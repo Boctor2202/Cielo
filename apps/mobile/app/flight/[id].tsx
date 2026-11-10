@@ -1,0 +1,461 @@
+import React, { useMemo, useState } from "react";
+import { Alert, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
+import { Stack, router, useLocalSearchParams } from "expo-router";
+import {
+  PILOT_FUNCTIONS,
+  addDays,
+  defaultIfrFor,
+  deriveFlightTimes,
+  formatClock,
+  formatDuration,
+  parseClock,
+  parseDuration,
+  type Approach,
+  type Flight,
+  type FlightFormInput,
+  type PilotFunction,
+} from "@cielo/core";
+import { AirportField } from "../../src/components/AirportField";
+import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPicker";
+import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, ToggleRow, Txt } from "../../src/components/ui";
+import { lookupAirport } from "../../src/airports";
+import type { I18nKey } from "../../src/i18n";
+import { todayUtc, useApp } from "../../src/state";
+import { mono, space, useTheme } from "../../src/theme";
+
+type Clock = "out" | "off" | "on" | "in";
+
+interface FormState {
+  date: string;
+  flightNumber: string;
+  depIcao: string;
+  arrIcao: string;
+  out: string;
+  off: string;
+  on: string;
+  in: string;
+  aircraftId: string | null;
+  function: PilotFunction;
+  picName: string;
+  ifr: boolean;
+  pilotFlying: boolean;
+  autoLandings: boolean;
+  autoNight: boolean;
+  nightManual: string;
+  takeoffsDay: number;
+  takeoffsNight: number;
+  landingsDay: number;
+  landingsNight: number;
+  approaches: Approach[];
+  isFstd: boolean;
+  fstdType: string;
+  fstdQualification: string;
+  fstdMin: string;
+  remarks: string;
+}
+
+const nowClock = () => formatClock(new Date().toISOString());
+const normClock = (s: string) => {
+  const c = parseClock(s);
+  return c ? `${String(c.h).padStart(2, "0")}:${String(c.m).padStart(2, "0")}` : s.trim() === "" ? "" : s;
+};
+
+export default function FlightForm() {
+  const { id, rosterEventId } = useLocalSearchParams<{ id: string; rosterEventId?: string }>();
+  const { t, flights, aircraft, aircraftTypes, rosterEvents, pilot, put } = useApp();
+  const c = useTheme();
+  const existing = id && id !== "new" ? flights.find((f) => f.id === id) : undefined;
+  const rosterEvent = rosterEventId ? rosterEvents.find((e) => e.id === rosterEventId) : undefined;
+
+  const [form, setForm] = useState<FormState>(() => initialState(existing, rosterEvent));
+  const [picker, setPicker] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  function initialState(f: Flight | undefined, ev: typeof rosterEvent): FormState {
+    if (f) {
+      return {
+        date: f.date,
+        flightNumber: f.flightNumber ?? "",
+        depIcao: f.depIcao,
+        arrIcao: f.arrIcao,
+        out: formatClock(f.outUtc),
+        off: formatClock(f.offUtc),
+        on: formatClock(f.onUtc),
+        in: formatClock(f.inUtc),
+        aircraftId: f.aircraftId ?? null,
+        function: f.function,
+        picName: f.picName ?? "",
+        ifr: f.ifrMin > 0,
+        pilotFlying: f.pilotFlying,
+        autoLandings: false,
+        autoNight: f.nightCalc !== "manual",
+        nightManual: f.nightCalc === "manual" ? formatDuration(f.nightMin) : "",
+        takeoffsDay: f.takeoffsDay,
+        takeoffsNight: f.takeoffsNight,
+        landingsDay: f.landingsDay,
+        landingsNight: f.landingsNight,
+        approaches: f.approaches ?? [],
+        isFstd: f.isFstd,
+        fstdType: f.fstdType ?? "",
+        fstdQualification: f.fstdQualification ?? "",
+        fstdMin: f.fstdMin ? formatDuration(f.fstdMin) : "",
+        remarks: f.remarks ?? "",
+      };
+    }
+    const last = flights.find((x) => !x.isFstd);
+    const pf = pilot.defaultPilotFlying === "always" ? true : pilot.defaultPilotFlying === "never" ? false : !(last?.pilotFlying ?? false);
+    const ac = ev?.aircraftReg ? aircraft.find((a) => a.registration === ev.aircraftReg) : last ? aircraft.find((a) => a.id === last.aircraftId) : undefined;
+    const type = ac ? aircraftTypes.find((x) => x.id === ac.aircraftTypeId) : undefined;
+    return {
+      date: ev ? ev.startUtc.slice(0, 10) : todayUtc(),
+      flightNumber: ev?.flightNumber ?? "",
+      depIcao: ev?.depIcao ?? last?.arrIcao ?? pilot.homeBaseIcao ?? "",
+      arrIcao: ev?.arrIcao ?? "",
+      out: ev ? formatClock(ev.startUtc) : "",
+      off: "",
+      on: "",
+      in: ev ? formatClock(ev.endUtc) : "",
+      aircraftId: ac?.id ?? null,
+      function: pilot.defaultFunction,
+      picName: "",
+      ifr: defaultIfrFor(pilot.defaultIfr, type),
+      pilotFlying: pf,
+      autoLandings: true,
+      autoNight: true,
+      nightManual: "",
+      takeoffsDay: 0,
+      takeoffsNight: 0,
+      landingsDay: 0,
+      landingsNight: 0,
+      approaches: [],
+      isFstd: ev?.kind === "SIM",
+      fstdType: ev?.kind === "SIM" ? (ev.aircraftTypeIcao ?? "") : "",
+      fstdQualification: "",
+      fstdMin: "",
+      remarks: "",
+    };
+  }
+
+  const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm((s) => ({ ...s, [k]: v }));
+
+  const selectedAircraft = aircraft.find((a) => a.id === form.aircraftId);
+  const selectedType = selectedAircraft ? aircraftTypes.find((x) => x.id === selectedAircraft.aircraftTypeId) : undefined;
+
+  const input: FlightFormInput = useMemo(
+    () => ({
+      date: form.date,
+      flightNumber: form.flightNumber || undefined,
+      depIcao: form.depIcao,
+      arrIcao: form.arrIcao,
+      out: form.out || undefined,
+      off: form.off || undefined,
+      on: form.on || undefined,
+      in: form.in || undefined,
+      aircraftId: form.aircraftId,
+      registration: selectedAircraft?.registration,
+      aircraftTypeIcao: selectedType?.icao,
+      aircraftModel: selectedType ? `${selectedType.manufacturer} ${selectedType.model}` : undefined,
+      operation: selectedAircraft?.defaultOperation,
+      function: form.function,
+      picName: form.picName || undefined,
+      ifr: form.ifr,
+      nightOverrideMin: form.autoNight ? undefined : (parseDuration(form.nightManual) ?? 0),
+      takeoffsDay: form.takeoffsDay,
+      takeoffsNight: form.takeoffsNight,
+      landingsDay: form.landingsDay,
+      landingsNight: form.landingsNight,
+      autoLandings: form.autoLandings,
+      pilotFlying: form.pilotFlying,
+      approaches: form.approaches.filter((a) => a.type.trim() && a.count > 0),
+      isFstd: form.isFstd,
+      fstdType: form.fstdType || undefined,
+      fstdQualification: form.fstdQualification || undefined,
+      fstdMin: parseDuration(form.fstdMin) ?? 0,
+      remarks: form.remarks || undefined,
+    }),
+    [form, selectedAircraft, selectedType],
+  );
+
+  const derived = useMemo(
+    () => deriveFlightTimes(input, { airports: lookupAirport, aircraftType: selectedType, aircraft: selectedAircraft }),
+    [input, selectedType, selectedAircraft],
+  );
+  const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
+  const locked = !!existing?.locked;
+
+  const save = async () => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(form.date) || Number.isNaN(Date.parse(form.date))) return setError(t("flight.invalidDate"));
+    if (!form.isFstd && (!form.depIcao.trim() || !form.arrIcao.trim())) return setError(t("flight.invalidAirports"));
+    setError(null);
+    setSaving(true);
+    try {
+      const { warnings: _w, ...times } = derived;
+      const flight: Partial<Flight> = {
+        ...existing,
+        pilotId: pilot.id,
+        date: input.date,
+        flightNumber: input.flightNumber,
+        source: existing?.source ?? (rosterEvent ? "roster" : "manual"),
+        rosterEventId: existing?.rosterEventId ?? rosterEvent?.id ?? null,
+        depIcao: input.depIcao.toUpperCase(),
+        arrIcao: input.arrIcao.toUpperCase(),
+        aircraftId: input.aircraftId ?? null,
+        registration: input.registration,
+        aircraftTypeIcao: input.aircraftTypeIcao,
+        aircraftModel: input.aircraftModel,
+        ...times,
+        function: input.function,
+        picName: input.picName ?? (input.function === "PIC" ? "SELF" : undefined),
+        actualImcMin: existing?.actualImcMin ?? 0,
+        xcMin: existing?.xcMin ?? 0,
+        pilotFlying: input.pilotFlying,
+        approaches: input.approaches ?? [],
+        isFstd: input.isFstd,
+        fstdType: input.isFstd ? input.fstdType : undefined,
+        fstdQualification: input.isFstd ? input.fstdQualification : undefined,
+        fstdMin: input.isFstd ? (input.fstdMin ?? 0) : 0,
+        crew: existing?.crew ?? [],
+        remarks: input.remarks,
+        signatureId: existing?.signatureId ?? null,
+        locked: existing?.locked ?? false,
+      };
+      const saved = await put("flights", flight);
+      if (rosterEvent && !rosterEvent.flightId) await put("roster_events", { ...rosterEvent, flightId: saved.id });
+      router.back();
+    } catch (e) {
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : String(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const clockField = (k: Clock, label: I18nKey) => (
+    <View style={{ flex: 1, gap: 4 }}>
+      <Field
+        label={t(label)}
+        value={form[k]}
+        monoValue
+        placeholder="--:--"
+        keyboardType="numbers-and-punctuation"
+        maxLength={5}
+        onChangeText={(s) => set(k, s)}
+        onBlur={() => set(k, normClock(form[k]))}
+        error={!!form[k] && !parseClock(form[k])}
+      />
+      <Pressable onPress={() => set(k, nowClock())} hitSlop={6}>
+        <Txt variant="small" color={c.accent}>
+          {t("common.now")}
+        </Txt>
+      </Pressable>
+    </View>
+  );
+
+  return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <Stack.Screen
+        options={{
+          title: existing ? t("flight.edit") : t("flight.new"),
+          headerRight: () => <Button kind="ghost" small title={t("common.save")} onPress={save} disabled={locked} loading={saving} />,
+        }}
+      />
+      <Screen>
+        {locked ? <Txt color={c.caution}>{t("flight.locked")}</Txt> : null}
+
+        {/* Live preview of the values computed by @cielo/core deriveFlightTimes */}
+        <Card style={{ borderColor: c.accent }}>
+          <Txt variant="label">{t("flight.preview")}</Txt>
+          <Row gap={space.md}>
+            <Stat label={t("flight.total")} value={fmt(form.isFstd ? (input.fstdMin ?? 0) : derived.totalMin)} color={c.accent} />
+            <Stat label={t("flight.air")} value={fmt(derived.airMin)} />
+            <Stat label={t("flight.night")} value={fmt(derived.nightMin)} />
+            <Stat label={t("flight.ifrTime")} value={fmt(derived.ifrMin)} />
+          </Row>
+          <Txt variant="small" mono>
+            {t("flight.landings")} ☀ {derived.landingsDay} · ☾ {derived.landingsNight} — T/O ☀ {derived.takeoffsDay} · ☾ {derived.takeoffsNight}
+          </Txt>
+          {derived.warnings.map((w) => (
+            <Txt key={w} variant="small" color={c.caution}>
+              {t(`flight.warn.${w}` as I18nKey)}
+            </Txt>
+          ))}
+        </Card>
+
+        <Card>
+          <ToggleRow label={t("flight.fstd")} value={form.isFstd} onChange={(v) => set("isFstd", v)} />
+          <Field
+            label={t("flight.date")}
+            value={form.date}
+            monoValue
+            placeholder="YYYY-MM-DD"
+            keyboardType="numbers-and-punctuation"
+            maxLength={10}
+            onChangeText={(s) => set("date", s)}
+          />
+          <Row>
+            <Chip label={t("common.today")} selected={form.date === todayUtc()} onPress={() => set("date", todayUtc())} />
+            <Chip
+              label={t("common.yesterday")}
+              selected={form.date === addDays(todayUtc(), -1)}
+              onPress={() => set("date", addDays(todayUtc(), -1))}
+            />
+          </Row>
+          <Field
+            label={t("flight.flightNumber")}
+            value={form.flightNumber}
+            monoValue
+            autoCapitalize="characters"
+            autoCorrect={false}
+            onChangeText={(s) => set("flightNumber", s)}
+            placeholder="AFR1234"
+          />
+        </Card>
+
+        {form.isFstd ? (
+          <Card>
+            <Field label={t("flight.fstdType")} value={form.fstdType} autoCapitalize="characters" onChangeText={(s) => set("fstdType", s)} />
+            <Field label={t("flight.fstdQualification")} value={form.fstdQualification} onChangeText={(s) => set("fstdQualification", s)} />
+            <Field
+              label={t("flight.fstdMin")}
+              value={form.fstdMin}
+              monoValue
+              placeholder="h:mm"
+              keyboardType="numbers-and-punctuation"
+              onChangeText={(s) => set("fstdMin", s)}
+            />
+          </Card>
+        ) : null}
+
+        <Card>
+          <Row style={{ alignItems: "flex-start" }} gap={space.md}>
+            <AirportField label={t("flight.dep")} value={form.depIcao} onChange={(v) => set("depIcao", v)} />
+            <AirportField label={t("flight.arr")} value={form.arrIcao} onChange={(v) => set("arrIcao", v)} />
+          </Row>
+          <Txt variant="small">{t("flight.clocksHint")}</Txt>
+          <Row gap={space.sm} style={{ alignItems: "flex-start" }}>
+            {clockField("out", "flight.out")}
+            {clockField("off", "flight.off")}
+            {clockField("on", "flight.on")}
+            {clockField("in", "flight.in")}
+          </Row>
+        </Card>
+
+        <Card>
+          <Txt variant="label">{t("flight.aircraft")}</Txt>
+          <Pressable
+            onPress={() => setPicker(true)}
+            style={({ pressed }) => ({
+              borderWidth: 1,
+              borderColor: c.border,
+              borderRadius: 10,
+              padding: space.md,
+              backgroundColor: c.bg,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Txt style={selectedAircraft ? mono : undefined} color={selectedAircraft ? c.text : c.muted}>
+              {selectedAircraft ? aircraftLabel(selectedAircraft, aircraftTypes) : t("flight.chooseAircraft")}
+            </Txt>
+            {selectedType ? (
+              <Txt variant="small">
+                {selectedType.manufacturer} {selectedType.model}
+              </Txt>
+            ) : null}
+          </Pressable>
+          <Txt variant="label">{t("flight.function")}</Txt>
+          <Row style={{ flexWrap: "wrap" }}>
+            {PILOT_FUNCTIONS.map((fn) => (
+              <Chip key={fn} label={fn} selected={form.function === fn} onPress={() => set("function", fn)} />
+            ))}
+          </Row>
+          <Field
+            label={t("flight.picName")}
+            value={form.picName}
+            onChangeText={(s) => set("picName", s)}
+            placeholder={form.function === "PIC" ? t("flight.self") : ""}
+            autoCapitalize="words"
+          />
+          <ToggleRow label={t("flight.ifr")} value={form.ifr} onChange={(v) => set("ifr", v)} />
+          <ToggleRow label={t("flight.pilotFlying")} value={form.pilotFlying} onChange={(v) => set("pilotFlying", v)} />
+        </Card>
+
+        <Card>
+          <ToggleRow label={t("flight.autoNight")} value={form.autoNight} onChange={(v) => set("autoNight", v)} />
+          {!form.autoNight ? (
+            <Field
+              label={t("flight.nightManual")}
+              value={form.nightManual}
+              monoValue
+              placeholder="h:mm"
+              keyboardType="numbers-and-punctuation"
+              onChangeText={(s) => set("nightManual", s)}
+            />
+          ) : null}
+          <ToggleRow label={t("flight.autoLandings")} value={form.autoLandings} onChange={(v) => set("autoLandings", v)} />
+          {!form.autoLandings ? (
+            <Row gap={space.xs}>
+              <Stepper label={t("flight.takeoffsDay")} value={form.takeoffsDay} onChange={(v) => set("takeoffsDay", v)} />
+              <Stepper label={t("flight.takeoffsNight")} value={form.takeoffsNight} onChange={(v) => set("takeoffsNight", v)} />
+              <Stepper label={t("flight.landingsDay")} value={form.landingsDay} onChange={(v) => set("landingsDay", v)} />
+              <Stepper label={t("flight.landingsNight")} value={form.landingsNight} onChange={(v) => set("landingsNight", v)} />
+            </Row>
+          ) : null}
+        </Card>
+
+        <Card>
+          <Txt variant="label">{t("flight.approaches")}</Txt>
+          {form.approaches.map((a, i) => {
+            const update = (patch: Partial<Approach>) =>
+              set(
+                "approaches",
+                form.approaches.map((x, j) => (j === i ? { ...x, ...patch } : x)),
+              );
+            return (
+              <Row key={i} style={{ alignItems: "flex-end" }}>
+                <Field
+                  style={{ flex: 2 }}
+                  value={a.type}
+                  placeholder={t("flight.approachType")}
+                  autoCapitalize="characters"
+                  onChangeText={(s) => update({ type: s })}
+                />
+                <Field
+                  style={{ flex: 1 }}
+                  value={a.runway ?? ""}
+                  placeholder={t("flight.runway")}
+                  monoValue
+                  autoCapitalize="characters"
+                  onChangeText={(s) => update({ runway: s || undefined })}
+                />
+                <Stepper label="×" value={a.count} onChange={(v) => update({ count: v })} />
+              </Row>
+            );
+          })}
+          <Button
+            kind="secondary"
+            small
+            title={t("flight.addApproach")}
+            onPress={() => set("approaches", [...form.approaches, { type: form.ifr ? "ILS" : "VIS", count: 1 }])}
+          />
+        </Card>
+
+        <Card>
+          <Field label={t("flight.remarks")} value={form.remarks} multiline onChangeText={(s) => set("remarks", s)} />
+        </Card>
+
+        {error ? <Txt color={c.warning}>{error}</Txt> : null}
+        <Button title={t("common.save")} onPress={save} disabled={locked} loading={saving} />
+      </Screen>
+
+      <AircraftPicker
+        visible={picker}
+        onClose={() => setPicker(false)}
+        onPick={(a) => {
+          const type = aircraftTypes.find((x) => x.id === a.aircraftTypeId);
+          setForm((s) => ({ ...s, aircraftId: a.id, ifr: existing ? s.ifr : defaultIfrFor(pilot.defaultIfr, type) }));
+          setPicker(false);
+        }}
+      />
+    </KeyboardAvoidingView>
+  );
+}
