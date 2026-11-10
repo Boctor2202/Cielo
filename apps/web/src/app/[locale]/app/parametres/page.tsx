@@ -1,0 +1,180 @@
+"use client";
+
+import { Download, LogOut, RefreshCw, Trash2, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { PILOT_FUNCTIONS, type Pilot } from "@cielo/core";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { Card, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
+import { usePilot } from "@/lib/hooks";
+import { deleteAllLocal, exportAll, importAll, updatePilot } from "@/lib/repo";
+import { downloadBlob } from "@/lib/download";
+import { useCloud } from "@/lib/cloud";
+import { SITE } from "@/config/site";
+
+export default function SettingsPage() {
+  const t = useTranslations("app.settings");
+  const tc = useTranslations("common");
+  const tfn = useTranslations("app.functions");
+  const tfw = useTranslations("app.frameworks");
+  const tp = useTranslations("app.plans");
+  const tpr = useTranslations("pricing");
+  const tn = useTranslations("app.nav");
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+  const pilot = usePilot();
+  const cloud = useCloud();
+  const { toast, toastNode } = useToast();
+  const [v, setV] = useState<Pilot | null>(null);
+  const [delOpen, setDelOpen] = useState(false);
+  const [word, setWord] = useState("");
+  const [yearly, setYearly] = useState(true);
+  useEffect(() => {
+    if (pilot && !v) setV(pilot);
+  }, [pilot, v]);
+  if (!v) return <p className="text-muted">…</p>;
+
+  const patch = async (p: Partial<Pilot>) => {
+    setV({ ...v, ...p });
+    await updatePilot(p);
+  };
+
+  async function checkout(plan: "basic" | "premium") {
+    try {
+      const { url } = await cloud.invoke<{ url: string }>("create-checkout-session", { plan, interval: yearly ? "yearly" : "monthly", returnPath: `/${locale}/app/parametres` });
+      window.location.assign(url);
+    } catch (e) {
+      toast(String((e as Error).message ?? e));
+    }
+  }
+
+  return (
+    <>
+      <PageTitle title={t("title")} />
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card title={t("profile")}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={t("fullName")}><input className="input" value={v.fullName} onChange={(e) => setV({ ...v, fullName: e.target.value })} onBlur={() => patch({ fullName: v.fullName })} /></Field>
+            <Field label={t("email")}><input className="input" type="email" value={cloud.session?.user.email ?? v.email} disabled={!!cloud.session} onChange={(e) => setV({ ...v, email: e.target.value })} onBlur={() => patch({ email: v.email })} /></Field>
+            <Field label={t("licenceNumber")}><input className="input num" value={v.licenceNumber ?? ""} onChange={(e) => setV({ ...v, licenceNumber: e.target.value })} onBlur={() => patch({ licenceNumber: v.licenceNumber })} /></Field>
+            <Field label={t("homeBase")}><input className="input num uppercase" maxLength={4} value={v.homeBaseIcao ?? ""} onChange={(e) => setV({ ...v, homeBaseIcao: e.target.value.toUpperCase() })} onBlur={() => patch({ homeBaseIcao: v.homeBaseIcao || undefined })} /></Field>
+          </div>
+        </Card>
+
+        <Card title={t("preferences")}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={t("framework")}>
+              <select className="input" value={v.regulatoryFramework} onChange={(e) => patch({ regulatoryFramework: e.target.value as Pilot["regulatoryFramework"] })}>
+                {(["EASA", "FAA", "CASA"] as const).map((f) => <option key={f} value={f}>{tfw(f)}</option>)}
+              </select>
+            </Field>
+            <Field label={t("defaultFunction")}>
+              <select className="input" value={v.defaultFunction} onChange={(e) => patch({ defaultFunction: e.target.value as Pilot["defaultFunction"] })}>
+                {PILOT_FUNCTIONS.map((f) => <option key={f} value={f}>{tfn(f)}</option>)}
+              </select>
+            </Field>
+            <Field label={t("defaultIfr")}>
+              <select className="input" value={v.defaultIfr} onChange={(e) => patch({ defaultIfr: e.target.value as Pilot["defaultIfr"] })}>
+                {(["ask", "always", "never"] as const).map((o) => <option key={o} value={o}>{t(`ifrOptions.${o}`)}</option>)}
+              </select>
+            </Field>
+            <Field label={t("pilotFlying")}>
+              <select className="input" value={v.defaultPilotFlying} onChange={(e) => patch({ defaultPilotFlying: e.target.value as Pilot["defaultPilotFlying"] })}>
+                {(["always", "alternate", "never"] as const).map((o) => <option key={o} value={o}>{t(`pfOptions.${o}`)}</option>)}
+              </select>
+            </Field>
+            <Field label={t("timeDisplay")}>
+              <Segmented value={v.timeDisplay} onChange={(x) => patch({ timeDisplay: x })} options={[{ value: "hhmm", label: t("hhmm") }, { value: "decimal", label: t("decimal") }]} />
+            </Field>
+            <Field label={t("language")}>
+              <Segmented
+                value={locale}
+                onChange={(l) => {
+                  patch({ locale: l as Pilot["locale"] });
+                  router.replace(pathname as "/app/parametres", { locale: l });
+                }}
+                options={[{ value: "fr", label: "Français" }, { value: "en", label: "English" }]}
+              />
+            </Field>
+          </div>
+        </Card>
+
+        <Card title={t("subscription")}>
+          <p className="text-sm">{t("currentPlan", { plan: tp(v.subscriptionTier) })}</p>
+          {cloud.session ? (
+            <div className="mt-4 space-y-3">
+              <Segmented value={yearly ? "y" : "m"} onChange={(x) => setYearly(x === "y")} options={[{ value: "m", label: tpr("monthly") }, { value: "y", label: tpr("yearly") }]} />
+              <div className="grid gap-2 sm:grid-cols-2">
+                {(["basic", "premium"] as const).map((p) => (
+                  <button key={p} type="button" className={`btn ${p === "premium" ? "btn-primary" : "btn-secondary"}`} disabled={v.subscriptionTier === p} onClick={() => checkout(p)}>
+                    {tp(p)} · {yearly ? SITE.pricing[p].yearly : SITE.pricing[p].monthly} €{yearly ? tpr("perYear") : tpr("perMonth")}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted">{t("cloudOff")}</p>
+          )}
+        </Card>
+
+        <Card title={t("storage")}>
+          <p className="text-sm text-muted">{cloud.session ? t("storageCloud") : t("storageLocal")}</p>
+          {cloud.session && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button type="button" className="btn btn-secondary btn-sm" onClick={cloud.syncNow} disabled={cloud.syncing}><RefreshCw size={14} className={cloud.syncing ? "animate-spin" : ""} /> {t("syncNow")}</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={cloud.signOut}><LogOut size={14} /> {tn("signOut")}</button>
+              {cloud.lastSync && <p className="w-full text-xs text-muted">{cloud.lastSync.finishedAt.slice(0, 16).replace("T", " ")} UTC {cloud.lastSync.ok ? "✓" : `· ${cloud.lastSync.errors.length} erreur(s)`}</p>}
+            </div>
+          )}
+        </Card>
+
+        <Card title={t("data")} className="lg:col-span-2">
+          <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn btn-secondary" onClick={async () => downloadBlob(JSON.stringify(await exportAll(), null, 2), `cielo-export-${new Date().toISOString().slice(0, 10)}.json`, "application/json")}>
+              <Download size={16} /> {t("exportJson")}
+            </button>
+            <label className="btn btn-secondary">
+              <Upload size={16} /> {t("importJson")}
+              <input type="file" accept="application/json,.json" className="sr-only" onChange={async (e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                try {
+                  await importAll(JSON.parse(await f.text()));
+                  toast(t("restored"));
+                } catch (err) {
+                  toast(String((err as Error).message));
+                }
+              }} />
+            </label>
+            <button type="button" className="btn btn-danger" onClick={() => setDelOpen(true)}><Trash2 size={16} /> {t("deleteAll")}</button>
+          </div>
+        </Card>
+      </div>
+
+      <Modal open={delOpen} onClose={() => setDelOpen(false)} title={t("deleteAll")}>
+        <p className="text-sm">{t("deleteConfirm")}</p>
+        <input className="input mt-4" value={word} onChange={(e) => setWord(e.target.value)} placeholder={t("deleteWord")} />
+        <div className="mt-4 flex justify-end gap-2">
+          <button type="button" className="btn btn-secondary" onClick={() => setDelOpen(false)}>{tc("cancel")}</button>
+          <button
+            type="button"
+            className="btn btn-danger"
+            disabled={word.trim().toUpperCase() !== t("deleteWord")}
+            onClick={async () => {
+              if (cloud.session) {
+                await cloud.invoke("gdpr-delete", { confirm: "DELETE" });
+                await cloud.signOut();
+              }
+              await deleteAllLocal();
+              window.location.assign(`/${locale}`);
+            }}
+          >
+            {tc("delete")}
+          </button>
+        </div>
+      </Modal>
+      {toastNode}
+    </>
+  );
+}

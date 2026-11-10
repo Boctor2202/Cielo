@@ -6,3 +6,4 @@ dist
 .env
 *.tsbuildinfo
 packages/reference-data/raw
+packages/export/test/out

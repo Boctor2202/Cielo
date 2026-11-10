@@ -23,6 +23,9 @@ importers:
       '@cielo/reference-data':
         specifier: workspace:*
         version: link:../../packages/reference-data
+      '@cielo/sync':
+        specifier: workspace:*
+        version: link:../../packages/sync
       '@expo/metro-runtime':
         specifier: ~58.0.17
         version: 58.0.17(@expo/log-box@58.0.15)(expo@58.0.23)(react-dom@19.3.0(react@19.3.0))(react-native@0.88.1(@babel/core@7.29.13)(@react-native/metro-config@0.88.1(@babel/core@7.29.13))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
@@ -123,6 +126,9 @@ importers:
       '@cielo/reference-data':
         specifier: workspace:*
         version: link:../../packages/reference-data
+      '@cielo/sync':
+        specifier: workspace:*
+        version: link:../../packages/sync
       '@fontsource-variable/inter':
         specifier: ^5.3.0
         version: 5.3.0

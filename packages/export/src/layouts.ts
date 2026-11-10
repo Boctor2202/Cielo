@@ -114,7 +114,7 @@ const CASA: Layout = {
   decimal: true,
   rowsPerPage: 20,
   columns: [
-    { sub: "DATE", w: 5, align: "center", value: (f) => formatDateShort(f.date, "en") },
+    { sub: "DATE", w: 5, align: "center", value: (f) => formatDateShort(f.date) },
     { group: "AIRCRAFT", sub: "TYPE", w: 5, align: "left", value: (f) => (f.isFstd ? (f.fstdType ?? "FSTD") : (f.aircraftTypeIcao ?? "")) },
     { group: "AIRCRAFT", sub: "REGISTRATION", w: 5, align: "center", value: (f) => (fl(f) ? (f.registration ?? "") : "") },
     { sub: "PILOT IN COMMAND", w: 7, align: "left", value: (f) => (fl(f) ? (f.function === "PIC" ? "SELF" : (f.picName ?? "")) : "") },

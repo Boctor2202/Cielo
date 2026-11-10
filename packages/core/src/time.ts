@@ -84,5 +84,5 @@ export function daysBetween(a: string, b: string): number {
 
 export function formatDateShort(date: string, locale: "fr" | "en" = "fr"): string {
   const [y, m, d] = date.slice(0, 10).split("-");
-  return locale === "fr" ? `${d}/${m}/${y!.slice(2)}` : `${d}/${m}/${y!.slice(2)}`;
+  return locale === "fr" ? `${d}/${m}/${y!.slice(2)}` : `${m}/${d}/${y!.slice(2)}`;
 }

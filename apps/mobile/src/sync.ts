@@ -1,20 +1,12 @@
 /**
- * ─────────────────────────────────────────────────────────────────────────────
- *  SYNC HOOK POINT — @cielo/sync (being written in parallel, not a dependency yet)
- * ─────────────────────────────────────────────────────────────────────────────
- * The UI only ever talks to the LocalStore (SQLite). Once "@cielo/sync" is published in the
- * workspace, add it to package.json and replace the body of `startSync` with:
- *
- *   const { createSupabaseSync } = await import("@cielo/sync");
- *   const engine = createSupabaseSync({ supabase, store, pilotId });
- *   await engine.syncNow?.();
- *   return engine;
- *
+ * Cloud sync: the UI only ever talks to the LocalStore (SQLite); @cielo/sync pushes local changes
+ * and pulls server changes (last-write-wins on updatedAt) every minute while signed in.
  * `startSync` is called by AppProvider when a Supabase session exists, and `stop()` on sign-out.
- * `onChange` must be called by the engine after it pulled rows so the UI reloads.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { LocalStore } from "@cielo/core";
+import { SYNC_TABLES, type LocalStore } from "@cielo/core";
+import { createSupabaseSync } from "@cielo/sync";
+import { PILOT_ID_KEY } from "./db/seed";
 
 export interface SyncHandle {
   syncNow(): Promise<void>;
@@ -28,10 +20,43 @@ export interface StartSyncArgs {
   onChange?: () => void;
 }
 
-export async function startSync(_args: StartSyncArgs): Promise<SyncHandle> {
-  // TODO(@cielo/sync): wire createSupabaseSync({ supabase, store, pilotId }) here.
+/** First sign-in after using the app offline: re-key local rows to the account id. */
+async function adoptAccountId(store: LocalStore, localId: string, accountId: string): Promise<boolean> {
+  if (localId === accountId) return false;
+  const now = new Date().toISOString();
+  for (const table of SYNC_TABLES) {
+    const rows = (await store.all(table)) as unknown as Record<string, unknown>[];
+    const changed = rows
+      .filter((r) => (table === "pilots" ? r.id === localId : r.pilotId === localId))
+      .map((r) => (table === "pilots" ? { ...r, id: accountId, updatedAt: now } : { ...r, pilotId: accountId, updatedAt: now }));
+    if (changed.length) await store.bulkPut(table, changed as never);
+  }
+  await store.setMeta(PILOT_ID_KEY, accountId);
+  return true;
+}
+
+export async function startSync({ supabase, store, pilotId, onChange }: StartSyncArgs): Promise<SyncHandle> {
+  const { data } = await supabase.auth.getUser();
+  const accountId = data.user?.id;
+  if (!accountId) return { async syncNow() {}, stop() {} };
+  if (await adoptAccountId(store, pilotId, accountId)) {
+    // The pilot id changed: AppProvider reloads and calls startSync again with the account id.
+    onChange?.();
+    return { async syncNow() {}, stop() {} };
+  }
+  const engine = createSupabaseSync({
+    supabase,
+    store,
+    pilotId: accountId,
+    onResult: (r) => {
+      if (Object.values(r.pulled).some((n) => (n ?? 0) > 0)) onChange?.();
+    },
+  });
+  engine.start(60_000);
   return {
-    async syncNow() {},
-    stop() {},
+    async syncNow() {
+      await engine.syncNow();
+    },
+    stop: () => engine.stop(),
   };
 }
