@@ -1,0 +1,8 @@
+node_modules
+.next
+dist
+.expo
+.env*.local
+.env
+*.tsbuildinfo
+packages/reference-data/raw

@@ -1,0 +1,16 @@
+{
+  "name": "cielo",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "pnpm --filter @cielo/web dev",
+    "build": "pnpm --filter @cielo/web build",
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "airports": "pnpm --filter @cielo/reference-data build:airports"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5"
+  }
+}
