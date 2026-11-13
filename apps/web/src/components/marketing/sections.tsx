@@ -1,8 +1,10 @@
 import { useLocale, useMessages, useTranslations } from "next-intl";
-import { ArrowRight, BadgeCheck, CalendarClock, CloudOff, FileDown, Map, PenLine, ScanSearch, ShieldCheck, Upload } from "lucide-react";
+import { ArrowRight, BadgeCheck, CalendarClock, CloudOff, FileDown, Lock, Map, PenLine, ScanSearch, ShieldCheck, Upload } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { SITE } from "@/config/site";
 import { BrowserFrame, LaptopFrame, PhoneFrame, Shot } from "./Shot";
+import { FeatureTabs } from "./FeatureTabs";
+import { Reveal } from "./Reveal";
 
 export const FEATURE_KEYS = ["logbook", "import", "audit", "licenses", "ftl", "stats", "signature", "offline"] as const;
 const ICONS = { logbook: FileDown, import: Upload, audit: ScanSearch, licenses: BadgeCheck, ftl: CalendarClock, stats: Map, signature: PenLine, offline: CloudOff };
@@ -10,36 +12,119 @@ const ICONS = { logbook: FileDown, import: Upload, audit: ScanSearch, licenses: 
 export function Hero() {
   const t = useTranslations("hero");
   return (
-    <section className="relative overflow-hidden">
-      <div className="chart-grid pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
-      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-14 sm:px-6 lg:grid-cols-[1fr_1.15fr] lg:pb-24 lg:pt-20">
+    <section className="horizon relative overflow-hidden">
+      <div className="chart-grid pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_top,black_25%,transparent_70%)]" />
+      <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1fr_1.12fr] lg:pb-28 lg:pt-20">
         <div>
-          <p className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-semibold text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+          <p className="mono-label inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/8 px-3 py-1.5">
+            <span className="blink h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
             {t("eyebrow")}
           </p>
-          <h1 className="mt-5 text-[2.5rem] font-bold leading-[1.05] tracking-[-0.03em] sm:text-6xl">{t("title")}</h1>
-          <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted">{t("subtitle")}</p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/inscription" className="btn btn-primary !px-6 !py-3 text-base">
-              {t("ctaTrial")} <ArrowRight size={18} />
+          <h1 className="mt-6 text-balance text-[2.6rem] font-bold leading-[1.04] tracking-[-0.035em] sm:text-6xl lg:text-[4.1rem]">{t("title")}</h1>
+          <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-muted">{t("subtitle")}</p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Link href="/inscription" className="btn btn-primary min-h-12 !px-6 text-base shadow-[0_10px_30px_-10px_var(--accent)]">
+              {t("ctaTrial")} <ArrowRight size={18} aria-hidden />
             </Link>
-            <Link href={{ pathname: "/connexion", query: { demo: "1" } }} className="btn btn-secondary !px-6 !py-3 text-base">
+            <Link href={{ pathname: "/connexion", query: { demo: "1" } }} className="btn btn-secondary min-h-12 !px-6 text-base">
               {t("ctaDemo")}
             </Link>
           </div>
           <p className="mt-4 text-sm text-muted">{t("note")}</p>
-          <StoreBadges className="mt-8" />
+          <StoreBadges className="mt-9" />
         </div>
-        <div className="relative pb-6 sm:pb-10">
-          <LaptopFrame>
-            <Shot name="dashboard" alt="" priority className="w-full" />
-          </LaptopFrame>
-          <PhoneFrame className="absolute -bottom-4 right-[-2%] w-[27%] min-w-[110px] sm:-bottom-8">
+        <div className="relative pb-8 sm:pb-12">
+          <div className="hud-frame">
+            <LaptopFrame>
+              <div className="aspect-[16/10]">
+                <Shot name="dashboard" alt="" priority className="h-full w-full object-cover object-top" />
+              </div>
+            </LaptopFrame>
+          </div>
+          <PhoneFrame className="absolute -bottom-2 right-[-2%] w-[27%] min-w-[108px] sm:-bottom-6">
             <Shot name="mobile-logbook" alt="" priority className="w-full" />
           </PhoneFrame>
+          {/* Instrument readouts: what Cielo computes for you */}
+          <div className="glass absolute -left-3 top-[58%] hidden rounded-xl border border-border px-4 py-3 shadow-xl sm:block" aria-hidden>
+            <p className="mono-label !text-[10px]">{t("readoutNight")}</p>
+            <p className="num mt-1 text-2xl font-semibold">0:47</p>
+            <p className="num text-[11px] text-muted">{t("readoutRoute")}</p>
+          </div>
+          <div className="glass absolute -top-5 left-[18%] hidden items-center gap-2 rounded-full border border-success/40 px-3 py-1.5 text-xs font-semibold text-success shadow-lg sm:flex" aria-hidden>
+            <span className="h-1.5 w-1.5 rounded-full bg-success" /> {t("readoutStatus")}
+          </div>
         </div>
       </div>
+    </section>
+  );
+}
+
+export function Why() {
+  const t = useTranslations("why");
+  const m = useMessages() as { why: { items: { t: string; d: string }[] } };
+  const icons = [ShieldCheck, CloudOff, Lock];
+  return (
+    <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-24">
+      <Reveal className="reveal max-w-2xl">
+        <p className="mono-label">{t("label")}</p>
+        <h2 className="mt-3 text-balance text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
+      </Reveal>
+      <Reveal className="mt-10 grid gap-4 md:grid-cols-3">
+        {m.why.items.map((it, i) => {
+          const Icon = icons[i] ?? ShieldCheck;
+          return (
+            <div key={it.t} className="reveal card relative overflow-hidden p-6">
+              <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" aria-hidden />
+              <Icon size={22} className="text-accent" aria-hidden />
+              <h3 className="mt-4 text-lg font-semibold">{it.t}</h3>
+              <p className="mt-2 leading-relaxed text-muted">{it.d}</p>
+            </div>
+          );
+        })}
+      </Reveal>
+    </section>
+  );
+}
+
+export function Showcase() {
+  const t = useTranslations("features");
+  const ts = useTranslations("showcase");
+  return (
+    <section id="features" className="border-y border-border bg-surface/40">
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
+        <Reveal className="reveal mb-12 max-w-2xl">
+          <p className="mono-label">{ts("label")}</p>
+          <h2 className="mt-3 text-balance text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
+          <p className="mt-4 text-lg text-muted">{t("subtitle")}</p>
+          <p className="sr-only">{ts("hint")}</p>
+        </Reveal>
+        <FeatureTabs />
+      </div>
+    </section>
+  );
+}
+
+export function HowItWorks() {
+  const t = useTranslations("how");
+  const m = useMessages() as { how: { steps: { t: string; d: string }[] } };
+  return (
+    <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-24">
+      <Reveal className="reveal max-w-2xl">
+        <p className="mono-label">{t("label")}</p>
+        <h2 className="mt-3 text-balance text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
+      </Reveal>
+      <Reveal as="ul" className="relative mt-12 grid gap-8 md:grid-cols-3 md:gap-6">
+        <span className="absolute left-0 right-0 top-5 hidden h-px border-t border-dashed border-border md:block" aria-hidden />
+        {m.how.steps.map((s, i) => (
+          <li key={s.t} className="reveal relative">
+            <span className="num relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-accent bg-bg text-sm font-semibold text-accent">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <h3 className="mt-5 text-lg font-semibold">{s.t}</h3>
+            <p className="mt-2 leading-relaxed text-muted">{s.d}</p>
+          </li>
+        ))}
+      </Reveal>
     </section>
   );
 }
@@ -83,13 +168,15 @@ export function ProofBand() {
     { v: SITE.stats.hoursLogged, l: t("hours") },
     { v: SITE.stats.pilots, l: t("pilots") },
     { v: SITE.stats.airlinesSupported, l: t("airlines") },
-  ];
+  ].filter((i) => i.v !== null);
+  // Only verified figures are shown: the band stays hidden until values are filled in SITE.stats.
+  if (items.length === 0) return null;
   return (
     <section className="border-y border-border bg-brand text-white">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 divide-y divide-white/10 px-4 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-6">
+      <div className={`mx-auto grid max-w-6xl grid-cols-1 divide-y divide-white/10 px-4 sm:divide-x sm:divide-y-0 sm:px-6 ${items.length === 3 ? "sm:grid-cols-3" : items.length === 2 ? "sm:grid-cols-2" : ""}`}>
         {items.map((i) => (
           <div key={i.l} className="flex items-baseline justify-center gap-3 py-7 sm:flex-col sm:items-center sm:gap-1">
-            <span className="num text-3xl font-semibold text-[#22D3EE] sm:text-4xl">{i.v === null ? t("placeholder") : nf.format(i.v)}</span>
+            <span className="num text-3xl font-semibold text-[#22D3EE] sm:text-4xl">{nf.format(i.v!)}</span>
             <span className="text-sm uppercase tracking-[0.12em] text-white/70">{i.l}</span>
           </div>
         ))}
@@ -193,13 +280,14 @@ export function CtaBand() {
   const t = useTranslations("cta");
   return (
     <section className="px-4 pb-20 sm:px-6">
-      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-2xl bg-brand px-6 py-14 text-center text-white sm:px-12">
+      <div className="hud-frame relative mx-auto max-w-6xl overflow-hidden rounded-2xl bg-brand px-6 py-14 text-center text-white sm:px-12">
         <div className="chart-grid pointer-events-none absolute inset-0 opacity-60 [--grid:rgba(34,211,238,0.08)]" />
         <h2 className="relative text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
         <p className="relative mx-auto mt-3 max-w-xl text-white/75">{t("text")}</p>
-        <Link href="/inscription" className="btn relative mt-8 !bg-[#22D3EE] !px-6 !py-3 text-base !text-[#0A1626] hover:!bg-[#67E8F9]">
-          {t("button")} <ArrowRight size={18} />
+        <Link href="/inscription" className="btn relative mt-8 min-h-12 !bg-[#22D3EE] !px-6 text-base !text-[#0A1626] hover:!bg-[#67E8F9]">
+          {t("button")} <ArrowRight size={18} aria-hidden />
         </Link>
+        <StoreBadges className="relative mt-8 justify-center [&_a]:!border-white/20 [&_a]:!bg-white [&_a]:!text-[#0A1626]" />
       </div>
     </section>
   );

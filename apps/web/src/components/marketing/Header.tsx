@@ -18,14 +18,14 @@ export function Header() {
     { href: "/blog", label: t("blog") },
   ] as const;
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-bg/85 backdrop-blur-md">
+    <header className="glass sticky top-0 z-40 border-b border-border/70">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/" className="shrink-0" aria-label="Cielo">
           <Logo />
         </Link>
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className="rounded-md px-3 py-2 text-[15px] font-medium text-muted transition-colors hover:text-text">
+            <Link key={l.href} href={l.href} className="rounded-md px-3 py-2 text-[15px] font-medium text-muted transition-colors duration-200 hover:bg-surface hover:text-text">
               {l.label}
             </Link>
           ))}

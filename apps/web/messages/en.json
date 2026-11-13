@@ -24,7 +24,11 @@
     "note": "No credit card · Your data stays yours",
     "appStore": "Download on the App Store",
     "playStore": "Get it on Google Play",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "readoutNight": "Night computed",
+    "readoutRoute": "LFPG → LFMN",
+    "readoutStatus": "Logbook consistent",
+    "liveDemo": "Live demo, no sign-up"
   },
   "proof": {
     "hours": "hours logged",
@@ -39,42 +43,74 @@
       "logbook": {
         "title": "Logbook and official exports",
         "text": "Every AMC1 FCL.050 column, page totals and automatic carry-forward. PDF export in EASA, FAA and CASA formats, plus CSV and Excel.",
-        "points": ["Night time from civil twilight", "SE / ME / multi-pilot derived from the aircraft", "Carry forward your paper logbook totals"]
+        "points": [
+          "Night time from civil twilight",
+          "SE / ME / multi-pilot derived from the aircraft",
+          "Carry forward your paper logbook totals"
+        ]
       },
       "import": {
         "title": "Automatic import",
         "text": "Import your airline roster (iCal, CSV), your old CSV or Excel files, or take photos of your paper logbook pages.",
-        "points": ["Automatic column detection", "Preview and fix before import", "Photo scan with text recognition"]
+        "points": [
+          "Automatic column detection",
+          "Preview and fix before import",
+          "Photo scan with text recognition"
+        ]
       },
       "audit": {
         "title": "Automatic audit",
         "text": "Cielo reads your logbook like an examiner: overlaps, inconsistent times, duplicates, night time above total, broken continuity.",
-        "points": ["17 consistency rules", "Direct link to the flight to fix", "Before every check ride or interview"]
+        "points": [
+          "17 consistency rules",
+          "Direct link to the flight to fix",
+          "Before every check ride or interview"
+        ]
       },
       "licenses": {
         "title": "Licences, medical, ratings",
         "text": "Licences, medical certificate, SEP, MEP, TR, IR, FI, LPE… Alerts 90, 30 and 7 days before every expiry, by notification and e-mail.",
-        "points": ["FCL.060 recent experience computed", "Encrypted document scans", "Custom alert thresholds"]
+        "points": [
+          "FCL.060 recent experience computed",
+          "Encrypted document scans",
+          "Custom alert thresholds"
+        ]
       },
       "ftl": {
         "title": "Rest and FTL limits",
         "text": "Flight duty and rest periods computed under EASA ORO.FTL from your flights and roster, with alerts before you exceed a limit.",
-        "points": ["Max FDP from reporting time", "7, 14, 28-day and 12-month totals", "Minimum rest and weekly rest"]
+        "points": [
+          "Max FDP from reporting time",
+          "7, 14, 28-day and 12-month totals",
+          "Minimum rest and weekly rest"
+        ]
       },
       "stats": {
         "title": "Flight map and statistics",
         "text": "Your routes on a map, your hours by type, by function, at night and IFR, your most visited airports.",
-        "points": ["Exact great circle between airports", "28 / 90-day / 12-month periods", "19,000 aerodromes in the database"]
+        "points": [
+          "Exact great circle between airports",
+          "28 / 90-day / 12-month periods",
+          "19,000 aerodromes in the database"
+        ]
       },
       "signature": {
         "title": "Digital flight signature",
         "text": "Have a flight signed by your instructor or captain right on the screen. The entry is locked and its fingerprint sealed.",
-        "points": ["SHA-256 fingerprint of the content", "Any change voids the signature", "Shown in the official export"]
+        "points": [
+          "SHA-256 fingerprint of the content",
+          "Any change voids the signature",
+          "Shown in the official export"
+        ]
       },
       "offline": {
         "title": "Offline and in sync",
         "text": "Cielo works without a network, in flight or on a layover. Your data syncs as soon as you're back online, on all your devices.",
-        "points": ["Local database on each device", "Hosted in the European Union", "Automatic encrypted backup"]
+        "points": [
+          "Local database on each device",
+          "Hosted in the European Union",
+          "Automatic encrypted backup"
+        ]
       }
     }
   },
@@ -90,14 +126,39 @@
     "cta": "Get started",
     "ctaFree": "Create my logbook",
     "plans": {
-      "free": { "name": "Free", "desc": "To try Cielo, and for occasional private pilots.", "price": "€0" },
-      "basic": { "name": "Basic", "desc": "For private pilots and student pilots." },
-      "premium": { "name": "Premium", "desc": "For professional pilots: roster, FTL, unlimited exports." }
+      "free": {
+        "name": "Free",
+        "desc": "To try Cielo, and for occasional private pilots.",
+        "price": "€0"
+      },
+      "basic": {
+        "name": "Basic",
+        "desc": "For private pilots and student pilots."
+      },
+      "premium": {
+        "name": "Premium",
+        "desc": "For professional pilots: roster, FTL, unlimited exports."
+      }
     },
     "highlights": {
-      "free": ["Up to 50 flights", "Automatic night time", "CSV export", "1 device"],
-      "basic": ["Unlimited flights", "EASA, FAA, CASA PDF export", "Licences and alerts", "Multi-device sync"],
-      "premium": ["Everything in Basic", "Roster and calendar import", "ORO.FTL limits", "Audit, signatures, photo scan"]
+      "free": [
+        "Up to 50 flights",
+        "Automatic night time",
+        "CSV export",
+        "1 device"
+      ],
+      "basic": [
+        "Unlimited flights",
+        "EASA, FAA, CASA PDF export",
+        "Licences and alerts",
+        "Multi-device sync"
+      ],
+      "premium": [
+        "Everything in Basic",
+        "Roster and calendar import",
+        "ORO.FTL limits",
+        "Audit, signatures, photo scan"
+      ]
     },
     "compareTitle": "Detailed comparison",
     "feature": "Feature",
@@ -119,7 +180,11 @@
       "scan": "Paper logbook photo scan",
       "support": "Priority support"
     },
-    "values": { "fifty": "50", "unlimited": "Unlimited", "oneDevice": "1 device" },
+    "values": {
+      "fifty": "50",
+      "unlimited": "Unlimited",
+      "oneDevice": "1 device"
+    },
     "vat": "Prices include VAT. Cancel anytime."
   },
   "testimonials": {
@@ -130,12 +195,30 @@
   "faq": {
     "title": "Frequently asked questions",
     "items": [
-      { "q": "Is my data safe?", "a": "Your data is stored on your device first, then synced to servers located in the European Union. Traffic is encrypted (TLS), attachments are kept in a private space and each account can only access its own data. We never sell or share your data." },
-      { "q": "Is Cielo EASA compliant?", "a": "The logbook records all the information required by FCL.050 in the AMC1 FCL.050 layout. Night time follows the EASA definition (civil twilight). An electronic logbook is acceptable provided the data is accurate and available on request: you can print or show the official PDF export at any time." },
-      { "q": "Can I export my logbook?", "a": "Yes, anytime: PDF in EASA, FAA or CASA format, CSV and Excel. You can also download all your data as JSON from the settings." },
-      { "q": "How do I cancel my subscription?", "a": "In one click from the settings (web) or from your store settings (iOS, Android). Your logbook stays readable and exportable after cancellation." },
-      { "q": "Can I bring my paper logbook?", "a": "Yes. Enter your paper logbook totals under “Carry forward”: they are added to your totals and shown as “Total from previous pages” in the export. You can also scan your pages or import a file." },
-      { "q": "Does the app work offline?", "a": "Yes. Logging and browsing work offline. Sync resumes automatically once you're back online." }
+      {
+        "q": "Is my data safe?",
+        "a": "Your data is stored on your device first, then synced to servers located in the European Union. Traffic is encrypted (TLS), attachments are kept in a private space and each account can only access its own data. We never sell or share your data."
+      },
+      {
+        "q": "Is Cielo EASA compliant?",
+        "a": "The logbook records all the information required by FCL.050 in the AMC1 FCL.050 layout. Night time follows the EASA definition (civil twilight). An electronic logbook is acceptable provided the data is accurate and available on request: you can print or show the official PDF export at any time."
+      },
+      {
+        "q": "Can I export my logbook?",
+        "a": "Yes, anytime: PDF in EASA, FAA or CASA format, CSV and Excel. You can also download all your data as JSON from the settings."
+      },
+      {
+        "q": "How do I cancel my subscription?",
+        "a": "In one click from the settings (web) or from your store settings (iOS, Android). Your logbook stays readable and exportable after cancellation."
+      },
+      {
+        "q": "Can I bring my paper logbook?",
+        "a": "Yes. Enter your paper logbook totals under “Carry forward”: they are added to your totals and shown as “Total from previous pages” in the export. You can also scan your pages or import a file."
+      },
+      {
+        "q": "Does the app work offline?",
+        "a": "Yes. Logging and browsing work offline. Sync resumes automatically once you're back online."
+      }
     ]
   },
   "cta": {
@@ -160,10 +243,22 @@
     "title": "Cielo for airlines and flight schools",
     "subtitle": "Give your crews a modern logbook, filled automatically from your crew planning system.",
     "points": [
-      { "t": "Native roster import", "d": "iCal and CSV connectors, compatible with most crew planning tools." },
-      { "t": "Bulk licences", "d": "Central billing, self-service seat assignment and removal." },
-      { "t": "FTL tracking", "d": "Helps each crew member track ORO.FTL limits, alongside your official system." },
-      { "t": "Pilot-owned data", "d": "Each pilot owns their logbook, even after leaving the company." }
+      {
+        "t": "Native roster import",
+        "d": "iCal and CSV connectors, compatible with most crew planning tools."
+      },
+      {
+        "t": "Bulk licences",
+        "d": "Central billing, self-service seat assignment and removal."
+      },
+      {
+        "t": "FTL tracking",
+        "d": "Helps each crew member track ORO.FTL limits, alongside your official system."
+      },
+      {
+        "t": "Pilot-owned data",
+        "d": "Each pilot owns their logbook, even after leaving the company."
+      }
     ],
     "cta": "Contact us"
   },
@@ -375,7 +470,12 @@
       "title": "Flight signature",
       "signerName": "Signer name",
       "signerRole": "Capacity",
-      "roles": { "instructor": "Instructor", "captain": "Captain", "examiner": "Examiner", "other": "Other" },
+      "roles": {
+        "instructor": "Instructor",
+        "captain": "Captain",
+        "examiner": "Examiner",
+        "other": "Other"
+      },
       "licence": "Licence no.",
       "draw": "Sign inside the box",
       "clear": "Clear",
@@ -387,7 +487,11 @@
     },
     "import": {
       "title": "Import flights",
-      "tabs": { "file": "CSV / Excel file", "roster": "Airline roster", "scan": "Paper logbook scan" },
+      "tabs": {
+        "file": "CSV / Excel file",
+        "roster": "Airline roster",
+        "scan": "Paper logbook scan"
+      },
       "drop": "Drop a CSV, XLSX or TXT file, or click to choose",
       "mapping": "Column mapping",
       "mappingHelp": "Cielo recognised the columns below. Fix them if needed.",
@@ -405,19 +509,44 @@
       "scanRunning": "Recognising text… {progress}%",
       "scanFound": "{count, plural, =0 {No row recognised} one {# row recognised} other {# rows recognised}}",
       "fields": {
-        "date": "Date", "flightNumber": "Flight no.", "dep": "Departure", "arr": "Arrival", "out": "Off-block", "off": "Takeoff",
-        "on": "Landing", "in": "On-block", "registration": "Registration", "type": "Type", "function": "Function",
-        "picName": "PIC name", "total": "Total time", "night": "Night", "ifr": "IFR", "landingsDay": "Day ldg",
-        "landingsNight": "Night ldg", "takeoffsDay": "Day T/O", "takeoffsNight": "Night T/O", "pic": "PIC time",
-        "copilot": "Co-pilot time", "dual": "Dual time", "instructor": "Instructor time", "multiPilot": "Multi-pilot time",
-        "remarks": "Remarks", "fstdType": "FSTD type", "fstdTime": "FSTD time"
+        "date": "Date",
+        "flightNumber": "Flight no.",
+        "dep": "Departure",
+        "arr": "Arrival",
+        "out": "Off-block",
+        "off": "Takeoff",
+        "on": "Landing",
+        "in": "On-block",
+        "registration": "Registration",
+        "type": "Type",
+        "function": "Function",
+        "picName": "PIC name",
+        "total": "Total time",
+        "night": "Night",
+        "ifr": "IFR",
+        "landingsDay": "Day ldg",
+        "landingsNight": "Night ldg",
+        "takeoffsDay": "Day T/O",
+        "takeoffsNight": "Night T/O",
+        "pic": "PIC time",
+        "copilot": "Co-pilot time",
+        "dual": "Dual time",
+        "instructor": "Instructor time",
+        "multiPilot": "Multi-pilot time",
+        "remarks": "Remarks",
+        "fstdType": "FSTD type",
+        "fstdTime": "FSTD time"
       }
     },
     "audit": {
       "title": "Logbook audit",
       "subtitle": "Automatic consistency check of your {count} entries.",
       "clean": "No issue found. Your logbook is consistent.",
-      "severity": { "error": "Errors", "warning": "Warnings", "info": "To check" },
+      "severity": {
+        "error": "Errors",
+        "warning": "Warnings",
+        "info": "To check"
+      },
       "open": "Open flight",
       "codes": {
         "missingTimes": "Missing times",
@@ -502,7 +631,17 @@
       "today": "Today",
       "month": "Month",
       "list": "List",
-      "kinds": { "FLIGHT": "Flight", "DEADHEAD": "Deadhead", "STANDBY": "Standby", "SIM": "Simulator", "GROUND": "Ground / training", "OFF": "Day off", "REST": "Layover", "LEAVE": "Leave", "OTHER": "Other" },
+      "kinds": {
+        "FLIGHT": "Flight",
+        "DEADHEAD": "Deadhead",
+        "STANDBY": "Standby",
+        "SIM": "Simulator",
+        "GROUND": "Ground / training",
+        "OFF": "Day off",
+        "REST": "Layover",
+        "LEAVE": "Leave",
+        "OTHER": "Other"
+      },
       "logFlight": "Log flight",
       "logged": "Logged",
       "layover": "Layover sheet",
@@ -572,7 +711,14 @@
       "subtitle": "Track your expiry dates: Cielo warns you before each one.",
       "add": "Add document",
       "kind": "Category",
-      "kinds": { "licence": "Licence", "medical": "Medical", "rating": "Rating", "endorsement": "Endorsement", "language": "Language proficiency", "other": "Other" },
+      "kinds": {
+        "licence": "Licence",
+        "medical": "Medical",
+        "rating": "Rating",
+        "endorsement": "Endorsement",
+        "language": "Language proficiency",
+        "other": "Other"
+      },
       "code": "Title",
       "authority": "Authority",
       "number": "Number",
@@ -582,7 +728,12 @@
       "alertDays": "Alerts (days before)",
       "notes": "Notes",
       "attachment": "Scan / photo",
-      "state": { "valid": "Valid", "expiring": "Expiring soon", "expired": "Expired", "no_expiry": "No expiry" },
+      "state": {
+        "valid": "Valid",
+        "expiring": "Expiring soon",
+        "expired": "Expired",
+        "no_expiry": "No expiry"
+      },
       "daysLeft": "{count, plural, =0 {expires today} one {# day left} other {# days left}}",
       "expiredSince": "expired {count, plural, one {# day} other {# days}} ago",
       "empty": "No documents yet.",
@@ -627,9 +778,17 @@
       "framework": "Reference regulation",
       "defaultFunction": "Default function",
       "defaultIfr": "Default IFR time",
-      "ifrOptions": { "always": "All flight time as IFR", "never": "Never (VFR)", "ask": "By aircraft (multi-pilot = IFR)" },
+      "ifrOptions": {
+        "always": "All flight time as IFR",
+        "never": "Never (VFR)",
+        "ask": "By aircraft (multi-pilot = IFR)"
+      },
       "pilotFlying": "Pilot flying by default",
-      "pfOptions": { "always": "Yes", "never": "No", "alternate": "Alternate every sector" },
+      "pfOptions": {
+        "always": "Yes",
+        "never": "No",
+        "alternate": "Alternate every sector"
+      },
       "timeDisplay": "Duration display",
       "hhmm": "Hours:minutes (1:35)",
       "decimal": "Decimal (1.6)",
@@ -651,8 +810,63 @@
       "storageCloud": "Signed in: your data is synced.",
       "syncNow": "Sync now"
     },
-    "functions": { "PIC": "Pilot in command (PIC)", "SIC": "Co-pilot (SIC)", "PICUS": "PIC under supervision (PICUS)", "DUAL": "Dual (student)", "FI": "Instructor (FI)", "FE": "Examiner (FE)" },
-    "frameworks": { "EASA": "EASA Part-FCL", "FAA": "FAA 14 CFR Part 61", "CASA": "CASA CASR Part 61" },
-    "plans": { "free": "Free", "basic": "Basic", "premium": "Premium" }
+    "functions": {
+      "PIC": "Pilot in command (PIC)",
+      "SIC": "Co-pilot (SIC)",
+      "PICUS": "PIC under supervision (PICUS)",
+      "DUAL": "Dual (student)",
+      "FI": "Instructor (FI)",
+      "FE": "Examiner (FE)"
+    },
+    "frameworks": {
+      "EASA": "EASA Part-FCL",
+      "FAA": "FAA 14 CFR Part 61",
+      "CASA": "CASA CASR Part 61"
+    },
+    "plans": {
+      "free": "Free",
+      "basic": "Basic",
+      "premium": "Premium"
+    }
+  },
+  "why": {
+    "label": "Why Cielo",
+    "title": "Built like a flight instrument",
+    "items": [
+      {
+        "t": "EASA compliant by design",
+        "d": "AMC1 FCL.050 columns, the EASA night definition and FCL.060 recent experience. FAA and CASA exports included."
+      },
+      {
+        "t": "Works offline",
+        "d": "Log and browse in flight or on a layover. Sync resumes on its own once you're back online."
+      },
+      {
+        "t": "Your data stays yours",
+        "d": "Hosted in the European Union, full export anytime, deletion in one click."
+      }
+    ]
+  },
+  "showcase": {
+    "label": "Features",
+    "hint": "Pick a feature to see its screen."
+  },
+  "how": {
+    "label": "3 steps",
+    "title": "From your paper logbook to the official export",
+    "steps": [
+      {
+        "t": "Import",
+        "d": "CSV or Excel file, your airline roster, or a photo of your paper pages. Your old logbook totals are carried forward."
+      },
+      {
+        "t": "Log",
+        "d": "A flight in 20 seconds: Cielo computes block time, night, day/night landings and the single-pilot / multi-pilot columns."
+      },
+      {
+        "t": "Export",
+        "d": "PDF in EASA, FAA or CASA format, with page totals and carry-forward. Ready for a check ride or a job interview."
+      }
+    ]
   }
 }

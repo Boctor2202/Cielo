@@ -24,7 +24,11 @@
     "note": "Sans carte bancaire · Vos données restent à vous",
     "appStore": "Télécharger dans l'App Store",
     "playStore": "Disponible sur Google Play",
-    "comingSoon": "Bientôt"
+    "comingSoon": "Bientôt",
+    "readoutNight": "Nuit calculée",
+    "readoutRoute": "LFPG → LFMN",
+    "readoutStatus": "Carnet conforme",
+    "liveDemo": "Démo en direct, sans inscription"
   },
   "proof": {
     "hours": "heures loggées",
@@ -39,42 +43,74 @@
       "logbook": {
         "title": "Carnet de vol et exports officiels",
         "text": "Toutes les colonnes de l'AMC1 FCL.050, totaux par page et reports automatiques. Export PDF aux formats EASA, FAA et CASA, plus CSV et Excel.",
-        "points": ["Temps de nuit calculé au crépuscule civil", "SE / ME / multipilote déduits de l'avion", "Report des totaux de votre carnet papier"]
+        "points": [
+          "Temps de nuit calculé au crépuscule civil",
+          "SE / ME / multipilote déduits de l'avion",
+          "Report des totaux de votre carnet papier"
+        ]
       },
       "import": {
         "title": "Import automatique",
         "text": "Importez votre roster compagnie (iCal, CSV), vos anciens fichiers CSV ou Excel, ou photographiez les pages de votre carnet papier.",
-        "points": ["Détection automatique des colonnes", "Aperçu et correction avant import", "Scan photo avec reconnaissance de texte"]
+        "points": [
+          "Détection automatique des colonnes",
+          "Aperçu et correction avant import",
+          "Scan photo avec reconnaissance de texte"
+        ]
       },
       "audit": {
         "title": "Audit automatique",
         "text": "Cielo relit votre carnet comme un examinateur : chevauchements, heures incohérentes, doublons, temps de nuit supérieur au total, ruptures de continuité.",
-        "points": ["17 règles de contrôle", "Lien direct vers le vol à corriger", "Avant chaque contrôle en vol ou embauche"]
+        "points": [
+          "17 règles de contrôle",
+          "Lien direct vers le vol à corriger",
+          "Avant chaque contrôle en vol ou embauche"
+        ]
       },
       "licenses": {
         "title": "Licences, médical, qualifications",
         "text": "Licences, aptitude médicale, SEP, MEP, TR, IR, FI, LPE… Alertes à 90, 30 et 7 jours avant chaque échéance, par notification et e-mail.",
-        "points": ["Expérience récente FCL.060 calculée", "Scans de vos documents chiffrés", "Seuils d'alerte personnalisables"]
+        "points": [
+          "Expérience récente FCL.060 calculée",
+          "Scans de vos documents chiffrés",
+          "Seuils d'alerte personnalisables"
+        ]
       },
       "ftl": {
         "title": "Temps de repos et limites FTL",
         "text": "Temps de service de vol et de repos calculés selon EASA ORO.FTL à partir de vos vols et de votre roster, avec alertes avant dépassement.",
-        "points": ["FDP maximum selon l'heure de présentation", "Cumuls 7 j, 14 j, 28 j, 12 mois", "Repos minimum et repos hebdomadaire"]
+        "points": [
+          "FDP maximum selon l'heure de présentation",
+          "Cumuls 7 j, 14 j, 28 j, 12 mois",
+          "Repos minimum et repos hebdomadaire"
+        ]
       },
       "stats": {
         "title": "Carte de vos vols et statistiques",
         "text": "Vos routes sur une carte, vos heures par type, par fonction, de nuit et IFR, vos aéroports les plus fréquentés.",
-        "points": ["Grand cercle exact entre aéroports", "Périodes 28 j / 90 j / 12 mois", "19 000 aérodromes référencés"]
+        "points": [
+          "Grand cercle exact entre aéroports",
+          "Périodes 28 j / 90 j / 12 mois",
+          "19 000 aérodromes référencés"
+        ]
       },
       "signature": {
         "title": "Signature numérique des vols",
         "text": "Faites signer un vol par votre instructeur ou votre commandant de bord directement sur l'écran. Le vol est verrouillé et son empreinte scellée.",
-        "points": ["Empreinte SHA-256 du contenu", "Toute modification invalide la signature", "Mention dans l'export officiel"]
+        "points": [
+          "Empreinte SHA-256 du contenu",
+          "Toute modification invalide la signature",
+          "Mention dans l'export officiel"
+        ]
       },
       "offline": {
         "title": "Hors ligne et synchronisé",
         "text": "Cielo fonctionne sans réseau, en vol comme en escale. Vos données se synchronisent dès que vous retrouvez une connexion, sur tous vos appareils.",
-        "points": ["Base locale sur chaque appareil", "Hébergement dans l'Union européenne", "Sauvegarde automatique chiffrée"]
+        "points": [
+          "Base locale sur chaque appareil",
+          "Hébergement dans l'Union européenne",
+          "Sauvegarde automatique chiffrée"
+        ]
       }
     }
   },
@@ -90,14 +126,39 @@
     "cta": "Commencer",
     "ctaFree": "Créer mon carnet",
     "plans": {
-      "free": { "name": "Gratuit", "desc": "Pour découvrir Cielo et les pilotes privés occasionnels.", "price": "0 €" },
-      "basic": { "name": "Basic", "desc": "Pour les pilotes privés et les élèves pilotes." },
-      "premium": { "name": "Premium", "desc": "Pour les pilotes professionnels : roster, FTL, exports illimités." }
+      "free": {
+        "name": "Gratuit",
+        "desc": "Pour découvrir Cielo et les pilotes privés occasionnels.",
+        "price": "0 €"
+      },
+      "basic": {
+        "name": "Basic",
+        "desc": "Pour les pilotes privés et les élèves pilotes."
+      },
+      "premium": {
+        "name": "Premium",
+        "desc": "Pour les pilotes professionnels : roster, FTL, exports illimités."
+      }
     },
     "highlights": {
-      "free": ["Jusqu'à 50 vols", "Calcul automatique du temps de nuit", "Export CSV", "1 appareil"],
-      "basic": ["Vols illimités", "Export PDF EASA, FAA, CASA", "Licences et alertes", "Synchronisation multi-appareils"],
-      "premium": ["Tout Basic", "Import roster et calendrier", "Limites FTL ORO.FTL", "Audit, signatures, scan photo"]
+      "free": [
+        "Jusqu'à 50 vols",
+        "Calcul automatique du temps de nuit",
+        "Export CSV",
+        "1 appareil"
+      ],
+      "basic": [
+        "Vols illimités",
+        "Export PDF EASA, FAA, CASA",
+        "Licences et alertes",
+        "Synchronisation multi-appareils"
+      ],
+      "premium": [
+        "Tout Basic",
+        "Import roster et calendrier",
+        "Limites FTL ORO.FTL",
+        "Audit, signatures, scan photo"
+      ]
     },
     "compareTitle": "Comparaison détaillée",
     "feature": "Fonctionnalité",
@@ -119,7 +180,11 @@
       "scan": "Scan photo du carnet papier",
       "support": "Support prioritaire"
     },
-    "values": { "fifty": "50", "unlimited": "Illimité", "oneDevice": "1 appareil" },
+    "values": {
+      "fifty": "50",
+      "unlimited": "Illimité",
+      "oneDevice": "1 appareil"
+    },
     "vat": "Prix TTC. Résiliable à tout moment."
   },
   "testimonials": {
@@ -130,12 +195,30 @@
   "faq": {
     "title": "Questions fréquentes",
     "items": [
-      { "q": "Mes données sont-elles en sécurité ?", "a": "Vos données sont stockées d'abord sur votre appareil, puis synchronisées sur des serveurs situés dans l'Union européenne. Les échanges sont chiffrés (TLS), les documents joints sont stockés dans un espace privé et chaque compte n'accède qu'à ses propres données. Nous ne vendons ni ne partageons vos données." },
-      { "q": "Cielo est-il conforme EASA ?", "a": "Le carnet reprend toutes les informations exigées par FCL.050 et le format de l'AMC1 FCL.050. Le temps de nuit est calculé selon la définition EASA (crépuscule civil). Un carnet électronique est accepté sous réserve que les données soient exactes et disponibles sur demande : vous pouvez à tout moment imprimer ou présenter l'export PDF officiel." },
-      { "q": "Puis-je exporter mon carnet ?", "a": "Oui, à tout moment : PDF aux formats EASA, FAA ou CASA, CSV et Excel. Vous pouvez aussi télécharger l'intégralité de vos données au format JSON depuis les paramètres." },
-      { "q": "Comment résilier mon abonnement ?", "a": "En un clic depuis les paramètres (web) ou depuis les réglages de votre store (iOS, Android). Votre carnet reste accessible en lecture et exportable, même après résiliation." },
-      { "q": "Puis-je reprendre mon ancien carnet papier ?", "a": "Oui. Saisissez les totaux de votre carnet papier dans « Report des totaux » : ils sont ajoutés à vos totaux et apparaissent dans « Total des pages précédentes » de l'export. Vous pouvez aussi scanner vos pages ou importer un fichier." },
-      { "q": "L'application fonctionne-t-elle sans réseau ?", "a": "Oui. Toutes les fonctions de saisie et de consultation marchent hors ligne. La synchronisation reprend automatiquement à la reconnexion." }
+      {
+        "q": "Mes données sont-elles en sécurité ?",
+        "a": "Vos données sont stockées d'abord sur votre appareil, puis synchronisées sur des serveurs situés dans l'Union européenne. Les échanges sont chiffrés (TLS), les documents joints sont stockés dans un espace privé et chaque compte n'accède qu'à ses propres données. Nous ne vendons ni ne partageons vos données."
+      },
+      {
+        "q": "Cielo est-il conforme EASA ?",
+        "a": "Le carnet reprend toutes les informations exigées par FCL.050 et le format de l'AMC1 FCL.050. Le temps de nuit est calculé selon la définition EASA (crépuscule civil). Un carnet électronique est accepté sous réserve que les données soient exactes et disponibles sur demande : vous pouvez à tout moment imprimer ou présenter l'export PDF officiel."
+      },
+      {
+        "q": "Puis-je exporter mon carnet ?",
+        "a": "Oui, à tout moment : PDF aux formats EASA, FAA ou CASA, CSV et Excel. Vous pouvez aussi télécharger l'intégralité de vos données au format JSON depuis les paramètres."
+      },
+      {
+        "q": "Comment résilier mon abonnement ?",
+        "a": "En un clic depuis les paramètres (web) ou depuis les réglages de votre store (iOS, Android). Votre carnet reste accessible en lecture et exportable, même après résiliation."
+      },
+      {
+        "q": "Puis-je reprendre mon ancien carnet papier ?",
+        "a": "Oui. Saisissez les totaux de votre carnet papier dans « Report des totaux » : ils sont ajoutés à vos totaux et apparaissent dans « Total des pages précédentes » de l'export. Vous pouvez aussi scanner vos pages ou importer un fichier."
+      },
+      {
+        "q": "L'application fonctionne-t-elle sans réseau ?",
+        "a": "Oui. Toutes les fonctions de saisie et de consultation marchent hors ligne. La synchronisation reprend automatiquement à la reconnexion."
+      }
     ]
   },
   "cta": {
@@ -160,10 +243,22 @@
     "title": "Cielo pour les compagnies et écoles",
     "subtitle": "Offrez à vos équipages un carnet de vol moderne, alimenté automatiquement par votre système de planning.",
     "points": [
-      { "t": "Import roster natif", "d": "Connecteurs iCal et CSV, compatibles avec la plupart des outils de planification équipage." },
-      { "t": "Licences groupées", "d": "Facturation centralisée, attribution et retrait de licences en libre-service." },
-      { "t": "Suivi FTL", "d": "Aide au suivi individuel des limites ORO.FTL, en complément de votre système officiel." },
-      { "t": "Données des pilotes", "d": "Chaque pilote reste propriétaire de son carnet, y compris s'il quitte la compagnie." }
+      {
+        "t": "Import roster natif",
+        "d": "Connecteurs iCal et CSV, compatibles avec la plupart des outils de planification équipage."
+      },
+      {
+        "t": "Licences groupées",
+        "d": "Facturation centralisée, attribution et retrait de licences en libre-service."
+      },
+      {
+        "t": "Suivi FTL",
+        "d": "Aide au suivi individuel des limites ORO.FTL, en complément de votre système officiel."
+      },
+      {
+        "t": "Données des pilotes",
+        "d": "Chaque pilote reste propriétaire de son carnet, y compris s'il quitte la compagnie."
+      }
     ],
     "cta": "Nous contacter"
   },
@@ -375,7 +470,12 @@
       "title": "Signature du vol",
       "signerName": "Nom du signataire",
       "signerRole": "Qualité",
-      "roles": { "instructor": "Instructeur", "captain": "Commandant de bord", "examiner": "Examinateur", "other": "Autre" },
+      "roles": {
+        "instructor": "Instructeur",
+        "captain": "Commandant de bord",
+        "examiner": "Examinateur",
+        "other": "Autre"
+      },
       "licence": "N° de licence",
       "draw": "Signez dans le cadre",
       "clear": "Effacer",
@@ -387,7 +487,11 @@
     },
     "import": {
       "title": "Importer des vols",
-      "tabs": { "file": "Fichier CSV / Excel", "roster": "Roster compagnie", "scan": "Scan du carnet papier" },
+      "tabs": {
+        "file": "Fichier CSV / Excel",
+        "roster": "Roster compagnie",
+        "scan": "Scan du carnet papier"
+      },
       "drop": "Déposez un fichier CSV, XLSX ou TXT, ou cliquez pour choisir",
       "mapping": "Correspondance des colonnes",
       "mappingHelp": "Cielo a reconnu les colonnes ci-dessous. Corrigez-les si besoin.",
@@ -405,19 +509,44 @@
       "scanRunning": "Reconnaissance du texte… {progress} %",
       "scanFound": "{count, plural, =0 {Aucune ligne reconnue} one {# ligne reconnue} other {# lignes reconnues}}",
       "fields": {
-        "date": "Date", "flightNumber": "N° de vol", "dep": "Départ", "arr": "Arrivée", "out": "Off-block", "off": "Décollage",
-        "on": "Atterrissage", "in": "On-block", "registration": "Immatriculation", "type": "Type", "function": "Fonction",
-        "picName": "Nom CDB", "total": "Temps total", "night": "Nuit", "ifr": "IFR", "landingsDay": "Att. jour",
-        "landingsNight": "Att. nuit", "takeoffsDay": "Déc. jour", "takeoffsNight": "Déc. nuit", "pic": "Temps PIC",
-        "copilot": "Temps copilote", "dual": "Temps DC", "instructor": "Temps instructeur", "multiPilot": "Temps multipilote",
-        "remarks": "Remarques", "fstdType": "Type FSTD", "fstdTime": "Temps FSTD"
+        "date": "Date",
+        "flightNumber": "N° de vol",
+        "dep": "Départ",
+        "arr": "Arrivée",
+        "out": "Off-block",
+        "off": "Décollage",
+        "on": "Atterrissage",
+        "in": "On-block",
+        "registration": "Immatriculation",
+        "type": "Type",
+        "function": "Fonction",
+        "picName": "Nom CDB",
+        "total": "Temps total",
+        "night": "Nuit",
+        "ifr": "IFR",
+        "landingsDay": "Att. jour",
+        "landingsNight": "Att. nuit",
+        "takeoffsDay": "Déc. jour",
+        "takeoffsNight": "Déc. nuit",
+        "pic": "Temps PIC",
+        "copilot": "Temps copilote",
+        "dual": "Temps DC",
+        "instructor": "Temps instructeur",
+        "multiPilot": "Temps multipilote",
+        "remarks": "Remarques",
+        "fstdType": "Type FSTD",
+        "fstdTime": "Temps FSTD"
       }
     },
     "audit": {
       "title": "Audit du carnet",
       "subtitle": "Contrôle automatique de la cohérence de vos {count} entrées.",
       "clean": "Aucune anomalie détectée. Votre carnet est cohérent.",
-      "severity": { "error": "Erreurs", "warning": "Avertissements", "info": "À vérifier" },
+      "severity": {
+        "error": "Erreurs",
+        "warning": "Avertissements",
+        "info": "À vérifier"
+      },
       "open": "Ouvrir le vol",
       "codes": {
         "missingTimes": "Heures manquantes",
@@ -502,7 +631,17 @@
       "today": "Aujourd'hui",
       "month": "Mois",
       "list": "Liste",
-      "kinds": { "FLIGHT": "Vol", "DEADHEAD": "Mise en place", "STANDBY": "Réserve", "SIM": "Simulateur", "GROUND": "Sol / formation", "OFF": "Repos", "REST": "Escale", "LEAVE": "Congés", "OTHER": "Autre" },
+      "kinds": {
+        "FLIGHT": "Vol",
+        "DEADHEAD": "Mise en place",
+        "STANDBY": "Réserve",
+        "SIM": "Simulateur",
+        "GROUND": "Sol / formation",
+        "OFF": "Repos",
+        "REST": "Escale",
+        "LEAVE": "Congés",
+        "OTHER": "Autre"
+      },
       "logFlight": "Créer le vol",
       "logged": "Vol créé",
       "layover": "Fiche d'escale",
@@ -572,7 +711,14 @@
       "subtitle": "Suivez vos échéances : Cielo vous prévient avant chaque expiration.",
       "add": "Ajouter un document",
       "kind": "Catégorie",
-      "kinds": { "licence": "Licence", "medical": "Médical", "rating": "Qualification", "endorsement": "Mention", "language": "Compétence linguistique", "other": "Autre" },
+      "kinds": {
+        "licence": "Licence",
+        "medical": "Médical",
+        "rating": "Qualification",
+        "endorsement": "Mention",
+        "language": "Compétence linguistique",
+        "other": "Autre"
+      },
       "code": "Intitulé",
       "authority": "Autorité",
       "number": "Numéro",
@@ -582,7 +728,12 @@
       "alertDays": "Alertes (jours avant)",
       "notes": "Notes",
       "attachment": "Scan / photo",
-      "state": { "valid": "Valide", "expiring": "Expire bientôt", "expired": "Expiré", "no_expiry": "Sans échéance" },
+      "state": {
+        "valid": "Valide",
+        "expiring": "Expire bientôt",
+        "expired": "Expiré",
+        "no_expiry": "Sans échéance"
+      },
       "daysLeft": "{count, plural, =0 {expire aujourd'hui} one {# jour restant} other {# jours restants}}",
       "expiredSince": "expiré depuis {count, plural, one {# jour} other {# jours}}",
       "empty": "Aucun document enregistré.",
@@ -627,9 +778,17 @@
       "framework": "Réglementation de référence",
       "defaultFunction": "Fonction par défaut",
       "defaultIfr": "Temps IFR par défaut",
-      "ifrOptions": { "always": "Tout le temps de vol en IFR", "never": "Jamais (VFR)", "ask": "Selon l'appareil (multipilote = IFR)" },
+      "ifrOptions": {
+        "always": "Tout le temps de vol en IFR",
+        "never": "Jamais (VFR)",
+        "ask": "Selon l'appareil (multipilote = IFR)"
+      },
       "pilotFlying": "Pilote aux commandes par défaut",
-      "pfOptions": { "always": "Oui", "never": "Non", "alternate": "Alterner à chaque étape" },
+      "pfOptions": {
+        "always": "Oui",
+        "never": "Non",
+        "alternate": "Alterner à chaque étape"
+      },
       "timeDisplay": "Affichage des durées",
       "hhmm": "Heures:minutes (1:35)",
       "decimal": "Décimal (1.6)",
@@ -651,8 +810,63 @@
       "storageCloud": "Connecté : vos données sont synchronisées.",
       "syncNow": "Synchroniser maintenant"
     },
-    "functions": { "PIC": "Commandant de bord (PIC)", "SIC": "Copilote (SIC)", "PICUS": "PIC sous supervision (PICUS)", "DUAL": "Double commande (élève)", "FI": "Instructeur (FI)", "FE": "Examinateur (FE)" },
-    "frameworks": { "EASA": "EASA Part-FCL", "FAA": "FAA 14 CFR Part 61", "CASA": "CASA CASR Part 61" },
-    "plans": { "free": "Gratuit", "basic": "Basic", "premium": "Premium" }
+    "functions": {
+      "PIC": "Commandant de bord (PIC)",
+      "SIC": "Copilote (SIC)",
+      "PICUS": "PIC sous supervision (PICUS)",
+      "DUAL": "Double commande (élève)",
+      "FI": "Instructeur (FI)",
+      "FE": "Examinateur (FE)"
+    },
+    "frameworks": {
+      "EASA": "EASA Part-FCL",
+      "FAA": "FAA 14 CFR Part 61",
+      "CASA": "CASA CASR Part 61"
+    },
+    "plans": {
+      "free": "Gratuit",
+      "basic": "Basic",
+      "premium": "Premium"
+    }
+  },
+  "why": {
+    "label": "Pourquoi Cielo",
+    "title": "Conçu comme un instrument de bord",
+    "items": [
+      {
+        "t": "Conforme EASA d'origine",
+        "d": "Les colonnes de l'AMC1 FCL.050, la définition EASA de la nuit et l'expérience récente FCL.060. Exports FAA et CASA inclus."
+      },
+      {
+        "t": "Fonctionne sans réseau",
+        "d": "Saisie et consultation en vol comme en escale. La synchronisation reprend seule à la reconnexion."
+      },
+      {
+        "t": "Vos données restent à vous",
+        "d": "Hébergement dans l'Union européenne, export complet à tout moment, suppression en un clic."
+      }
+    ]
+  },
+  "showcase": {
+    "label": "Fonctionnalités",
+    "hint": "Choisissez une fonctionnalité pour voir l'écran correspondant."
+  },
+  "how": {
+    "label": "En 3 étapes",
+    "title": "De votre carnet papier à l'export officiel",
+    "steps": [
+      {
+        "t": "Importez",
+        "d": "Fichier CSV ou Excel, roster de votre compagnie, ou photo de vos pages papier. Les totaux de l'ancien carnet sont reportés."
+      },
+      {
+        "t": "Saisissez",
+        "d": "Un vol en 20 secondes : Cielo calcule le temps bloc, la nuit, les atterrissages jour/nuit et les colonnes monopilote / multipilote."
+      },
+      {
+        "t": "Exportez",
+        "d": "PDF au format EASA, FAA ou CASA, avec totaux par page et reports. Prêt pour un contrôle ou un entretien d'embauche."
+      }
+    ]
   }
 }
