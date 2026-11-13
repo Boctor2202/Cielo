@@ -13,6 +13,7 @@ import { usePilot } from "@/lib/hooks";
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
 import { LocaleSwitch } from "../LocaleSwitch";
+import { MobileTabBar } from "./MobileTabBar";
 
 const NAV: { href: AppPathname; key: string; icon: typeof Gauge }[] = [
   { href: "/app", key: "dashboard", icon: Gauge },
@@ -119,24 +120,11 @@ function Shell({ children }: { children: ReactNode }) {
           <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:pb-12 lg:pt-8">{children}</main>
         </div>
 
-        {/* Mobile tab bar */}
-        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" aria-label="Tabs">
-          {[NAV[0]!, NAV[1]!].map(({ href, key, icon: Icon }) => (
-            <TabLink key={href} href={href} active={isActive(href)} icon={<Icon size={20} />} label={t(key)} />
-          ))}
-          <Link href="/app/carnet/nouveau" className="flex items-center justify-center" aria-label={t("newFlight")}>
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent text-accent-contrast shadow-lg">
-              <Plus size={22} />
-            </span>
-          </Link>
-          <TabLink href="/app/documents" active={isActive("/app/documents")} icon={<BadgeCheck size={20} />} label={t("documents").split(" ")[0]!} />
-          <button type="button" onClick={() => setMore(!more)} className={`flex flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-medium ${more ? "text-accent" : "text-muted"}`}>
-            <MoreHorizontal size={20} /> …
-          </button>
-        </nav>
+        {/* Mobile tab bar (liquid-glass pill) */}
+        <MobileTabBar moreOpen={more} onToggleMore={() => setMore(!more)} moreActive={NAV.slice(2).some(({ href }) => href !== "/app/roster" && href !== "/app/documents" && isActive(href))} />
         {more && (
-          <div className="fixed inset-x-0 bottom-16 z-40 mx-3 mb-[env(safe-area-inset-bottom)] grid grid-cols-3 gap-1 rounded-2xl border border-border bg-bg p-2 shadow-2xl lg:hidden" onClick={() => setMore(false)}>
-            {NAV.slice(2).map(({ href, key, icon: Icon }) => (
+          <div className="fixed inset-x-0 bottom-[88px] z-40 mx-3 mb-[env(safe-area-inset-bottom)] grid grid-cols-3 gap-1 rounded-2xl border border-border bg-bg p-2 shadow-2xl lg:hidden" onClick={() => setMore(false)}>
+            {NAV.slice(2).filter(({ href }) => href !== "/app/roster" && href !== "/app/documents").map(({ href, key, icon: Icon }) => (
               <Link key={href} href={href} className={`flex flex-col items-center gap-1 rounded-xl px-2 py-3 text-xs font-medium ${isActive(href) ? "bg-accent/12 text-accent" : "text-muted"}`}>
                 <Icon size={20} /> {t(key)}
               </Link>
@@ -145,14 +133,5 @@ function Shell({ children }: { children: ReactNode }) {
         )}
       </div>
     </AirportsProvider>
-  );
-}
-
-function TabLink({ href, active, icon, label }: { href: AppPathname; active: boolean; icon: ReactNode; label: string }) {
-  return (
-    <Link href={href} className={`flex flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-medium ${active ? "text-accent" : "text-muted"}`}>
-      {icon}
-      <span className="max-w-full truncate px-1">{label}</span>
-    </Link>
   );
 }

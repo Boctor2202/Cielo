@@ -51,7 +51,7 @@ export default function DocumentsPage() {
     <>
       <PageTitle title={t("title")} subtitle={t("subtitle")} actions={<button type="button" className="btn btn-primary btn-sm" onClick={() => setDraft(blank())}><Plus size={15} /> {t("add")}</button>} />
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           {licenses && groups.length === 0 && <Card><Empty icon={<BadgeCheck size={36} />} text={t("empty")} /></Card>}
           {groups.map((g) => (
             <Card key={g.k} title={t(`kinds.${g.k}`)} pad={false}>
@@ -73,7 +73,7 @@ export default function DocumentsPage() {
             </Card>
           ))}
         </div>
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           {recency && (
             <Card title={t("recency")}>
               <div className="space-y-3 text-sm">
@@ -86,7 +86,7 @@ export default function DocumentsPage() {
             {perm === "granted" ? (
               <p className="flex items-center gap-2 text-sm text-success"><Bell size={16} /> {t("notificationsOn")}</p>
             ) : perm !== "unsupported" ? (
-              <button type="button" className="btn btn-secondary w-full" onClick={async () => setPerm(await Notification.requestPermission())}><Bell size={16} /> {t("enableNotifications")}</button>
+              <button type="button" className="btn btn-secondary w-full !whitespace-normal" onClick={async () => setPerm(await Notification.requestPermission())}><Bell size={16} /> {t("enableNotifications")}</button>
             ) : null}
             <p className="mt-3 text-xs text-muted">{t("notificationsInfo")}</p>
           </Card>

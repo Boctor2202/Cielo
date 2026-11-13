@@ -18,7 +18,7 @@ export function PageTitle({ title, subtitle, actions }: { title: string; subtitl
 
 export function Card({ title, action, children, className = "", pad = true }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; pad?: boolean }) {
   return (
-    <section className={`card ${className}`}>
+    <section className={`card min-w-0 ${className}`}>
       {(title || action) && (
         <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
           <h2 className="text-[15px] font-semibold">{title}</h2>
@@ -60,7 +60,7 @@ export function Readout({ label, value, sub, level = "info" }: { label: string; 
 
 export function Badge({ level = "neutral", children }: { level?: Level; children: ReactNode }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-md border border-current/25 px-1.5 py-0.5 text-xs font-semibold ${LEVEL[level]}`}>
+    <span className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-current/25 px-1.5 py-0.5 text-xs font-semibold ${LEVEL[level]}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${LEVEL_BG[level]}`} />
       {children}
     </span>
@@ -184,7 +184,7 @@ export function Empty({ icon, text, action }: { icon?: ReactNode; text: ReactNod
 
 export function Segmented<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: ReactNode }[]; onChange: (v: T) => void }) {
   return (
-    <div className="inline-flex rounded-lg border border-border bg-surface p-0.5" role="group">
+    <div className="inline-flex max-w-full flex-wrap rounded-lg border border-border bg-surface p-0.5" role="group">
       {options.map((o) => (
         <button
           key={o.value}

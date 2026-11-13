@@ -75,7 +75,7 @@ export default function FtlPage() {
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <Card title={`${t("violations")} · ${report.violations.length}`} pad={false}>
             {report.violations.length === 0 ? (
               <p className="px-5 py-4 text-sm text-success">{t("noViolation")}</p>

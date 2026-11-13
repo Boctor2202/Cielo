@@ -80,7 +80,7 @@ async function shoot(theme) {
   await page.getByRole("button", { name: /Faire signer/ }).click();
   await page.waitForTimeout(400);
   await page.getByRole("dialog").locator("input").first().fill("Cdt A. Moreau");
-  const box = await page.locator("canvas").boundingBox();
+  const box = await page.getByRole("dialog").locator("canvas").boundingBox();
   if (box) {
     await page.mouse.move(box.x + 30, box.y + 100);
     await page.mouse.down();

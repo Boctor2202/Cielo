@@ -90,13 +90,13 @@ export default function StatsPage() {
         <Card title={t("airports")} pad={false}>
           <ul className="divide-y divide-border text-sm">
             {s.topAirports.map((a, i) => (
-              <li key={a.key} className="flex items-center justify-between px-5 py-2.5">
-                <span className="flex items-center gap-3">
+              <li key={a.key} className="flex items-center justify-between gap-3 px-5 py-2.5">
+                <span className="flex min-w-0 items-center gap-3">
                   <span className="num w-5 text-xs text-muted">{i + 1}</span>
                   <span className="num font-semibold">{a.key}</span>
-                  <span className="truncate text-muted">{airports?.get(a.key)?.name}</span>
+                  <span className="min-w-0 truncate text-muted">{airports?.get(a.key)?.name}</span>
                 </span>
-                <span className="text-muted">{t("visits", { count: a.flights })}</span>
+                <span className="shrink-0 whitespace-nowrap text-muted">{t("visits", { count: a.flights })}</span>
               </li>
             ))}
           </ul>

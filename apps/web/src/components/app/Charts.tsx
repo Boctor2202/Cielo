@@ -57,7 +57,7 @@ export function SplitBar({ a, b, format }: { a: { label: string; value: number }
         {a.value > 0 && <div className="h-full rounded-l" style={{ width: `${pa}%`, background: "var(--chart-1)" }} />}
         {b.value > 0 && <div className="h-full rounded-r" style={{ width: `${100 - pa}%`, background: "var(--chart-2)" }} />}
       </div>
-      <div className="mt-2.5 flex justify-between gap-3 text-sm">
+      <div className="mt-2.5 flex flex-wrap justify-between gap-x-4 gap-y-1.5 text-sm">
         {[{ ...a, c: "var(--chart-1)", p: pa }, { ...b, c: "var(--chart-2)", p: 100 - pa }].map((x) => (
           <span key={x.label} className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-sm" style={{ background: x.c }} />
