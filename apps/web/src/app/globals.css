@@ -271,3 +271,23 @@ select.input {
 @media (prefers-reduced-motion: reduce) {
   .blink { animation: none; }
 }
+
+/* Immersive home: night sky over the photos, and deep space behind the globe */
+.immersive-stars {
+  background-image:
+    radial-gradient(1px 1px at 12% 14%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 27% 32%, #dfeaff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 41% 9%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 58% 22%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 66% 6%, #cfe0ff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 79% 27%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 12%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 94% 36%, #dfeaff 50%, transparent 51%),
+    radial-gradient(1px 1px at 6% 40%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 35% 44%, #cfe0ff 50%, transparent 51%);
+  background-size: 640px 520px;
+  mask-image: linear-gradient(to bottom, black 35%, transparent 75%);
+}
+.immersive-space {
+  background: radial-gradient(70% 70% at 68% 50%, #0b1a38 0%, #050a1a 60%, #02050f 100%);
+}

@@ -44,3 +44,10 @@ node scripts/screenshots.mjs
 1. Backend : `docs/backend.md` (Supabase UE, Stripe, RevenueCat, cron des alertes).
 2. Web : déployer `apps/web` (Vercel, Render…) avec `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 3. Mobile : `apps/mobile/README.md` (EAS Build / Submit vers App Store Connect et Google Play).
+
+## Crédits photos
+
+Page d'accueil : photos Unsplash (licence Unsplash, usage commercial autorisé), recadrées et converties en WebP dans
+`apps/web/public/immersive/` — IDs `1544016768-982d1554f0b9` (décollage, recadrée pour retirer la livrée),
+`1436491865332-7a61a109cc05` (aile au-dessus des nuages), `1506012787146-f92b2d7d6d96` (coucher de soleil),
+`1517479149777-5f3b1511d5ad` (mer de nuages). Globe : aérodromes OurAirports (domaine public).

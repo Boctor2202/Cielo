@@ -13,3 +13,19 @@ const worker = path.join(mlDir, "dist/maplibre-gl-worker.mjs");
 const workerDst = path.resolve("public/vendor/maplibre-gl-worker.mjs");
 fs.mkdirSync(path.dirname(workerDst), { recursive: true });
 fs.copyFileSync(worker, workerDst);
+
+// Light dataset for the 3D globe on the home page: a spatially thinned set of aerodromes (lat, lon).
+const globeDst = path.resolve("public/data/globe-dots.json");
+if (!fs.existsSync(globeDst) || fs.statSync(globeDst).mtimeMs < fs.statSync(src).mtimeMs) {
+  const { rows } = JSON.parse(fs.readFileSync(src, "utf8"));
+  const seen = new Set();
+  const dots = [];
+  for (const r of rows) {
+    const lat = r[5], lon = r[6];
+    const cell = `${Math.round(lat / 1.4)}:${Math.round((lon * Math.cos((lat * Math.PI) / 180)) / 1.4)}`;
+    if (seen.has(cell)) continue;
+    seen.add(cell);
+    dots.push(Math.round(lat * 10) / 10, Math.round(lon * 10) / 10);
+  }
+  fs.writeFileSync(globeDst, JSON.stringify(dots));
+}

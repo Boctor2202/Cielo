@@ -868,5 +868,39 @@
         "d": "PDF in EASA, FAA or CASA format, with page totals and carry-forward. Ready for a check ride or a job interview."
       }
     ]
+  },
+  "immersive": {
+    "canvasLabel": "Photos of an airliner taking off, then above the clouds at sunset, night falling, a globe showing flight routes, then a sea of clouds at dusk.",
+    "scroll": "Scroll",
+    "chapters": [
+      "Take-off",
+      "EASA night",
+      "Routes",
+      "Check ride"
+    ],
+    "c1": {
+      "label": "01 · Night time",
+      "title": "The sun passes −6°. Cielo logs it.",
+      "text": "EASA night starts at the end of civil twilight. Cielo follows the aircraft position minute by minute and computes night time and night landings, with nothing for you to type."
+    },
+    "c2": {
+      "label": "02 · Your routes",
+      "title": "Every flight, on the world map.",
+      "text": "Your routes drawn as great circles across 19,000 aerodromes. Hours by type, by function, at night and IFR, most visited airports: your career at a glance."
+    },
+    "c3": {
+      "label": "03 · Compliance",
+      "title": "Ready for the check ride.",
+      "text": "Automatic logbook audit, licences and medical tracked, FTL limits, official EASA, FAA or CASA PDF export. Your logbook is right, and you can prove it.",
+      "cta": "Create my logbook"
+    },
+    "hud": {
+      "sun": "Sun elevation",
+      "utc": "UTC",
+      "night": "Night time",
+      "day": "DAY",
+      "nightOn": "NIGHT",
+      "threshold": "EASA threshold −6°"
+    }
   }
 }

@@ -868,5 +868,39 @@
         "d": "PDF au format EASA, FAA ou CASA, avec totaux par page et reports. Prêt pour un contrôle ou un entretien d'embauche."
       }
     ]
+  },
+  "immersive": {
+    "canvasLabel": "Photos d'un avion de ligne au décollage puis au-dessus des nuages au coucher du soleil, la nuit qui tombe, un globe montrant des routes aériennes, puis une mer de nuages au crépuscule.",
+    "scroll": "Faites défiler",
+    "chapters": [
+      "Décollage",
+      "Nuit EASA",
+      "Routes",
+      "Contrôle"
+    ],
+    "c1": {
+      "label": "01 · Temps de nuit",
+      "title": "Le soleil passe à −6°. Cielo le note.",
+      "text": "La nuit EASA commence à la fin du crépuscule civil. Cielo suit la position de l'avion minute par minute et calcule le temps de nuit et les atterrissages de nuit, sans que vous ayez rien à saisir."
+    },
+    "c2": {
+      "label": "02 · Vos routes",
+      "title": "Chaque vol, sur la carte du monde.",
+      "text": "Vos routes tracées en grand cercle sur 19 000 aérodromes. Heures par type, par fonction, de nuit et en IFR, aéroports les plus fréquentés : votre carrière d'un coup d'œil."
+    },
+    "c3": {
+      "label": "03 · Conformité",
+      "title": "Prêt pour le contrôle.",
+      "text": "Audit automatique du carnet, licences et médical suivis, limites FTL, export PDF officiel EASA, FAA ou CASA. Votre carnet est juste, et vous pouvez le prouver.",
+      "cta": "Créer mon carnet"
+    },
+    "hud": {
+      "sun": "Élévation soleil",
+      "utc": "UTC",
+      "night": "Temps de nuit",
+      "day": "JOUR",
+      "nightOn": "NUIT",
+      "threshold": "Seuil EASA −6°"
+    }
   }
 }
