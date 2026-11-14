@@ -687,7 +687,41 @@
       "contactRole": "Role",
       "addContact": "Add contact",
       "localTime": "Local time",
-      "history": "Other stays at {icao}"
+      "history": "Other stays at {icao}",
+      "activities": {
+        "title": "Things to do near the hotel",
+        "from": "around {place}",
+        "hotelSearch": "Search the crew hotel",
+        "hotelChange": "Change hotel",
+        "find": "Search",
+        "noHotel": "No hotel found near the airport.",
+        "hotelSaved": "Hotel saved for this layover",
+        "loading": "Finding the best places…",
+        "count": "{count, plural, =0 {No places found} one {# place} other {# places}}, ranked by Google rating",
+        "byRating": "Rating",
+        "byDistance": "Distance",
+        "walk": "{min} min walk",
+        "km": "{km} km",
+        "open": "Open",
+        "closed": "Closed",
+        "openMaps": "Open {name} in Google Maps",
+        "attribution": "Google Maps data",
+        "error": "Places can't be loaded right now. Try again in a moment.",
+        "notConfigured": "Activity search isn't switched on yet: the service's Google Maps key is missing.",
+        "cats": {
+          "restaurants": "Restaurants",
+          "bars": "Bars",
+          "nightlife": "Nightclubs",
+          "cafes": "Cafés",
+          "beaches": "Beaches",
+          "culture": "Culture",
+          "shows": "Theatre & shows",
+          "cinema": "Cinema",
+          "parks": "Parks",
+          "wellness": "Spa & fitness",
+          "shopping": "Shopping"
+        }
+      }
     },
     "ftl": {
       "title": "Flight time limitations (FTL)",

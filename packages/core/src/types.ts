@@ -266,6 +266,8 @@ export interface Layover extends SyncedRecord {
   arrivalUtc?: ISODateTime | null;
   departureUtc?: ISODateTime | null;
   hotelName?: string;
+  /** Google place ID of the crew hotel (the only Google data we may store) */
+  hotelPlaceId?: string;
   address?: string;
   phone?: string;
   notes?: string;

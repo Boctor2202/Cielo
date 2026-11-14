@@ -12,6 +12,7 @@ import { useAirports } from "@/lib/airports";
 import { useFormatDate, useTable } from "@/lib/hooks";
 import { saveLayover, softDelete } from "@/lib/repo";
 import { db } from "@/lib/db";
+import { Activities } from "./Activities";
 
 export default function LayoverPage() {
   const t = useTranslations("app.layover");
@@ -102,6 +103,18 @@ export default function LayoverPage() {
           )}
         </div>
       </form>
+      <div className="mt-5">
+        <Activities
+          hotelPlaceId={v.hotelPlaceId}
+          airport={ap ? { lat: ap.lat, lon: ap.lon, name: ap.name } : undefined}
+          onHotel={async (h) => {
+            const next = { ...v, hotelPlaceId: h.id, hotelName: h.name, address: h.address ?? v.address };
+            setV(next);
+            await saveLayover(next);
+            toast(t("activities.hotelSaved"));
+          }}
+        />
+      </div>
       {toastNode}
     </>
   );

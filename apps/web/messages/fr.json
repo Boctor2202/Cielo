@@ -687,7 +687,41 @@
       "contactRole": "Rôle",
       "addContact": "Ajouter un contact",
       "localTime": "Heure locale",
-      "history": "Autres séjours à {icao}"
+      "history": "Autres séjours à {icao}",
+      "activities": {
+        "title": "À faire autour de l'hôtel",
+        "from": "autour de {place}",
+        "hotelSearch": "Rechercher l'hôtel de l'équipage",
+        "hotelChange": "Changer d'hôtel",
+        "find": "Rechercher",
+        "noHotel": "Aucun hôtel trouvé près de l'aéroport.",
+        "hotelSaved": "Hôtel enregistré pour cette escale",
+        "loading": "Recherche des meilleures adresses…",
+        "count": "{count, plural, =0 {Aucun lieu trouvé} one {# lieu} other {# lieux}}, classés par note Google",
+        "byRating": "Note",
+        "byDistance": "Distance",
+        "walk": "{min} min à pied",
+        "km": "{km} km",
+        "open": "Ouvert",
+        "closed": "Fermé",
+        "openMaps": "Ouvrir {name} dans Google Maps",
+        "attribution": "Données Google Maps",
+        "error": "Impossible de charger les lieux pour le moment. Réessayez dans un instant.",
+        "notConfigured": "La recherche d'activités n'est pas encore activée : il manque la clé Google Maps du service.",
+        "cats": {
+          "restaurants": "Restaurants",
+          "bars": "Bars",
+          "nightlife": "Discothèques",
+          "cafes": "Cafés",
+          "beaches": "Plages",
+          "culture": "Culture",
+          "shows": "Théâtre et spectacles",
+          "cinema": "Cinéma",
+          "parks": "Parcs",
+          "wellness": "Spa et sport",
+          "shopping": "Shopping"
+        }
+      }
     },
     "ftl": {
       "title": "Limites de temps de vol (FTL)",
