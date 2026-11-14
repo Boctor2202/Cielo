@@ -7,11 +7,13 @@ class CieloDB extends Dexie {
   meta!: Table<{ key: string; value: string }, string>;
   constructor() {
     super("cielo");
-    const schema: Record<string, string> = { meta: "key" };
-    for (const t of SYNC_TABLES) schema[t] = "id, updatedAt";
-    schema.flights = "id, updatedAt, date";
-    schema.roster_events = "id, updatedAt, startUtc";
-    this.version(1).stores(schema);
+    const v1: Record<string, string> = { meta: "key" };
+    for (const t of SYNC_TABLES) if (t !== "flight_tracks") v1[t] = "id, updatedAt";
+    v1.flights = "id, updatedAt, date";
+    v1.roster_events = "id, updatedAt, startUtc";
+    this.version(1).stores(v1);
+    // v2: real flight tracks (ADS-B)
+    this.version(2).stores({ ...v1, flight_tracks: "id, updatedAt, flightId" });
   }
   t<T extends TableName>(name: T): Table<TableMap[T], string> {
     return this.table(name);

@@ -87,6 +87,8 @@ export interface Aircraft extends SyncedRecord {
   tailwheel?: boolean;
   defaultOperation: OperationMode;
   notes?: string;
+  /** 24-bit ICAO (Mode S) address in hex, learned from ADS-B; used to fetch flight tracks */
+  icaoHex?: string;
 }
 
 export interface Airport {
@@ -257,6 +259,21 @@ export interface RosterEvent extends SyncedRecord {
   crew?: CrewMember[];
   flightId?: UUID | null;
   externalUid?: string;
+}
+
+/** A point of a recorded track: [unix seconds, lat, lon, barometric altitude ft (null on the ground), ground speed kt]. */
+export type TrackPoint = [number, number, number, number | null, number | null];
+
+/** The real track of a logged flight (ADS-B), stored apart from the flight so the logbook stays light. id = flight id. */
+export interface FlightTrack extends SyncedRecord {
+  pilotId: UUID;
+  flightId: UUID;
+  /** ICAO address of the aircraft */
+  hex: string;
+  source: "adsb.lol" | "flightaware";
+  /** simplified track, oldest first */
+  points: TrackPoint[];
+  fetchedAt: ISODateTime;
 }
 
 export interface Layover extends SyncedRecord {

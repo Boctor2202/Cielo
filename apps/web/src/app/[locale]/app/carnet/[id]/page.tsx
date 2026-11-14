@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useTranslations } from "next-intl";
 import { FlightForm } from "@/components/app/FlightForm";
+import { FlightTrackCard } from "@/components/app/FlightTrackCard";
 import { PageTitle } from "@/components/app/ui";
 import { usePilot } from "@/lib/hooks";
 import { db } from "@/lib/db";
@@ -18,6 +19,7 @@ export default function EditFlight() {
     <>
       <PageTitle title={t("editTitle")} subtitle={flight.isFstd ? `FSTD · ${flight.date}` : `${flight.depIcao} → ${flight.arrIcao} · ${flight.date}`} />
       <FlightForm key={`${flight.id}-${flight.signatureId ?? ""}`} flight={flight} pilot={pilot} />
+      <FlightTrackCard flight={flight} />
     </>
   );
 }

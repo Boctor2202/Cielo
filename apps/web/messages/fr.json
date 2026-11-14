@@ -1279,6 +1279,26 @@
       "noTrack": "Pas de trace enregistrée.",
       "attribution": "Données ADS-B : contributeurs",
       "needKey": "La carte Google n'est pas configurée."
+    },
+    "track": {
+      "title": "Trace réelle",
+      "source": "Trace ADS-B de l'appareil {hex} · données",
+      "pending": "La trace réelle sera enregistrée automatiquement dès que le réseau ADS-B l'aura reçue (dans les 30 h suivant le vol).",
+      "needData": "Renseignez l'immatriculation et les heures bloc pour enregistrer la trace réelle.",
+      "tooOld": "Trace non enregistrée : le réseau ADS-B ne la conserve que 24 h environ. La récupération des vols anciens arrivera avec FlightAware.",
+      "fetch": "Récupérer la trace maintenant",
+      "window": "{from} → {to} UTC",
+      "maxAlt": "Altitude max {ft} ft",
+      "maxGs": "Vitesse sol max {kt} kt",
+      "profile": "Profil d'altitude",
+      "result": {
+        "no_times": "Il manque l'immatriculation ou les heures bloc.",
+        "too_old": "Trop ancien : la trace n'est plus disponible.",
+        "no_hex": "{reg} n'émet pas en ce moment : son code transpondeur sera appris dès qu'il volera. Nouvel essai automatique.",
+        "no_match": "Aucune trace de {reg} ne correspond aux heures bloc de ce vol (vérifiez qu'elles sont en UTC).",
+        "quota": "Quota de données atteint, nouvel essai plus tard.",
+        "error": "Trace indisponible pour le moment."
+      }
     }
   },
   "why": {

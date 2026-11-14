@@ -1279,6 +1279,26 @@
       "noTrack": "No recorded track.",
       "attribution": "ADS-B data: contributors of",
       "needKey": "Google Maps is not configured."
+    },
+    "track": {
+      "title": "Actual track",
+      "source": "ADS-B track of aircraft {hex} · data",
+      "pending": "The actual track is saved automatically once the ADS-B network has it (within 30 h of the flight).",
+      "needData": "Enter the registration and block times to save the actual track.",
+      "tooOld": "No track saved: the ADS-B network keeps it for about 24 h. Older flights will come with FlightAware.",
+      "fetch": "Fetch the track now",
+      "window": "{from} → {to} UTC",
+      "maxAlt": "Max altitude {ft} ft",
+      "maxGs": "Max ground speed {kt} kt",
+      "profile": "Altitude profile",
+      "result": {
+        "no_times": "The registration or block times are missing.",
+        "too_old": "Too old: the track is no longer available.",
+        "no_hex": "{reg} is not transmitting right now: its transponder code will be learned as soon as it flies. Will retry automatically.",
+        "no_match": "No track of {reg} matches this flight's block times (check they are in UTC).",
+        "quota": "Data quota reached, will retry later.",
+        "error": "Track unavailable right now."
+      }
     }
   },
   "why": {

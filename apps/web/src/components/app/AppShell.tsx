@@ -10,6 +10,7 @@ import type { StaticPathname as AppPathname } from "@/i18n/routing";
 import { AirportsProvider } from "@/lib/airports";
 import { CloudProvider, useCloud } from "@/lib/cloud";
 import { usePilot } from "@/lib/hooks";
+import { useTrackAutoFetch } from "@/lib/tracks";
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
 import { LocaleSwitch } from "../LocaleSwitch";
@@ -59,6 +60,7 @@ function Shell({ children }: { children: ReactNode }) {
   const cloud = useCloud();
   const t = useTranslations("app.nav");
   const pathname = usePathname();
+  useTrackAutoFetch();
   const pilot = usePilot();
   const online = useOnline();
   const [more, setMore] = useState(false);

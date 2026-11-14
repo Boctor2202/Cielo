@@ -101,8 +101,7 @@ export async function aircraftByRegistration(reg: string): Promise<LiveAircraft[
   return (d.ac ?? []).flatMap((a) => slim(a) ?? []);
 }
 
-/** A point of a track: [unix seconds, lat, lon, altitude ft or null on the ground, ground speed kt or null]. */
-export type TrackPoint = [number, number, number, number | null, number | null];
+import type { TrackPoint } from "@cielo/core";
 
 export interface Track {
   hex: string;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  analyseFtl, auditLogbook, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
+  analyseFtl, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
   detectMapping, formatDuration, icalToRosterEvent, licenseStatus, maxDailyFdp, parseCsv, parseDuration,
   parseFlexibleDate, parseIcal, rowsToFlights, sumFlights, sunElevation, type Airport, type Flight,
 } from "../src";
@@ -194,5 +194,22 @@ describe("import", () => {
     const r = icalToRosterEvent(ev[0]!, "p", () => undefined);
     expect(r).toMatchObject({ kind: "FLIGHT", depIcao: "LFPG", arrIcao: "LFMN", flightNumber: "AF7700" });
     expect(icalToRosterEvent(ev[1]!, "p", () => undefined).kind).toBe("STANDBY");
+  });
+});
+
+describe("flight tracks", () => {
+  const t0 = Date.parse("2026-11-14T08:00:00Z") / 1000;
+  const leg = (start: number, n: number, lat0: number): import("../src").TrackPoint[] =>
+    Array.from({ length: n }, (_, i) => [start + i * 60, lat0 + i * 0.01, 2 + i * 0.01, i < n / 2 ? i * 1000 : (n - i) * 1000, 400] as import("../src").TrackPoint);
+  it("picks the leg matching the block times and trims it", () => {
+    const legs = [leg(t0, 60, 48), leg(t0 + 3 * 3600, 90, 43)];
+    const got = pickLeg(legs, "2026-11-14T11:05:00Z", "2026-11-14T12:20:00Z");
+    expect(got?.[0]?.[1]).toBe(43);
+    expect(pickLeg(legs, "2026-11-14T20:00:00Z", "2026-11-14T21:00:00Z")).toBeNull();
+  });
+  it("simplifies a straight line to its ends but keeps altitude changes", () => {
+    const pts = leg(t0, 200, 48).map((p) => [p[0], p[1], p[2], 35000, 450] as import("../src").TrackPoint);
+    expect(simplifyTrack(pts).length).toBe(2);
+    expect(simplifyTrack(leg(t0, 40, 48)).length).toBeGreaterThan(10);
   });
 });
