@@ -41,6 +41,15 @@ export interface Pilot extends SyncedRecord {
   defaultPilotFlying: PilotFlyingRule;
   timeDisplay: TimeDisplay;
   signatureDataUrl?: string;
+  /** Profile photo: small square JPEG data URL, resized on the device */
+  photoDataUrl?: string;
+  /** Position, e.g. "Captain", "First Officer", "Flight Instructor" */
+  rank?: string;
+  employer?: string;
+  /** ISO 3166-1 alpha-2 */
+  nationality?: string;
+  phone?: string;
+  bio?: string;
   subscriptionTier: SubscriptionTier;
   subscriptionSource: SubscriptionSource;
   subscriptionExpiresAt?: ISODateTime | null;

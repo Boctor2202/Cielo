@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  BadgeCheck, BarChart3, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Wifi, WifiOff, MoreHorizontal,
+  BadgeCheck, BarChart3, UserRound, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Wifi, WifiOff, MoreHorizontal,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -26,6 +26,7 @@ const NAV: { href: AppPathname; key: string; icon: typeof Gauge }[] = [
   { href: "/app/emplois", key: "jobs", icon: Briefcase },
   { href: "/app/cv", key: "cv", icon: FileUser },
   { href: "/app/appareils", key: "aircraft", icon: Plane },
+  { href: "/app/profil", key: "profile", icon: UserRound },
   { href: "/app/parametres", key: "settings", icon: Settings },
 ];
 
@@ -91,13 +92,13 @@ function Shell({ children }: { children: ReactNode }) {
           </nav>
           <div className="border-t border-border p-3">
             <div className="flex items-center justify-between gap-2 px-2">
-              <div className="min-w-0">
+              <Link href="/app/profil" className="min-w-0 rounded-md hover:text-accent">
                 <p className="truncate text-sm font-semibold">{pilot?.fullName || "—"}</p>
                 <p className="flex items-center gap-1.5 text-xs text-muted">
                   {online ? <Wifi size={12} className="text-success" /> : <WifiOff size={12} className="text-caution" />}
                   {status}
                 </p>
-              </div>
+              </Link>
               <div className="flex">
                 <LocaleSwitch />
                 <ThemeToggle />

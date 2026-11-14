@@ -358,7 +358,8 @@
       "offline": "Offline",
       "signOut": "Sign out",
       "jobs": "Pilot jobs",
-      "cv": "Pilot CV"
+      "cv": "Pilot CV",
+      "profile": "Profile"
     },
     "dashboard": {
       "hello": "Hello {name}",
@@ -1021,6 +1022,55 @@
         }
       },
       "tips": "Tips: single column, no photo or tables, precise figures. Send the PDF: its text is readable by AI tools and it carries a structured copy of your CV."
+    },
+    "profile": {
+      "eyebrow": "Pilot profile",
+      "noName": "Your name",
+      "edit": "Edit profile",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saved": "Profile saved",
+      "editTitle": "Edit profile",
+      "addPhoto": "Add a photo",
+      "changePhoto": "Change photo",
+      "removePhoto": "Remove photo",
+      "photoHint": "Square photo, cropped and resized on your device before upload.",
+      "photoError": "This image can't be read. Try a JPEG or PNG.",
+      "about": "About",
+      "experience": "Experience",
+      "asOf": "as of {date}",
+      "types": "Types flown",
+      "licences": "Licences, ratings and medical",
+      "manage": "Manage",
+      "noLicences": "No documents recorded yet.",
+      "validUntil": "valid until {date}",
+      "expired": "expired",
+      "noExpiry": "no expiry",
+      "privacy": "Your profile is private: only you can see it.",
+      "crew": "Crew",
+      "stageLabel": "Animation: the pilot walks in",
+      "h": {
+        "total": "Total time",
+        "pic": "Pilot in command",
+        "multiPilot": "Multi-pilot",
+        "turbine": "Turbine",
+        "night": "Night",
+        "ifr": "IFR",
+        "last90": "Last 90 days",
+        "landings": "Landings"
+      },
+      "f": {
+        "fullName": "Full name",
+        "rank": "Position",
+        "employer": "Employer",
+        "base": "Base (ICAO)",
+        "nationality": "Nationality",
+        "nationalityHint": "Two-letter country code, e.g. GB",
+        "licenceNumber": "Licence number",
+        "phone": "Phone",
+        "email": "Email",
+        "bio": "About you (600 characters max.)"
+      }
     }
   },
   "why": {

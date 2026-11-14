@@ -358,7 +358,8 @@
       "offline": "Hors ligne",
       "signOut": "Se déconnecter",
       "jobs": "Offres d'emploi",
-      "cv": "CV pilote"
+      "cv": "CV pilote",
+      "profile": "Profil"
     },
     "dashboard": {
       "hello": "Bonjour {name}",
@@ -1021,6 +1022,55 @@
         }
       },
       "tips": "Conseils : une seule colonne, pas de photo ni de tableau, des chiffres précis. Envoyez le PDF : son texte est lisible par les IA et il contient une copie structurée de votre CV."
+    },
+    "profile": {
+      "eyebrow": "Profil pilote",
+      "noName": "Votre nom",
+      "edit": "Modifier le profil",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "saved": "Profil enregistré",
+      "editTitle": "Modifier le profil",
+      "addPhoto": "Ajouter une photo",
+      "changePhoto": "Changer la photo",
+      "removePhoto": "Retirer la photo",
+      "photoHint": "Photo carrée recadrée et réduite sur votre appareil avant envoi.",
+      "photoError": "Impossible de lire cette image. Essayez un JPEG ou un PNG.",
+      "about": "Présentation",
+      "experience": "Expérience",
+      "asOf": "au {date}",
+      "types": "Types pilotés",
+      "licences": "Licences, qualifications et médical",
+      "manage": "Gérer",
+      "noLicences": "Aucun document enregistré pour l'instant.",
+      "validUntil": "valide jusqu'au {date}",
+      "expired": "expiré",
+      "noExpiry": "sans échéance",
+      "privacy": "Votre profil reste privé : il n'est visible que par vous.",
+      "crew": "Équipage",
+      "stageLabel": "Animation : le pilote entre en scène",
+      "h": {
+        "total": "Temps total",
+        "pic": "Commandant de bord",
+        "multiPilot": "Multipilote",
+        "turbine": "Turbine",
+        "night": "Nuit",
+        "ifr": "IFR",
+        "last90": "90 derniers jours",
+        "landings": "Atterrissages"
+      },
+      "f": {
+        "fullName": "Nom complet",
+        "rank": "Fonction",
+        "employer": "Employeur",
+        "base": "Base (OACI)",
+        "nationality": "Nationalité",
+        "nationalityHint": "Code pays à deux lettres, ex. FR",
+        "licenceNumber": "N° de licence",
+        "phone": "Téléphone",
+        "email": "E-mail",
+        "bio": "Présentation (600 caractères max.)"
+      }
     }
   },
   "why": {
