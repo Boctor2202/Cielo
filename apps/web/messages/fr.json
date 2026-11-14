@@ -870,26 +870,47 @@
     ]
   },
   "immersive": {
-    "canvasLabel": "Photos d'un avion de ligne au décollage puis au-dessus des nuages au coucher du soleil, la nuit qui tombe, un globe montrant des routes aériennes, puis une mer de nuages au crépuscule.",
+    "canvasLabel": "Scène animée : l'avion que vous pilotez vole au-dessus d'une mer de nuages, la nuit tombe, puis des photos de l'appareil, un globe montrant des routes aériennes et un ciel au crépuscule.",
     "scroll": "Faites défiler",
     "chapters": [
-      "Décollage",
+      "Envol",
       "Nuit EASA",
+      "Votre machine",
       "Routes",
-      "Contrôle"
+      "Prêt"
     ],
     "c1": {
       "label": "01 · Temps de nuit",
       "title": "Le soleil passe à −6°. Cielo le note.",
       "text": "La nuit EASA commence à la fin du crépuscule civil. Cielo suit la position de l'avion minute par minute et calcule le temps de nuit et les atterrissages de nuit, sans que vous ayez rien à saisir."
     },
+    "machine": {
+      "label": "02 · Votre machine",
+      "title": "Votre {name}. Vos colonnes, sans y penser.",
+      "titleGeneric": "Votre avion. Vos colonnes, sans y penser.",
+      "text": "Cielo connaît votre type : chaque vol alimente automatiquement les bonnes colonnes du carnet EASA, les totaux par type et votre expérience récente.",
+      "icao": "Type OACI",
+      "rating": "Qualification",
+      "engines": "Motorisation",
+      "operation": "Exploitation",
+      "multi": "Multipilote",
+      "single": "Monopilote",
+      "engineTypes": {
+        "piston": "piston",
+        "turboprop": "turbopropulseur",
+        "jet": "réacteur",
+        "turboshaft": "turbine",
+        "electric": "électrique",
+        "none": "sans moteur"
+      }
+    },
     "c2": {
-      "label": "02 · Vos routes",
+      "label": "03 · Vos routes",
       "title": "Chaque vol, sur la carte du monde.",
-      "text": "Vos routes tracées en grand cercle sur 19 000 aérodromes. Heures par type, par fonction, de nuit et en IFR, aéroports les plus fréquentés : votre carrière d'un coup d'œil."
+      "text": "Vos routes tracées en grand cercle sur 19 000 aérodromes. Heures par type, par fonction, de nuit et en IFR : votre carrière d'un coup d'œil."
     },
     "c3": {
-      "label": "03 · Conformité",
+      "label": "04 · Conformité",
       "title": "Prêt pour le contrôle.",
       "text": "Audit automatique du carnet, licences et médical suivis, limites FTL, export PDF officiel EASA, FAA ou CASA. Votre carnet est juste, et vous pouvez le prouver.",
       "cta": "Créer mon carnet"
@@ -901,6 +922,19 @@
       "day": "JOUR",
       "nightOn": "NUIT",
       "threshold": "Seuil EASA −6°"
+    },
+    "picker": {
+      "flying": "Vous volez sur",
+      "choose": "Choisir mon avion",
+      "fromLogbook": "d'après votre carnet",
+      "placeholder": "Type ou code OACI (C68A, A320, PC12…)",
+      "generic": "Photos dédiées à venir pour ce type : visuels génériques affichés.",
+      "reset": "Réinitialiser",
+      "none": "Aucun type trouvé"
+    },
+    "credits": {
+      "title": "Crédits photo",
+      "modified": "modifiée"
     }
   }
 }

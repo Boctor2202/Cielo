@@ -45,9 +45,18 @@ node scripts/screenshots.mjs
 2. Web : déployer `apps/web` (Vercel, Render…) avec `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 3. Mobile : `apps/mobile/README.md` (EAS Build / Submit vers App Store Connect et Google Play).
 
+## Page d'accueil : l'avion du pilote
+
+La page d'accueil affiche l'avion que pilote le visiteur : le type choisi dans le sélecteur « Vous volez sur… »,
+sinon le type le plus volé dans son carnet, sinon un avion de ligne. Le catalogue est dans
+`apps/web/src/lib/aircraft-visuals.ts` : pour ajouter un type, déposer ses images dans
+`apps/web/public/immersive/aircraft/<id>/` (deux détourages WebP avec transparence + photos de galerie) et ajouter une entrée
+avec ses codes OACI et ses crédits.
+
 ## Crédits photos
 
-Page d'accueil : photos Unsplash (licence Unsplash, usage commercial autorisé), recadrées et converties en WebP dans
-`apps/web/public/immersive/` — IDs `1544016768-982d1554f0b9` (décollage, recadrée pour retirer la livrée),
-`1436491865332-7a61a109cc05` (aile au-dessus des nuages), `1506012787146-f92b2d7d6d96` (coucher de soleil),
-`1517479149777-5f3b1511d5ad` (mer de nuages). Globe : aérodromes OurAirports (domaine public).
+- Cessna Citation Latitude : Wikimedia Commons, licences CC BY / CC BY-SA (auteurs et liens dans
+  `aircraft-visuals.ts`, affichés sur la page via « Crédits photo »). Les versions détourées ou recadrées restent sous la
+  licence de l'original.
+- Ciels et avion de ligne : Unsplash (licence Unsplash, usage commercial autorisé).
+- Globe : aérodromes OurAirports (domaine public).

@@ -43,8 +43,11 @@ export interface Readouts {
 
 export const createReadouts = (): Readouts => ({ progress: 0, sunElevation: 6, utcMinutes: 1120, nightMinutes: 0, chapter: 0 });
 
-/** Sun elevation (degrees) along the scroll: the sunset crosses the EASA −6° threshold around p = 0.36. */
-export const SUN_ELEV: Key<number>[] = [[0, 6.5], [0.14, 3.5], [0.46, -9.5], [0.62, -15], [1, -15]];
+/** Sun elevation (degrees) along the scroll: the sunset crosses the EASA −6° threshold around p = 0.30. */
+export const SUN_ELEV: Key<number>[] = [[0, 6.5], [0.14, 3.5], [0.36, -9.5], [0.5, -15], [1, -15]];
+
+/** Story chapters as scroll-progress bounds: hero, EASA night, your aircraft, routes (globe), call to action. */
+export const CHAPTERS = [0, 0.2, 0.42, 0.62, 0.84, 1] as const;
 
 /** Same mapping the scene uses, so the HUD can run even without WebGL. */
 export function readoutsAt(p: number, r: Readouts) {
@@ -53,5 +56,6 @@ export function readoutsAt(p: number, r: Readouts) {
   r.sunElevation = el;
   r.utcMinutes = 1120 + ((6.5 - el) / 21.5) * 95;
   r.nightMinutes = Math.max(0, r.utcMinutes - (1120 + (12.5 / 21.5) * 95));
-  r.chapter = p < 0.26 ? 0 : p < 0.56 ? 1 : p < 0.8 ? 2 : 3;
+  r.chapter = Math.max(0, CHAPTERS.findIndex((b) => p < b) - 1);
+  if (p >= 1) r.chapter = CHAPTERS.length - 2;
 }

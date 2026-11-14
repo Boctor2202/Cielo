@@ -870,26 +870,47 @@
     ]
   },
   "immersive": {
-    "canvasLabel": "Photos of an airliner taking off, then above the clouds at sunset, night falling, a globe showing flight routes, then a sea of clouds at dusk.",
+    "canvasLabel": "Animated scene: the aircraft you fly cruises above a sea of clouds, night falls, then photos of the aircraft, a globe showing flight routes and a dusk sky.",
     "scroll": "Scroll",
     "chapters": [
-      "Take-off",
+      "Airborne",
       "EASA night",
+      "Your aircraft",
       "Routes",
-      "Check ride"
+      "Ready"
     ],
     "c1": {
       "label": "01 · Night time",
       "title": "The sun passes −6°. Cielo logs it.",
       "text": "EASA night starts at the end of civil twilight. Cielo follows the aircraft position minute by minute and computes night time and night landings, with nothing for you to type."
     },
+    "machine": {
+      "label": "02 · Your aircraft",
+      "title": "Your {name}. The right columns, automatically.",
+      "titleGeneric": "Your aircraft. The right columns, automatically.",
+      "text": "Cielo knows your type: every flight feeds the right EASA logbook columns, the totals by type and your recent experience.",
+      "icao": "ICAO type",
+      "rating": "Rating",
+      "engines": "Engines",
+      "operation": "Operation",
+      "multi": "Multi-pilot",
+      "single": "Single-pilot",
+      "engineTypes": {
+        "piston": "piston",
+        "turboprop": "turboprop",
+        "jet": "jet",
+        "turboshaft": "turboshaft",
+        "electric": "electric",
+        "none": "no engine"
+      }
+    },
     "c2": {
-      "label": "02 · Your routes",
+      "label": "03 · Your routes",
       "title": "Every flight, on the world map.",
-      "text": "Your routes drawn as great circles across 19,000 aerodromes. Hours by type, by function, at night and IFR, most visited airports: your career at a glance."
+      "text": "Your routes drawn as great circles across 19,000 aerodromes. Hours by type, by function, at night and IFR: your career at a glance."
     },
     "c3": {
-      "label": "03 · Compliance",
+      "label": "04 · Compliance",
       "title": "Ready for the check ride.",
       "text": "Automatic logbook audit, licences and medical tracked, FTL limits, official EASA, FAA or CASA PDF export. Your logbook is right, and you can prove it.",
       "cta": "Create my logbook"
@@ -901,6 +922,19 @@
       "day": "DAY",
       "nightOn": "NIGHT",
       "threshold": "EASA threshold −6°"
+    },
+    "picker": {
+      "flying": "You fly the",
+      "choose": "Pick my aircraft",
+      "fromLogbook": "from your logbook",
+      "placeholder": "Type or ICAO code (C68A, A320, PC12…)",
+      "generic": "Dedicated photos coming for this type: generic visuals shown.",
+      "reset": "Reset",
+      "none": "No type found"
+    },
+    "credits": {
+      "title": "Photo credits",
+      "modified": "modified"
     }
   }
 }
