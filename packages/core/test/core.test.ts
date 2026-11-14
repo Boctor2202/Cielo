@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  accessFor, analyseFtl, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
+  accessFor, analyseTable, analyseFtl, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
   detectMapping, formatDuration, icalToRosterEvent, licenseStatus, maxDailyFdp, parseCsv, parseDuration,
   parseFlexibleDate, parseIcal, rowsToFlights, sumFlights, sunElevation, type Airport, type Flight,
 } from "../src";
@@ -228,5 +228,40 @@ describe("access", () => {
     const basic = accessFor(p("2026-01-01T00:00:00Z", "basic", "2026-12-01T00:00:00Z"), { signedIn: true, now });
     expect(basic.canWrite && !basic.has("ftl")).toBe(true);
     expect(accessFor(p("2026-01-01T00:00:00Z", "premium", "2026-11-01T00:00:00Z"), { signedIn: true, now }).canWrite).toBe(false);
+  });
+});
+
+describe("import: automatic column detection", () => {
+  const map = (csv: string) => {
+    const a = analyseTable(parseCsv(csv));
+    const named = Object.fromEntries(Object.entries(a.mapping).filter(([, i]) => i >= 0).map(([f, i]) => [f, a.header[i]]));
+    return { a, named, flights: rowsToFlights(a.rows, a.mapping, { dateOrder: a.dateOrder }) };
+  };
+  it("EASA paper layout with a title line and a two-row header", () => {
+    const { named, flights, a } = map(
+      [
+        "Carnet de vol - export",
+        "Date,Departure,,Arrival,,Aircraft,,Total time of flight,Name PIC,Landings,,Operational condition time,,Pilot function time,",
+        ",Place,Time,Place,Time,Type,Registration,,,Day,Night,Night,IFR,PIC,Co-pilot",
+        "26/05/2024,LFPG,08:05,EGLL,09:20,A320,F-HBXA,1:15,Dupont,1,0,0:00,1:15,0:00,1:15",
+        "27/05/2024,EGLL,10:00,LFPG,11:10,A320,F-HBXA,1:10,Dupont,0,0,0:00,1:10,0:00,1:10",
+      ].join("\n"),
+    );
+    expect(a.headerRow).toBe(1);
+    expect(named).toMatchObject({ date: "Date", dep: "Departure Place", out: "Departure Time", arr: "Arrival Place", in: "Arrival Time", registration: "Aircraft Registration", total: "Total time of flight", landingsDay: "Landings Day", landingsNight: "Landings Night", ifr: "Operational condition time IFR", copilot: "Pilot function time Co-pilot" });
+    expect(flights[0]!.input?.depIcao).toBe("LFPG");
+  });
+  it("ForeFlight-style camelCase export", () => {
+    const { named } = map("Date,AircraftID,From,To,TimeOut,TimeOff,TimeOn,TimeIn,TotalTime,PIC,SIC,Night,DayLandingsFullStop,PilotComments\n2025-03-02,N123AB,KSFO,KLAX,14:00,14:12,15:20,15:30,1.5,1.5,0,0,1,ok");
+    expect(named).toMatchObject({ registration: "AircraftID", dep: "From", arr: "To", out: "TimeOut", off: "TimeOff", on: "TimeOn", in: "TimeIn", total: "TotalTime", pic: "PIC", landingsDay: "DayLandingsFullStop", remarks: "PilotComments" });
+  });
+  it("unknown headers: recognised from the values", () => {
+    const { named, a } = map("Jour,A,B,C,D,E,F,G\n12/31/2024,LFPO,LFML,07:10,08:25,1:15,F-GKXA,A320\n01/02/2025,LFML,LFPO,09:00,10:20,1:20,F-GKXA,A320");
+    expect(a.dateOrder).toBe("mdy");
+    expect(named).toMatchObject({ date: "Jour", dep: "A", arr: "B", out: "C", in: "D", total: "E", registration: "F", type: "G" });
+  });
+  it("does not take 'Total flight time' for the flight number", () => {
+    const { named } = map("Flight date,Flight,From,To,Total flight time\n2025-01-01,AF1234,LFPG,LFMN,1:30");
+    expect(named).toMatchObject({ flightNumber: "Flight", total: "Total flight time" });
   });
 });

@@ -4,7 +4,7 @@ import { CalendarDays, Camera, FileSpreadsheet, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  detectMapping, IMPORT_FIELDS, parseCsv, rowsToFlights, type DateOrder, type ImportField, type ImportedRow,
+  analyseTable, IMPORT_FIELDS, parseCsv, rowsToFlights, type DateOrder, type ImportField, type ImportedRow,
 } from "@cielo/core";
 import { Link } from "@/i18n/navigation";
 import { Card, Field, PageTitle, Segmented, useToast } from "@/components/app/ui";
@@ -72,12 +72,15 @@ function FileImport() {
   const [busy, setBusy] = useState(false);
 
   const parsed = useMemo<ImportedRow[]>(() => (rows && mapping ? rowsToFlights(rows.slice(1), mapping, { dateOrder: order }) : []), [rows, mapping, order]);
+  const recognised = mapping ? Object.values(mapping).filter((i) => i >= 0).length : 0;
   const ok = parsed.filter((r) => r.errors.length === 0 && r.input);
 
   async function onFile(file: File) {
-    const table = await readTable(file);
-    setRows(table);
-    setMapping(detectMapping(table[0] ?? []));
+    // header row, two-row headers, columns (names + values) and date order are all detected automatically
+    const a = analyseTable(await readTable(file));
+    setRows([a.header, ...a.rows]);
+    setMapping(a.mapping);
+    setOrder(a.dateOrder);
   }
 
   async function run() {
@@ -98,7 +101,10 @@ function FileImport() {
       {rows && mapping && (
         <>
           <Card title={t("mapping")}>
-            <p className="mb-4 text-sm text-muted">{t("mappingHelp")}</p>
+            <p className="text-sm">{t("autoDetected", { count: recognised, total: rows[0]!.length })}</p>
+            <details className="mt-3">
+            <summary className="cursor-pointer text-sm text-accent">{t("checkColumns")}</summary>
+            <p className="mb-4 mt-3 text-sm text-muted">{t("mappingHelp")}</p>
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {IMPORT_FIELDS.map((f) => (
                 <Field key={f} label={t(`fields.${f}`)}>
@@ -118,6 +124,7 @@ function FileImport() {
                 </select>
               </Field>
             </div>
+            </details>
           </Card>
           <PreviewCard parsed={parsed} ok={ok.length} onImport={run} busy={busy || !airports} />
         </>

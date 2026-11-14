@@ -654,7 +654,9 @@
         "remarks": "Remarques",
         "fstdType": "Type FSTD",
         "fstdTime": "Temps FSTD"
-      }
+      },
+      "autoDetected": "{count} colonnes sur {total} reconnues automatiquement. Vérifiez l'aperçu ci-dessous puis importez.",
+      "checkColumns": "Vérifier ou corriger les colonnes"
     },
     "audit": {
       "title": "Audit du carnet",

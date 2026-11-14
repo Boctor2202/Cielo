@@ -654,7 +654,9 @@
         "remarks": "Remarks",
         "fstdType": "FSTD type",
         "fstdTime": "FSTD time"
-      }
+      },
+      "autoDetected": "{count} of {total} columns recognised automatically. Check the preview below, then import.",
+      "checkColumns": "Check or fix the columns"
     },
     "audit": {
       "title": "Logbook audit",

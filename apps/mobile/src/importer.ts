@@ -6,7 +6,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import {
   deriveFlightTimes,
-  detectMapping,
+  analyseTable,
   newId,
   parseCsv,
   rowsToFlights,
@@ -29,9 +29,9 @@ export async function pickAndImportCsv(store: SqliteStore, pilot: Pilot, types: 
   const text = await new File(res.assets[0].uri).text();
   const table = parseCsv(text.replace(/^﻿/, ""));
   if (table.length < 2) throw new Error("empty");
-  const [header, ...rows] = table;
-  const mapping = detectMapping(header!);
-  const parsed = rowsToFlights(rows.filter((r) => r.some((c) => c.trim())), mapping, { defaultFunction: pilot.defaultFunction });
+  // header row, two-row headers, columns (names + values) and date order detected automatically
+  const a = analyseTable(table);
+  const parsed = rowsToFlights(a.rows, a.mapping, { dateOrder: a.dateOrder, defaultFunction: pilot.defaultFunction });
 
   const now = new Date().toISOString();
   const key = (f: Pick<Flight, "date" | "depIcao" | "arrIcao" | "outUtc" | "totalMin">) => `${f.date}|${f.depIcao}|${f.arrIcao}|${f.outUtc ?? ""}|${f.totalMin}`;
