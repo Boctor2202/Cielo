@@ -13,10 +13,15 @@
       "buildNumber": "1",
       "supportsTablet": true,
       "usesAppleSignIn": true,
-      "config": { "usesNonExemptEncryption": false },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
         "CFBundleAllowMixedLocalizations": true,
-        "CFBundleLocalizations": ["fr", "en"]
+        "CFBundleLocalizations": [
+          "fr",
+          "en"
+        ]
       }
     },
     "android": {
@@ -26,11 +31,18 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0E2A47"
       },
-      "permissions": ["android.permission.POST_NOTIFICATIONS", "android.permission.SCHEDULE_EXACT_ALARM"]
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.SCHEDULE_EXACT_ALARM"
+      ]
     },
     "locales": {
-      "fr": { "CFBundleDisplayName": "Strato" },
-      "en": { "CFBundleDisplayName": "Strato" }
+      "fr": {
+        "CFBundleDisplayName": "Strato"
+      },
+      "en": {
+        "CFBundleDisplayName": "Strato"
+      }
     },
     "plugins": [
       "expo-router",
@@ -52,7 +64,10 @@
           "imageWidth": 160,
           "resizeMode": "contain",
           "backgroundColor": "#FFFFFF",
-          "dark": { "image": "./assets/splash-icon.png", "backgroundColor": "#0A1626" }
+          "dark": {
+            "image": "./assets/splash-icon.png",
+            "backgroundColor": "#0A1626"
+          }
         }
       ]
     ],
@@ -60,10 +75,21 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {},
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
       "eas": {
-        "projectId": ""
+        "projectId": "c9d2903e-0e29-4c2d-a381-cd385e436c1e"
       }
+    },
+    "owner": "strato-app",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/c9d2903e-0e29-4c2d-a381-cd385e436c1e"
     }
   }
 }
