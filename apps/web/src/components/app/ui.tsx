@@ -6,7 +6,7 @@ import { formatDuration, parseDuration } from "@cielo/core";
 
 export function PageTitle({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 className="text-[28px] font-normal tracking-[-0.035em] sm:text-[34px]">{title}</h1>
         {subtitle && <p className="mt-1 text-[15px] text-muted">{subtitle}</p>}

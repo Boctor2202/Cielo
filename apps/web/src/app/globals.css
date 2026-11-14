@@ -403,3 +403,11 @@ select.input {
 .app-glass.app-glass-strong {
   background: color-mix(in srgb, var(--surface) 62%, transparent);
 }
+/* phones: long button labels wrap instead of pushing the page sideways */
+@media (max-width: 480px) {
+  .app-skin .btn {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+  }
+}

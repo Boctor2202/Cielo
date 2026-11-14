@@ -127,9 +127,9 @@ export default function RosterPage() {
         }
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button type="button" className="btn btn-secondary btn-sm !px-2" onClick={() => shift(-1)} aria-label="previous"><ChevronLeft size={16} /></button>
-          <h2 className="min-w-40 text-center text-lg font-semibold capitalize">{monthLabel}</h2>
+          <h2 className="min-w-36 text-center text-lg font-semibold capitalize">{monthLabel}</h2>
           <button type="button" className="btn btn-secondary btn-sm !px-2" onClick={() => shift(1)} aria-label="next"><ChevronRight size={16} /></button>
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setCursor(today.slice(0, 7))}>{t("today")}</button>
         </div>
