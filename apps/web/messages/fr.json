@@ -1138,13 +1138,6 @@
       "gearUp": "VARIO POSITIF · TRAIN RENTRÉ",
       "climb": "MONTÉE",
       "cruise": "CROISIÈRE"
-    },
-    "phaseTitle": {
-      "lineup": "Alignement",
-      "roll": "Accélération",
-      "rotate": "Rotation · décollage",
-      "gearUp": "Rentrée du train",
-      "climb": "Montée"
     }
   },
   "seo": {

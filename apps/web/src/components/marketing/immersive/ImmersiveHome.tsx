@@ -172,7 +172,6 @@ export function ImmersiveHome() {
 
         <FlightStrip readouts={readouts} />
         <ProgressRail readouts={readouts} labels={chapters} />
-        <PhaseTitle readouts={readouts} />
         <Credits />
       </div>
 
@@ -370,39 +369,6 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         <canvas ref={canvas} className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${ready ? "opacity-100" : "opacity-0"}`} />
       )}
     </div>
-  );
-}
-
-/** Big caption naming each phase of the takeoff as it happens. */
-function PhaseTitle({ readouts }: { readouts: React.RefObject<Readouts> }) {
-  const t = useTranslations("immersive.phaseTitle");
-  const el = useRef<HTMLParagraphElement>(null);
-  const labels = useRef<Record<string, string>>({});
-  for (const k of ["lineup", "roll", "rotate", "gearUp", "climb"]) labels.current[k] = t(k);
-  const last = useRef("");
-  const write = useRef((r: Readouts) => {
-    const node = el.current;
-    if (!node) return;
-    const key = r.progress > GLOBE_FROM - 0.03 ? "" : r.phase;
-    if (key === last.current) return;
-    last.current = key;
-    node.style.opacity = "0";
-    node.style.transform = "translateY(8px)";
-    window.setTimeout(() => {
-      if (last.current !== key) return;
-      node.textContent = key ? labels.current[key] ?? "" : "";
-      node.style.opacity = key ? "1" : "0";
-      node.style.transform = "translateY(0)";
-    }, 160);
-  }).current;
-  useLiveText(readouts, write);
-  return (
-    <p
-      ref={el}
-      className="mono-label pointer-events-none absolute left-1/2 top-[15svh] -translate-x-1/2 whitespace-nowrap rounded-full border border-white/15 bg-[#02040b]/45 px-4 py-2 !text-[13px] !tracking-[0.22em] !text-white backdrop-blur-md transition-[opacity,transform] duration-300 sm:!text-[15px] md:left-auto md:right-[8vw] md:translate-x-0"
-      style={{ opacity: 0 }}
-      aria-hidden
-    />
   );
 }
 
