@@ -9,7 +9,7 @@
     "airlines": "Pour les compagnies",
     "blog": "Blog",
     "login": "Connexion",
-    "trial": "Essai gratuit",
+    "trial": "Essai 7 jours",
     "openApp": "Ouvrir l'app",
     "menu": "Menu",
     "theme": "Changer de thème",
@@ -19,9 +19,9 @@
     "eyebrow": "Conforme EASA Part-FCL · FAA · CASA",
     "title": "Votre carnet de vol, enfin digital",
     "subtitle": "Saisissez un vol en 20 secondes. Strato calcule votre temps de nuit, vérifie votre carnet, suit vos licences et vos limites FTL, puis exporte au format officiel EASA.",
-    "ctaTrial": "Essai gratuit",
+    "ctaTrial": "Essayer 7 jours",
     "ctaDemo": "Voir la démo",
-    "note": "Sans carte bancaire · Vos données restent à vous",
+    "note": "7 jours d'essai · Sans engagement · Vos données restent à vous",
     "appStore": "Télécharger dans l'App Store",
     "playStore": "Disponible sur Google Play",
     "comingSoon": "Bientôt",
@@ -134,47 +134,38 @@
   },
   "pricing": {
     "title": "Des tarifs simples",
-    "subtitle": "Commencez gratuitement. Passez à l'offre supérieure quand votre carnet grandit.",
+    "subtitle": "7 jours d'essai sur l'offre de votre choix, puis un abonnement mensuel sans engagement.",
     "monthly": "Mensuel",
     "yearly": "Annuel",
     "perMonth": "/mois",
     "perYear": "/an",
     "billedYearly": "soit {price} par mois",
-    "popular": "Le plus choisi",
-    "cta": "Commencer",
+    "popular": "Le plus complet",
+    "cta": "Essayer 7 jours",
     "ctaFree": "Créer mon carnet",
     "plans": {
-      "free": {
-        "name": "Gratuit",
-        "desc": "Pour découvrir Strato et les pilotes privés occasionnels.",
-        "price": "0 €"
-      },
       "basic": {
         "name": "Basic",
         "desc": "Pour les pilotes privés et les élèves pilotes."
       },
       "premium": {
-        "name": "Premium",
-        "desc": "Pour les pilotes professionnels : roster, FTL, exports illimités."
+        "name": "Max",
+        "desc": "Pour les pilotes professionnels : roster, FTL, escales, radar et traces réelles."
       }
     },
     "highlights": {
-      "free": [
-        "Jusqu'à 50 vols",
-        "Calcul automatique du temps de nuit",
-        "Export CSV",
-        "1 appareil"
-      ],
       "basic": [
         "Vols illimités",
         "Export PDF EASA, FAA, CASA",
-        "Licences et alertes",
+        "Licences, médical et alertes",
+        "Statistiques et carte des vols",
         "Synchronisation multi-appareils"
       ],
       "premium": [
         "Tout Basic",
-        "Import roster et calendrier",
-        "Limites FTL ORO.FTL",
+        "Import roster et limites FTL",
+        "Escales : activités, restaurants, spectacles",
+        "Radar en direct et traces réelles des vols",
         "Audit, signatures, scan photo"
       ]
     },
@@ -196,14 +187,17 @@
       "audit": "Audit automatique du carnet",
       "signature": "Signature numérique",
       "scan": "Scan photo du carnet papier",
-      "support": "Support prioritaire"
+      "support": "Support prioritaire",
+      "radar": "Radar en direct et traces réelles des vols",
+      "layovers": "Module escales"
     },
     "values": {
       "fifty": "50",
       "unlimited": "Illimité",
       "oneDevice": "1 appareil"
     },
-    "vat": "Prix TTC. Résiliable à tout moment."
+    "vat": "Prix TTC, facturés chaque mois. Sans engagement. Sans abonnement, votre carnet reste consultable et exportable.",
+    "trialNote": "Carte bancaire demandée à l'inscription. Aucun prélèvement pendant 7 jours, annulable en un clic avant la fin de l'essai."
   },
   "testimonials": {
     "title": "Ils volent avec Strato",
@@ -242,7 +236,7 @@
   "cta": {
     "title": "Prêt pour votre prochain vol ?",
     "text": "Créez votre carnet en moins d'une minute. Importez votre historique quand vous voulez.",
-    "button": "Essai gratuit"
+    "button": "Essayer 7 jours"
   },
   "footer": {
     "tagline": "Le carnet de vol électronique conçu par et pour les pilotes.",
@@ -1016,9 +1010,9 @@
       "CASA": "CASA CASR Part 61"
     },
     "plans": {
-      "free": "Gratuit",
+      "free": "Aucun abonnement",
       "basic": "Basic",
-      "premium": "Premium"
+      "premium": "Max"
     },
     "jobs": {
       "title": "Offres d'emploi pilote",
@@ -1299,6 +1293,18 @@
         "quota": "Quota de données atteint, nouvel essai plus tard.",
         "error": "Trace indisponible pour le moment."
       }
+    },
+    "access": {
+      "demo": "Démo : {days, plural, one {encore # jour} other {encore # jours}} pour tout essayer. Créez votre compte pour continuer avec 7 jours d'essai.",
+      "startTrial": "Démarrer l'essai",
+      "readOnlyBanner": "Votre carnet est en lecture seule : abonnez-vous pour saisir de nouveaux vols. Vos données restent consultables et exportables.",
+      "subscribe": "Choisir un abonnement",
+      "upgrade": "Passer à Max",
+      "readOnlyShort": "Lecture seule : abonnez-vous pour enregistrer.",
+      "readOnlyTitle": "Abonnement nécessaire",
+      "readOnlyText": "Sans abonnement actif, votre carnet reste consultable et exportable, mais la saisie est désactivée. Basic à 6,99 €/mois, Max à 9,99 €/mois.",
+      "maxTitle": "Fonction réservée à Max",
+      "maxText": "Roster, FTL, escales, radar, traces réelles, audit, signatures et scan sont inclus dans Max (9,99 €/mois)."
     }
   },
   "why": {
@@ -1428,8 +1434,8 @@
       "description": "Toutes les colonnes AMC1 FCL.050, import de roster, audit du carnet, suivi des licences et du médical, limites FTL, statistiques, signature, mode hors ligne, offres d'emploi et CV pilote."
     },
     "pricing": {
-      "title": "Tarifs — carnet de vol électronique dès 0 €",
-      "description": "Gratuit pour découvrir, Basic pour les pilotes privés et élèves, Premium pour les pilotes professionnels (roster, FTL, exports illimités). Sans engagement, -33 % à l'année."
+      "title": "Tarifs — carnet de vol électronique dès 6,99 €/mois",
+      "description": "Basic à 6,99 €/mois pour les pilotes privés et élèves, Max à 9,99 €/mois pour les pilotes professionnels (roster, FTL, escales, radar). 7 jours d'essai, sans engagement."
     },
     "airlines": {
       "title": "Carnet de vol électronique pour compagnies et écoles",

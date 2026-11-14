@@ -57,7 +57,7 @@ export function organizationLd() {
 
 export function softwareLd(locale: string, description: string) {
   const p = SITE.pricing;
-  const offer = (name: string, price: number, unit: "MON" | "ANN") => ({
+  const offer = (name: string, price: number, unit: "MON") => ({
     "@type": "Offer",
     name,
     price: price.toFixed(2),
@@ -77,11 +77,8 @@ export function softwareLd(locale: string, description: string) {
     inLanguage: ["fr", "en"],
     publisher: { "@id": `${SITE_URL}/#organization` },
     offers: [
-      { "@type": "Offer", name: "Free", price: "0", priceCurrency: p.currency },
       offer("Basic", p.basic.monthly, "MON"),
-      offer("Basic", p.basic.yearly, "ANN"),
-      offer("Premium", p.premium.monthly, "MON"),
-      offer("Premium", p.premium.yearly, "ANN"),
+      offer("Max", p.premium.monthly, "MON"),
     ],
   };
 }

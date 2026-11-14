@@ -9,7 +9,7 @@
     "airlines": "For airlines",
     "blog": "Blog",
     "login": "Log in",
-    "trial": "Free trial",
+    "trial": "7-day trial",
     "openApp": "Open app",
     "menu": "Menu",
     "theme": "Toggle theme",
@@ -19,9 +19,9 @@
     "eyebrow": "EASA Part-FCL · FAA · CASA compliant",
     "title": "Your logbook, finally digital",
     "subtitle": "Log a flight in 20 seconds. Strato computes your night time, checks your logbook, tracks your licences and FTL limits, then exports in the official EASA format.",
-    "ctaTrial": "Free trial",
+    "ctaTrial": "Try 7 days",
     "ctaDemo": "See the demo",
-    "note": "No credit card · Your data stays yours",
+    "note": "7-day trial · No commitment · Your data stays yours",
     "appStore": "Download on the App Store",
     "playStore": "Get it on Google Play",
     "comingSoon": "Coming soon",
@@ -134,47 +134,38 @@
   },
   "pricing": {
     "title": "Simple pricing",
-    "subtitle": "Start for free. Upgrade when your logbook grows.",
+    "subtitle": "7-day trial on the plan of your choice, then a monthly subscription, cancel anytime.",
     "monthly": "Monthly",
     "yearly": "Yearly",
     "perMonth": "/month",
     "perYear": "/year",
     "billedYearly": "that's {price} per month",
-    "popular": "Most popular",
-    "cta": "Get started",
+    "popular": "Most complete",
+    "cta": "Try 7 days",
     "ctaFree": "Create my logbook",
     "plans": {
-      "free": {
-        "name": "Free",
-        "desc": "To try Strato, and for occasional private pilots.",
-        "price": "€0"
-      },
       "basic": {
         "name": "Basic",
         "desc": "For private pilots and student pilots."
       },
       "premium": {
-        "name": "Premium",
-        "desc": "For professional pilots: roster, FTL, unlimited exports."
+        "name": "Max",
+        "desc": "For professional pilots: roster, FTL, layovers, radar and real tracks."
       }
     },
     "highlights": {
-      "free": [
-        "Up to 50 flights",
-        "Automatic night time",
-        "CSV export",
-        "1 device"
-      ],
       "basic": [
         "Unlimited flights",
         "EASA, FAA, CASA PDF export",
-        "Licences and alerts",
+        "Licences, medical and alerts",
+        "Statistics and flight map",
         "Multi-device sync"
       ],
       "premium": [
         "Everything in Basic",
-        "Roster and calendar import",
-        "ORO.FTL limits",
+        "Roster import and FTL limits",
+        "Layovers: activities, restaurants, shows",
+        "Live radar and real flight tracks",
         "Audit, signatures, photo scan"
       ]
     },
@@ -196,14 +187,17 @@
       "audit": "Automatic logbook audit",
       "signature": "Digital signature",
       "scan": "Paper logbook photo scan",
-      "support": "Priority support"
+      "support": "Priority support",
+      "radar": "Live radar and real flight tracks",
+      "layovers": "Layovers module"
     },
     "values": {
       "fifty": "50",
       "unlimited": "Unlimited",
       "oneDevice": "1 device"
     },
-    "vat": "Prices include VAT. Cancel anytime."
+    "vat": "Prices incl. VAT, billed monthly. No commitment. Without a subscription your logbook stays viewable and exportable.",
+    "trialNote": "Card required at sign-up. Nothing is charged for 7 days; cancel in one click before the trial ends."
   },
   "testimonials": {
     "title": "They fly with Strato",
@@ -242,7 +236,7 @@
   "cta": {
     "title": "Ready for your next flight?",
     "text": "Create your logbook in under a minute. Import your history whenever you like.",
-    "button": "Free trial"
+    "button": "Try 7 days"
   },
   "footer": {
     "tagline": "The electronic logbook built by and for pilots.",
@@ -1016,9 +1010,9 @@
       "CASA": "CASA CASR Part 61"
     },
     "plans": {
-      "free": "Free",
+      "free": "No subscription",
       "basic": "Basic",
-      "premium": "Premium"
+      "premium": "Max"
     },
     "jobs": {
       "title": "Pilot job offers",
@@ -1299,6 +1293,18 @@
         "quota": "Data quota reached, will retry later.",
         "error": "Track unavailable right now."
       }
+    },
+    "access": {
+      "demo": "Demo: {days, plural, one {# day} other {# days}} left to try everything. Create your account to continue with a 7-day trial.",
+      "startTrial": "Start the trial",
+      "readOnlyBanner": "Your logbook is read-only: subscribe to log new flights. Your data stays viewable and exportable.",
+      "subscribe": "Choose a plan",
+      "upgrade": "Upgrade to Max",
+      "readOnlyShort": "Read-only: subscribe to save.",
+      "readOnlyTitle": "Subscription required",
+      "readOnlyText": "Without an active subscription your logbook stays viewable and exportable, but logging is off. Basic €6.99/month, Max €9.99/month.",
+      "maxTitle": "Max feature",
+      "maxText": "Roster, FTL, layovers, radar, real tracks, audit, signatures and scan are included in Max (€9.99/month)."
     }
   },
   "why": {
@@ -1428,8 +1434,8 @@
       "description": "Every AMC1 FCL.050 column, roster import, logbook audit, licence and medical tracking, FTL limits, statistics, signatures, offline mode, pilot jobs and pilot CV."
     },
     "pricing": {
-      "title": "Pricing — electronic pilot logbook from €0",
-      "description": "Free to get started, Basic for private and student pilots, Premium for professional pilots (roster, FTL, unlimited exports). No commitment, 33% off yearly."
+      "title": "Pricing — electronic pilot logbook from €6.99/month",
+      "description": "Basic at €6.99/month for private and student pilots, Max at €9.99/month for professional pilots (roster, FTL, layovers, radar). 7-day trial, no commitment."
     },
     "airlines": {
       "title": "Electronic logbook for airlines and flight schools",

@@ -13,10 +13,10 @@ export const SITE = {
   },
   pricing: {
     currency: "EUR",
-    basic: { monthly: 4.99, yearly: 39.99 },
-    premium: { monthly: 8.99, yearly: 69.99 },
-    /** shown as "-x %" on the yearly toggle */
-    yearlyDiscountLabel: "-33 %",
+    /** monthly only, after a 7-day trial (card required); "premium" is the Max plan */
+    basic: { monthly: 6.99 },
+    premium: { monthly: 9.99 },
+    trialDays: 7,
   },
   stores: {
     appStoreUrl: "#", // https://apps.apple.com/app/id...

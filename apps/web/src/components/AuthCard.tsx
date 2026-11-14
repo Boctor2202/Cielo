@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -22,6 +22,15 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
   const [error, setError] = useState("");
   const cloud = isCloudEnabled();
   const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/${locale}/app` : undefined;
+  // plan picked on the pricing page: the 7-day trial checkout opens right after the first sign-in
+  useEffect(() => {
+    const plan = search.get("plan");
+    if (mode === "signup" && (plan === "basic" || plan === "premium")) {
+      try {
+        localStorage.setItem("strato-plan", plan);
+      } catch {}
+    }
+  }, [mode, search]);
 
   async function local(withDemo: boolean) {
     setState("busy");

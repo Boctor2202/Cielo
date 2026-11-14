@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  BadgeCheck, BarChart3, UserRound, Hotel, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Wifi, WifiOff, MoreHorizontal, Radar,
+  BadgeCheck, BarChart3, UserRound, Hotel, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Wifi, WifiOff, MoreHorizontal, Radar, Lock,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -11,21 +11,23 @@ import { AirportsProvider } from "@/lib/airports";
 import { CloudProvider, useCloud } from "@/lib/cloud";
 import { usePilot } from "@/lib/hooks";
 import { useTrackAutoFetch } from "@/lib/tracks";
+import { AccessBanner, useAccess, usePendingCheckout } from "@/lib/access";
+import type { MaxFeature } from "@cielo/core";
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
 import { LocaleSwitch } from "../LocaleSwitch";
 import { MobileTabBar } from "./MobileTabBar";
 
-const NAV: { href: AppPathname; key: string; icon: typeof Gauge }[] = [
+const NAV: { href: AppPathname; key: string; icon: typeof Gauge; max?: MaxFeature }[] = [
   { href: "/app", key: "dashboard", icon: Gauge },
   { href: "/app/carnet", key: "logbook", icon: NotebookPen },
-  { href: "/app/roster", key: "roster", icon: CalendarDays },
-  { href: "/app/escales", key: "layovers", icon: Hotel },
-  { href: "/app/ftl", key: "ftl", icon: Timer },
+  { href: "/app/roster", key: "roster", icon: CalendarDays , max: "roster" },
+  { href: "/app/escales", key: "layovers", icon: Hotel , max: "layovers" },
+  { href: "/app/ftl", key: "ftl", icon: Timer , max: "ftl" },
   { href: "/app/documents", key: "documents", icon: BadgeCheck },
   { href: "/app/statistiques", key: "stats", icon: BarChart3 },
   { href: "/app/carte", key: "map", icon: MapIcon },
-  { href: "/app/radar", key: "radar", icon: Radar },
+  { href: "/app/radar", key: "radar", icon: Radar , max: "radar" },
   { href: "/app/emplois", key: "jobs", icon: Briefcase },
   { href: "/app/cv", key: "cv", icon: FileUser },
   { href: "/app/appareils", key: "aircraft", icon: Plane },
@@ -60,7 +62,9 @@ function Shell({ children }: { children: ReactNode }) {
   const cloud = useCloud();
   const t = useTranslations("app.nav");
   const pathname = usePathname();
-  useTrackAutoFetch();
+  const access = useAccess();
+  usePendingCheckout();
+  useTrackAutoFetch(access.has("tracks") && access.canWrite);
   const pilot = usePilot();
   const online = useOnline();
   const [more, setMore] = useState(false);
@@ -84,7 +88,7 @@ function Shell({ children }: { children: ReactNode }) {
             </Link>
           </div>
           <nav className="mt-4 flex-1 space-y-0.5 overflow-y-auto px-3" aria-label="App">
-            {NAV.map(({ href, key, icon: Icon }) => (
+            {NAV.map(({ href, key, icon: Icon, max }) => (
               <Link
                 key={href}
                 href={href}
@@ -92,7 +96,8 @@ function Shell({ children }: { children: ReactNode }) {
                   isActive(href) ? "bg-bg/60 text-accent shadow-[inset_0_1px_0_var(--glass-hi)]" : "text-muted hover:bg-bg/40 hover:text-text"
                 }`}
               >
-                <Icon size={18} /> {t(key)}
+                <Icon size={18} /> <span className="flex-1">{t(key)}</span>
+                {max && !access.has(max) && <Lock size={13} className="opacity-60" aria-label="Max" />}
               </Link>
             ))}
           </nav>
@@ -129,7 +134,17 @@ function Shell({ children }: { children: ReactNode }) {
           </header>
           <main className="mx-auto max-w-[1340px] px-3 pb-28 pt-3 sm:px-4 lg:pb-3 lg:pt-3">
             {/* the dashboard draws its own glass workspace; every other page sits in the same pane */}
-            {pathname === "/app" ? children : <div className="app-glass min-h-[calc(100dvh-1.5rem)] rounded-[28px] px-4 py-6 sm:px-8 sm:py-8">{children}</div>}
+            {pathname === "/app" ? (
+              <>
+                <AccessBanner />
+                {children}
+              </>
+            ) : (
+              <div className="app-glass min-h-[calc(100dvh-1.5rem)] rounded-[28px] px-4 py-6 sm:px-8 sm:py-8">
+                <AccessBanner />
+                {children}
+              </div>
+            )}
           </main>
         </div>
 

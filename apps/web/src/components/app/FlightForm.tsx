@@ -11,6 +11,7 @@ import { useAirports } from "@/lib/airports";
 import { useDuration, useTable, useTypes } from "@/lib/hooks";
 import { findType, flightToInput, saveFlight, softDelete } from "@/lib/repo";
 import { db } from "@/lib/db";
+import { useAccess } from "@/lib/access";
 import { AirportInput } from "./AirportInput";
 import { FlightAwareFill } from "./FlightAwareFill";
 import { Card, ClockInput, DurationInput, Field, Segmented, Toggle, useToast } from "./ui";
@@ -35,6 +36,7 @@ function blank(pilot: Pilot | undefined): FlightFormInput {
 
 export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { flight?: Flight; prefill?: Partial<FlightFormInput>; pilot?: Pilot; source?: Flight["source"]; rosterEventId?: string }) {
   const t = useTranslations("app.form");
+  const tacc = useTranslations("app.access");
   const tc = useTranslations("common");
   const tfn = useTranslations("app.functions");
   const ta = useTranslations("app.aircraft");
@@ -51,6 +53,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [signOpen, setSignOpen] = useState(false);
+  const access = useAccess();
   const set = <K extends keyof FlightFormInput>(k: K, val: FlightFormInput[K]) => setV((s) => ({ ...s, [k]: val }));
 
   // Pilot defaults arrive asynchronously for new flights.
@@ -337,10 +340,11 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
           )}
           <div className="space-y-2 border-t border-border p-4">
             {error && <p className="text-sm text-warning">{error}</p>}
-            <button type="submit" className="btn btn-primary w-full" disabled={busy || !airports}>
+            {!access.canWrite && <p className="text-sm text-muted">{tacc("readOnlyShort")}</p>}
+            <button type="submit" className="btn btn-primary w-full" disabled={busy || !airports || !access.canWrite}>
               {tc("save")}
             </button>
-            <button type="button" className="btn btn-secondary w-full" disabled={busy || !airports} onClick={() => submit(true)}>
+            <button type="button" className="btn btn-secondary w-full" disabled={busy || !airports || !access.canWrite} onClick={() => submit(true)}>
               {t("saveAndNew")}
             </button>
           </div>
@@ -349,7 +353,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
         {flight && (
           <div className="card mt-4 space-y-2 p-4">
             <SignatureStatus flight={flight} />
-            {!flight.signatureId && (
+            {!flight.signatureId && access.has("signature") && (
               <button type="button" className="btn btn-secondary w-full" onClick={() => setSignOpen(true)}>
                 <PenLine size={16} /> {t("sign")}
               </button>

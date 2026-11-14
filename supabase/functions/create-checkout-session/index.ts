@@ -1,5 +1,6 @@
 // Creates a Stripe Checkout session for the signed-in pilot.
-// Body: { plan: "basic" | "premium", interval: "monthly" | "yearly", returnPath?: "/settings" }
+// Body: { plan: "basic" | "premium" (Max), interval?: "monthly", returnPath?: "/settings" }
+// No free plan: the first subscription of a pilot starts with a 7-day trial; the card is collected up front.
 // Response: { url }
 // Secrets: STRIPE_SECRET_KEY, STRIPE_PRICE_*, APP_URL (e.g. https://app.cielo.aero).
 import { errorResponse, json, preflight, readJson, requireEnv } from "../_shared/http.ts";
@@ -23,7 +24,8 @@ Deno.serve(async (req) => {
 
   const body = await readJson<Body>(req);
   if (!body || (body.plan !== "basic" && body.plan !== "premium")) return errorResponse(400, "plan must be basic or premium");
-  if (body.interval !== "monthly" && body.interval !== "yearly") return errorResponse(400, "interval must be monthly or yearly");
+  const interval: Interval = body.interval ?? "monthly";
+  if (interval !== "monthly" && interval !== "yearly") return errorResponse(400, "interval must be monthly or yearly");
 
   // Only same-site relative paths: never redirect to an arbitrary URL from the body.
   const returnPath = body.returnPath && /^\/[A-Za-z0-9\-_/]*$/.test(body.returnPath) ? body.returnPath : "/settings/subscription";
@@ -40,14 +42,24 @@ Deno.serve(async (req) => {
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+    // one trial per pilot, whatever the store (Stripe, Apple, Google)
+    const { count: pastSubscriptions } = await adminClient()
+      .from("subscriptions")
+      .select("id", { count: "exact", head: true })
+      .eq("pilot_id", user.id);
+    const trial = !pastSubscriptions;
 
     const session = await stripeRequest<{ id: string; url: string }>("POST", "/checkout/sessions", {
       mode: "subscription",
-      line_items: { 0: { price: priceIdFor(body.plan, body.interval), quantity: 1 } },
+      line_items: { 0: { price: priceIdFor(body.plan, interval), quantity: 1 } },
+      payment_method_collection: "always",
       client_reference_id: user.id,
       ...(previous?.customer_id ? { customer: previous.customer_id } : { customer_email: user.email }),
       metadata: { pilot_id: user.id },
-      subscription_data: { metadata: { pilot_id: user.id } },
+      subscription_data: {
+        metadata: { pilot_id: user.id },
+        ...(trial ? { trial_period_days: 7, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } } : {}),
+      },
       allow_promotion_codes: true,
       success_url: `${appUrl}${returnPath}?checkout=success`,
       cancel_url: `${appUrl}${returnPath}?checkout=cancel`,

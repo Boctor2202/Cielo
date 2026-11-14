@@ -1,68 +1,52 @@
 "use client";
 
 import { Check, Minus } from "lucide-react";
-import { useState } from "react";
 import { useLocale, useMessages, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { SITE } from "@/config/site";
 
-type Plan = "free" | "basic" | "premium";
+type Plan = "basic" | "premium";
 type Cell = boolean | string;
 
-/** Feature matrix — keep in sync with the entitlements enforced by the app. */
-const MATRIX: { row: string; free: Cell; basic: Cell; premium: Cell }[] = [
-  { row: "flights", free: "fifty", basic: "unlimited", premium: "unlimited" },
-  { row: "night", free: true, basic: true, premium: true },
-  { row: "airports", free: true, basic: true, premium: true },
-  { row: "csv", free: true, basic: true, premium: true },
-  { row: "pdf", free: false, basic: true, premium: true },
-  { row: "carry", free: true, basic: true, premium: true },
-  { row: "licenses", free: false, basic: true, premium: true },
-  { row: "recency", free: true, basic: true, premium: true },
-  { row: "sync", free: "oneDevice", basic: true, premium: true },
-  { row: "stats", free: false, basic: true, premium: true },
-  { row: "roster", free: false, basic: false, premium: true },
-  { row: "ftl", free: false, basic: false, premium: true },
-  { row: "audit", free: false, basic: false, premium: true },
-  { row: "signature", free: false, basic: false, premium: true },
-  { row: "scan", free: false, basic: false, premium: true },
-  { row: "support", free: false, basic: false, premium: true },
+/** Feature matrix — keep in sync with MAX_FEATURES in @cielo/core (the entitlements enforced by the app). */
+const MATRIX: { row: string; basic: Cell; premium: Cell }[] = [
+  { row: "flights", basic: "unlimited", premium: "unlimited" },
+  { row: "night", basic: true, premium: true },
+  { row: "airports", basic: true, premium: true },
+  { row: "csv", basic: true, premium: true },
+  { row: "pdf", basic: true, premium: true },
+  { row: "carry", basic: true, premium: true },
+  { row: "licenses", basic: true, premium: true },
+  { row: "recency", basic: true, premium: true },
+  { row: "sync", basic: true, premium: true },
+  { row: "stats", basic: true, premium: true },
+  { row: "roster", basic: false, premium: true },
+  { row: "ftl", basic: false, premium: true },
+  { row: "layovers", basic: false, premium: true },
+  { row: "radar", basic: false, premium: true },
+  { row: "audit", basic: false, premium: true },
+  { row: "signature", basic: false, premium: true },
+  { row: "scan", basic: false, premium: true },
+  { row: "support", basic: false, premium: true },
 ];
 
 export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
   const t = useTranslations("pricing");
   const locale = useLocale();
   const messages = useMessages() as { pricing: { highlights: Record<Plan, string[]> } };
-  const [yearly, setYearly] = useState(true);
   const money = (v: number) => new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-IE", { style: "currency", currency: SITE.pricing.currency }).format(v);
-
-  const plans: Plan[] = ["free", "basic", "premium"];
-  const priceOf = (p: Plan) => (p === "free" ? null : yearly ? SITE.pricing[p].yearly : SITE.pricing[p].monthly);
+  const plans: Plan[] = ["basic", "premium"];
 
   return (
     <section id="pricing" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-2xl text-center">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
         <p className="mt-4 text-lg text-muted">{t("subtitle")}</p>
-        <div className="mt-8 inline-flex rounded-lg border border-border bg-surface p-1" role="group">
-          {[false, true].map((y) => (
-            <button
-              key={String(y)}
-              type="button"
-              aria-pressed={yearly === y}
-              onClick={() => setYearly(y)}
-              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${yearly === y ? "bg-bg text-text shadow-sm" : "text-muted"}`}
-            >
-              {y ? t("yearly") : t("monthly")}
-              {y && <span className="ml-2 rounded bg-accent/15 px-1.5 py-0.5 text-xs text-accent">{SITE.pricing.yearlyDiscountLabel}</span>}
-            </button>
-          ))}
-        </div>
       </div>
 
-      <div className="mt-12 grid gap-5 md:grid-cols-3">
+      <div className="mx-auto mt-12 grid max-w-4xl gap-5 md:grid-cols-2">
         {plans.map((p) => {
-          const price = priceOf(p);
+          const price = SITE.pricing[p].monthly;
           const popular = p === "premium";
           return (
             <div key={p} className={`relative flex flex-col rounded-2xl border p-7 ${popular ? "border-accent bg-surface shadow-[0_0_0_1px_var(--accent)]" : "border-border bg-bg"}`}>
@@ -70,10 +54,9 @@ export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
               <h3 className="text-lg font-bold">{t(`plans.${p}.name`)}</h3>
               <p className="mt-1 min-h-10 text-sm text-muted">{t(`plans.${p}.desc`)}</p>
               <div className="mt-6 flex items-baseline gap-1">
-                <span className="num text-4xl font-semibold tracking-tight">{price === null ? t("plans.free.price") : money(price)}</span>
-                {price !== null && <span className="text-muted">{yearly ? t("perYear") : t("perMonth")}</span>}
+                <span className="num text-4xl font-semibold tracking-tight">{money(price)}</span>
+                <span className="text-muted">{t("perMonth")}</span>
               </div>
-              <p className="mt-1 h-5 text-xs text-muted">{price !== null && yearly ? t("billedYearly", { price: money(price / 12) }) : ""}</p>
               <ul className="mt-6 flex-1 space-y-2.5 text-[15px]">
                 {messages.pricing.highlights[p].map((h) => (
                   <li key={h} className="flex gap-2.5">
@@ -83,16 +66,17 @@ export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
                 ))}
               </ul>
               <Link
-                href={{ pathname: "/inscription", query: p === "free" ? {} : { plan: p, interval: yearly ? "year" : "month" } }}
+                href={{ pathname: "/inscription", query: { plan: p } }}
                 className={`btn mt-8 w-full ${popular ? "btn-primary" : "btn-secondary"}`}
               >
-                {p === "free" ? t("ctaFree") : t("cta")}
+                {t("cta")}
               </Link>
             </div>
           );
         })}
       </div>
-      <p className="mt-4 text-center text-xs text-muted">{t("vat")}</p>
+      <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-muted">{t("trialNote")}</p>
+      <p className="mt-2 text-center text-xs text-muted">{t("vat")}</p>
 
       {showCompare && (
         <div className="mt-20">

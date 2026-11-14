@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  analyseFtl, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
+  accessFor, analyseFtl, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
   detectMapping, formatDuration, icalToRosterEvent, licenseStatus, maxDailyFdp, parseCsv, parseDuration,
   parseFlexibleDate, parseIcal, rowsToFlights, sumFlights, sunElevation, type Airport, type Flight,
 } from "../src";
@@ -211,5 +211,22 @@ describe("flight tracks", () => {
     const pts = leg(t0, 200, 48).map((p) => [p[0], p[1], p[2], 35000, 450] as import("../src").TrackPoint);
     expect(simplifyTrack(pts).length).toBe(2);
     expect(simplifyTrack(leg(t0, 40, 48)).length).toBeGreaterThan(10);
+  });
+});
+
+describe("access", () => {
+  const now = new Date("2026-11-14T12:00:00Z");
+  const p = (createdAt: string, tier: "free" | "basic" | "premium", exp?: string) => ({ createdAt, subscriptionTier: tier, subscriptionExpiresAt: exp ?? null });
+  it("gives a 7-day local demo, then read-only", () => {
+    const a = accessFor(p("2026-11-10T00:00:00Z", "free"), { signedIn: false, now });
+    expect(a.demo && a.canWrite && a.has("radar")).toBe(true);
+    const b = accessFor(p("2026-11-01T00:00:00Z", "free"), { signedIn: false, now });
+    expect(b.canWrite || b.has("roster")).toBe(false);
+  });
+  it("signed-in pilots need a subscription; Basic has no Max features", () => {
+    expect(accessFor(p("2026-11-13T00:00:00Z", "free"), { signedIn: true, now }).canWrite).toBe(false);
+    const basic = accessFor(p("2026-01-01T00:00:00Z", "basic", "2026-12-01T00:00:00Z"), { signedIn: true, now });
+    expect(basic.canWrite && !basic.has("ftl")).toBe(true);
+    expect(accessFor(p("2026-01-01T00:00:00Z", "premium", "2026-11-01T00:00:00Z"), { signedIn: true, now }).canWrite).toBe(false);
   });
 });

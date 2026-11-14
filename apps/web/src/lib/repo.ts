@@ -7,6 +7,12 @@ import {
 } from "@cielo/core";
 import { AIRCRAFT_TYPES, type AirportIndex } from "@cielo/reference-data";
 import { db, localStore } from "./db";
+import { ReadOnlyError, writeAllowed } from "./write-guard";
+
+/** No subscription (and no demo left): the logbook is read-only. */
+const guard = () => {
+  if (!writeAllowed()) throw new ReadOnlyError();
+};
 
 const now = () => new Date().toISOString();
 
@@ -79,6 +85,7 @@ export function findType(types: AircraftType[], idOrIcao?: string | null): Aircr
 }
 
 export async function saveAircraft(a: Partial<Aircraft> & { registration: string; aircraftTypeId: string }): Promise<Aircraft> {
+  guard();
   const pilot = await ensurePilot();
   const existing = a.id ? await db().t("aircraft").get(a.id) : undefined;
   const rec = stamp({
@@ -93,6 +100,7 @@ export async function saveAircraft(a: Partial<Aircraft> & { registration: string
 }
 
 export async function saveCustomType(t: Omit<AircraftType, "id" | "createdAt" | "updatedAt"> & { id?: string }): Promise<AircraftType> {
+  guard();
   const pilot = await ensurePilot();
   const rec = stamp({ ...t, icao: t.icao.toUpperCase(), ownerPilotId: pilot.id } as AircraftType);
   await db().t("aircraft_types").put(rec);
@@ -241,6 +249,7 @@ export async function buildFlight(
 }
 
 export async function saveFlight(input: FlightFormInput, airports: AirportIndex, opts: Parameters<typeof buildFlight>[2] = {}) {
+  guard();
   const f = await buildFlight(input, airports, opts);
   await db().t("flights").put(f);
   if (f.rosterEventId) {
@@ -251,11 +260,13 @@ export async function saveFlight(input: FlightFormInput, airports: AirportIndex,
 }
 
 export async function softDelete<T extends TableName>(table: T, id: string) {
+  guard();
   const rec = await db().t(table).get(id);
   if (rec) await db().t(table).put({ ...rec, deletedAt: now(), updatedAt: now() } as TableMap[T]);
 }
 
 export async function restore<T extends TableName>(table: T, id: string) {
+  guard();
   const rec = await db().t(table).get(id);
   if (rec) await db().t(table).put({ ...rec, deletedAt: null, updatedAt: now() } as TableMap[T]);
 }
@@ -308,6 +319,7 @@ export async function sha256(text: string): Promise<string> {
 }
 
 export async function signFlight(flightId: string, s: Pick<Signature, "signerName" | "signerRole" | "signerLicenceNumber" | "imageDataUrl">) {
+  guard();
   const f = await db().t("flights").get(flightId);
   if (!f) return;
   const pilot = await ensurePilot();
@@ -324,6 +336,7 @@ export async function verifySignature(f: Flight): Promise<{ sig?: Signature; val
 }
 
 export async function removeSignature(f: Flight) {
+  guard();
   if (f.signatureId) await softDelete("signatures", f.signatureId);
   await db().t("flights").put({ ...f, signatureId: null, locked: false, updatedAt: now() });
 }
@@ -331,6 +344,7 @@ export async function removeSignature(f: Flight) {
 /* ---------- Generic helpers ---------- */
 
 export async function put<T extends TableName>(table: T, rec: Omit<TableMap[T], "id" | "createdAt" | "updatedAt" | "pilotId"> & { id?: string }) {
+  guard();
   const pilot = await ensurePilot();
   const existing = rec.id ? await db().t(table).get(rec.id) : undefined;
   const row = stamp({ ...(existing ?? {}), ...rec, pilotId: pilot.id } as unknown as TableMap[T]);
@@ -352,6 +366,7 @@ export async function exportAll(): Promise<Record<string, unknown>> {
 }
 
 export async function importAll(data: Record<string, unknown>) {
+  guard();
   // backups made before the rename say "Cielo" or "Sillage"
   if (data.app !== "Strato" && data.app !== "Sillage" && data.app !== "Cielo") throw new Error("Not a Strato backup");
   await db().transaction("rw", db().tables, async () => {

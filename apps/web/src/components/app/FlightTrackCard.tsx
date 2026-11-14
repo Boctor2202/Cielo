@@ -9,6 +9,7 @@ import type { Flight, TrackPoint } from "@cielo/core";
 import { db } from "@/lib/db";
 import { fetchFlightTrack, TRACK_WINDOW_H, type TrackResult } from "@/lib/tracks";
 import { currentTheme } from "@/lib/theme";
+import { useAccess } from "@/lib/access";
 import { DAY, NIGHT, loadGoogle } from "./GoogleRoutesMap";
 import { Card } from "./ui";
 
@@ -20,7 +21,8 @@ export function FlightTrackCard({ flight }: { flight: Flight }) {
   const track = useLiveQuery(() => db().t("flight_tracks").get(flight.id), [flight.id]);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<TrackResult | null>(null);
-  if (flight.isFstd) return null;
+  const access = useAccess();
+  if (flight.isFstd || !access.has("tracks")) return null;
 
   const inn = flight.inUtc ?? flight.onUtc;
   const recent = !!inn && Date.now() - Date.parse(inn) < TRACK_WINDOW_H * 3600_000;

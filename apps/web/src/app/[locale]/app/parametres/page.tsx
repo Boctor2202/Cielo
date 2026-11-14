@@ -29,7 +29,6 @@ export default function SettingsPage() {
   const [v, setV] = useState<Pilot | null>(null);
   const [delOpen, setDelOpen] = useState(false);
   const [word, setWord] = useState("");
-  const [yearly, setYearly] = useState(true);
   useEffect(() => {
     if (pilot && !v) setV(pilot);
   }, [pilot, v]);
@@ -42,7 +41,7 @@ export default function SettingsPage() {
 
   async function checkout(plan: "basic" | "premium") {
     try {
-      const { url } = await cloud.invoke<{ url: string }>("create-checkout-session", { plan, interval: yearly ? "yearly" : "monthly", returnPath: `/${locale}/app/parametres` });
+      const { url } = await cloud.invoke<{ url: string }>("create-checkout-session", { plan, interval: "monthly", returnPath: `/${locale}/app/parametres` });
       window.location.assign(url);
     } catch (e) {
       toast(String((e as Error).message ?? e));
@@ -104,11 +103,11 @@ export default function SettingsPage() {
           <p className="text-sm">{t("currentPlan", { plan: tp(v.subscriptionTier) })}</p>
           {cloud.session ? (
             <div className="mt-4 space-y-3">
-              <Segmented value={yearly ? "y" : "m"} onChange={(x) => setYearly(x === "y")} options={[{ value: "m", label: tpr("monthly") }, { value: "y", label: tpr("yearly") }]} />
+              <p className="text-xs text-muted">{tpr("trialNote")}</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {(["basic", "premium"] as const).map((p) => (
                   <button key={p} type="button" className={`btn ${p === "premium" ? "btn-primary" : "btn-secondary"}`} disabled={v.subscriptionTier === p} onClick={() => checkout(p)}>
-                    {tp(p)} · {yearly ? SITE.pricing[p].yearly : SITE.pricing[p].monthly} €{yearly ? tpr("perYear") : tpr("perMonth")}
+                    {tp(p)} · {SITE.pricing[p].monthly.toLocaleString(locale, { minimumFractionDigits: 2 })} €{tpr("perMonth")}
                   </button>
                 ))}
               </div>

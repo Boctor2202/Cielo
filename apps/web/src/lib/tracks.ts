@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { stamp, type Flight, type FlightTrack } from "@cielo/core";
 import { db, localStore } from "./db";
 import { ensurePilot } from "./repo";
+import { writeAllowed } from "./write-guard";
 
 /** adsb.lol keeps an aircraft's track for about 24 h; we try for a little longer after block-on. */
 export const TRACK_WINDOW_H = 30;
@@ -37,6 +38,7 @@ async function hexFor(registration: string): Promise<string | null> {
 
 /** Fetches and stores the real track of one logged flight. */
 export async function fetchFlightTrack(f: Flight): Promise<TrackResult> {
+  if (!writeAllowed()) return "error";
   const existing = await db().t("flight_tracks").get(f.id);
   if (existing && !existing.deletedAt) return "exists";
   const times = blockTimes(f);
@@ -85,8 +87,9 @@ async function sweep() {
 }
 
 /** Mounted once in the app shell: saves the real track of each new flight while adsb.lol still has it. */
-export function useTrackAutoFetch() {
+export function useTrackAutoFetch(enabled: boolean) {
   useEffect(() => {
+    if (!enabled) return;
     const first = setTimeout(sweep, 5_000);
     const i = setInterval(sweep, RETRY_MIN * 60_000);
     // a flight just saved: try soon
@@ -101,5 +104,5 @@ export function useTrackAutoFetch() {
       db().t("flights").hook("creating").unsubscribe(onChange);
       db().t("flights").hook("updating").unsubscribe(onChange);
     };
-  }, []);
+  }, [enabled]);
 }
