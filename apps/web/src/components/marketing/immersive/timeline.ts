@@ -37,13 +37,13 @@ export function vec(keys: Key<[number, number, number]>[], p: number): [number, 
  * (fractions of its duration). The clouds clip is cut before the jet comes out on top of the layer.
  */
 export const SHOTS = {
-  takeoff: { from: 0, to: 0.3, start: 0, end: 1 },
-  gear: { from: 0.3, to: 0.44, start: 0, end: 1 },
-  clouds: { from: 0.44, to: 0.54, start: 0, end: 1 },
+  takeoff: { from: 0, to: 0.38, start: 0, end: 1 },
+  gear: { from: 0.38, to: 0.5, start: 0, end: 1 },
+  clouds: { from: 0.5, to: 0.57, start: 0, end: 1 },
 } as const;
 
 /** Scroll progress where the Earth takes over. */
-export const GLOBE_FROM = 0.56;
+export const GLOBE_FROM = 0.59;
 
 export type Phase = "lineup" | "roll" | "rotate" | "gearUp" | "climb" | "cruise";
 
@@ -64,7 +64,7 @@ export const createReadouts = (): Readouts => ({
 });
 
 /** Sunrise: the sun climbs through the EASA −6° threshold (end of night) during the takeoff roll. */
-export const SUN_ELEV: Key<number>[] = [[0, -7], [0.3, -5.4], [0.56, -2.5], [1, 1.5]];
+export const SUN_ELEV: Key<number>[] = [[0, -7], [0.38, -5.4], [0.59, -2.5], [1, 1.5]];
 
 /** Story chapters as scroll-progress bounds: lined up, takeoff (night), your aircraft, routes (globe), ready. */
 export const CHAPTERS = [0, 0.2, 0.4, 0.6, 0.8, 1] as const;

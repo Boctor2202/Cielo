@@ -1138,6 +1138,13 @@
       "gearUp": "POSITIVE RATE · GEAR UP",
       "climb": "CLIMB",
       "cruise": "CRUISE"
+    },
+    "phaseTitle": {
+      "lineup": "Lined up",
+      "roll": "Takeoff roll",
+      "rotate": "Rotation · lift-off",
+      "gearUp": "Gear up",
+      "climb": "Climb"
     }
   },
   "seo": {

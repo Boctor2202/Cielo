@@ -4,16 +4,13 @@ import { ArrowRight, ChevronDown, Move3d } from "lucide-react";
 import { motion, useMotionValueEvent, useScroll, useSpring, useTransform, type MotionValue } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { AIRCRAFT_TYPES } from "@cielo/reference-data";
 import { Link } from "@/i18n/navigation";
-import { DEFAULT_VISUAL, EARTH_CREDITS, FILM_CREDITS, src, srcSet, type AircraftVisual, type Img } from "@/lib/aircraft-visuals";
-import { useHomeAircraft, type HomeAircraft } from "@/lib/home-aircraft";
+import { DEFAULT_VISUAL, EARTH_CREDITS, FILM_CREDITS } from "@/lib/aircraft-visuals";
 import { StoreBadges } from "../sections";
-import { AircraftPicker } from "./AircraftPicker";
 import { createReadouts, GLOBE_FROM, readoutsAt, SHOTS, type Readouts } from "./timeline";
 import type { FlightScene } from "./scene";
 
-const CHAPTER_VH = 120;
+const CHAPTER_VH = 180;
 const CHAPTER_COUNT = 5;
 
 const fmtClock = (m: number) => {
@@ -24,7 +21,7 @@ const fmtDur = (m: number) => `${Math.floor(m / 60)}:${String(Math.round(m) % 60
 const fmtElev = (e: number) => `${e >= 0 ? "+" : "−"}${Math.abs(e).toFixed(1)}°`;
 
 /**
- * Immersive home. A sticky stage plays a film scrubbed by the scroll — the pilot's aircraft lined up at the
+ * Immersive home, the same for every visitor. A sticky stage plays a film scrubbed by the scroll — a business jet lined up at the
  * runway threshold, the takeoff roll that speeds up as you scroll, rotation, gear up, into the clouds — then
  * hands over to a photographic 3D Earth with the pilot's routes, which the visitor turns by click-and-drag.
  * The story is real DOM text on top (indexable, screen-reader friendly); with reduced motion the film is
@@ -42,10 +39,8 @@ export function ImmersiveHome() {
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
-  const aircraft = useHomeAircraft();
-  const { visual } = aircraft;
-  // types without their own film play the business-jet film until theirs is made
-  const film = visual.film ?? DEFAULT_VISUAL.film;
+  // the same film for every visitor
+  const film = DEFAULT_VISUAL.film!;
 
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -133,8 +128,6 @@ export function ImmersiveHome() {
   const globeOpacity = useTransform(p, [GLOBE_FROM - 0.01, GLOBE_FROM + 0.06], [0, 1]);
 
   const chapters = t.raw("chapters") as string[];
-  const type = AIRCRAFT_TYPES.find((x) => x.icao === aircraft.icao);
-  const name = aircraft.label;
 
   return (
     <section ref={sectionRef} className="relative bg-[#02040b] text-white" style={{ height: `${CHAPTER_VH * CHAPTER_COUNT}vh` }}>
@@ -156,9 +149,7 @@ export function ImmersiveHome() {
 
         {/* Film */}
         <motion.div className="absolute inset-0" style={{ opacity: filmOpacity }} aria-hidden>
-          <motion.div className="absolute inset-0" initial={false} animate={{ opacity: aircraft.ready ? 1 : 0 }} transition={{ duration: 0.6 }}>
-            {film ? <Film key={film.base} base={film.base} poster={film.poster} p={p} reduce={reduce} /> : <Stills key={visual.id} visual={visual} p={p} />}
-          </motion.div>
+          <Film base={film.base} poster={film.poster} p={p} reduce={reduce} />
           <motion.div className="absolute inset-0 bg-[#f4f1ea]" style={{ opacity: whiteout }} />
         </motion.div>
         <motion.div className="pointer-events-none absolute inset-0 bg-[#f4f1ea]" style={{ opacity: useTransform(p, [GLOBE_FROM - 0.004, GLOBE_FROM, GLOBE_FROM + 0.08], [0, 0.92, 0]) }} aria-hidden />
@@ -181,7 +172,8 @@ export function ImmersiveHome() {
 
         <FlightStrip readouts={readouts} />
         <ProgressRail readouts={readouts} labels={chapters} />
-        <Credits visual={visual} hasFilm={!!film} />
+        <PhaseTitle readouts={readouts} />
+        <Credits />
       </div>
 
       {/* ---------- Story ---------- */}
@@ -201,7 +193,6 @@ export function ImmersiveHome() {
               {th("ctaDemo")}
             </Link>
           </div>
-          <AircraftPicker aircraft={aircraft} />
           <StoreBadges className="mt-7 max-sm:hidden [&_a]:!border-white/15 [&_a]:!bg-white [&_a]:!text-[#0a1626]" />
           <p className="mt-10 flex items-center gap-2 text-sm text-white/70" aria-hidden>
             <ChevronDown size={16} className="animate-bounce motion-reduce:animate-none" /> {t("scroll")}
@@ -220,16 +211,8 @@ export function ImmersiveHome() {
         <Chapter align="left">
           <Panel>
             <Label>{t("machine.label")}</Label>
-            <Title>{name ? t("machine.title", { name }) : t("machine.titleGeneric")}</Title>
+            <Title>{t("machine.titleGeneric")}</Title>
             <p className="mt-4 leading-relaxed text-white/80">{t("machine.text")}</p>
-            {type && (
-              <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-white/10 pt-5">
-                <Fact k={t("machine.icao")} v={type.icao} />
-                <Fact k={t("machine.rating")} v={type.classOrTypeRating ?? "—"} />
-                <Fact k={t("machine.engines")} v={type.engineCount ? `${type.engineCount} × ${t(`machine.engineTypes.${type.engineType}`)}` : t(`machine.engineTypes.${type.engineType}`)} />
-                <Fact k={t("machine.operation")} v={type.multiPilot ? t("machine.multi") : t("machine.single")} />
-              </dl>
-            )}
           </Panel>
         </Chapter>
 
@@ -256,50 +239,62 @@ export function ImmersiveHome() {
   );
 }
 
-/* ---------- film: video clips scrubbed by scroll ---------- */
+/* ---------- film: image sequences scrubbed by scroll ---------- */
 
 type ShotId = keyof typeof SHOTS;
 const SHOT_IDS = Object.keys(SHOTS) as ShotId[];
+const FRAME_COUNT: Record<ShotId, number> = { takeoff: 190, gear: 121, clouds: 40 };
 
 /**
- * Each clip is downloaded whole (blob URL) so seeking never waits for the network, then its currentTime
- * follows the scroll. Clips are encoded with a short keyframe interval so seeks land fast in every browser.
+ * The film is a sequence of still frames (24 per second of footage) drawn on a canvas: any scroll position
+ * shows its frame at once, with no video seeking. Frames load coarse-to-fine (every 8th, then every 4th…)
+ * so the whole sequence is scrubbable within a second and sharpens as the rest arrives.
  */
 function Film({ base, poster, p, reduce }: { base: string; poster: string; p: MotionValue<number>; reduce: boolean }) {
-  const videos = useRef<Partial<Record<ShotId, HTMLVideoElement | null>>>({});
-  const [ready, setReady] = useState<Partial<Record<ShotId, boolean>>>({});
-  const [shot, setShot] = useState<ShotId>("takeoff");
+  const frames = useRef<Record<ShotId, (HTMLImageElement | null)[]>>({ takeoff: [], gear: [], clouds: [] });
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (reduce) return;
     const small = window.innerWidth < 900 || (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
-    const q = small ? "720" : "1080";
-    const urls: string[] = [];
+    const q = small ? "720" : "1280";
     let alive = true;
-    (async () => {
-      for (const id of SHOT_IDS) {
+    const queue: [ShotId, number][] = [];
+    const seen = new Set<string>();
+    for (const step of [8, 4, 2, 1])
+      for (const id of SHOT_IDS)
+        for (let i = 0; i < FRAME_COUNT[id]; i += step) {
+          const k = `${id}/${i}`;
+          if (!seen.has(k)) {
+            seen.add(k);
+            queue.push([id, i]);
+          }
+        }
+    let next = 0;
+    const worker = async () => {
+      while (alive && next < queue.length) {
+        const [id, i] = queue[next++]!;
+        const img = new Image();
+        img.decoding = "async";
+        img.src = `${base}/frames-${q}/${id}/${i}.webp`;
         try {
-          const blob = await (await fetch(`${base}/${id}-${q}.mp4`)).blob();
-          if (!alive) return;
-          const url = URL.createObjectURL(blob);
-          urls.push(url);
-          const v = videos.current[id];
-          if (!v) continue;
-          v.src = url;
-          v.addEventListener("loadeddata", () => alive && setReady((r) => ({ ...r, [id]: true })), { once: true });
-          v.load();
-        } catch {}
+          await img.decode();
+        } catch {
+          continue;
+        }
+        if (!alive) return;
+        frames.current[id][i] = img;
+        if (id === "takeoff" && i === 0) setReady(true);
       }
-    })();
+    };
+    for (let w = 0; w < 6; w++) void worker();
     return () => {
       alive = false;
-      urls.forEach((u) => URL.revokeObjectURL(u));
     };
   }, [base, reduce]);
 
-  // seek loop: only the visible clip seeks, one seek at a time (no backlog when scrolling fast).
-  // The frame is then drawn on a canvas with a speed effect: during the takeoff roll the image pushes in,
-  // the runway streaks outward (zoom blur, the aircraft at the centre stays sharp) and the camera shakes a little.
+  // Draw loop. During the takeoff roll the image pushes in, the runway streaks outward (zoom blur, the aircraft
+  // at the centre stays sharp) and the camera shakes a little, all in proportion to the speed.
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (reduce) return;
@@ -307,18 +302,21 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
     const cv = canvas.current;
     const ctx = cv?.getContext("2d", { alpha: false });
     const layers = window.innerWidth < 768 ? 3 : 5;
+    const nearest = (id: ShotId, f: number) => {
+      const list = frames.current[id];
+      for (let d = 0; d < FRAME_COUNT[id]; d++) {
+        const a = list[f - d] ?? list[f + d];
+        if (a) return a;
+      }
+      return null;
+    };
     const loop = () => {
       const v = p.get();
       const id = SHOT_IDS.find((k) => v < SHOTS[k].to) ?? SHOT_IDS[SHOT_IDS.length - 1]!;
-      setShot((s) => (s === id ? s : id));
-      const el = videos.current[id];
-      if (el && el.readyState >= 1 && !el.seeking && el.duration) {
-        const s = SHOTS[id];
-        const k = Math.min(1, Math.max(0, (v - s.from) / (s.to - s.from)));
-        const time = (s.start + k * (s.end - s.start)) * el.duration;
-        if (Math.abs(el.currentTime - time) > 0.5 / 24) el.currentTime = time;
-      }
-      if (cv && ctx && el && el.readyState >= 2) {
+      const s = SHOTS[id];
+      const k = Math.min(1, Math.max(0, (v - s.from) / (s.to - s.from)));
+      const img = nearest(id, Math.round(k * (FRAME_COUNT[id] - 1)));
+      if (cv && ctx && img) {
         const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const w = Math.round(cv.clientWidth * dpr);
         const h = Math.round(cv.clientHeight * dpr);
@@ -328,9 +326,9 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         }
         const { speed, push, cy } = speedFx(id, v);
         // object-fit: cover
-        const base = Math.max(w / el.videoWidth, h / el.videoHeight);
-        const dw = el.videoWidth * base;
-        const dh = el.videoHeight * base;
+        const fit = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+        const dw = img.naturalWidth * fit;
+        const dh = img.naturalHeight * fit;
         const t = performance.now() / 1000;
         const shake = speed * dpr * (id === "takeoff" ? 2.2 : 0.8);
         const ox = (Math.sin(t * 37.1) + Math.sin(t * 61.7) * 0.6) * shake;
@@ -342,7 +340,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         // the frame scaled around the focal point
         const draw = (scale: number, alpha: number) => {
           ctx.globalAlpha = alpha;
-          ctx.drawImage(el, fx + (x0 - fx) * scale + ox, fy + (y0 - fy) * scale + oy, dw * scale, dh * scale);
+          ctx.drawImage(img, fx + (x0 - fx) * scale + ox, fy + (y0 - fy) * scale + oy, dw * scale, dh * scale);
         };
         draw(push, 1);
         if (speed > 0.02) for (let i = 1; i <= layers; i++) draw(push * (1 + 0.016 * i * speed), 0.2 * speed);
@@ -356,7 +354,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
 
   return (
     <div className="absolute inset-0">
-      {/* poster: the first frame, shown at once (LCP) until the clip is ready */}
+      {/* poster: the first frame, shown at once (LCP) until the sequence is ready */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`${poster}-1280.webp`}
@@ -364,29 +362,47 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         sizes="100vw"
         alt=""
         fetchPriority="high"
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${ready.takeoff && shot !== "takeoff" ? "opacity-0" : "opacity-100"}`}
+        className="absolute inset-0 h-full w-full object-cover"
       />
       {reduce ? (
         <StillFrames base={base} p={p} />
       ) : (
-        <>
-          {SHOT_IDS.map((id) => (
-            <video
-              key={id}
-              ref={(el) => {
-                videos.current[id] = el;
-              }}
-              muted
-              playsInline
-              preload="auto"
-              disablePictureInPicture
-              className="pointer-events-none absolute h-px w-px opacity-0"
-            />
-          ))}
-          <canvas ref={canvas} className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${ready[shot] ? "opacity-100" : "opacity-0"}`} />
-        </>
+        <canvas ref={canvas} className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${ready ? "opacity-100" : "opacity-0"}`} />
       )}
     </div>
+  );
+}
+
+/** Big caption naming each phase of the takeoff as it happens. */
+function PhaseTitle({ readouts }: { readouts: React.RefObject<Readouts> }) {
+  const t = useTranslations("immersive.phaseTitle");
+  const el = useRef<HTMLParagraphElement>(null);
+  const labels = useRef<Record<string, string>>({});
+  for (const k of ["lineup", "roll", "rotate", "gearUp", "climb"]) labels.current[k] = t(k);
+  const last = useRef("");
+  const write = useRef((r: Readouts) => {
+    const node = el.current;
+    if (!node) return;
+    const key = r.progress > GLOBE_FROM - 0.03 ? "" : r.phase;
+    if (key === last.current) return;
+    last.current = key;
+    node.style.opacity = "0";
+    node.style.transform = "translateY(8px)";
+    window.setTimeout(() => {
+      if (last.current !== key) return;
+      node.textContent = key ? labels.current[key] ?? "" : "";
+      node.style.opacity = key ? "1" : "0";
+      node.style.transform = "translateY(0)";
+    }, 160);
+  }).current;
+  useLiveText(readouts, write);
+  return (
+    <p
+      ref={el}
+      className="mono-label pointer-events-none absolute left-1/2 top-[15svh] -translate-x-1/2 whitespace-nowrap rounded-full border border-white/15 bg-[#02040b]/45 px-4 py-2 !text-[13px] !tracking-[0.22em] !text-white backdrop-blur-md transition-[opacity,transform] duration-300 sm:!text-[15px] md:left-auto md:right-[8vw] md:translate-x-0"
+      style={{ opacity: 0 }}
+      aria-hidden
+    />
   );
 }
 
@@ -420,31 +436,6 @@ function StillFrames({ base, p }: { base: string; p: MotionValue<number> }) {
   );
 }
 
-/** Types without a film: their photos, with a slow push-in, until the clouds. */
-function Stills({ visual, p }: { visual: AircraftVisual; p: MotionValue<number> }) {
-  const imgs: Img[] = [visual.backdrop, ...visual.gallery].filter(Boolean) as Img[];
-  return (
-    <>
-      {imgs.slice(0, 3).map((img, i) => (
-        <Still key={img.base} img={img} i={i} n={Math.min(3, imgs.length)} p={p} />
-      ))}
-    </>
-  );
-}
-
-function Still({ img, i, n, p }: { img: Img; i: number; n: number; p: MotionValue<number> }) {
-  const span = SHOTS.clouds.to / n;
-  const a = i * span;
-  const opacity = useTransform(p, i === 0 ? [0, a + span, a + span + 0.04] : [a - 0.04, a, a + span, a + span + 0.04], i === 0 ? [1, 1, 0] : [0, 1, 1, i === n - 1 ? 1 : 0]);
-  const scale = useTransform(p, [Math.max(0, a - 0.04), a + span + 0.04], [1.02, 1.16]);
-  return (
-    <motion.div className="absolute inset-0 will-change-transform" style={{ opacity, scale }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src(img)} srcSet={srcSet(img)} sizes="100vw" alt="" className="h-full w-full object-cover" />
-    </motion.div>
-  );
-}
-
 /* ---------- story pieces ---------- */
 
 function Chapter({ align, children, eager }: { align: "left" | "right"; children: ReactNode; eager?: boolean }) {
@@ -472,18 +463,12 @@ const Label = ({ children }: { children: ReactNode }) => <p className="mono-labe
 const Title = ({ children }: { children: ReactNode }) => (
   <h2 className="mt-3 text-balance font-display text-[2rem] font-semibold leading-[1.1] tracking-[-0.01em] sm:text-[2.6rem]">{children}</h2>
 );
-const Fact = ({ k, v }: { k: string; v: string }) => (
-  <div>
-    <dt className="mono-label !text-[10px] !text-white/50">{k}</dt>
-    <dd className="num mt-1 text-lg font-semibold">{v}</dd>
-  </div>
-);
 
 /** Headline that rises word by word. */
 function SplitTitle({ text }: { text: string }) {
   const words = text.split(" ");
   return (
-    <h1 className="mt-6 font-display text-[2.9rem] font-semibold leading-[1.02] tracking-[-0.02em] [text-shadow:0_2px_40px_rgba(2,4,11,.6)] sm:text-6xl lg:text-[4.6rem]" aria-label={text}>
+    <h1 className="mt-6 font-display text-[2.9rem] font-semibold leading-[1.02] tracking-[-0.02em] [filter:drop-shadow(0_2px_18px_rgba(2,4,11,.55))] sm:text-6xl lg:text-[4.6rem]" aria-label={text}>
       {words.map((w, i) => (
         <span key={i} className="inline-block overflow-hidden pb-[0.12em] align-bottom" aria-hidden>
           <motion.span className="inline-block motion-reduce:![transform:none]" initial={{ y: "115%" }} animate={{ y: 0 }} transition={{ duration: 0.8, delay: 0.15 + i * 0.07, ease: [0.2, 0.8, 0.2, 1] }}>
@@ -495,9 +480,9 @@ function SplitTitle({ text }: { text: string }) {
   );
 }
 
-function Credits({ visual, hasFilm }: { visual: AircraftVisual; hasFilm: boolean }) {
+function Credits() {
   const t = useTranslations("immersive.credits");
-  const list = [...(hasFilm ? FILM_CREDITS : visual.credits), ...EARTH_CREDITS];
+  const list = [...FILM_CREDITS, ...EARTH_CREDITS];
   return (
     <details className="group absolute bottom-16 right-4 z-20 md:bottom-4 text-[11px] text-white/70">
       <summary className="cursor-pointer list-none rounded-full border border-white/10 bg-[#02040b]/50 px-3 py-1.5 backdrop-blur-md transition-colors hover:text-white [&::-webkit-details-marker]:hidden">{t("title")}</summary>
@@ -638,4 +623,3 @@ function ProgressRail({ readouts, labels }: { readouts: React.RefObject<Readouts
   );
 }
 
-export type { HomeAircraft };
