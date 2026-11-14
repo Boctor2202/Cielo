@@ -477,7 +477,8 @@
         "newFlight": "New flight",
         "footerNote": "Worked out from your logbook",
         "savingsNote": "Goals worked out automatically from your logbook and the FCL.060 rules.",
-        "otherTypes": "Other types"
+        "otherTypes": "Other types",
+        "carried": "Carried forward from previous logbook"
       }
     },
     "logbook": {

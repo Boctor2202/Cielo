@@ -111,9 +111,11 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today }: { fli
     // hours by aircraft type since the start of the logbook (carried-forward totals included)
     const byType = new Map<string, number>();
     for (const f of realFlights) byType.set(f.aircraftTypeIcao ?? "—", (byType.get(f.aircraftTypeIcao ?? "—") ?? 0) + f.totalMin);
-    for (const o of opening) if (!o.deletedAt && o.totalMin) byType.set(o.aircraftTypeIcao ?? (g.otherTypes ?? "Other"), (byType.get(o.aircraftTypeIcao ?? (g.otherTypes ?? "Other")) ?? 0) + o.totalMin);
+    const CARRIED = "\u0000carried";
+    for (const o of opening) if (!o.deletedAt && o.totalMin) byType.set(o.aircraftTypeIcao ?? CARRIED, (byType.get(o.aircraftTypeIcao ?? CARRIED) ?? 0) + o.totalMin);
     const ranked = [...byType.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
     const nameOf = (icao: string) => {
+      if (icao === CARRIED) return g.carried ?? "Carried forward";
       const ty = types?.find((x) => x.icao === icao);
       return ty ? `${ty.manufacturer} ${ty.model}` : icao;
     };

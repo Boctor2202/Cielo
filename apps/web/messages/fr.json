@@ -477,7 +477,8 @@
         "newFlight": "Nouveau vol",
         "footerNote": "Calculé depuis votre carnet",
         "savingsNote": "Objectifs calculés automatiquement à partir de votre carnet et des règles FCL.060.",
-        "otherTypes": "Autres types"
+        "otherTypes": "Autres types",
+        "carried": "Reports du carnet précédent"
       }
     },
     "logbook": {
