@@ -27,6 +27,7 @@ type GoogleNS = {
     LatLngBounds: new () => { extend: (p: { lat: number; lng: number }) => void };
     InfoWindow: new () => { setContent: (c: string) => void; setPosition: (p: unknown) => void; open: (o: { map: GMap }) => void; close: () => void };
     SymbolPath: { CIRCLE: number };
+    Point: new (x: number, y: number) => unknown;
   };
 };
 
@@ -101,8 +102,14 @@ export function GoogleRoutesMap({ apiKey, lang, dark, lines, points, onError }: 
             return { strokeColor: accent, strokeOpacity: 0.8, strokeWeight: Math.min(4, 1.2 + Math.log2(n)), clickable: false };
           }
           const n = Number(f.getProperty("n")) || 1;
+          // inline SVG dot: nothing to download, sized by the number of visits
+          const r = Math.round(Math.min(9, 4 + Math.log2(n)));
+          const d = r * 2 + 4;
+          const fill = dark ? "#e8eef5" : "#0e2a47";
+          const ring = dark ? "#0a1626" : "#ffffff";
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d}" height="${d}"><circle cx="${d / 2}" cy="${d / 2}" r="${r}" fill="${fill}" stroke="${ring}" stroke-width="2"/></svg>`;
           return {
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: Math.min(8, 3.5 + Math.log2(n)), fillColor: dark ? "#e8eef5" : "#0e2a47", fillOpacity: 1, strokeColor: dark ? "#0a1626" : "#ffffff", strokeWeight: 2 },
+            icon: { url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`, anchor: new google.maps.Point(d / 2, d / 2) },
             title: `${f.getProperty("icao")} · ${n}`,
           };
         });
