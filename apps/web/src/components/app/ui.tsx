@@ -8,7 +8,7 @@ export function PageTitle({ title, subtitle, actions }: { title: string; subtitl
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-[28px]">{title}</h1>
+        <h1 className="text-[28px] font-normal tracking-[-0.035em] sm:text-[34px]">{title}</h1>
         {subtitle && <p className="mt-1 text-[15px] text-muted">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -49,10 +49,12 @@ const LEVEL_BG: Record<Level, string> = {
 /** Instrument-style readout: label in small caps, big tabular figure, status bar. */
 export function Readout({ label, value, sub, level = "info" }: { label: string; value: ReactNode; sub?: ReactNode; level?: Level }) {
   return (
-    <div className="card relative overflow-hidden p-4">
-      <span className={`absolute inset-y-0 left-0 w-1 ${LEVEL_BG[level]}`} />
-      <p className="label-caps">{label}</p>
-      <p className="num mt-1.5 text-[26px] font-semibold leading-none tracking-tight sm:text-[30px]">{value}</p>
+    <div className="card relative overflow-hidden p-5">
+      <p className="label-caps flex items-center gap-1.5 !text-[12.5px]">
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${LEVEL_BG[level]}`} />
+        {label}
+      </p>
+      <p className="num mt-3 text-[28px] font-normal leading-none tracking-[-0.03em] sm:text-[34px]">{value}</p>
       {sub && <p className="mt-2 text-xs text-muted">{sub}</p>}
     </div>
   );

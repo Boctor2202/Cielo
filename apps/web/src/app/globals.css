@@ -309,3 +309,97 @@ select.input {
   font-weight: 600;
   letter-spacing: -0.015em;
 }
+
+/* ---------- App skin: the glass workspace of the dashboard, applied to every app page ---------- */
+.app-room {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: #c9d3de url("/immersive/film/c68a/takeoff-poster-1920.webp") center 56% / cover no-repeat;
+}
+.app-room::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 22%, transparent);
+}
+[data-theme="dark"] .app-room::after {
+  background: color-mix(in srgb, var(--bg) 64%, transparent);
+}
+.app-skin {
+  position: relative;
+  isolation: isolate; /* the fixed photo (z -1) paints above the page background but below the panes */
+  --glass-hi: rgb(255 255 255 / 0.6);
+  --glass-shadow: rgb(10 22 38 / 0.45);
+  background: transparent;
+}
+[data-theme="dark"] .app-skin {
+  position: relative;
+  isolation: isolate; /* the fixed photo (z -1) paints above the page background but below the panes */
+  --glass-hi: rgb(255 255 255 / 0.12);
+  --glass-shadow: rgb(0 0 0 / 0.7);
+}
+/* the big frosted pane (same material as the dashboard: blur 22, opacity .3, saturation 1.2) */
+.app-glass {
+  position: relative;
+  background: color-mix(in srgb, var(--surface) 30%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+  backdrop-filter: blur(22px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 var(--glass-hi),
+    inset 0 0 0 1px color-mix(in srgb, var(--glass-hi) 34%, transparent),
+    0 20px 52px -25px var(--glass-shadow);
+}
+/* panels inside the pane */
+.app-skin .card {
+  background: color-mix(in srgb, var(--surface) 34%, transparent);
+  border: 0;
+  border-radius: 20px;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--glass-hi) 75%, transparent),
+    0 8px 22px -20px var(--glass-shadow);
+}
+.app-skin .card > header {
+  border-bottom: 0;
+  padding-bottom: 0.25rem;
+}
+.app-skin .input {
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  border-color: color-mix(in srgb, var(--border) 55%, transparent);
+  border-radius: 12px;
+}
+.app-skin .input:focus {
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+}
+.app-skin .btn {
+  border-radius: 12px;
+}
+.app-skin .btn-secondary {
+  background: color-mix(in srgb, var(--bg) 40%, transparent);
+  border-color: color-mix(in srgb, var(--border) 45%, transparent);
+}
+.app-skin .btn-ghost:hover {
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+}
+/* figures and labels as on the dashboard: Manrope with tabular figures, quiet sentence-case labels */
+.app-skin .num {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.app-skin .mono-label,
+.app-skin .label-caps {
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+  color: var(--muted);
+}
+.app-skin table thead,
+.app-skin table thead th {
+  background: transparent;
+}
+/* navigation needs a steadier backdrop than the content pane */
+.app-glass.app-glass-strong {
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+}

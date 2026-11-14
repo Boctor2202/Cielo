@@ -34,6 +34,9 @@ const HOST_TOKENS = {
   "--color-input": "var(--bg)",
   "--color-popover": "var(--bg)",
   fontFamily: "var(--font-sans)",
+  // the app shell draws the photo behind every page; the dashboard shows it through
+  background: "transparent",
+  "--gw-shade": "transparent",
   minHeight: "calc(100svh - 7rem)",
   borderRadius: 28,
 } as CSSProperties;
@@ -190,7 +193,6 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
       }
       userName={first}
       avatarUrl={pilot?.photoDataUrl}
-      backgroundImage="/immersive/film/c68a/takeoff-poster-1920.webp"
       balance={data.total}
       balanceChange={data.change !== undefined ? { percent: data.change, label: g.changeLabel ?? "" } : undefined}
       account={data.account}

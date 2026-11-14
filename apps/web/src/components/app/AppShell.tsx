@@ -69,8 +69,10 @@ function Shell({ children }: { children: ReactNode }) {
 
   return (
     <AirportsProvider>
-      <div className="min-h-dvh lg:grid lg:grid-cols-[240px_1fr]">
-        <aside className="sticky top-0 hidden h-dvh flex-col border-r border-border bg-surface lg:flex">
+      <div className="app-skin min-h-dvh lg:grid lg:grid-cols-[256px_1fr]">
+        <div className="app-room" aria-hidden="true" />
+        <div className="sticky top-0 hidden h-dvh p-3 pr-0 lg:block">
+        <aside className="app-glass app-glass-strong flex h-full flex-col rounded-[28px]">
           <div className="flex h-16 items-center px-5">
             <Link href="/" aria-label="Strato">
               <Logo />
@@ -86,15 +88,15 @@ function Shell({ children }: { children: ReactNode }) {
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[14.5px] font-medium transition-colors ${
-                  isActive(href) ? "bg-accent/12 text-accent" : "text-muted hover:bg-surface-2 hover:text-text"
+                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-[14.5px] font-medium transition-colors ${
+                  isActive(href) ? "bg-bg/60 text-accent shadow-[inset_0_1px_0_var(--glass-hi)]" : "text-muted hover:bg-bg/40 hover:text-text"
                 }`}
               >
                 <Icon size={18} /> {t(key)}
               </Link>
             ))}
           </nav>
-          <div className="border-t border-border p-3">
+          <div className="p-3">
             <div className="flex items-center justify-between gap-2 px-2">
               <Link href="/app/profil" className="min-w-0 rounded-md hover:text-accent">
                 <p className="truncate text-sm font-semibold">{pilot?.fullName || "—"}</p>
@@ -110,9 +112,10 @@ function Shell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </aside>
+        </div>
 
         <div className="min-w-0">
-          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg/90 px-4 backdrop-blur lg:hidden">
+          <header className="app-glass sticky top-0 z-30 flex h-14 items-center justify-between px-4 lg:hidden">
             <Link href="/app" aria-label="Strato">
               <Logo />
             </Link>
@@ -124,13 +127,16 @@ function Shell({ children }: { children: ReactNode }) {
               <ThemeToggle />
             </div>
           </header>
-          <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:pb-12 lg:pt-8">{children}</main>
+          <main className="mx-auto max-w-[1340px] px-3 pb-28 pt-3 sm:px-4 lg:pb-3 lg:pt-3">
+            {/* the dashboard draws its own glass workspace; every other page sits in the same pane */}
+            {pathname === "/app" ? children : <div className="app-glass min-h-[calc(100dvh-1.5rem)] rounded-[28px] px-4 py-6 sm:px-8 sm:py-8">{children}</div>}
+          </main>
         </div>
 
         {/* Mobile tab bar (liquid-glass pill) */}
         <MobileTabBar moreOpen={more} onToggleMore={() => setMore(!more)} moreActive={NAV.slice(2).some(({ href }) => href !== "/app/roster" && href !== "/app/documents" && isActive(href))} />
         {more && (
-          <div className="fixed inset-x-0 bottom-[88px] z-40 mx-3 mb-[env(safe-area-inset-bottom)] grid grid-cols-3 gap-1 rounded-2xl border border-border bg-bg p-2 shadow-2xl lg:hidden" onClick={() => setMore(false)}>
+          <div className="fixed inset-x-0 bottom-[88px] z-40 mx-3 mb-[env(safe-area-inset-bottom)] grid grid-cols-3 gap-1 app-glass rounded-2xl p-2 lg:hidden" onClick={() => setMore(false)}>
             {NAV.slice(2).filter(({ href }) => href !== "/app/roster" && href !== "/app/documents").map(({ href, key, icon: Icon }) => (
               <Link key={href} href={href} className={`flex flex-col items-center gap-1 rounded-xl px-2 py-3 text-xs font-medium ${isActive(href) ? "bg-accent/12 text-accent" : "text-muted"}`}>
                 <Icon size={20} /> {t(key)}
