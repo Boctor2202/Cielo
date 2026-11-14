@@ -123,6 +123,9 @@ importers:
       '@cielo/export':
         specifier: workspace:*
         version: link:../../packages/export
+      '@cielo/jobs':
+        specifier: workspace:*
+        version: link:../../packages/jobs
       '@cielo/reference-data':
         specifier: workspace:*
         version: link:../../packages/reference-data
@@ -233,6 +236,25 @@ importers:
         specifier: ^1.17.1
         version: 1.17.1
     devDependencies:
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.0
+        version: 4.1.12(@types/node@22.20.5)(vite@8.3.7(@types/node@22.20.5)(jiti@2.7.0)(terser@5.51.2))
+
+  packages/jobs:
+    dependencies:
+      '@cielo/core':
+        specifier: workspace:*
+        version: link:../core
+      '@cielo/reference-data':
+        specifier: workspace:*
+        version: link:../reference-data
+    devDependencies:
+      '@types/node':
+        specifier: ^22
+        version: 22.20.5
       typescript:
         specifier: ~5.9.3
         version: 5.9.3

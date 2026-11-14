@@ -14,6 +14,7 @@
   "dependencies": {
     "@cielo/core": "workspace:*",
     "@cielo/export": "workspace:*",
+    "@cielo/jobs": "workspace:*",
     "@cielo/reference-data": "workspace:*",
     "@cielo/sync": "workspace:*",
     "@fontsource-variable/ibm-plex-sans": "^5.3.0",

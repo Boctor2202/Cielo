@@ -338,7 +338,8 @@
       "localMode": "Local mode",
       "synced": "Synced",
       "offline": "Offline",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "jobs": "Pilot jobs"
     },
     "dashboard": {
       "hello": "Hello {name}",
@@ -827,6 +828,76 @@
       "free": "Free",
       "basic": "Basic",
       "premium": "Premium"
+    },
+    "jobs": {
+      "title": "Pilot job offers",
+      "subtitle": "Read from airlines' and operators' careers sites, ranked against your experience.",
+      "privacy": "Your match % is computed on this device: your logbook is never sent.",
+      "sourceNote": "Offers published by the employers themselves. Cielo shows the key facts; the full ad and the application are on their site.",
+      "updated": "Updated {date} · {count, plural, one {# employer} other {# employers}} followed",
+      "sort": {
+        "label": "Sort by",
+        "match": "For you",
+        "experience": "Experience required",
+        "salary": "Salary",
+        "recent": "Most recent"
+      },
+      "filter": {
+        "position": "Position",
+        "all": "All",
+        "onType": "My types only",
+        "segment": "Sector"
+      },
+      "positions": {
+        "CPT": "Captain",
+        "FO": "First officer",
+        "SO": "Second officer",
+        "CADET": "Cadet",
+        "FI": "Instructor",
+        "OTHER": "Other"
+      },
+      "segments": {
+        "airline": "Airline",
+        "business": "Business",
+        "cargo": "Cargo",
+        "regional": "Regional",
+        "helicopter": "Helicopter",
+        "training": "Training",
+        "other": "Other"
+      },
+      "match": "match",
+      "lowConfidence": "Few requirements published: indicative score",
+      "noLogbook": "Log or import your flights to see your match % for each offer.",
+      "salaryNone": "Salary not disclosed",
+      "salaryPeriod": {
+        "year": "/yr",
+        "month": "/mo",
+        "day": "/day",
+        "hour": "/h"
+      },
+      "apply": "View the ad",
+      "onType": "On your type",
+      "tr": {
+        "required": "Type rating required",
+        "provided": "Type rating provided"
+      },
+      "req": {
+        "licence": "Licence",
+        "totalHours": "Total hours",
+        "picHours": "PIC hours",
+        "onTypeHours": "Hours on type",
+        "multiPilotHours": "Multi-pilot",
+        "jetHours": "Jet hours",
+        "turbineHours": "Turbine hours",
+        "typeRating": "Type rating",
+        "english": "ICAO English"
+      },
+      "you": "you: {value}",
+      "gaps": "To build up",
+      "empty": "No offer matches these filters.",
+      "loading": "Loading offers…",
+      "error": "Offers could not be loaded. Please try again later.",
+      "posted": "Posted {date}"
     }
   },
   "why": {

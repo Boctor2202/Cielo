@@ -11,7 +11,7 @@ const securityHeaders = [
 ];
 
 const config: NextConfig = {
-  transpilePackages: ["@cielo/core", "@cielo/export", "@cielo/reference-data", "@cielo/sync"],
+  transpilePackages: ["@cielo/core", "@cielo/export", "@cielo/reference-data", "@cielo/sync", "@cielo/jobs"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

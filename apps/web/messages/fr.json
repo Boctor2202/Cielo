@@ -338,7 +338,8 @@
       "localMode": "Mode local",
       "synced": "Synchronisé",
       "offline": "Hors ligne",
-      "signOut": "Se déconnecter"
+      "signOut": "Se déconnecter",
+      "jobs": "Offres d'emploi"
     },
     "dashboard": {
       "hello": "Bonjour {name}",
@@ -827,6 +828,76 @@
       "free": "Gratuit",
       "basic": "Basic",
       "premium": "Premium"
+    },
+    "jobs": {
+      "title": "Offres d'emploi pilote",
+      "subtitle": "Lues sur les sites carrière des compagnies et opérateurs, classées selon votre expérience.",
+      "privacy": "Votre % de correspondance est calculé sur cet appareil : votre carnet n'est jamais envoyé.",
+      "sourceNote": "Offres publiées par les employeurs eux-mêmes. Cielo en affiche les informations clés ; l'annonce complète et la candidature se font sur leur site.",
+      "updated": "Mise à jour {date} · {count, plural, one {# employeur} other {# employeurs}} suivis",
+      "sort": {
+        "label": "Trier par",
+        "match": "Pour vous",
+        "experience": "Expérience requise",
+        "salary": "Salaire",
+        "recent": "Plus récentes"
+      },
+      "filter": {
+        "position": "Poste",
+        "all": "Tous",
+        "onType": "Sur mes types uniquement",
+        "segment": "Secteur"
+      },
+      "positions": {
+        "CPT": "Commandant",
+        "FO": "Copilote",
+        "SO": "Second officer",
+        "CADET": "Cadet",
+        "FI": "Instructeur",
+        "OTHER": "Autre"
+      },
+      "segments": {
+        "airline": "Ligne",
+        "business": "Affaires",
+        "cargo": "Cargo",
+        "regional": "Régional",
+        "helicopter": "Hélicoptère",
+        "training": "Formation",
+        "other": "Autre"
+      },
+      "match": "correspondance",
+      "lowConfidence": "Peu d'exigences publiées : score indicatif",
+      "noLogbook": "Saisissez ou importez vos vols pour voir votre % de correspondance avec chaque offre.",
+      "salaryNone": "Salaire non communiqué",
+      "salaryPeriod": {
+        "year": "/an",
+        "month": "/mois",
+        "day": "/jour",
+        "hour": "/h"
+      },
+      "apply": "Voir l'annonce",
+      "onType": "Sur votre type",
+      "tr": {
+        "required": "Qualification de type exigée",
+        "provided": "Qualification de type fournie"
+      },
+      "req": {
+        "licence": "Licence",
+        "totalHours": "Heures totales",
+        "picHours": "Heures CDB",
+        "onTypeHours": "Heures sur type",
+        "multiPilotHours": "Multipilote",
+        "jetHours": "Heures jet",
+        "turbineHours": "Heures turbine",
+        "typeRating": "Qualification",
+        "english": "Anglais OACI"
+      },
+      "you": "vous : {value}",
+      "gaps": "À compléter",
+      "empty": "Aucune offre ne correspond à ces filtres.",
+      "loading": "Chargement des offres…",
+      "error": "Les offres n'ont pas pu être chargées. Réessayez plus tard.",
+      "posted": "Publiée le {date}"
     }
   },
   "why": {
