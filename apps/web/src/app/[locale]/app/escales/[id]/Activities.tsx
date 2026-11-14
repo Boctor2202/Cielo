@@ -40,7 +40,6 @@ type Center = { lat: number; lng: number; label: string; isHotel: boolean };
 export function Activities({
   hotelPlaceId,
   airport,
-  onHotel,
   from,
   to,
 }: {
@@ -48,7 +47,6 @@ export function Activities({
   to: string;
   hotelPlaceId?: string;
   airport?: { lat: number; lon: number; name: string };
-  onHotel: (h: HotelHit) => void;
 }) {
   const t = useTranslations("app.layover.activities");
   const locale = useLocale();
@@ -59,9 +57,6 @@ export function Activities({
   const [state, setState] = useState<
     "idle" | "loading" | "error" | "not_configured"
   >("idle");
-  const [q, setQ] = useState("");
-  const [hits, setHits] = useState<HotelHit[] | null>(null);
-  const [searching, setSearching] = useState(false);
   const cache = useMemo(() => new Map<string, Place[]>(), []); // this page view only, never stored
 
   // Where to search from: the saved hotel, else the airport
@@ -129,23 +124,6 @@ export function Activities({
     };
   }, [center, cat, locale, cache]);
 
-  const searchHotel = async () => {
-    if (q.trim().length < 2) return;
-    setSearching(true);
-    const near = airport ? `&lat=${airport.lat}&lng=${airport.lon}` : "";
-    try {
-      const d = (await (
-        await fetch(
-          `/api/escale/hotel?q=${encodeURIComponent(q)}${near}&lang=${locale}`,
-        )
-      ).json()) as { hotels?: HotelHit[]; error?: string };
-      if (d.error === "not_configured") setState("not_configured");
-      setHits(d.hotels ?? []);
-    } finally {
-      setSearching(false);
-    }
-  };
-
   const list = useMemo(
     () =>
       places
@@ -176,76 +154,7 @@ export function Activities({
         <p className="text-muted">{t("notConfigured")}</p>
       ) : (
         <div className="space-y-5">
-          {/* Crew hotel */}
-          <div className="rounded-xl border border-border bg-surface-2 p-3">
-            <form
-              className="flex flex-wrap gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void searchHotel();
-              }}
-            >
-              <label className="sr-only" htmlFor="hotel-q">
-                {t("hotelSearch")}
-              </label>
-              <input
-                id="hotel-q"
-                className="input min-w-0 flex-1"
-                placeholder={hotelPlaceId ? t("hotelChange") : t("hotelSearch")}
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-              />
-              <button
-                className="btn border border-border"
-                type="submit"
-                disabled={searching}
-              >
-                {searching ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Search size={16} />
-                )}{" "}
-                {t("find")}
-              </button>
-            </form>
-            {hits && (
-              <ul className="mt-2 divide-y divide-border">
-                {hits.length === 0 && (
-                  <li className="py-2 text-sm text-muted">{t("noHotel")}</li>
-                )}
-                {hits.map((h) => (
-                  <li key={h.id}>
-                    <button
-                      type="button"
-                      className="flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left hover:bg-surface"
-                      onClick={() => {
-                        onHotel(h);
-                        setCenter({
-                          lat: h.lat,
-                          lng: h.lng,
-                          label: h.name,
-                          isHotel: true,
-                        });
-                        setHits(null);
-                        setQ("");
-                      }}
-                    >
-                      <Hotel
-                        size={16}
-                        className="mt-0.5 shrink-0 text-accent"
-                      />
-                      <span className="min-w-0">
-                        <span className="block font-semibold">{h.name}</span>
-                        <span className="block truncate text-xs text-muted">
-                          {h.address}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {!hotelPlaceId && <p className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-muted">{t("pickHotel")}</p>}
 
           {/* Categories */}
           <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">

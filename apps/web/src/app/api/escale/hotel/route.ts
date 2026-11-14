@@ -1,8 +1,8 @@
-import { findHotel, hotelById, PlacesError, rateLimited } from "@/lib/places";
+import { findHotel, hotelById, hotelsNear, PlacesError, rateLimited } from "@/lib/places";
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/escale/hotel?q=Hilton&lat=&lng=&lang=fr  (search)  ·  GET /api/escale/hotel?id=ChIJ…  (saved hotel) */
+/** GET /api/escale/hotel?q=Hilton&lat=&lng=  (search) · ?near=1&lat=&lng=  (around the airport) · ?id=ChIJ…  (saved hotel) */
 export async function GET(req: Request) {
   const u = new URL(req.url);
   const lang = u.searchParams.get("lang") === "en" ? "en" : "fr";
@@ -11,11 +11,16 @@ export async function GET(req: Request) {
   try {
     const id = u.searchParams.get("id");
     if (id) return Response.json({ hotel: await hotelById(id, lang) }, { headers: { "Cache-Control": "no-store" } });
-    const q = (u.searchParams.get("q") ?? "").trim().slice(0, 120);
-    if (q.length < 2) return Response.json({ error: "bad_request" }, { status: 400 });
     const lat = Number(u.searchParams.get("lat"));
     const lng = Number(u.searchParams.get("lng"));
     const near = Number.isFinite(lat) && Number.isFinite(lng) && u.searchParams.has("lat") ? { lat, lng } : null;
+    // no query: the hotels around the airport
+    if (u.searchParams.get("near") === "1") {
+      if (!near) return Response.json({ error: "bad_request" }, { status: 400 });
+      return Response.json({ hotels: await hotelsNear(near, lang) }, { headers: { "Cache-Control": "no-store" } });
+    }
+    const q = (u.searchParams.get("q") ?? "").trim().slice(0, 120);
+    if (q.length < 2) return Response.json({ error: "bad_request" }, { status: 400 });
     return Response.json({ hotels: await findHotel(q, near, lang) }, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
     if (e instanceof PlacesError) return Response.json({ error: e.code }, { status: e.status });

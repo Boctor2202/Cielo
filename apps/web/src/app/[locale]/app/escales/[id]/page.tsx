@@ -13,6 +13,7 @@ import { useFormatDate, useTable } from "@/lib/hooks";
 import { saveLayover, softDelete } from "@/lib/repo";
 import { db } from "@/lib/db";
 import { Activities } from "./Activities";
+import { HotelPicker } from "./HotelPicker";
 
 export default function LayoverPage() {
   const t = useTranslations("app.layover");
@@ -67,7 +68,20 @@ export default function LayoverPage() {
         <div className="space-y-5">
           <Card title={t("hotel")}>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={t("hotel")}><input className="input" value={v.hotelName ?? ""} onChange={(e) => setV({ ...v, hotelName: e.target.value })} /></Field>
+              <Field label={t("hotel")}>
+                <HotelPicker
+                  value={v.hotelName ?? ""}
+                  selected={!!v.hotelPlaceId}
+                  airport={ap ? { lat: ap.lat, lon: ap.lon } : undefined}
+                  onText={(name) => setV({ ...v, hotelName: name, hotelPlaceId: undefined })}
+                  onPick={async (h) => {
+                    const next = { ...v, hotelPlaceId: h.id, hotelName: h.name, address: h.address ?? v.address, phone: h.phone ?? v.phone };
+                    setV(next);
+                    await saveLayover(next);
+                    toast(t("activities.hotelSaved"));
+                  }}
+                />
+              </Field>
               <Field label={t("phone")}><input className="input num" type="tel" value={v.phone ?? ""} onChange={(e) => setV({ ...v, phone: e.target.value })} /></Field>
               <Field label={t("arrival")}><input className="input num" type="date" value={v.arrivalUtc?.slice(0, 10) ?? ""} onChange={(e) => setV({ ...v, arrivalUtc: e.target.value ? `${e.target.value}T12:00:00.000Z` : null })} /></Field>
               <Field label={t("departure")}><input className="input num" type="date" value={v.departureUtc?.slice(0, 10) ?? ""} onChange={(e) => setV({ ...v, departureUtc: e.target.value ? `${e.target.value}T12:00:00.000Z` : null })} /></Field>
@@ -114,12 +128,6 @@ export default function LayoverPage() {
           from={(v.arrivalUtc ?? new Date().toISOString()).slice(0, 10)}
           to={(v.departureUtc ?? v.arrivalUtc ?? new Date(Date.now() + 2 * 86400_000).toISOString()).slice(0, 10)}
           airport={ap ? { lat: ap.lat, lon: ap.lon, name: ap.name } : undefined}
-          onHotel={async (h) => {
-            const next = { ...v, hotelPlaceId: h.id, hotelName: h.name, address: h.address ?? v.address };
-            setV(next);
-            await saveLayover(next);
-            toast(t("activities.hotelSaved"));
-          }}
         />
       </div>
       {toastNode}

@@ -144,8 +144,43 @@ export interface HotelHit {
   id: string;
   name: string;
   address?: string;
+  phone?: string;
+  rating?: number;
+  reviews?: number;
+  distanceM?: number;
   lat: number;
   lng: number;
+}
+
+const HOTEL_FIELDS = "places.id,places.displayName,places.formattedAddress,places.location,places.internationalPhoneNumber,places.rating,places.userRatingCount";
+const toHotel = (p: GPlace & { internationalPhoneNumber?: string }, from?: { lat: number; lng: number }): HotelHit => {
+  const loc = { lat: p.location!.latitude, lng: p.location!.longitude };
+  return {
+    id: p.id,
+    name: p.displayName?.text ?? "",
+    address: p.formattedAddress,
+    phone: p.internationalPhoneNumber,
+    rating: p.rating,
+    reviews: p.userRatingCount,
+    distanceM: from ? Math.round(distanceM(from, loc)) : undefined,
+    ...loc,
+  };
+};
+
+/** Hotels around the layover airport, most popular first: the list shown before the pilot types anything. */
+export async function hotelsNear(center: { lat: number; lng: number }, lang: string): Promise<HotelHit[]> {
+  const res = await call(
+    "places:searchNearby",
+    {
+      includedTypes: ["lodging"],
+      maxResultCount: 20,
+      rankPreference: "POPULARITY",
+      languageCode: lang,
+      locationRestriction: { circle: { center: { latitude: center.lat, longitude: center.lng }, radius: 15000 } },
+    },
+    HOTEL_FIELDS,
+  );
+  return (res.places ?? []).filter((p) => p.location).map((p) => toHotel(p, center));
 }
 
 /** Hotel search by name, biased towards the layover airport. */
@@ -156,12 +191,12 @@ export async function findHotel(query: string, near: { lat: number; lng: number 
       textQuery: query,
       includedType: "lodging",
       languageCode: lang,
-      maxResultCount: 6,
+      maxResultCount: 8,
       ...(near ? { locationBias: { circle: { center: { latitude: near.lat, longitude: near.lng }, radius: 40000 } } } : {}),
     },
-    "places.id,places.displayName,places.formattedAddress,places.location",
+    HOTEL_FIELDS,
   );
-  return (res.places ?? []).filter((p) => p.location).map((p) => ({ id: p.id, name: p.displayName?.text ?? "", address: p.formattedAddress, lat: p.location!.latitude, lng: p.location!.longitude }));
+  return (res.places ?? []).filter((p) => p.location).map((p) => toHotel(p, near ?? undefined));
 }
 
 /** Location of a saved hotel (place ID only is stored, per Google's terms). */
