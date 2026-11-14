@@ -575,7 +575,19 @@
       "duplicate": "Duplicate",
       "returnFlight": "Return flight",
       "sign": "Get it signed",
-      "fromRoster": "Prefilled from roster"
+      "fromRoster": "Prefilled from roster",
+      "flightaware": {
+        "button": "Fill from FlightAware",
+        "needReg": "Enter the registration and date first",
+        "title": "Flights of {reg} that day",
+        "loading": "Searching FlightAware…",
+        "none": "No flight found for this registration on that date (aircraft blocked, not tracked or another date).",
+        "error": "FlightAware is unavailable right now.",
+        "notConfigured": "FlightAware lookup isn't switched on yet.",
+        "close": "Close",
+        "diverted": "diverted",
+        "attribution": "Actual UTC times (block / runway) from FlightAware. Check them before saving."
+      }
     },
     "signature": {
       "title": "Flight signature",

@@ -575,7 +575,19 @@
       "duplicate": "Dupliquer",
       "returnFlight": "Vol retour",
       "sign": "Faire signer",
-      "fromRoster": "Pré-rempli depuis le roster"
+      "fromRoster": "Pré-rempli depuis le roster",
+      "flightaware": {
+        "button": "Remplir depuis FlightAware",
+        "needReg": "Saisissez d'abord l'immatriculation et la date",
+        "title": "Vols de {reg} ce jour-là",
+        "loading": "Recherche sur FlightAware…",
+        "none": "Aucun vol trouvé pour cette immatriculation à cette date (avion masqué, non suivi ou date différente).",
+        "error": "FlightAware est indisponible pour le moment.",
+        "notConfigured": "La recherche FlightAware n'est pas encore activée.",
+        "close": "Fermer",
+        "diverted": "dérouté",
+        "attribution": "Heures réelles UTC (cales / piste) fournies par FlightAware. Vérifiez-les avant d'enregistrer."
+      }
     },
     "signature": {
       "title": "Signature du vol",

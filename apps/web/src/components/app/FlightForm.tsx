@@ -12,6 +12,7 @@ import { useDuration, useTable, useTypes } from "@/lib/hooks";
 import { findType, flightToInput, saveFlight, softDelete } from "@/lib/repo";
 import { db } from "@/lib/db";
 import { AirportInput } from "./AirportInput";
+import { FlightAwareFill } from "./FlightAwareFill";
 import { Card, ClockInput, DurationInput, Field, Segmented, Toggle, useToast } from "./ui";
 import { SignatureModal, SignatureStatus } from "./Signature";
 
@@ -162,7 +163,26 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
           </Card>
         ) : (
           <>
-            <Card title={t("timesTitle")}>
+            <Card
+              title={t("timesTitle")}
+              action={
+                <FlightAwareFill
+                  registration={v.registration}
+                  date={v.date}
+                  onPick={(f) =>
+                    setV((s) => ({
+                      ...s,
+                      depIcao: f.dep ?? s.depIcao,
+                      arrIcao: f.arr ?? s.arrIcao,
+                      out: f.out ?? s.out,
+                      off: f.off ?? s.off,
+                      on: f.on ?? s.on,
+                      in: f.in ?? s.in,
+                    }))
+                  }
+                />
+              }
+            >
               <div className="grid grid-cols-4 gap-2 sm:gap-4">
                 {(["out", "off", "on", "in"] as const).map((k) => (
                   <Field key={k} label={t(k)}>
