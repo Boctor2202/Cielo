@@ -4,7 +4,7 @@ import { routing } from "@/i18n/routing";
 import { SITE } from "@/config/site";
 
 /** Public site URL (canonical links, sitemap, Open Graph). Set NEXT_PUBLIC_SITE_URL once the custom domain is live. */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://cielo-ecru.vercel.app").replace(/\/$/, "");
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://stratologbook.com").replace(/\/$/, "");
 
 export type Locale = (typeof routing.locales)[number];
 type Href = Parameters<typeof getPathname>[0]["href"];

@@ -4,8 +4,8 @@
  */
 export const SITE = {
   name: "Strato",
-  domain: "strato.app",
-  contactEmail: "contact@strato.app",
+  domain: "stratologbook.com",
+  contactEmail: "contact@stratologbook.com",
   stats: {
     hoursLogged: null as number | null, // e.g. 2_500_000
     pilots: null as number | null, // e.g. 12_000
