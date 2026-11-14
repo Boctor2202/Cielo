@@ -2,7 +2,8 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { GoogleRoutesMap } from "@/components/app/GoogleRoutesMap";
 import { greatCirclePath } from "@cielo/core";
 import { PageTitle } from "@/components/app/ui";
 import { useAirports } from "@/lib/airports";
@@ -33,6 +34,13 @@ export default function MapPage() {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
   const [year, setYear] = useState("");
+  const locale = useLocale();
+  // Google Maps when a browser key is configured, else the built-in vector map
+  const googleKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY;
+  const [googleFailed, setGoogleFailed] = useState(false);
+  const useGoogle = !!googleKey && !googleFailed;
+  const [dark, setDark] = useState(false);
+  useEffect(() => setDark(currentTheme() === "dark"), []);
   const years = useMemo(() => [...new Set((flights ?? []).map((f) => f.date.slice(0, 4)))].sort().reverse(), [flights]);
 
   const geo = useMemo(() => {
@@ -60,7 +68,7 @@ export default function MapPage() {
   }, [flights, airports, year]);
 
   useEffect(() => {
-    if (!ref.current || mapRef.current) return;
+    if (useGoogle || !ref.current || mapRef.current) return;
     let cancelled = false;
     import("maplibre-gl").then((maplibregl) => {
       if (cancelled || !ref.current) return;
@@ -84,7 +92,7 @@ export default function MapPage() {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [useGoogle]);
 
   useEffect(() => {
     const apply = () => {
@@ -116,7 +124,11 @@ export default function MapPage() {
           </select>
         }
       />
-      <div ref={ref} className="h-[calc(100dvh-220px)] min-h-[420px] overflow-hidden rounded-xl border border-border" />
+      {useGoogle ? (
+        <GoogleRoutesMap apiKey={googleKey!} lang={locale} dark={dark} lines={geo?.lines} points={geo?.points} onError={() => setGoogleFailed(true)} />
+      ) : (
+        <div ref={ref} className="h-[calc(100dvh-220px)] min-h-[420px] overflow-hidden rounded-xl border border-border" />
+      )}
     </>
   );
 }
