@@ -7,3 +7,4 @@ dist
 *.tsbuildinfo
 packages/reference-data/raw
 packages/export/test/out
+packages/*/test/out
