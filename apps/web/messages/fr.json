@@ -360,7 +360,8 @@
       "jobs": "Offres d'emploi",
       "cv": "CV pilote",
       "profile": "Profil",
-      "layovers": "Escales"
+      "layovers": "Escales",
+      "radar": "Radar"
     },
     "dashboard": {
       "hello": "Bonjour {name}",
@@ -1254,6 +1255,30 @@
       "arrival": "Arrivée",
       "departure": "Départ",
       "create": "Créer l'escale"
+    },
+    "radar": {
+      "title": "Radar",
+      "subtitle": "Le trafic en direct, partout dans le monde.",
+      "searchReg": "Immatriculation (ex. F-GTAM)",
+      "notAirborne": "{reg} n'émet pas en ce moment.",
+      "loading": "Chargement du trafic…",
+      "count": "{count, plural, one {# avion} other {# avions}} dans la zone",
+      "quota": "Quota de données atteint, réessayez plus tard.",
+      "error": "Trafic indisponible pour le moment.",
+      "zoomIn": "Zoomez pour voir tout le trafic de la zone.",
+      "close": "Fermer",
+      "altitude": "Altitude",
+      "speed": "Vitesse sol",
+      "vs": "Vario",
+      "track": "Route",
+      "squawk": "Squawk",
+      "hex": "Code Mode S",
+      "ground": "Au sol",
+      "trackLoading": "Chargement de la trace…",
+      "trackSince": "Trace depuis {time} UTC",
+      "noTrack": "Pas de trace enregistrée.",
+      "attribution": "Données ADS-B : contributeurs",
+      "needKey": "La carte Google n'est pas configurée."
     }
   },
   "why": {

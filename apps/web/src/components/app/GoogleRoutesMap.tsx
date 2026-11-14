@@ -31,10 +31,10 @@ type GoogleNS = {
   };
 };
 
-let loader: Promise<GoogleNS> | null = null;
-function loadGoogle(key: string, lang: string): Promise<GoogleNS> {
+let loader: Promise<unknown> | null = null;
+export function loadGoogle<G = GoogleNS>(key: string, lang: string): Promise<G> {
   const w = window as unknown as { google?: GoogleNS; __stratoMapsReady?: () => void };
-  if (w.google?.maps) return Promise.resolve(w.google);
+  if (w.google?.maps) return Promise.resolve(w.google as G);
   if (!loader)
     loader = new Promise((resolve, reject) => {
       w.__stratoMapsReady = () => resolve(w.google!);
@@ -47,11 +47,11 @@ function loadGoogle(key: string, lang: string): Promise<GoogleNS> {
       };
       document.head.appendChild(s);
     });
-  return loader;
+  return loader as Promise<G>;
 }
 
 // Night style (classic styles array, no Map ID needed)
-const NIGHT = [
+export const NIGHT = [
   { elementType: "geometry", stylers: [{ color: "#13263f" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#0a1626" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#93a6bc" }] },
@@ -63,7 +63,7 @@ const NIGHT = [
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a1626" }] },
   { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4a5d73" }] },
 ];
-const DAY = [
+export const DAY = [
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
   { featureType: "road", elementType: "labels", stylers: [{ visibility: "off" }] },

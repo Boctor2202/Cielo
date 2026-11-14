@@ -360,7 +360,8 @@
       "jobs": "Pilot jobs",
       "cv": "Pilot CV",
       "profile": "Profile",
-      "layovers": "Layovers"
+      "layovers": "Layovers",
+      "radar": "Radar"
     },
     "dashboard": {
       "hello": "Hello {name}",
@@ -1254,6 +1255,30 @@
       "arrival": "Arrival",
       "departure": "Departure",
       "create": "Create layover"
+    },
+    "radar": {
+      "title": "Radar",
+      "subtitle": "Live traffic, worldwide.",
+      "searchReg": "Registration (e.g. F-GTAM)",
+      "notAirborne": "{reg} is not transmitting right now.",
+      "loading": "Loading traffic…",
+      "count": "{count, plural, one {# aircraft} other {# aircraft}} in view",
+      "quota": "Data quota reached, try again later.",
+      "error": "Traffic unavailable right now.",
+      "zoomIn": "Zoom in to see all the traffic in the area.",
+      "close": "Close",
+      "altitude": "Altitude",
+      "speed": "Ground speed",
+      "vs": "Vertical speed",
+      "track": "Track",
+      "squawk": "Squawk",
+      "hex": "Mode S code",
+      "ground": "On ground",
+      "trackLoading": "Loading track…",
+      "trackSince": "Track since {time} UTC",
+      "noTrack": "No recorded track.",
+      "attribution": "ADS-B data: contributors of",
+      "needKey": "Google Maps is not configured."
     }
   },
   "why": {
