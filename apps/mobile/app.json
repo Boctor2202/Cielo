@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "Sillage",
-    "slug": "sillage",
-    "scheme": "sillage",
+    "name": "Strato",
+    "slug": "strato",
+    "scheme": "strato",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#0A1626",
     "ios": {
-      "bundleIdentifier": "app.sillage.logbook",
+      "bundleIdentifier": "app.strato.logbook",
       "buildNumber": "1",
       "supportsTablet": true,
       "usesAppleSignIn": true,
@@ -20,7 +20,7 @@
       }
     },
     "android": {
-      "package": "app.sillage.logbook",
+      "package": "app.strato.logbook",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -29,8 +29,8 @@
       "permissions": ["android.permission.POST_NOTIFICATIONS", "android.permission.SCHEDULE_EXACT_ALARM"]
     },
     "locales": {
-      "fr": { "CFBundleDisplayName": "Sillage" },
-      "en": { "CFBundleDisplayName": "Sillage" }
+      "fr": { "CFBundleDisplayName": "Strato" },
+      "en": { "CFBundleDisplayName": "Strato" }
     },
     "plugins": [
       "expo-router",

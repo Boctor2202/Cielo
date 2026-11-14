@@ -1,5 +1,5 @@
 /**
- * A pilot job offer as Sillage stores and shows it: facts extracted from the employer's own public job feed,
+ * A pilot job offer as Strato stores and shows it: facts extracted from the employer's own public job feed,
  * plus a link to the original posting. The posting text itself is never stored or republished.
  */
 

@@ -15,13 +15,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta" });
   return {
-    title: { default: t("title"), template: "%s · Sillage" },
+    title: { default: t("title"), template: "%s · Strato" },
     description: t("description"),
-    applicationName: "Sillage",
+    applicationName: "Strato",
     icons: { icon: "/icon.svg" },
     manifest: "/manifest.webmanifest",
     metadataBase: new URL(SITE_URL),
-    openGraph: { title: t("title"), description: t("description"), type: "website", siteName: "Sillage", locale: locale === "fr" ? "fr_FR" : "en_GB", images: [ogImage(locale)] },
+    openGraph: { title: t("title"), description: t("description"), type: "website", siteName: "Strato", locale: locale === "fr" ? "fr_FR" : "en_GB", images: [ogImage(locale)] },
     twitter: { card: "summary_large_image", images: [ogImage(locale).url] },
     formatDetection: { telephone: false },
   };

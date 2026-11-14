@@ -18,7 +18,7 @@ export interface Gap {
 export interface Match {
   /** 0–100 */
   score: number;
-  /** how much of the job's requirements Sillage could read (0–1); low means the % is less reliable */
+  /** how much of the job's requirements Strato could read (0–1); low means the % is less reliable */
   confidence: number;
   gaps: Gap[];
   /** requirements the pilot meets, for display */

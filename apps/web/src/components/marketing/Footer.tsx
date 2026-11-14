@@ -47,7 +47,7 @@ export function Footer() {
       </div>
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-muted sm:px-6 md:flex-row md:justify-between">
-          <span>© {year} Sillage. {t("rights")}</span>
+          <span>© {year} Strato. {t("rights")}</span>
           <span className="max-w-xl md:text-right">{t("disclaimer")}</span>
         </div>
       </div>

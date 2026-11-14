@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Sillage — le carnet de vol électronique des pilotes",
+    "title": "Strato — le carnet de vol électronique des pilotes",
     "description": "Carnet de vol électronique conforme EASA Part-FCL : saisie rapide, calcul automatique du temps de nuit, exports officiels, licences, FTL et roster. Pour pilotes de ligne, d'affaires et privés."
   },
   "nav": {
@@ -18,7 +18,7 @@
   "hero": {
     "eyebrow": "Conforme EASA Part-FCL · FAA · CASA",
     "title": "Votre carnet de vol, enfin digital",
-    "subtitle": "Saisissez un vol en 20 secondes. Sillage calcule votre temps de nuit, vérifie votre carnet, suit vos licences et vos limites FTL, puis exporte au format officiel EASA.",
+    "subtitle": "Saisissez un vol en 20 secondes. Strato calcule votre temps de nuit, vérifie votre carnet, suit vos licences et vos limites FTL, puis exporte au format officiel EASA.",
     "ctaTrial": "Essai gratuit",
     "ctaDemo": "Voir la démo",
     "note": "Sans carte bancaire · Vos données restent à vous",
@@ -60,7 +60,7 @@
       },
       "audit": {
         "title": "Audit automatique",
-        "text": "Sillage relit votre carnet comme un examinateur : chevauchements, heures incohérentes, doublons, temps de nuit supérieur au total, ruptures de continuité.",
+        "text": "Strato relit votre carnet comme un examinateur : chevauchements, heures incohérentes, doublons, temps de nuit supérieur au total, ruptures de continuité.",
         "points": [
           "17 règles de contrôle",
           "Lien direct vers le vol à corriger",
@@ -105,7 +105,7 @@
       },
       "offline": {
         "title": "Hors ligne et synchronisé",
-        "text": "Sillage fonctionne sans réseau, en vol comme en escale. Vos données se synchronisent dès que vous retrouvez une connexion, sur tous vos appareils.",
+        "text": "Strato fonctionne sans réseau, en vol comme en escale. Vos données se synchronisent dès que vous retrouvez une connexion, sur tous vos appareils.",
         "points": [
           "Base locale sur chaque appareil",
           "Hébergement dans l'Union européenne",
@@ -114,7 +114,7 @@
       },
       "jobs": {
         "title": "Offres d'emploi pilote",
-        "text": "Les offres publiées par les compagnies et opérateurs sur leurs propres pages carrières, classées par région du monde, expérience exigée et salaire quand il est indiqué. Sillage calcule votre pourcentage de correspondance à partir de votre carnet, sur votre appareil.",
+        "text": "Les offres publiées par les compagnies et opérateurs sur leurs propres pages carrières, classées par région du monde, expérience exigée et salaire quand il est indiqué. Strato calcule votre pourcentage de correspondance à partir de votre carnet, sur votre appareil.",
         "points": [
           "Classement par région : licence et droit de travailler pris en compte",
           "Heures exigées, qualification de type, salaire lus dans l'annonce",
@@ -146,7 +146,7 @@
     "plans": {
       "free": {
         "name": "Gratuit",
-        "desc": "Pour découvrir Sillage et les pilotes privés occasionnels.",
+        "desc": "Pour découvrir Strato et les pilotes privés occasionnels.",
         "price": "0 €"
       },
       "basic": {
@@ -206,7 +206,7 @@
     "vat": "Prix TTC. Résiliable à tout moment."
   },
   "testimonials": {
-    "title": "Ils volent avec Sillage",
+    "title": "Ils volent avec Strato",
     "empty": "Les premiers témoignages de pilotes arriveront ici.",
     "slot": "Emplacement témoignage"
   },
@@ -218,7 +218,7 @@
         "a": "Vos données sont stockées d'abord sur votre appareil, puis synchronisées sur des serveurs situés dans l'Union européenne. Les échanges sont chiffrés (TLS), les documents joints sont stockés dans un espace privé et chaque compte n'accède qu'à ses propres données. Nous ne vendons ni ne partageons vos données."
       },
       {
-        "q": "Sillage est-il conforme EASA ?",
+        "q": "Strato est-il conforme EASA ?",
         "a": "Le carnet reprend toutes les informations exigées par FCL.050 et le format de l'AMC1 FCL.050. Le temps de nuit est calculé selon la définition EASA (crépuscule civil). Un carnet électronique est accepté sous réserve que les données soient exactes et disponibles sur demande : vous pouvez à tout moment imprimer ou présenter l'export PDF officiel."
       },
       {
@@ -255,10 +255,10 @@
     "cookies": "Cookies",
     "contact": "Contact",
     "rights": "Tous droits réservés.",
-    "disclaimer": "Sillage est un outil d'aide. Le pilote reste responsable de l'exactitude de son carnet et du respect de la réglementation applicable."
+    "disclaimer": "Strato est un outil d'aide. Le pilote reste responsable de l'exactitude de son carnet et du respect de la réglementation applicable."
   },
   "airlines": {
-    "title": "Sillage pour les compagnies et écoles",
+    "title": "Strato pour les compagnies et écoles",
     "subtitle": "Offrez à vos équipages un carnet de vol moderne, alimenté automatiquement par votre système de planning.",
     "points": [
       {
@@ -514,7 +514,7 @@
       },
       "drop": "Déposez un fichier CSV, XLSX ou TXT, ou cliquez pour choisir",
       "mapping": "Correspondance des colonnes",
-      "mappingHelp": "Sillage a reconnu les colonnes ci-dessous. Corrigez-les si besoin.",
+      "mappingHelp": "Strato a reconnu les colonnes ci-dessous. Corrigez-les si besoin.",
       "ignore": "— ignorer —",
       "dateOrder": "Format des dates",
       "preview": "Aperçu",
@@ -728,7 +728,7 @@
     },
     "documents": {
       "title": "Licences, médical et qualifications",
-      "subtitle": "Suivez vos échéances : Sillage vous prévient avant chaque expiration.",
+      "subtitle": "Suivez vos échéances : Strato vous prévient avant chaque expiration.",
       "add": "Ajouter un document",
       "kind": "Catégorie",
       "kinds": {
@@ -852,7 +852,7 @@
       "title": "Offres d'emploi pilote",
       "subtitle": "Lues sur les sites carrière des compagnies et opérateurs, classées selon votre expérience.",
       "privacy": "Votre % de correspondance est calculé sur cet appareil : votre carnet n'est jamais envoyé.",
-      "sourceNote": "Offres publiées par les employeurs eux-mêmes. Sillage en affiche les informations clés ; l'annonce complète et la candidature se font sur leur site.",
+      "sourceNote": "Offres publiées par les employeurs eux-mêmes. Strato en affiche les informations clés ; l'annonce complète et la candidature se font sur leur site.",
       "updated": "Mise à jour {date} · {count, plural, one {# employeur} other {# employeurs}} suivis",
       "sort": {
         "label": "Trier par",
@@ -1024,7 +1024,7 @@
     }
   },
   "why": {
-    "label": "Pourquoi Sillage",
+    "label": "Pourquoi Strato",
     "title": "Conçu comme un instrument de bord",
     "items": [
       {
@@ -1055,7 +1055,7 @@
       },
       {
         "t": "Saisissez",
-        "d": "Un vol en 20 secondes : Sillage calcule le temps bloc, la nuit, les atterrissages jour/nuit et les colonnes monopilote / multipilote."
+        "d": "Un vol en 20 secondes : Strato calcule le temps bloc, la nuit, les atterrissages jour/nuit et les colonnes monopilote / multipilote."
       },
       {
         "t": "Exportez",
@@ -1075,14 +1075,14 @@
     ],
     "c1": {
       "label": "01 · Temps de nuit",
-      "title": "Le soleil passe à −6°. Sillage le note.",
-      "text": "La nuit EASA s'arrête au début du crépuscule civil du matin. Sillage suit la position de l'avion minute par minute et calcule le temps de nuit, les décollages et les atterrissages de nuit, sans que vous ayez rien à saisir."
+      "title": "Le soleil passe à −6°. Strato le note.",
+      "text": "La nuit EASA s'arrête au début du crépuscule civil du matin. Strato suit la position de l'avion minute par minute et calcule le temps de nuit, les décollages et les atterrissages de nuit, sans que vous ayez rien à saisir."
     },
     "machine": {
       "label": "02 · Votre machine",
       "title": "Votre {name}. Vos colonnes, sans y penser.",
       "titleGeneric": "Votre avion. Vos colonnes, sans y penser.",
-      "text": "Sillage connaît votre type : chaque vol alimente automatiquement les bonnes colonnes du carnet EASA, les totaux par type et votre expérience récente.",
+      "text": "Strato connaît votre type : chaque vol alimente automatiquement les bonnes colonnes du carnet EASA, les totaux par type et votre expérience récente.",
       "icao": "Type OACI",
       "rating": "Qualification",
       "engines": "Motorisation",
@@ -1142,7 +1142,7 @@
   },
   "seo": {
     "home": {
-      "title": "Sillage — Carnet de vol électronique EASA pour pilotes",
+      "title": "Strato — Carnet de vol électronique EASA pour pilotes",
       "description": "Carnet de vol électronique conforme EASA Part-FCL : temps de nuit calculé automatiquement, export PDF officiel, licences, FTL, roster, offres d'emploi pilote et CV. Essai gratuit, web, iOS et Android."
     },
     "features": {
@@ -1155,7 +1155,7 @@
     },
     "airlines": {
       "title": "Carnet de vol électronique pour compagnies et écoles",
-      "description": "Sillage pour les compagnies, opérateurs d'affaires et écoles de pilotage : rosters importés, suivi des licences de l'équipage, conformité EASA et exports officiels."
+      "description": "Strato pour les compagnies, opérateurs d'affaires et écoles de pilotage : rosters importés, suivi des licences de l'équipage, conformité EASA et exports officiels."
     },
     "blog": {
       "title": "Blog — réglementation EASA et métier de pilote",
@@ -1163,7 +1163,7 @@
     },
     "contact": {
       "title": "Contact",
-      "description": "Une question sur Sillage, le carnet de vol électronique ? Écrivez-nous, réponse sous 48 h."
+      "description": "Une question sur Strato, le carnet de vol électronique ? Écrivez-nous, réponse sous 48 h."
     }
   }
 }

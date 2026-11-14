@@ -67,7 +67,7 @@ function Shell({ children }: { children: ReactNode }) {
       <div className="min-h-dvh lg:grid lg:grid-cols-[240px_1fr]">
         <aside className="sticky top-0 hidden h-dvh flex-col border-r border-border bg-surface lg:flex">
           <div className="flex h-16 items-center px-5">
-            <Link href="/" aria-label="Sillage">
+            <Link href="/" aria-label="Strato">
               <Logo />
             </Link>
           </div>
@@ -108,7 +108,7 @@ function Shell({ children }: { children: ReactNode }) {
 
         <div className="min-w-0">
           <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg/90 px-4 backdrop-blur lg:hidden">
-            <Link href="/app" aria-label="Sillage">
+            <Link href="/app" aria-label="Strato">
               <Logo />
             </Link>
             <div className="flex items-center gap-1">

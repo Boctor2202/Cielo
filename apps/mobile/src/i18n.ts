@@ -2,7 +2,7 @@ import { getLocales } from "expo-localization";
 import type { Locale } from "@cielo/core";
 
 const en = {
-  "app.name": "Sillage",
+  "app.name": "Strato",
   "common.save": "Save",
   "common.cancel": "Cancel",
   "common.delete": "Delete",
@@ -206,7 +206,7 @@ const en = {
   "more.version": "Version {v}",
 
   "auth.title": "Sign in",
-  "auth.intro": "Sign in to back up and sync your logbook between devices. You can keep using Sillage without an account.",
+  "auth.intro": "Sign in to back up and sync your logbook between devices. You can keep using Strato without an account.",
   "auth.email": "E-mail",
   "auth.sendLink": "Send magic link",
   "auth.linkSent": "Check your inbox: open the link on this device.",
@@ -216,7 +216,7 @@ const en = {
   "auth.failed": "Sign-in failed",
   "auth.completing": "Completing sign-in…",
 
-  "sub.title": "Sillage Premium",
+  "sub.title": "Strato Premium",
   "sub.pitch": "Unlimited cloud sync, roster import, FTL monitoring and signed exports.",
   "sub.unavailable": "In-app purchases are not configured in this build.",
   "sub.restore": "Restore purchases",
@@ -230,7 +230,7 @@ export type I18nKey = keyof typeof en;
 type Dict = Record<I18nKey, string>;
 
 const fr: Dict = {
-  "app.name": "Sillage",
+  "app.name": "Strato",
   "common.save": "Enregistrer",
   "common.cancel": "Annuler",
   "common.delete": "Supprimer",
@@ -434,7 +434,7 @@ const fr: Dict = {
   "more.version": "Version {v}",
 
   "auth.title": "Connexion",
-  "auth.intro": "Connectez-vous pour sauvegarder et synchroniser votre carnet entre vos appareils. Sillage reste utilisable sans compte.",
+  "auth.intro": "Connectez-vous pour sauvegarder et synchroniser votre carnet entre vos appareils. Strato reste utilisable sans compte.",
   "auth.email": "E-mail",
   "auth.sendLink": "Recevoir un lien de connexion",
   "auth.linkSent": "Consultez votre boîte mail et ouvrez le lien sur cet appareil.",
@@ -444,7 +444,7 @@ const fr: Dict = {
   "auth.failed": "Échec de la connexion",
   "auth.completing": "Connexion en cours…",
 
-  "sub.title": "Sillage Premium",
+  "sub.title": "Strato Premium",
   "sub.pitch": "Synchronisation illimitée, import de planning, suivi FTL et exports signés.",
   "sub.unavailable": "Les achats intégrés ne sont pas configurés dans cette version.",
   "sub.restore": "Restaurer mes achats",

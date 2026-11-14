@@ -23,7 +23,7 @@ export function alternatesFor(href: Href, locale: string): Metadata["alternates"
   };
 }
 
-export const ogImage = (locale: string) => ({ url: `${SITE_URL}/og/sillage-${locale === "en" ? "en" : "fr"}.jpg`, width: 1200, height: 630, alt: "Sillage" });
+export const ogImage = (locale: string) => ({ url: `${SITE_URL}/og/strato-${locale === "en" ? "en" : "fr"}.jpg`, width: 1200, height: 630, alt: "Strato" });
 
 /** Full metadata for a public page: title, description, canonical, hreflang, Open Graph and Twitter card. */
 export function pageMeta(

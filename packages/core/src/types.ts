@@ -1,5 +1,5 @@
 /**
- * Sillage domain model.
+ * Strato domain model.
  * Conventions: every duration is an integer number of minutes, every instant
  * is an ISO-8601 UTC string. Synced records carry id/createdAt/updatedAt/deletedAt.
  */

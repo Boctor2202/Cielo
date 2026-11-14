@@ -21,7 +21,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <JsonLd
         nodes={[
           organizationLd(),
-          { "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: SITE_URL, name: "Sillage", inLanguage: locale, publisher: { "@id": `${SITE_URL}/#organization` } },
+          { "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: SITE_URL, name: "Strato", inLanguage: locale, publisher: { "@id": `${SITE_URL}/#organization` } },
           softwareLd(locale, t("description")),
           faqLd(m.faq.items),
         ]}

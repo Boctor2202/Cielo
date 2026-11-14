@@ -44,7 +44,7 @@ export function Hero() {
           <PhoneFrame className="absolute -bottom-2 right-[-2%] w-[27%] min-w-[108px] sm:-bottom-6">
             <Shot name="mobile-logbook" alt="" priority className="w-full" />
           </PhoneFrame>
-          {/* Instrument readouts: what Sillage computes for you */}
+          {/* Instrument readouts: what Strato computes for you */}
           <div className="glass absolute -left-3 top-[58%] hidden rounded-xl border border-border px-4 py-3 shadow-xl sm:block" aria-hidden>
             <p className="mono-label !text-[10px]">{t("readoutNight")}</p>
             <p className="num mt-1 text-2xl font-semibold">0:47</p>

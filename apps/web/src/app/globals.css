@@ -1,12 +1,13 @@
 @import "tailwindcss";
 @import "@fontsource-variable/manrope";
+@import "@fontsource-variable/unbounded";
 @import "@fontsource-variable/jetbrains-mono";
 @import "@fontsource-variable/fraunces/opsz.css";
 @import "@fontsource-variable/fraunces/opsz-italic.css";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* Sillage — "annunciator" palette: cyan = selected/active, green = normal, amber = caution, red = warning. */
+/* Strato — "annunciator" palette: cyan = selected/active, green = normal, amber = caution, red = warning. */
 :root {
   --bg: #ffffff;
   --surface: #f3f6f9;
@@ -67,6 +68,7 @@
   --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, monospace;
   --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+  --font-brand: "Unbounded Variable", ui-sans-serif, system-ui, sans-serif;
   --radius-card: 12px;
 }
 
