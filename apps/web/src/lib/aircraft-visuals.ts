@@ -33,6 +33,11 @@ export interface AircraftVisual {
   cutouts?: { flight: Img; front: Img };
   /** Full-bleed hero photo, used when there is no cut-out. */
   backdrop?: Img;
+  /**
+   * Scroll-scrubbed film: takeoff (lined up → roll → rotation → lift-off, gear up) then the climb through the clouds.
+   * `rotate` and `liftoff` are fractions of the takeoff clip, used by the instruments strip.
+   */
+  film?: { base: string; poster: string; rotate: number; liftoff: number };
   /** Photos of the type for the "your aircraft" gallery. */
   gallery: (Img & { caption: { fr: string; en: string } })[];
   credits: Credit[];
@@ -62,6 +67,7 @@ export const AIRCRAFT_VISUALS: AircraftVisual[] = [
     id: "c68a",
     match: ["C68A"],
     name: { fr: "Cessna Citation Latitude", en: "Cessna Citation Latitude" },
+    film: { base: "/immersive/film/c68a", poster: "/immersive/film/c68a/takeoff-poster", rotate: 0.6, liftoff: 0.7 },
     cutouts: {
       flight: { base: `${A}/c68a/flight`, widths: [800, 1600], ratio: 1554 / 543 },
       front: { base: `${A}/c68a/front`, widths: [800, 1600], ratio: 1889 / 485 },
@@ -103,7 +109,24 @@ export const AIRCRAFT_VISUALS: AircraftVisual[] = [
   },
 ];
 
-export const DEFAULT_VISUAL = AIRCRAFT_VISUALS.find((v) => v.id === "airliner")!;
+// Visitors and types without dedicated imagery see the business-jet film
+export const DEFAULT_VISUAL = AIRCRAFT_VISUALS.find((v) => v.id === "c68a")!;
+
+export const FILM_CREDITS: Credit[] = [
+  {
+    subject: "Takeoff and climb film (AI-generated, not a real aircraft or airport)",
+    author: "Cielo",
+    license: "Generated with Veo via SYZEL",
+    licenseUrl: "https://deepmind.google/models/veo/",
+    sourceUrl: "https://deepmind.google/models/veo/",
+  },
+];
+
+export const EARTH_CREDITS: Credit[] = [
+  { subject: "Blue Marble Next Generation (Earth by day)", author: "NASA Earth Observatory", license: "Public domain", licenseUrl: "https://earthobservatory.nasa.gov/image-use-policy", sourceUrl: "https://visibleearth.nasa.gov/collection/1484/blue-marble" },
+  { subject: "Black Marble 2016 (Earth at night)", author: "NASA Earth Observatory", license: "Public domain", licenseUrl: "https://earthobservatory.nasa.gov/image-use-policy", sourceUrl: "https://earthobservatory.nasa.gov/features/NightLights" },
+  { subject: "Clouds and ocean mask", author: "NASA Visible Earth, via three-globe (MIT)", license: "Public domain", licenseUrl: "https://earthobservatory.nasa.gov/image-use-policy", sourceUrl: "https://github.com/vasturiano/three-globe" },
+];
 
 /** Visual set for an ICAO type designator; `exact` tells whether dedicated imagery exists for that type. */
 export function visualFor(icao: string | null | undefined): { visual: AircraftVisual; exact: boolean } {

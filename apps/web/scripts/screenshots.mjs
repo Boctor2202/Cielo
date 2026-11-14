@@ -99,6 +99,12 @@ async function shoot(theme) {
   await snap("offline");
   await ctx.setOffline(false);
 
+  // Jobs (needs the employers' feeds: run against a deployment that can reach them) and pilot CV
+  await go("/fr/app/emplois", 6000);
+  await snap("jobs");
+  await go("/fr/app/cv", 2500);
+  await snap("cv");
+
   // Mobile
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: theme, locale: "fr-FR", isMobile: true, hasTouch: true });
   await mctx.addInitScript((t) => localStorage.setItem("cielo-theme", t), theme);

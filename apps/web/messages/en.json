@@ -38,7 +38,7 @@
   },
   "features": {
     "title": "Everything a logbook should do",
-    "subtitle": "Eight tools, one source of truth for your flying experience.",
+    "subtitle": "Ten tools, one source of truth for your flying experience.",
     "items": {
       "logbook": {
         "title": "Logbook and official exports",
@@ -110,6 +110,24 @@
           "Local database on each device",
           "Hosted in the European Union",
           "Automatic encrypted backup"
+        ]
+      },
+      "jobs": {
+        "title": "Pilot jobs",
+        "text": "Openings posted by airlines and operators on their own careers pages, sorted by world region, required experience and salary when stated. Cielo works out your match percentage from your logbook, on your device.",
+        "points": [
+          "Sorted by region: licence and right to work taken into account",
+          "Required hours, type rating and salary read from the posting",
+          "“For you” match percentage computed on your device"
+        ]
+      },
+      "cv": {
+        "title": "Pilot CV",
+        "text": "A CV built from your logbook, with your hours by category (total, PIC, multi-pilot, turbine, night, IFR, per type) and a layout designed for the screening software airlines use.",
+        "points": [
+          "Hours by category and by type, always up to date",
+          "Pre-submission check for applicant tracking systems (ATS)",
+          "PDF, text and JSON Resume export, in English or French"
         ]
       }
     }
@@ -1046,11 +1064,11 @@
     ]
   },
   "immersive": {
-    "canvasLabel": "Animated scene: the aircraft you fly cruises above a sea of clouds, night falls, then photos of the aircraft, a globe showing flight routes and a dusk sky.",
+    "canvasLabel": "Scroll-driven film: a business jet lined up at the runway threshold accelerates, takes off, retracts its gear and climbs through the clouds, then the Earth seen from space with flight routes, which you can turn.",
     "scroll": "Scroll",
     "chapters": [
-      "Airborne",
-      "EASA night",
+      "Line-up",
+      "Takeoff",
       "Your aircraft",
       "Routes",
       "Ready"
@@ -1058,7 +1076,7 @@
     "c1": {
       "label": "01 · Night time",
       "title": "The sun passes −6°. Cielo logs it.",
-      "text": "EASA night starts at the end of civil twilight. Cielo follows the aircraft position minute by minute and computes night time and night landings, with nothing for you to type."
+      "text": "EASA night ends at the beginning of morning civil twilight. Cielo follows the aircraft's position minute by minute and works out night time, night takeoffs and night landings, with nothing for you to type."
     },
     "machine": {
       "label": "02 · Your aircraft",
@@ -1111,6 +1129,15 @@
     "credits": {
       "title": "Photo credits",
       "modified": "modified"
+    },
+    "drag": "Click and drag to turn the Earth",
+    "phase": {
+      "lineup": "LINED UP",
+      "roll": "TAKEOFF ROLL",
+      "rotate": "ROTATE",
+      "gearUp": "POSITIVE RATE · GEAR UP",
+      "climb": "CLIMB",
+      "cruise": "CRUISE"
     }
   }
 }

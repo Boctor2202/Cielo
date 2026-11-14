@@ -38,7 +38,7 @@
   },
   "features": {
     "title": "Tout ce qu'un carnet de vol devrait faire",
-    "subtitle": "Huit outils, une seule source de vérité pour votre expérience aéronautique.",
+    "subtitle": "Dix outils, une seule source de vérité pour votre expérience aéronautique.",
     "items": {
       "logbook": {
         "title": "Carnet de vol et exports officiels",
@@ -110,6 +110,24 @@
           "Base locale sur chaque appareil",
           "Hébergement dans l'Union européenne",
           "Sauvegarde automatique chiffrée"
+        ]
+      },
+      "jobs": {
+        "title": "Offres d'emploi pilote",
+        "text": "Les offres publiées par les compagnies et opérateurs sur leurs propres pages carrières, classées par région du monde, expérience exigée et salaire quand il est indiqué. Cielo calcule votre pourcentage de correspondance à partir de votre carnet, sur votre appareil.",
+        "points": [
+          "Classement par région : licence et droit de travailler pris en compte",
+          "Heures exigées, qualification de type, salaire lus dans l'annonce",
+          "% de correspondance « pour vous » calculé sur votre appareil"
+        ]
+      },
+      "cv": {
+        "title": "CV pilote",
+        "text": "Un CV généré depuis votre carnet, avec les heures par catégorie (total, PIC, multipilote, turbine, nuit, IFR, par type) et une mise en page pensée pour les logiciels de tri des compagnies.",
+        "points": [
+          "Heures par catégorie et par type, toujours à jour",
+          "Vérification avant envoi pour les logiciels de tri (ATS)",
+          "Export PDF, texte et JSON Resume, en français ou en anglais"
         ]
       }
     }
@@ -1046,11 +1064,11 @@
     ]
   },
   "immersive": {
-    "canvasLabel": "Scène animée : l'avion que vous pilotez vole au-dessus d'une mer de nuages, la nuit tombe, puis des photos de l'appareil, un globe montrant des routes aériennes et un ciel au crépuscule.",
+    "canvasLabel": "Film animé au défilement : un jet d'affaires aligné en bout de piste accélère, décolle, rentre son train et traverse les nuages, puis la Terre vue de l'espace avec des routes aériennes, que l'on peut faire tourner.",
     "scroll": "Faites défiler",
     "chapters": [
-      "Envol",
-      "Nuit EASA",
+      "Alignement",
+      "Décollage",
       "Votre machine",
       "Routes",
       "Prêt"
@@ -1058,7 +1076,7 @@
     "c1": {
       "label": "01 · Temps de nuit",
       "title": "Le soleil passe à −6°. Cielo le note.",
-      "text": "La nuit EASA commence à la fin du crépuscule civil. Cielo suit la position de l'avion minute par minute et calcule le temps de nuit et les atterrissages de nuit, sans que vous ayez rien à saisir."
+      "text": "La nuit EASA s'arrête au début du crépuscule civil du matin. Cielo suit la position de l'avion minute par minute et calcule le temps de nuit, les décollages et les atterrissages de nuit, sans que vous ayez rien à saisir."
     },
     "machine": {
       "label": "02 · Votre machine",
@@ -1111,6 +1129,15 @@
     "credits": {
       "title": "Crédits photo",
       "modified": "modifiée"
+    },
+    "drag": "Cliquez-glissez pour faire tourner la Terre",
+    "phase": {
+      "lineup": "ALIGNÉ",
+      "roll": "ROULAGE DÉCOLLAGE",
+      "rotate": "ROTATION",
+      "gearUp": "VARIO POSITIF · TRAIN RENTRÉ",
+      "climb": "MONTÉE",
+      "cruise": "CROISIÈRE"
     }
   }
 }

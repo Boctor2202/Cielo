@@ -1,13 +1,13 @@
 import { useLocale, useMessages, useTranslations } from "next-intl";
-import { ArrowRight, BadgeCheck, CalendarClock, CloudOff, FileDown, Lock, Map, PenLine, ScanSearch, ShieldCheck, Upload } from "lucide-react";
+import { ArrowRight, BadgeCheck, Briefcase, CalendarClock, CloudOff, FileDown, FileUser, Lock, Map, PenLine, ScanSearch, ShieldCheck, Upload } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { SITE } from "@/config/site";
 import { BrowserFrame, LaptopFrame, PhoneFrame, Shot } from "./Shot";
 import { FeatureTabs } from "./FeatureTabs";
 import { Reveal } from "./Reveal";
 
-export const FEATURE_KEYS = ["logbook", "import", "audit", "licenses", "ftl", "stats", "signature", "offline"] as const;
-const ICONS = { logbook: FileDown, import: Upload, audit: ScanSearch, licenses: BadgeCheck, ftl: CalendarClock, stats: Map, signature: PenLine, offline: CloudOff };
+export const FEATURE_KEYS = ["logbook", "import", "audit", "licenses", "ftl", "stats", "signature", "offline", "jobs", "cv"] as const;
+const ICONS = { logbook: FileDown, import: Upload, audit: ScanSearch, licenses: BadgeCheck, ftl: CalendarClock, stats: Map, signature: PenLine, offline: CloudOff, jobs: Briefcase, cv: FileUser };
 
 export function Hero() {
   const t = useTranslations("hero");

@@ -1,12 +1,12 @@
 "use client";
 
-import { BadgeCheck, CalendarClock, Check, CloudOff, FileDown, Map, PenLine, ScanSearch, Upload } from "lucide-react";
+import { BadgeCheck, Briefcase, CalendarClock, Check, CloudOff, FileDown, FileUser, Map, PenLine, ScanSearch, Upload } from "lucide-react";
 import { useRef, useState, type KeyboardEvent } from "react";
 import { useMessages, useTranslations } from "next-intl";
 import { BrowserFrame, Shot } from "./Shot";
 
-export const FEATURE_KEYS = ["logbook", "import", "audit", "licenses", "ftl", "stats", "signature", "offline"] as const;
-const ICONS = { logbook: FileDown, import: Upload, audit: ScanSearch, licenses: BadgeCheck, ftl: CalendarClock, stats: Map, signature: PenLine, offline: CloudOff };
+export const FEATURE_KEYS = ["logbook", "import", "audit", "licenses", "ftl", "stats", "signature", "offline", "jobs", "cv"] as const;
+const ICONS = { logbook: FileDown, import: Upload, audit: ScanSearch, licenses: BadgeCheck, ftl: CalendarClock, stats: Map, signature: PenLine, offline: CloudOff, jobs: Briefcase, cv: FileUser };
 
 /** Accessible tabs (WAI-ARIA pattern: arrow keys, Home/End): one screenshot per feature. */
 export function FeatureTabs() {
