@@ -175,6 +175,13 @@ describe("import", () => {
     expect(r!.errors).toEqual([]);
     expect(r!.input).toMatchObject({ date: "2026-11-10", depIcao: "LFPG", function: "SIC", nightOverrideMin: 20, registration: "F-HBXA" });
   });
+  it("reads a duration in the simulator column as the session time", () => {
+    const csv = "Date;Simulateur;Off block;On block\n22/12/2020;1:15;09:00;10:15\n";
+    const rows = parseCsv(csv);
+    const [r] = rowsToFlights(rows.slice(1), detectMapping(rows[0]!));
+    expect(r!.input).toMatchObject({ isFstd: true, fstdMin: 75 });
+    expect(r!.input!.fstdType).toBeUndefined();
+  });
   it("parses iCal roster events", () => {
     const ics = [
       "BEGIN:VCALENDAR", "BEGIN:VEVENT", "UID:1", "DTSTART:20261112T061500Z", "DTEND:20261112T074500Z",

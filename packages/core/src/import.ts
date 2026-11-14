@@ -131,8 +131,13 @@ export function rowsToFlights(
     const errors: string[] = [];
     const date = parseFlexibleDate(get(r, "date"), opts.dateOrder);
     if (!date) errors.push("date");
-    const fstdTime = dur(get(r, "fstdTime"));
-    const isFstd = !!get(r, "fstdType") || (!!fstdTime && !get(r, "registration"));
+    // A "simulator" / "FSTD" column often holds the session time (the EASA logbook's FSTD "total time of
+    // session"), not the device type: a value that reads as a duration is taken as the session time.
+    const rawFstd = get(r, "fstdType");
+    const fstdTypeIsTime = /^\d{1,2}\s*[:hH]\s*\d{2}$|^\d+([.,]\d+)?$/.test(rawFstd.trim());
+    const fstdTime = dur(get(r, "fstdTime")) ?? (fstdTypeIsTime ? dur(rawFstd.trim()) : undefined);
+    const fstdType = fstdTypeIsTime ? undefined : rawFstd || undefined;
+    const isFstd = !!rawFstd || (!!fstdTime && !get(r, "registration"));
     const dep = get(r, "dep").toUpperCase();
     const arr = get(r, "arr").toUpperCase();
     if (!isFstd && (!dep || !arr)) errors.push("route");
@@ -182,7 +187,7 @@ export function rowsToFlights(
           autoLandings: false,
           pilotFlying: opts.pilotFlying ?? (num(get(r, "landingsDay")) ?? 0) + (num(get(r, "landingsNight")) ?? 0) > 0,
           isFstd,
-          fstdType: get(r, "fstdType") || undefined,
+          fstdType,
           fstdMin: fstdTime,
           remarks: get(r, "remarks") || undefined,
         }
