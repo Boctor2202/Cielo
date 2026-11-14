@@ -359,7 +359,8 @@
       "signOut": "Sign out",
       "jobs": "Pilot jobs",
       "cv": "Pilot CV",
-      "profile": "Profile"
+      "profile": "Profile",
+      "layovers": "Layovers"
     },
     "dashboard": {
       "hello": "Hello {name}",
@@ -721,7 +722,10 @@
           "wellness": "Spa & fitness",
           "shopping": "Shopping"
         }
-      }
+      },
+      "back": "All layovers",
+      "arrival": "Arrival",
+      "departure": "Departure"
     },
     "ftl": {
       "title": "Flight time limitations (FTL)",
@@ -1105,6 +1109,19 @@
         "email": "Email",
         "bio": "About you (600 characters max.)"
       }
+    },
+    "layovers": {
+      "title": "Layovers",
+      "subtitle": "Your hotel, your contacts and the best places nearby, for every layover.",
+      "new": "New layover",
+      "empty": "No layovers yet. Add one with the airport and dates, no roster needed.",
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "noHotel": "No hotel yet",
+      "airport": "Airport (ICAO, IATA or city)",
+      "arrival": "Arrival",
+      "departure": "Departure",
+      "create": "Create layover"
     }
   },
   "why": {

@@ -104,7 +104,7 @@ export default function RosterPage() {
   async function openLayover(e: RosterEvent) {
     const existing = layovers?.find((l) => l.rosterEventId === e.id);
     const l = existing ?? (await saveLayover({ airportIcao: e.arrIcao ?? "", rosterEventId: e.id, arrivalUtc: e.endUtc, contacts: [] }));
-    router.push({ pathname: "/app/roster/escale/[id]", params: { id: l.id } });
+    router.push({ pathname: "/app/escales/[id]", params: { id: l.id } });
   }
 
   const EventChip = ({ e }: { e: RosterEvent }) => (

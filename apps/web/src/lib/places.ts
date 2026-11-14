@@ -111,8 +111,15 @@ export async function nearby(center: { lat: number; lng: number }, cat: PlaceCat
     },
     NEARBY_FIELDS,
   );
+  const seen = new Set<string>();
   return (res.places ?? [])
-    .filter((p) => p.location)
+    // Google sometimes returns the same place twice (also under two IDs with identical name and reviews)
+    .filter((p) => {
+      const k2 = `${p.displayName?.text}|${p.userRatingCount}`;
+      if (!p.location || seen.has(p.id) || seen.has(k2)) return false;
+      seen.add(p.id).add(k2);
+      return true;
+    })
     .map((p) => {
       const loc = { lat: p.location!.latitude, lng: p.location!.longitude };
       return {

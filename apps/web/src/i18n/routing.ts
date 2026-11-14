@@ -29,6 +29,8 @@ export const routing = defineRouting({
     "/app/appareils": { fr: "/app/appareils", en: "/app/aircraft" },
     "/app/roster": "/app/roster",
     "/app/roster/escale/[id]": { fr: "/app/roster/escale/[id]", en: "/app/roster/layover/[id]" },
+    "/app/escales": { fr: "/app/escales", en: "/app/layovers" },
+    "/app/escales/[id]": { fr: "/app/escales/[id]", en: "/app/layovers/[id]" },
     "/app/ftl": "/app/ftl",
     "/app/documents": "/app/documents",
     "/app/statistiques": { fr: "/app/statistiques", en: "/app/statistics" },

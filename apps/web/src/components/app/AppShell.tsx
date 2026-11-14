@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  BadgeCheck, BarChart3, UserRound, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Wifi, WifiOff, MoreHorizontal,
+  BadgeCheck, BarChart3, UserRound, Hotel, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Wifi, WifiOff, MoreHorizontal,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -19,6 +19,7 @@ const NAV: { href: AppPathname; key: string; icon: typeof Gauge }[] = [
   { href: "/app", key: "dashboard", icon: Gauge },
   { href: "/app/carnet", key: "logbook", icon: NotebookPen },
   { href: "/app/roster", key: "roster", icon: CalendarDays },
+  { href: "/app/escales", key: "layovers", icon: Hotel },
   { href: "/app/ftl", key: "ftl", icon: Timer },
   { href: "/app/documents", key: "documents", icon: BadgeCheck },
   { href: "/app/statistiques", key: "stats", icon: BarChart3 },

@@ -359,7 +359,8 @@
       "signOut": "Se déconnecter",
       "jobs": "Offres d'emploi",
       "cv": "CV pilote",
-      "profile": "Profil"
+      "profile": "Profil",
+      "layovers": "Escales"
     },
     "dashboard": {
       "hello": "Bonjour {name}",
@@ -721,7 +722,10 @@
           "wellness": "Spa et sport",
           "shopping": "Shopping"
         }
-      }
+      },
+      "back": "Toutes les escales",
+      "arrival": "Arrivée",
+      "departure": "Départ"
     },
     "ftl": {
       "title": "Limites de temps de vol (FTL)",
@@ -1105,6 +1109,19 @@
         "email": "E-mail",
         "bio": "Présentation (600 caractères max.)"
       }
+    },
+    "layovers": {
+      "title": "Escales",
+      "subtitle": "Votre hôtel, vos contacts et les meilleures adresses autour, pour chaque escale.",
+      "new": "Nouvelle escale",
+      "empty": "Aucune escale pour l'instant. Ajoutez-en une avec l'aéroport et les dates, pas besoin de roster.",
+      "upcoming": "À venir",
+      "past": "Passées",
+      "noHotel": "Hôtel non renseigné",
+      "airport": "Aéroport (code OACI, IATA ou ville)",
+      "arrival": "Arrivée",
+      "departure": "Départ",
+      "create": "Créer l'escale"
     }
   },
   "why": {
