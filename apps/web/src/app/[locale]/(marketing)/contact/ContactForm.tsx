@@ -15,7 +15,7 @@ export function ContactForm() {
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
         const body = `${fd.get("message")}\n\n— ${fd.get("name")} <${fd.get("email")}>`;
-        window.location.href = `mailto:${SITE.contactEmail}?subject=${encodeURIComponent("Cielo — contact")}&body=${encodeURIComponent(body)}`;
+        window.location.href = `mailto:${SITE.contactEmail}?subject=${encodeURIComponent("Sillage — contact")}&body=${encodeURIComponent(body)}`;
         setSent(true);
       }}
     >

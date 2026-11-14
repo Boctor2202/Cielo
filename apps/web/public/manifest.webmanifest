@@ -1,6 +1,6 @@
 {
-  "name": "Cielo — carnet de vol",
-  "short_name": "Cielo",
+  "name": "Sillage — carnet de vol",
+  "short_name": "Sillage",
   "start_url": "/fr/app",
   "display": "standalone",
   "background_color": "#0a1626",

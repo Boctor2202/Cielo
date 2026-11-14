@@ -43,6 +43,6 @@ export function toJsonResume(cv: CvData) {
       lastFlight: h.lastFlight,
       byType: h.byType.map((t) => ({ icao: t.icao, name: t.name, total: hrs(t.totalMin), pilotInCommand: hrs(t.picMin), coPilot: hrs(t.copilotMin), lastFlown: t.lastFlown })),
     },
-    meta: { generator: "Cielo", lastModified: new Date().toISOString() },
+    meta: { generator: "Sillage", lastModified: new Date().toISOString() },
   };
 }

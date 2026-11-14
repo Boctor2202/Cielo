@@ -12,7 +12,7 @@ export function priceIdFor(plan: Plan, interval: Interval): string {
   return requireEnv(`STRIPE_PRICE_${plan.toUpperCase()}_${interval.toUpperCase()}`);
 }
 
-/** Maps a Stripe price id back to a Cielo tier (null when unknown). */
+/** Maps a Stripe price id back to a Sillage tier (null when unknown). */
 export function tierForPrice(priceId: string | null | undefined): Tier | null {
   if (!priceId) return null;
   for (const plan of ["basic", "premium"] as const) {
@@ -95,7 +95,7 @@ export async function stripeRequest<T>(method: "GET" | "POST", path: string, par
   return data as T;
 }
 
-/** The subset of a Stripe Subscription object that Cielo uses. */
+/** The subset of a Stripe Subscription object that Sillage uses. */
 export interface StripeSubscription {
   id: string;
   status: string;

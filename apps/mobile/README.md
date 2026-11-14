@@ -1,4 +1,4 @@
-# Cielo — application mobile (iOS / Android)
+# Sillage — application mobile (iOS / Android)
 
 Carnet de vol électronique *local-first* (EASA Part-FCL en priorité, interface FR/EN), construit avec
 Expo SDK 58, expo-router et TypeScript. Toute la logique métier (calcul des temps, nuit, expérience
@@ -163,7 +163,7 @@ eas submit --profile production --platform android  # → piste « internal » d
 
 ### Fiche magasin (store listing)
 
-- **App Store Connect** : créez l'app (bundle `app.cielo.logbook`, SKU), nom « Cielo », sous-titre, description FR/EN,
+- **App Store Connect** : créez l'app (bundle `app.cielo.logbook`, SKU), nom « Sillage », sous-titre, description FR/EN,
   mots-clés (carnet de vol, logbook, EASA, pilote…), catégorie *Navigation* ou *Productivité*, captures 6,9″ et 13″ iPad,
   URL de politique de confidentialité, questionnaire *App Privacy* (données de contact et contenu utilisateur si la
   synchro est activée), classification d'âge, coordonnées de revue (fournir un compte de démonstration si la connexion

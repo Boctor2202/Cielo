@@ -162,7 +162,7 @@ export default function More() {
       </Card>
 
       <Txt variant="small" style={{ textAlign: "center" }} color={c.muted}>
-        Cielo · {t("more.version", { v: Constants.expoConfig?.version ?? "0.0.0" })}
+        Sillage · {t("more.version", { v: Constants.expoConfig?.version ?? "0.0.0" })}
       </Txt>
     </Screen>
   );

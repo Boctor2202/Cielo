@@ -1,7 +1,7 @@
 // Daily licence / medical expiry alerts (e-mail via Resend + Expo push).
 // Triggered once a day by pg_cron (see docs/backend.md) with header
 //   Authorization: Bearer <CRON_SECRET>
-// Secrets: CRON_SECRET, RESEND_API_KEY, ALERTS_FROM_EMAIL (e.g. "Cielo <alertes@cielo.aero>"),
+// Secrets: CRON_SECRET, RESEND_API_KEY, ALERTS_FROM_EMAIL (e.g. "Sillage <alertes@sillage.aero>"),
 // optional APP_URL (link in the e-mail).
 // Idempotent: license_alert_log records (license, day) so a re-run never sends twice.
 import { errorResponse, json, requireEnv, safeEqual } from "../_shared/http.ts";
@@ -118,7 +118,7 @@ async function sendEmail(to: string, locale: Locale, alerts: Alert[]): Promise<b
     : locale === "en" ? `${alerts.length} documents are about to expire` : `${alerts.length} documents arrivent à échéance`;
   const appUrl = Deno.env.get("APP_URL");
   const cta = appUrl
-    ? `<p><a href="${escapeHtml(appUrl)}/licenses">${locale === "en" ? "Open Cielo" : "Ouvrir Cielo"}</a></p>`
+    ? `<p><a href="${escapeHtml(appUrl)}/licenses">${locale === "en" ? "Open Sillage" : "Ouvrir Sillage"}</a></p>`
     : "";
   const html = `<p>${lines.map((l) => escapeHtml(l.body)).join("<br>")}</p>${cta}`;
   const text = lines.map((l) => l.body).join("\n");

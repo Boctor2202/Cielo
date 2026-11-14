@@ -5,7 +5,7 @@ import type { RawPosting, Source } from "./types";
  * the text is only used to extract facts (see extract.ts) and is never stored.
  */
 
-const UA = "CieloJobs/1.0 (+https://cielo.app; reads employers' public job feeds)";
+const UA = "SillageJobs/1.0 (reads employers' public job feeds)";
 
 async function get(url: string, accept = "application/json"): Promise<string> {
   const res = await fetch(url, { headers: { "User-Agent": UA, Accept: accept }, signal: AbortSignal.timeout(20000) });

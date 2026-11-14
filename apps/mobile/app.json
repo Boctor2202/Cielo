@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "Cielo",
-    "slug": "cielo",
-    "scheme": "cielo",
+    "name": "Sillage",
+    "slug": "sillage",
+    "scheme": "sillage",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#0A1626",
     "ios": {
-      "bundleIdentifier": "app.cielo.logbook",
+      "bundleIdentifier": "app.sillage.logbook",
       "buildNumber": "1",
       "supportsTablet": true,
       "usesAppleSignIn": true,
@@ -20,7 +20,7 @@
       }
     },
     "android": {
-      "package": "app.cielo.logbook",
+      "package": "app.sillage.logbook",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -29,8 +29,8 @@
       "permissions": ["android.permission.POST_NOTIFICATIONS", "android.permission.SCHEDULE_EXACT_ALARM"]
     },
     "locales": {
-      "fr": { "CFBundleDisplayName": "Cielo" },
-      "en": { "CFBundleDisplayName": "Cielo" }
+      "fr": { "CFBundleDisplayName": "Sillage" },
+      "en": { "CFBundleDisplayName": "Sillage" }
     },
     "plugins": [
       "expo-router",

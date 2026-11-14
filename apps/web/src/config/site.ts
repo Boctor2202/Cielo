@@ -3,9 +3,9 @@
  * Leave a stat at null to hide it from the proof band.
  */
 export const SITE = {
-  name: "Cielo",
-  domain: "cielo.app",
-  contactEmail: "contact@cielo.app",
+  name: "Sillage",
+  domain: "sillage.app",
+  contactEmail: "contact@sillage.app",
   stats: {
     hoursLogged: null as number | null, // e.g. 2_500_000
     pilots: null as number | null, // e.g. 12_000
@@ -20,7 +20,7 @@ export const SITE = {
   },
   stores: {
     appStoreUrl: "#", // https://apps.apple.com/app/id...
-    playStoreUrl: "#", // https://play.google.com/store/apps/details?id=app.cielo.logbook
+    playStoreUrl: "#", // https://play.google.com/store/apps/details?id=app.sillage.logbook
   },
   social: {
     instagram: "#",
