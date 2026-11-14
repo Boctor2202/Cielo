@@ -1,14 +1,16 @@
 /**
- * Geardown logo. The name in spaced capitals, its O drawn as a landing-gear indicator light that shows
- * green. The mark is the cockpit's "three greens": nose and main gear down and locked.
+ * Geardown logo. The name in spaced capitals, its O drawn as the cockpit's "three greens" (nose and main
+ * gear down and locked). The three greens on their own are the app icon and favicon.
  */
 export const GREEN = "#22C55E";
 
-function GearO({ className }: { className?: string }) {
+/** The O of the wordmark: the three greens (nose gear on top, main gears below), sized like a capital letter. */
+function ThreeGreensO({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 40 40" fill="none" aria-hidden className={className}>
-      <circle cx="20" cy="20" r="16.5" stroke="currentColor" strokeWidth="5" />
-      <circle cx="20" cy="20" r="7.5" fill={GREEN} />
+      <circle cx="20" cy="9.5" r="8" fill={GREEN} />
+      <circle cx="9" cy="29" r="8" fill={GREEN} />
+      <circle cx="31" cy="29" r="8" fill={GREEN} />
     </svg>
   );
 }
@@ -31,7 +33,7 @@ export function Logo({ className }: { className?: string }) {
   return (
     <span className={`inline-flex items-center text-[17px] font-bold leading-none tracking-[0.18em] ${className ?? ""}`} aria-label="Geardown">
       <span aria-hidden>GEARD</span>
-      <GearO className="mx-[0.06em] h-[0.8em] w-[0.8em]" />
+      <ThreeGreensO className="mx-[0.1em] h-[0.92em] w-[0.92em]" />
       <span aria-hidden>WN</span>
     </span>
   );
