@@ -111,6 +111,8 @@ export default function LayoverPage() {
       <div className="mt-5">
         <Activities
           hotelPlaceId={v.hotelPlaceId}
+          from={(v.arrivalUtc ?? new Date().toISOString()).slice(0, 10)}
+          to={(v.departureUtc ?? v.arrivalUtc ?? new Date(Date.now() + 2 * 86400_000).toISOString()).slice(0, 10)}
           airport={ap ? { lat: ap.lat, lon: ap.lon, name: ap.name } : undefined}
           onHotel={async (h) => {
             const next = { ...v, hotelPlaceId: h.id, hotelName: h.name, address: h.address ?? v.address };
