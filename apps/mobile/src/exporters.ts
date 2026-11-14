@@ -26,7 +26,7 @@ export async function exportLogbookPdf(flights: Flight[], balances: OpeningBalan
     licenceNumber: pilot.licenceNumber,
     opening: openingTotals(balances),
     locale: pilot.locale,
-    appName: "Strato",
+    appName: "Geardown",
     generatedAt: new Date(),
   });
   await shareFile(`cielo-logbook-${layout}-${slug(pilot.fullName)}-${isoDate(Date.now())}.pdf`, bytes, "application/pdf", "com.adobe.pdf");
@@ -43,6 +43,6 @@ export async function exportAllDataJson(store: LocalStore): Promise<void> {
   for (const t of SYNC_TABLES) tables[t] = await store.all(t);
   // Reference aircraft types are public data, not personal data.
   tables.aircraft_types = (tables.aircraft_types as { ownerPilotId?: string | null }[]).filter((r) => r.ownerPilotId);
-  const payload = { app: "Strato", format: "cielo-export", version: 1, exportedAt: new Date().toISOString(), tables };
+  const payload = { app: "Geardown", format: "cielo-export", version: 1, exportedAt: new Date().toISOString(), tables };
   await shareFile(`cielo-data-${isoDate(Date.now())}.json`, JSON.stringify(payload, null, 2), "application/json", "public.json");
 }

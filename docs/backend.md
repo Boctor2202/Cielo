@@ -1,4 +1,4 @@
-# Backend Strato (Supabase)
+# Backend Geardown (Supabase)
 
 Ce document décrit la mise en place du backend : base Postgres, authentification, stockage,
 fonctions edge (Stripe, RevenueCat, alertes de validité, RGPD) et synchronisation hors-ligne.
@@ -86,7 +86,7 @@ supabase secrets set \
   STRIPE_PRICE_PREMIUM_YEARLY=price_... \
   REVENUECAT_WEBHOOK_AUTH='<longue valeur aléatoire>' \
   RESEND_API_KEY=re_... \
-  ALERTS_FROM_EMAIL='Strato <alertes@cielo.example>' \
+  ALERTS_FROM_EMAIL='Geardown <alertes@cielo.example>' \
   CRON_SECRET='<longue valeur aléatoire>'
 # optionnels
 supabase secrets set CORS_ALLOW_ORIGIN=https://app.cielo.example EXPO_ACCESS_TOKEN=...
@@ -124,12 +124,12 @@ Dans **Authentication → Providers** :
 - **Email** : activer, confirmation d'e-mail activée. Configurer un SMTP (ex. Resend) dans
   **Authentication → SMTP Settings** pour ne pas dépendre du SMTP de test limité.
 - **Apple** (obligatoire sur iOS si un autre login social est proposé) :
-  1. Apple Developer → Identifiers : App ID `aero.strato.app` avec *Sign in with Apple* ;
+  1. Apple Developer → Identifiers : App ID `app.geardown.logbook` avec *Sign in with Apple* ;
   2. créer un **Services ID** (ex. `aero.cielo.web`) pour le web, domaine + URL de retour
      `https://<ref>.supabase.co/auth/v1/callback` ;
   3. créer une clé *Sign in with Apple* (.p8) ; générer le secret client (JWT signé, valable 6 mois
      maximum — **à renouveler**, prévoir un rappel) ;
-  4. dans Supabase : Client IDs = `aero.strato.app,aero.cielo.web`, Secret = le JWT.
+  4. dans Supabase : Client IDs = `app.geardown.logbook,aero.cielo.web`, Secret = le JWT.
      Sur iOS, l'app utilise le login natif (`signInWithIdToken`), aucun secret n'est embarqué.
 - **Google** :
   1. Google Cloud Console → Écran de consentement OAuth (externe, domaines autorisés) ;
@@ -144,7 +144,7 @@ Dans **Authentication → Providers** :
 
 ## 6. Stripe (abonnements web)
 
-1. **Produits** : *Strato Basic* et *Strato Premium*, chacun avec deux prix récurrents en EUR
+1. **Produits** : *Geardown Basic* et *Geardown Premium*, chacun avec deux prix récurrents en EUR
    (mensuel, annuel). Reporter les 4 `price_…` dans `STRIPE_PRICE_{BASIC,PREMIUM}_{MONTHLY,YEARLY}`.
 2. **Customer portal** (Settings → Billing → Customer portal) : autoriser annulation et
    changement de plan entre ces 4 prix.

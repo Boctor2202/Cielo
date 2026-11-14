@@ -33,13 +33,13 @@ type GoogleNS = {
 
 let loader: Promise<unknown> | null = null;
 export function loadGoogle<G = GoogleNS>(key: string, lang: string): Promise<G> {
-  const w = window as unknown as { google?: GoogleNS; __stratoMapsReady?: () => void };
+  const w = window as unknown as { google?: GoogleNS; __geardownMapsReady?: () => void };
   if (w.google?.maps) return Promise.resolve(w.google as G);
   if (!loader)
     loader = new Promise((resolve, reject) => {
-      w.__stratoMapsReady = () => resolve(w.google!);
+      w.__geardownMapsReady = () => resolve(w.google!);
       const s = document.createElement("script");
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly&language=${lang}&callback=__stratoMapsReady&loading=async`;
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly&language=${lang}&callback=__geardownMapsReady&loading=async`;
       s.async = true;
       s.onerror = () => {
         loader = null;

@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "Strato",
+    "name": "Geardown",
     "slug": "strato",
-    "scheme": "strato",
+    "scheme": "geardown",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#0A1626",
     "ios": {
-      "bundleIdentifier": "app.strato.logbook",
+      "bundleIdentifier": "app.geardown.logbook",
       "buildNumber": "1",
       "supportsTablet": true,
       "usesAppleSignIn": true,
@@ -25,7 +25,7 @@
       }
     },
     "android": {
-      "package": "app.strato.logbook",
+      "package": "app.geardown.logbook",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -38,10 +38,10 @@
     },
     "locales": {
       "fr": {
-        "CFBundleDisplayName": "Strato"
+        "CFBundleDisplayName": "Geardown"
       },
       "en": {
-        "CFBundleDisplayName": "Strato"
+        "CFBundleDisplayName": "Geardown"
       }
     },
     "plugins": [

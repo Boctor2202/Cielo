@@ -31,7 +31,7 @@ export const supabase: SupabaseClient | null =
 
 export const isCloudEnabled = supabase !== null;
 
-/** Deep link the auth provider redirects to: strato://auth-callback */
+/** Deep link the auth provider redirects to: geardown://auth-callback */
 export const authRedirectUrl = () => Linking.createURL("auth-callback");
 
 function requireClient(): SupabaseClient {

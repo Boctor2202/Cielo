@@ -35,7 +35,7 @@ const L = {
     instructor: "Instructor", dual: "Dual received", landings: "Landings", last12m: "Last 12 months", last90d: "Last 90 days", sectors: "Sectors flown",
     asOf: "Hours as of", lastFlight: "Last flight", validUntil: "valid until", noExpiry: "no expiry", present: "Present", email: "Email", phone: "Phone",
     location: "Location", nationality: "Nationality", dob: "Date of birth", linkedin: "LinkedIn", rightToWork: "Right to work", onType: "on type",
-    asPic: "PIC", asCopilot: "SIC", lastFlown: "last flown", targetRole: "Target position", icao: "ICAO level", source: "Hours computed from an electronic logbook (Strato).",
+    asPic: "PIC", asCopilot: "SIC", lastFlown: "last flown", targetRole: "Target position", icao: "ICAO level", source: "Hours computed from an electronic logbook (Geardown).",
   },
   fr: {
     contact: "Contact", summary: "Profil", hours: "Expérience de vol", types: "Types d'avions", licences: "Licences, qualifications et aptitude médicale",
@@ -47,7 +47,7 @@ const L = {
     asOf: "Heures arrêtées au", lastFlight: "Dernier vol", validUntil: "valide jusqu'au", noExpiry: "sans échéance", present: "Aujourd'hui", email: "E-mail",
     phone: "Téléphone", location: "Lieu", nationality: "Nationalité", dob: "Date de naissance", linkedin: "LinkedIn", rightToWork: "Autorisation de travail",
     onType: "sur type", asPic: "CDB", asCopilot: "OPL", lastFlown: "dernier vol", targetRole: "Poste visé", icao: "niveau OACI",
-    source: "Heures calculées à partir d'un carnet de vol électronique (Strato).",
+    source: "Heures calculées à partir d'un carnet de vol électronique (Geardown).",
   },
 };
 

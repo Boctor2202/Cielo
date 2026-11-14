@@ -1,7 +1,7 @@
 import type { Source } from "./types";
 
 /**
- * Employers whose own public job feeds Strato reads. Only official employer feeds (the ATS endpoints that power
+ * Employers whose own public job feeds Geardown reads. Only official employer feeds (the ATS endpoints that power
  * their careers pages) — never third-party job boards, whose listings belong to them.
  * To add an employer: find the ATS behind their careers page and its board token, then add a line.
  */

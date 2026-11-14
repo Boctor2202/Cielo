@@ -4,7 +4,7 @@ import { routing } from "@/i18n/routing";
 import { SITE } from "@/config/site";
 
 /** Public site URL (canonical links, sitemap, Open Graph). Set NEXT_PUBLIC_SITE_URL once the custom domain is live. */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://stratologbook.com").replace(/\/$/, "");
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://geardown.app").replace(/\/$/, "");
 
 export type Locale = (typeof routing.locales)[number];
 type Href = Parameters<typeof getPathname>[0]["href"];
@@ -23,7 +23,7 @@ export function alternatesFor(href: Href, locale: string): Metadata["alternates"
   };
 }
 
-export const ogImage = (locale: string) => ({ url: `${SITE_URL}/og/strato-${locale === "en" ? "en" : "fr"}.jpg`, width: 1200, height: 630, alt: "Strato" });
+export const ogImage = (locale: string) => ({ url: `${SITE_URL}/og/geardown-${locale === "en" ? "en" : "fr"}.jpg`, width: 1200, height: 630, alt: "Geardown" });
 
 /** Full metadata for a public page: title, description, canonical, hreflang, Open Graph and Twitter card. */
 export function pageMeta(

@@ -1,4 +1,4 @@
-// HTTP helpers shared by every Strato edge function.
+// HTTP helpers shared by every Geardown edge function.
 
 export const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": Deno.env.get("CORS_ALLOW_ORIGIN") ?? "*",

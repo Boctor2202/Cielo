@@ -14,7 +14,7 @@ import GlassWorkspace, {
 import { Link } from "@/i18n/navigation";
 import { useDuration, useFormatDate, useTypes } from "@/lib/hooks";
 
-const GLASS_KEY = "strato-glass";
+const GLASS_KEY = "geardown-glass";
 const TOTAL_MILESTONES = [100, 200, 500, 1000, 1500, 3000, 5000, 10000, 15000, 20000];
 const PIC_MILESTONES = [50, 100, 250, 500, 1000, 1500, 3000, 5000, 10000];
 const next = (list: number[], h: number) => list.find((m) => m > h) ?? Math.ceil((h + 1) / 5000) * 5000;
@@ -184,11 +184,12 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
 
   return (
     <GlassWorkspace
-      brand="Strato"
+      brand="Geardown"
       brandMark={
         <svg viewBox="0 0 40 40" width="18" height="18" fill="none" aria-hidden="true">
-          <circle cx="20" cy="20" r="14" stroke="currentColor" strokeWidth="4.5" />
-          <path d="M7 23.2 33 16.8" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" opacity=".75" />
+          <circle cx="20" cy="12.5" r="5.5" fill="currentColor" />
+          <circle cx="10.5" cy="27" r="5.5" fill="currentColor" />
+          <circle cx="29.5" cy="27" r="5.5" fill="currentColor" />
         </svg>
       }
       userName={first}

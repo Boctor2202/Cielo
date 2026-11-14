@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Strato — the electronic pilot logbook",
+    "title": "Geardown — the electronic pilot logbook",
     "description": "EASA Part-FCL compliant electronic logbook: fast entry, automatic night time, official exports, licences, FTL and roster. For airline, business and private pilots."
   },
   "nav": {
@@ -18,7 +18,7 @@
   "hero": {
     "eyebrow": "EASA Part-FCL · FAA · CASA compliant",
     "title": "Your logbook, finally digital",
-    "subtitle": "Log a flight in 20 seconds. Strato computes your night time, checks your logbook, tracks your licences and FTL limits, then exports in the official EASA format.",
+    "subtitle": "Log a flight in 20 seconds. Geardown computes your night time, checks your logbook, tracks your licences and FTL limits, then exports in the official EASA format.",
     "ctaTrial": "Try 7 days",
     "ctaDemo": "See the demo",
     "note": "7-day trial · No commitment · Your data stays yours",
@@ -60,7 +60,7 @@
       },
       "audit": {
         "title": "Automatic audit",
-        "text": "Strato reads your logbook like an examiner: overlaps, inconsistent times, duplicates, night time above total, broken continuity.",
+        "text": "Geardown reads your logbook like an examiner: overlaps, inconsistent times, duplicates, night time above total, broken continuity.",
         "points": [
           "17 consistency rules",
           "Direct link to the flight to fix",
@@ -105,7 +105,7 @@
       },
       "offline": {
         "title": "Offline and in sync",
-        "text": "Strato works without a network, in flight or on a layover. Your data syncs as soon as you're back online, on all your devices.",
+        "text": "Geardown works without a network, in flight or on a layover. Your data syncs as soon as you're back online, on all your devices.",
         "points": [
           "Local database on each device",
           "Hosted in the European Union",
@@ -114,7 +114,7 @@
       },
       "jobs": {
         "title": "Pilot jobs",
-        "text": "Openings posted by airlines and operators on their own careers pages, sorted by world region, required experience and salary when stated. Strato works out your match percentage from your logbook, on your device.",
+        "text": "Openings posted by airlines and operators on their own careers pages, sorted by world region, required experience and salary when stated. Geardown works out your match percentage from your logbook, on your device.",
         "points": [
           "Sorted by region: licence and right to work taken into account",
           "Required hours, type rating and salary read from the posting",
@@ -200,7 +200,7 @@
     "trialNote": "Card required at sign-up. Nothing is charged for 7 days; cancel in one click before the trial ends."
   },
   "testimonials": {
-    "title": "They fly with Strato",
+    "title": "They fly with Geardown",
     "empty": "The first pilot testimonials will appear here.",
     "slot": "Testimonial slot"
   },
@@ -212,7 +212,7 @@
         "a": "Your data is stored on your device first, then synced to servers located in the European Union. Traffic is encrypted (TLS), attachments are kept in a private space and each account can only access its own data. We never sell or share your data."
       },
       {
-        "q": "Is Strato EASA compliant?",
+        "q": "Is Geardown EASA compliant?",
         "a": "The logbook records all the information required by FCL.050 in the AMC1 FCL.050 layout. Night time follows the EASA definition (civil twilight). An electronic logbook is acceptable provided the data is accurate and available on request: you can print or show the official PDF export at any time."
       },
       {
@@ -249,10 +249,10 @@
     "cookies": "Cookies",
     "contact": "Contact",
     "rights": "All rights reserved.",
-    "disclaimer": "Strato is an aid. The pilot remains responsible for the accuracy of their logbook and compliance with applicable regulations."
+    "disclaimer": "Geardown is an aid. The pilot remains responsible for the accuracy of their logbook and compliance with applicable regulations."
   },
   "airlines": {
-    "title": "Strato for airlines and flight schools",
+    "title": "Geardown for airlines and flight schools",
     "subtitle": "Give your crews a modern logbook, filled automatically from your crew planning system.",
     "points": [
       {
@@ -404,7 +404,7 @@
         "exportCsv": "Export CSV",
         "exported": "Flights exported.",
         "csvHeader": "Route,Aircraft,Date,Minutes,Status",
-        "csvFile": "strato-flights.csv",
+        "csvFile": "geardown-flights.csv",
         "availableBalance": "Total time",
         "viewAccountActivity": "See flights",
         "cashFlow": "Flight hours",
@@ -612,7 +612,7 @@
       },
       "drop": "Drop a CSV, XLSX or TXT file, or click to choose",
       "mapping": "Column mapping",
-      "mappingHelp": "Strato recognised the columns below. Fix them if needed.",
+      "mappingHelp": "Geardown recognised the columns below. Fix them if needed.",
       "ignore": "— ignore —",
       "dateOrder": "Date format",
       "preview": "Preview",
@@ -896,7 +896,7 @@
     },
     "documents": {
       "title": "Licences, medical and ratings",
-      "subtitle": "Track your expiry dates: Strato warns you before each one.",
+      "subtitle": "Track your expiry dates: Geardown warns you before each one.",
       "add": "Add document",
       "kind": "Category",
       "kinds": {
@@ -1020,7 +1020,7 @@
       "title": "Pilot job offers",
       "subtitle": "Read from airlines' and operators' careers sites, ranked against your experience.",
       "privacy": "Your match % is computed on this device: your logbook is never sent.",
-      "sourceNote": "Offers published by the employers themselves. Strato shows the key facts; the full ad and the application are on their site.",
+      "sourceNote": "Offers published by the employers themselves. Geardown shows the key facts; the full ad and the application are on their site.",
       "updated": "Updated {date} · {count, plural, one {# employer} other {# employers}} followed",
       "sort": {
         "label": "Sort by",
@@ -1310,7 +1310,7 @@
     }
   },
   "why": {
-    "label": "Why Strato",
+    "label": "Why Geardown",
     "title": "Built like a flight instrument",
     "items": [
       {
@@ -1341,7 +1341,7 @@
       },
       {
         "t": "Log",
-        "d": "A flight in 20 seconds: Strato computes block time, night, day/night landings and the single-pilot / multi-pilot columns."
+        "d": "A flight in 20 seconds: Geardown computes block time, night, day/night landings and the single-pilot / multi-pilot columns."
       },
       {
         "t": "Export",
@@ -1361,14 +1361,14 @@
     ],
     "c1": {
       "label": "01 · Night time",
-      "title": "The sun passes −6°. Strato logs it.",
-      "text": "EASA night ends at the beginning of morning civil twilight. Strato follows the aircraft's position minute by minute and works out night time, night takeoffs and night landings, with nothing for you to type."
+      "title": "The sun passes −6°. Geardown logs it.",
+      "text": "EASA night ends at the beginning of morning civil twilight. Geardown follows the aircraft's position minute by minute and works out night time, night takeoffs and night landings, with nothing for you to type."
     },
     "machine": {
       "label": "02 · Your aircraft",
       "title": "Your {name}. The right columns, automatically.",
       "titleGeneric": "Your aircraft. The right columns, automatically.",
-      "text": "Strato knows your type: every flight feeds the right EASA logbook columns, the totals by type and your recent experience.",
+      "text": "Geardown knows your type: every flight feeds the right EASA logbook columns, the totals by type and your recent experience.",
       "icao": "ICAO type",
       "rating": "Rating",
       "engines": "Engines",
@@ -1428,7 +1428,7 @@
   },
   "seo": {
     "home": {
-      "title": "Strato — EASA electronic pilot logbook",
+      "title": "Geardown — EASA electronic pilot logbook",
       "description": "EASA Part-FCL compliant electronic pilot logbook: automatic night time, official PDF export, licences, FTL, roster, pilot jobs and pilot CV. Free trial, web, iOS and Android."
     },
     "features": {
@@ -1441,7 +1441,7 @@
     },
     "airlines": {
       "title": "Electronic logbook for airlines and flight schools",
-      "description": "Strato for airlines, business aviation operators and flight schools: imported rosters, crew licence tracking, EASA compliance and official exports."
+      "description": "Geardown for airlines, business aviation operators and flight schools: imported rosters, crew licence tracking, EASA compliance and official exports."
     },
     "blog": {
       "title": "Blog — EASA rules and pilot life",
@@ -1449,7 +1449,7 @@
     },
     "contact": {
       "title": "Contact",
-      "description": "A question about Strato, the electronic pilot logbook? Write to us, we reply within 48 hours."
+      "description": "A question about Geardown, the electronic pilot logbook? Write to us, we reply within 48 hours."
     }
   }
 }

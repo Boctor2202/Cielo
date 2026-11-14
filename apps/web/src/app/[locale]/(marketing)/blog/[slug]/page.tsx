@@ -43,7 +43,7 @@ export default async function PostPage({ params }: { params: Promise<{ locale: "
             publisher: { "@id": organizationLd()["@id"] },
           },
           breadcrumbLd([
-            { name: "Strato", url: absolute("/", locale) },
+            { name: "Geardown", url: absolute("/", locale) },
             { name: "Blog", url: absolute("/blog", locale) },
             { name: c.title, url },
           ]),

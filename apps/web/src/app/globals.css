@@ -6,7 +6,7 @@
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* Strato — "annunciator" palette: cyan = selected/active, green = normal, amber = caution, red = warning. */
+/* Geardown — "annunciator" palette: cyan = selected/active, green = normal, amber = caution, red = warning. */
 :root {
   --bg: #ffffff;
   --surface: #f3f6f9;

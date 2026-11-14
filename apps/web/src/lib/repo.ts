@@ -360,15 +360,15 @@ export const saveLayover = (l: Omit<Layover, "id" | "createdAt" | "updatedAt" | 
 /* ---------- GDPR ---------- */
 
 export async function exportAll(): Promise<Record<string, unknown>> {
-  const out: Record<string, unknown> = { app: "Strato", version: 1, exportedAt: now() };
+  const out: Record<string, unknown> = { app: "Geardown", version: 1, exportedAt: now() };
   for (const t of SYNC_TABLES) out[t] = await db().t(t).toArray();
   return out;
 }
 
 export async function importAll(data: Record<string, unknown>) {
   guard();
-  // backups made before the rename say "Cielo" or "Sillage"
-  if (data.app !== "Strato" && data.app !== "Sillage" && data.app !== "Cielo") throw new Error("Not a Strato backup");
+  // backups made before the renames say "Strato", "Sillage" or "Cielo"
+  if (!["Geardown", "Strato", "Sillage", "Cielo"].includes(String(data.app))) throw new Error("Not a Geardown backup");
   await db().transaction("rw", db().tables, async () => {
     for (const t of SYNC_TABLES) {
       const rows = data[t];

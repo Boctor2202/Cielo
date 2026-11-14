@@ -1,5 +1,5 @@
 /**
- * The Strato web services, shared with the web app (Google Places, Ticketmaster, adsb.lol run server-side,
+ * The Geardown web services, shared with the web app (Google Places, Ticketmaster, adsb.lol run server-side,
  * so no key ships in the app).
  */
 export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "https://cielo-ecru.vercel.app").replace(/\/$/, "");

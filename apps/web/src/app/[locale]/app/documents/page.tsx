@@ -32,7 +32,7 @@ export default function DocumentsPage() {
     (async () => {
       if ((await localStore.getMeta("lastLicenseAlert")) === today) return;
       for (const { license, daysLeft } of alertsDueToday(licenses, today)) {
-        new Notification(`Strato · ${license.code}`, { body: daysLeft === 0 ? t("daysLeft", { count: 0 }) : t("daysLeft", { count: daysLeft }), icon: "/icon.svg" });
+        new Notification(`Geardown · ${license.code}`, { body: daysLeft === 0 ? t("daysLeft", { count: 0 }) : t("daysLeft", { count: daysLeft }), icon: "/icon.svg" });
       }
       await localStore.setMeta("lastLicenseAlert", today);
     })();

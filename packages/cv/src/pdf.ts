@@ -54,8 +54,8 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
   pdf.setAuthor(safe(opts.author ?? doc.name));
   pdf.setSubject(safe(doc.headline));
   pdf.setKeywords(doc.keywords.map(safe));
-  pdf.setCreator("Strato");
-  pdf.setProducer("Strato");
+  pdf.setCreator("Geardown");
+  pdf.setProducer("Geardown");
   pdf.setLanguage(opts.lang === "fr" ? "fr-FR" : "en-GB");
 
   let page: PDFPage = pdf.addPage([W, H]);

@@ -27,7 +27,7 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
     const plan = search.get("plan");
     if (mode === "signup" && (plan === "basic" || plan === "premium")) {
       try {
-        localStorage.setItem("strato-plan", plan);
+        localStorage.setItem("geardown-plan", plan);
       } catch {}
     }
   }, [mode, search]);

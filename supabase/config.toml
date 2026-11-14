@@ -1,4 +1,4 @@
-# Minimal Supabase CLI configuration for Strato.
+# Minimal Supabase CLI configuration for Geardown.
 # Full reference: https://supabase.com/docs/guides/local-development/cli/config
 project_id = "cielo"
 

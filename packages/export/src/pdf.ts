@@ -38,8 +38,8 @@ export async function buildLogbookPdf(flights: Flight[], opts: LogbookPdfOptions
   const doc = await PDFDocument.create();
   doc.setTitle(`${layout.title} — ${opts.pilotName}`);
   doc.setAuthor(opts.pilotName);
-  doc.setCreator(opts.appName ?? "Strato");
-  doc.setProducer(opts.appName ?? "Strato");
+  doc.setCreator(opts.appName ?? "Geardown");
+  doc.setProducer(opts.appName ?? "Geardown");
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
 
@@ -53,7 +53,7 @@ export async function buildLogbookPdf(flights: Flight[], opts: LogbookPdfOptions
     const page = doc.addPage([842, 595]);
     const all = sumFlights(sorted, previous);
     page.drawRectangle({ x: 0, y: 515, width: 842, height: 80, color: BRAND });
-    page.drawText(safe(opts.appName ?? "Strato"), { x: 40, y: 548, size: 22, font: bold, color: rgb(1, 1, 1) });
+    page.drawText(safe(opts.appName ?? "Geardown"), { x: 40, y: 548, size: 22, font: bold, color: rgb(1, 1, 1) });
     page.drawText(safe(layout.title), { x: 40, y: 528, size: 11, font, color: rgb(0.75, 0.85, 0.95) });
     const lines: [string, string][] = [
       [opts.locale === "en" ? "Pilot" : "Pilote", opts.pilotName],

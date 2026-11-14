@@ -77,8 +77,8 @@ export function usePendingCheckout() {
     if (!cloud.session || !pilot || pilot.subscriptionTier !== "free") return;
     let plan: string | null = null;
     try {
-      plan = localStorage.getItem("strato-plan");
-      localStorage.removeItem("strato-plan");
+      plan = localStorage.getItem("geardown-plan");
+      localStorage.removeItem("geardown-plan");
     } catch {}
     if (plan !== "basic" && plan !== "premium") return;
     cloud

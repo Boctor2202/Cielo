@@ -1,4 +1,4 @@
-# Strato — carnet de vol électronique
+# Geardown — carnet de vol électronique
 
 Carnet de vol pour pilotes professionnels et privés (EASA Part-FCL en priorité, puis FAA et CASA), en français et en anglais.
 

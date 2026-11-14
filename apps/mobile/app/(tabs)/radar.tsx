@@ -19,7 +19,7 @@ function altColor(alt: LiveAircraft["alt"]) {
   return "#a78bfa";
 }
 
-/** Live traffic (adsb.lol through the Strato API) on Apple Maps / Google Maps, with the selected aircraft's track. */
+/** Live traffic (adsb.lol through the Geardown API) on Apple Maps / Google Maps, with the selected aircraft's track. */
 export default function Radar() {
   const { t, flights } = useApp();
   const c = useTheme();

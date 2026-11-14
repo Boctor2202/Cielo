@@ -179,7 +179,7 @@ export default function More() {
       </Card>
 
       <Txt variant="small" style={{ textAlign: "center" }} color={c.muted}>
-        Strato · {t("more.version", { v: Constants.expoConfig?.version ?? "0.0.0" })}
+        Geardown · {t("more.version", { v: Constants.expoConfig?.version ?? "0.0.0" })}
       </Txt>
     </Screen>
   );
