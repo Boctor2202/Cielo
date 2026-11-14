@@ -442,7 +442,7 @@
         "yourGoals": "Vos objectifs",
         "incomeExpenses": "Heures de vol et de nuit",
         "whereItGoes": "Par type d'appareil",
-        "allActivity": "Tous les vols",
+        "allActivity": "Depuis le début du carnet",
         "caughtUp": "Tout est à jour.",
         "noNotifications": "Aucune échéance dans les 60 prochains jours.",
         "closeNotifications": "Fermer",
@@ -463,7 +463,7 @@
         "periodWeek": "7 jours",
         "periodMonth": "30 jours",
         "periodYear": "12 mois",
-        "chartNote": "Heures bloc des vols réels, hors simulateur.",
+        "chartNote": "Heures bloc des vols réels (hors simulateur) ; 12 mois = les 365 derniers jours, comme dans le carnet.",
         "simulator": "Simulateur",
         "goalTotal": "Cap des {h} h",
         "goalPic": "{h} h commandant de bord",
@@ -476,7 +476,8 @@
         "changeLabel": "sur 28 jours, par rapport aux 28 précédents",
         "newFlight": "Nouveau vol",
         "footerNote": "Calculé depuis votre carnet",
-        "savingsNote": "Objectifs calculés automatiquement à partir de votre carnet et des règles FCL.060."
+        "savingsNote": "Objectifs calculés automatiquement à partir de votre carnet et des règles FCL.060.",
+        "otherTypes": "Autres types"
       }
     },
     "logbook": {

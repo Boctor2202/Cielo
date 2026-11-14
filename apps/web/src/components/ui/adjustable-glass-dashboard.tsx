@@ -112,6 +112,10 @@ export interface GlassWorkspaceProps {
   notifications?: { id: string; title: string; detail?: string }[];
   /** Replaces the period label next to the Overview heading. */
   headingAction?: ReactNode;
+  /** "Where it goes" rows; by default, outgoing transactions grouped by category. */
+  breakdown?: { label: string; value: number }[];
+  /** Icons of the three report cards (in, out, net). */
+  reportIcons?: [LucideIcon, LucideIcon, LucideIcon];
 }
 
 export const defaultLabels = {
@@ -270,6 +274,8 @@ export default function GlassWorkspace({
   avatarUrl,
   notifications = [],
   headingAction,
+  breakdown,
+  reportIcons,
 }: GlassWorkspaceProps) {
   const L = { ...defaultLabels, ...labels };
   const tabLabel: Record<View, string> = {
@@ -1020,17 +1026,17 @@ export default function GlassWorkspace({
                       {
                         label: L.moneyIn,
                         value: income,
-                        icon: ArrowDownLeft,
+                        icon: reportIcons?.[0] ?? ArrowDownLeft,
                       },
                       {
                         label: L.moneyOut,
                         value: expenses,
-                        icon: ArrowUpRight,
+                        icon: reportIcons?.[1] ?? ArrowUpRight,
                       },
                       {
                         label: L.netCashFlow,
                         value: income - expenses,
-                        icon: ChartNoAxesCombined,
+                        icon: reportIcons?.[2] ?? ChartNoAxesCombined,
                       },
                     ].map((s) => (
                       <section className="gw-panel" key={s.label}>
@@ -1072,23 +1078,34 @@ export default function GlassWorkspace({
                         <span>{L.allActivity}</span>
                       </div>
                       <div className="gw-category-list">
-                        {spendingCategories.map((category, i) => {
-                          const value = transactions
-                            .filter(
-                              (t) => t.category === category && t.amount < 0,
-                            )
-                            .reduce((s, t) => s - t.amount, 0);
+                        {(
+                          breakdown ??
+                          spendingCategories.map((category) => ({
+                            label: category,
+                            value: transactions
+                              .filter(
+                                (t) => t.category === category && t.amount < 0,
+                              )
+                              .reduce((s, t) => s - t.amount, 0),
+                          }))
+                        ).map(({ label: category, value }, i, rows) => {
+                          const sum = breakdown
+                            ? rows.reduce((s, r) => s + r.value, 0)
+                            : spent;
                           return (
                             <div key={category}>
                               <div>
-                                <IconFor category={category} override={categoryIcon} />
+                                <IconFor
+                                  category={category}
+                                  override={categoryIcon}
+                                />
                                 <span>{category}</span>
                                 <strong>{format(value)}</strong>
                               </div>
                               <span className="gw-category-track">
                                 <i
                                   style={{
-                                    width: `${spent ? (value / spent) * 100 : 0}%`,
+                                    width: `${sum ? (value / sum) * 100 : 0}%`,
                                     opacity: Math.max(0.4, 1 - i * 0.14),
                                   }}
                                 />

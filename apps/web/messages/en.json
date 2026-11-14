@@ -442,7 +442,7 @@
         "yourGoals": "Your goals",
         "incomeExpenses": "Flight and night hours",
         "whereItGoes": "By aircraft type",
-        "allActivity": "All flights",
+        "allActivity": "Since the start of the logbook",
         "caughtUp": "You're all set.",
         "noNotifications": "Nothing expires in the next 60 days.",
         "closeNotifications": "Close",
@@ -463,7 +463,7 @@
         "periodWeek": "7 days",
         "periodMonth": "30 days",
         "periodYear": "12 months",
-        "chartNote": "Block hours of real flights, simulator excluded.",
+        "chartNote": "Block hours of real flights (simulator excluded); 12 months = the last 365 days, as in the logbook.",
         "simulator": "Simulator",
         "goalTotal": "{h} h milestone",
         "goalPic": "{h} h pilot in command",
@@ -476,7 +476,8 @@
         "changeLabel": "over 28 days, compared with the previous 28",
         "newFlight": "New flight",
         "footerNote": "Worked out from your logbook",
-        "savingsNote": "Goals worked out automatically from your logbook and the FCL.060 rules."
+        "savingsNote": "Goals worked out automatically from your logbook and the FCL.060 rules.",
+        "otherTypes": "Other types"
       }
     },
     "logbook": {

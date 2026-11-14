@@ -1,6 +1,6 @@
 "use client";
 
-import { Plane, Plus } from "lucide-react";
+import { Moon, Plane, Plus, Sun } from "lucide-react";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocale, useMessages } from "next-intl";
 import { addDays, computeRecency, licenseStatus, type Flight, type License, type OpeningBalance, type Pilot } from "@cielo/core";
@@ -84,12 +84,14 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today }: { fli
       const l = inRange(from, addDays(from, 2));
       return { label: fmt(from, { day: "numeric", month: "short" }), income: sum(l, "totalMin"), expenses: sum(l, "nightMin") };
     });
-    const year = Array.from({ length: 12 }, (_, i) => {
-      const d = new Date(Date.UTC(+today.slice(0, 4), +today.slice(5, 7) - 12 + i, 1));
+    // the last 365 days, as everywhere else in the logbook, split by calendar month (first and last partial)
+    const start = addDays(today, -364);
+    const year: { label: string; income: number; expenses: number }[] = [];
+    for (let d = new Date(`${start.slice(0, 7)}-01T12:00:00Z`); d.toISOString().slice(0, 7) <= today.slice(0, 7); d.setUTCMonth(d.getUTCMonth() + 1)) {
       const key = d.toISOString().slice(0, 7);
-      const l = realFlights.filter((f) => f.date.startsWith(key));
-      return { label: fmt(`${key}-01`, { month: "short" }), income: sum(l, "totalMin"), expenses: sum(l, "nightMin") };
-    });
+      const l = realFlights.filter((f) => f.date.startsWith(key) && f.date >= start && f.date <= today);
+      year.push({ label: fmt(`${key}-01`, { month: "short" }), income: sum(l, "totalMin"), expenses: sum(l, "nightMin") });
+    }
     const periods: WorkspaceCashFlowPeriod[] = [
       { id: "week", label: g.periodWeek ?? "7 d", points: week, description: g.chartNote },
       { id: "month", label: g.periodMonth ?? "30 d", points: month, description: g.chartNote },
@@ -97,7 +99,7 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today }: { fli
     ];
 
     const sorted = [...live].sort((a, b) => (a.date === b.date ? (b.outUtc ?? "").localeCompare(a.outUtc ?? "") : a.date < b.date ? 1 : -1));
-    const transactions: WorkspaceTransaction[] = sorted.slice(0, 40).map((f) => ({
+    const transactions: WorkspaceTransaction[] = sorted.slice(0, 1000).map((f) => ({
       id: f.id,
       name: f.isFstd ? `${g.simulator ?? "FSTD"} · ${f.fstdType ?? ""}`.trim() : `${f.depIcao} → ${f.arrIcao}`,
       category: f.isFstd ? "FSTD" : f.aircraftTypeIcao ?? "—",
@@ -105,6 +107,20 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today }: { fli
       amount: f.totalMin || f.fstdMin || 0,
       status: f.date > today ? "Pending" : "Completed",
     }));
+
+    // hours by aircraft type since the start of the logbook (carried-forward totals included)
+    const byType = new Map<string, number>();
+    for (const f of realFlights) byType.set(f.aircraftTypeIcao ?? "—", (byType.get(f.aircraftTypeIcao ?? "—") ?? 0) + f.totalMin);
+    for (const o of opening) if (!o.deletedAt && o.totalMin) byType.set(o.aircraftTypeIcao ?? (g.otherTypes ?? "Other"), (byType.get(o.aircraftTypeIcao ?? (g.otherTypes ?? "Other")) ?? 0) + o.totalMin);
+    const ranked = [...byType.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+    const nameOf = (icao: string) => {
+      const ty = types?.find((x) => x.icao === icao);
+      return ty ? `${ty.manufacturer} ${ty.model}` : icao;
+    };
+    const breakdown = [
+      ...ranked.slice(0, 7).map(([k, v]) => ({ label: nameOf(k), value: v })),
+      ...(ranked.length > 7 ? [{ label: g.otherTypes ?? "Other", value: ranked.slice(7).reduce((s, [, v]) => s + v, 0) }] : []),
+    ];
 
     const last = realFlights.sort((a, b) => (a.date < b.date ? 1 : -1))[0];
     const typeName = last?.aircraftTypeIcao ? types?.find((x) => x.icao === last.aircraftTypeIcao) : undefined;
@@ -153,6 +169,7 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today }: { fli
       transactions,
       goals,
       notifications,
+      breakdown,
       account: last ? { name: typeName ? `${typeName.manufacturer} ${typeName.model}` : last.aircraftTypeIcao ?? "—", detail: [last.registration, fd(last.date)].filter(Boolean).join(" · ") } : undefined,
     };
   }, [flights, opening, licenses, today, locale, fd, types, g]);
@@ -196,6 +213,8 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today }: { fli
       formatValue={(v) => dur(Math.round(v))}
       showSign={false}
       categoryIcon={() => Plane}
+      breakdown={data.breakdown}
+      reportIcons={[Plane, Moon, Sun]}
       labels={g}
       useHostTheme
       style={HOST_TOKENS}
