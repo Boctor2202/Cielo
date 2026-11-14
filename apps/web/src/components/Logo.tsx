@@ -32,9 +32,11 @@ export function LogoMark({ size = 28, className }: { size?: number; className?: 
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={`inline-flex items-center text-[17px] font-bold leading-none tracking-[0.18em] ${className ?? ""}`} aria-label="Geardown">
+    <span className={`inline-flex items-baseline text-[17px] font-bold leading-none tracking-[0.18em] ${className ?? ""}`} aria-label="Geardown">
       <span aria-hidden>GEARD</span>
-      <ThreeGreensO className="mx-[0.04em] h-[0.84em] w-[0.84em]" />
+      {/* sized like Manrope's O (0.76em tall, 0.02em below the baseline): the ring's outer edge is 38/40 of the box,
+          and as a flex item aligned on the baseline the box sits on it */}
+      <ThreeGreensO className="relative top-[0.06em] mr-[0.18em] h-[0.8em] w-[0.8em] shrink-0" />
       <span aria-hidden>WN</span>
     </span>
   );
