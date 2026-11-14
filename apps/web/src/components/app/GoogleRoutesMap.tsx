@@ -72,6 +72,9 @@ export function GoogleRoutesMap({ apiKey, lang, dark, lines, points, onError }: 
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<GMap | null>(null);
   const g = useRef<GoogleNS | null>(null);
+  // always draw the latest data, whichever arrives last (the data or the map)
+  const data = useRef({ lines, points });
+  data.current = { lines, points };
 
   useEffect(() => {
     let alive = true;
@@ -123,6 +126,7 @@ export function GoogleRoutesMap({ apiKey, lang, dark, lines, points, onError }: 
   const draw = () => {
     const m = map.current;
     const google = g.current;
+    const { lines, points } = data.current;
     if (!m || !google || !lines || !points) return;
     m.data.forEach((f) => m.data.remove(f));
     m.data.addGeoJson(lines);
