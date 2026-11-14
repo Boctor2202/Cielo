@@ -42,7 +42,7 @@ const HOST_TOKENS = {
  * The pilot dashboard in the adjustable glass workspace: total time instead of a balance, flight and night
  * hours instead of cash flow, recent flights instead of transactions, and career and recency targets as goals.
  */
-export function GlassCockpit({ flights, opening, licenses, pilot, today }: { flights: Flight[]; opening: OpeningBalance[]; licenses: License[]; pilot?: Pilot; today: string }) {
+export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIssues = 0, auditHref }: { flights: Flight[]; opening: OpeningBalance[]; licenses: License[]; pilot?: Pilot; today: string; auditIssues?: number; auditHref?: string }) {
   const locale = useLocale();
   const m = useMessages() as unknown as { app: { dashboard: { glass: Partial<WorkspaceLabels> & Record<string, string> } } };
   const g = m.app.dashboard.glass;
@@ -153,7 +153,8 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today }: { fli
       },
     ];
 
-    const notifications = licenses
+    const audit = auditIssues > 0 ? [{ id: "audit", title: (g.auditIssues ?? "{n} items to check").replace("{n}", String(auditIssues)), href: auditHref }] : [];
+    const notifications = [...audit, ...licenses
       .filter((l) => !l.deletedAt)
       .map((l) => ({ l, s: licenseStatus(l, today) }))
       .filter(({ s }) => s.state === "expired" || (s.state === "expiring" && (s.daysLeft ?? 99) <= 60))
@@ -162,7 +163,7 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today }: { fli
         id: l.id,
         title: l.code,
         detail: s.state === "expired" ? g.expired ?? "expired" : (g.daysLeft ?? "{n} days left").replace("{n}", String(s.daysLeft ?? 0)),
-      }));
+      }))];
 
     return {
       total,
@@ -174,7 +175,7 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today }: { fli
       breakdown,
       account: last ? { name: typeName ? `${typeName.manufacturer} ${typeName.model}` : last.aircraftTypeIcao ?? "—", detail: [last.registration, fd(last.date)].filter(Boolean).join(" · ") } : undefined,
     };
-  }, [flights, opening, licenses, today, locale, fd, types, g]);
+  }, [flights, opening, licenses, today, locale, fd, types, g, auditIssues, auditHref]);
 
   const first = pilot?.displayName || pilot?.fullName?.split(" ")[0] || undefined;
 

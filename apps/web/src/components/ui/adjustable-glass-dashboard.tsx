@@ -109,7 +109,7 @@ export interface GlassWorkspaceProps {
   brandMark?: ReactNode;
   avatarUrl?: string;
   /** Notification items; without them the panel says you're all caught up. */
-  notifications?: { id: string; title: string; detail?: string }[];
+  notifications?: { id: string; title: string; detail?: string; href?: string }[];
   /** Replaces the period label next to the Overview heading. */
   headingAction?: ReactNode;
   /** "Where it goes" rows; by default, outgoing transactions grouped by category. */
@@ -1148,7 +1148,13 @@ export default function GlassWorkspace({
             {notifications.length ? (
               notifications.map((n) => (
                 <p key={n.id}>
-                  <strong style={{ color: "var(--gw-ink)" }}>{n.title}</strong>
+                  {n.href ? (
+                    <a href={n.href} style={{ color: "var(--gw-accent)", fontWeight: 600 }}>
+                      {n.title}
+                    </a>
+                  ) : (
+                    <strong style={{ color: "var(--gw-ink)" }}>{n.title}</strong>
+                  )}
                   {n.detail && <> · {n.detail}</>}
                 </p>
               ))

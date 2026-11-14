@@ -101,12 +101,15 @@ export default function Dashboard() {
 
   return (
     <>
-      {data.issues > 0 && (
-        <Link href="/app/carnet/audit" className="mb-5 flex items-center gap-3 rounded-xl border border-caution/40 bg-caution/10 px-4 py-3 text-sm font-medium text-caution">
-          <AlertTriangle size={18} /> {t("auditIssues", { count: data.issues })} <ArrowRight size={16} className="ml-auto" />
-        </Link>
-      )}
-      <GlassCockpit flights={flights} opening={balances ?? []} licenses={licenses ?? []} pilot={pilot} today={today} />
+      <GlassCockpit
+        flights={flights}
+        opening={balances ?? []}
+        licenses={licenses ?? []}
+        pilot={pilot}
+        today={today}
+        auditIssues={data.issues}
+        auditHref={`/${locale}/app/${locale === "fr" ? "carnet" : "logbook"}/audit`}
+      />
     </>
   );
 }

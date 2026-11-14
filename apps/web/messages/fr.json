@@ -396,7 +396,7 @@
         "personalWorkspace": "Carnet de vol",
         "adjustGlass": "Effet verre",
         "toggleTheme": "Changer de thème",
-        "notifications": "Échéances",
+        "notifications": "Alertes",
         "welcome": "Bonjour {name}",
         "yourWorkspace": "Votre tableau de bord",
         "tabOverview": "Vue d'ensemble",
@@ -444,7 +444,7 @@
         "whereItGoes": "Par type d'appareil",
         "allActivity": "Depuis le début du carnet",
         "caughtUp": "Tout est à jour.",
-        "noNotifications": "Aucune échéance dans les 60 prochains jours.",
+        "noNotifications": "Rien à signaler : aucune anomalie et aucune échéance dans les 60 prochains jours.",
         "closeNotifications": "Fermer",
         "glassAppearance": "Effet verre",
         "adjustMaterial": "Réglez la transparence du tableau de bord.",
@@ -478,7 +478,8 @@
         "footerNote": "Calculé depuis votre carnet",
         "savingsNote": "Objectifs calculés automatiquement à partir de votre carnet et des règles FCL.060.",
         "otherTypes": "Autres types",
-        "carried": "Reports du carnet précédent"
+        "carried": "Reports du carnet précédent",
+        "auditIssues": "{n} points à vérifier dans le carnet"
       }
     },
     "logbook": {

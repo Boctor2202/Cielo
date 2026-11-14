@@ -396,7 +396,7 @@
         "personalWorkspace": "Logbook",
         "adjustGlass": "Glass effect",
         "toggleTheme": "Switch theme",
-        "notifications": "Expiries",
+        "notifications": "Alerts",
         "welcome": "Hello {name}",
         "yourWorkspace": "Your dashboard",
         "tabOverview": "Overview",
@@ -444,7 +444,7 @@
         "whereItGoes": "By aircraft type",
         "allActivity": "Since the start of the logbook",
         "caughtUp": "You're all set.",
-        "noNotifications": "Nothing expires in the next 60 days.",
+        "noNotifications": "Nothing to report: no logbook issues and nothing expiring in the next 60 days.",
         "closeNotifications": "Close",
         "glassAppearance": "Glass effect",
         "adjustMaterial": "Tune the dashboard's transparency.",
@@ -478,7 +478,8 @@
         "footerNote": "Worked out from your logbook",
         "savingsNote": "Goals worked out automatically from your logbook and the FCL.060 rules.",
         "otherTypes": "Other types",
-        "carried": "Carried forward from previous logbook"
+        "carried": "Carried forward from previous logbook",
+        "auditIssues": "{n} items to check in your logbook"
       }
     },
     "logbook": {
