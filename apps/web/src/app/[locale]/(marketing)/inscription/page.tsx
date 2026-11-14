@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AuthCard } from "@/components/AuthCard";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const t = await getTranslations({ locale: (await params).locale, namespace: "auth" });
-  return { title: t("signupTitle"), robots: { index: false } };
+  return pageMeta((await params).locale, "/inscription", { title: t("signupTitle"), noindex: true });
 }
 
 export default async function Page({ params }: { params: Promise<{ locale: string }> }) {

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AIRCRAFT_TYPES } from "@cielo/reference-data";
 import { Link } from "@/i18n/navigation";
-import { EARTH_CREDITS, FILM_CREDITS, src, srcSet, type AircraftVisual, type Img } from "@/lib/aircraft-visuals";
+import { DEFAULT_VISUAL, EARTH_CREDITS, FILM_CREDITS, src, srcSet, type AircraftVisual, type Img } from "@/lib/aircraft-visuals";
 import { useHomeAircraft, type HomeAircraft } from "@/lib/home-aircraft";
 import { StoreBadges } from "../sections";
 import { AircraftPicker } from "./AircraftPicker";
@@ -44,6 +44,8 @@ export function ImmersiveHome() {
   }, []);
   const aircraft = useHomeAircraft();
   const { visual } = aircraft;
+  // types without their own film play the business-jet film until theirs is made
+  const film = visual.film ?? DEFAULT_VISUAL.film;
 
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,7 +60,7 @@ export function ImmersiveHome() {
   const p = reduce ? scrollYProgress : sprung;
 
   useMotionValueEvent(p, "change", (v) => {
-    readoutsAt(v, readouts.current, visual.film);
+    readoutsAt(v, readouts.current, film);
     sceneRef.current?.setProgress((v - GLOBE_FROM) / (1 - GLOBE_FROM));
     const active = v > GLOBE_FROM + 0.02;
     setGlobeActive((a) => (a === active ? a : active));
@@ -72,7 +74,7 @@ export function ImmersiveHome() {
     let disposed = false;
     let inView = true;
     let scene: FlightScene | null = null;
-    readoutsAt(p.get(), readouts.current, visual.film);
+    readoutsAt(p.get(), readouts.current, film);
     (async () => {
       const mod = await import("./scene");
       if (disposed || !mod.webglAvailable()) return;
@@ -155,7 +157,7 @@ export function ImmersiveHome() {
         {/* Film */}
         <motion.div className="absolute inset-0" style={{ opacity: filmOpacity }} aria-hidden>
           <motion.div className="absolute inset-0" initial={false} animate={{ opacity: aircraft.ready ? 1 : 0 }} transition={{ duration: 0.6 }}>
-            {visual.film ? <Film key={visual.id} base={visual.film.base} poster={visual.film.poster} p={p} reduce={reduce} /> : <Stills key={visual.id} visual={visual} p={p} />}
+            {film ? <Film key={film.base} base={film.base} poster={film.poster} p={p} reduce={reduce} /> : <Stills key={visual.id} visual={visual} p={p} />}
           </motion.div>
           <motion.div className="absolute inset-0 bg-[#f4f1ea]" style={{ opacity: whiteout }} />
         </motion.div>
@@ -179,7 +181,7 @@ export function ImmersiveHome() {
 
         <FlightStrip readouts={readouts} />
         <ProgressRail readouts={readouts} labels={chapters} />
-        <Credits visual={visual} />
+        <Credits visual={visual} hasFilm={!!film} />
       </div>
 
       {/* ---------- Story ---------- */}
@@ -493,9 +495,9 @@ function SplitTitle({ text }: { text: string }) {
   );
 }
 
-function Credits({ visual }: { visual: AircraftVisual }) {
+function Credits({ visual, hasFilm }: { visual: AircraftVisual; hasFilm: boolean }) {
   const t = useTranslations("immersive.credits");
-  const list = [...(visual.film ? FILM_CREDITS : visual.credits), ...EARTH_CREDITS];
+  const list = [...(hasFilm ? FILM_CREDITS : visual.credits), ...EARTH_CREDITS];
   return (
     <details className="group absolute bottom-16 right-4 z-20 md:bottom-4 text-[11px] text-white/70">
       <summary className="cursor-pointer list-none rounded-full border border-white/10 bg-[#02040b]/50 px-3 py-1.5 backdrop-blur-md transition-colors hover:text-white [&::-webkit-details-marker]:hidden">{t("title")}</summary>

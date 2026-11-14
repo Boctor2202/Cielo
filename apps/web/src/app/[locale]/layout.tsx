@@ -4,6 +4,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { themeScript } from "@/lib/theme";
+import { ogImage, SITE_URL } from "@/lib/seo";
 import "../globals.css";
 
 export function generateStaticParams() {
@@ -19,8 +20,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     applicationName: "Cielo",
     icons: { icon: "/icon.svg" },
     manifest: "/manifest.webmanifest",
-    alternates: { languages: { fr: "/fr", en: "/en" } },
-    openGraph: { title: t("title"), description: t("description"), type: "website", locale },
+    metadataBase: new URL(SITE_URL),
+    openGraph: { title: t("title"), description: t("description"), type: "website", siteName: "Cielo", locale: locale === "fr" ? "fr_FR" : "en_GB", images: [ogImage(locale)] },
+    twitter: { card: "summary_large_image", images: [ogImage(locale).url] },
+    formatDetection: { telephone: false },
   };
 }
 

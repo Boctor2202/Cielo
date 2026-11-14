@@ -1139,5 +1139,31 @@
       "climb": "CLIMB",
       "cruise": "CRUISE"
     }
+  },
+  "seo": {
+    "home": {
+      "title": "Cielo — EASA electronic pilot logbook",
+      "description": "EASA Part-FCL compliant electronic pilot logbook: automatic night time, official PDF export, licences, FTL, roster, pilot jobs and pilot CV. Free trial, web, iOS and Android."
+    },
+    "features": {
+      "title": "Electronic pilot logbook features",
+      "description": "Every AMC1 FCL.050 column, roster import, logbook audit, licence and medical tracking, FTL limits, statistics, signatures, offline mode, pilot jobs and pilot CV."
+    },
+    "pricing": {
+      "title": "Pricing — electronic pilot logbook from €0",
+      "description": "Free to get started, Basic for private and student pilots, Premium for professional pilots (roster, FTL, unlimited exports). No commitment, 33% off yearly."
+    },
+    "airlines": {
+      "title": "Electronic logbook for airlines and flight schools",
+      "description": "Cielo for airlines, business aviation operators and flight schools: imported rosters, crew licence tracking, EASA compliance and official exports."
+    },
+    "blog": {
+      "title": "Blog — EASA rules and pilot life",
+      "description": "EASA night time, FCL.060 recent experience, FTL, keeping your logbook: clear articles for airline, business and private pilots."
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "A question about Cielo, the electronic pilot logbook? Write to us, we reply within 48 hours."
+    }
   }
 }

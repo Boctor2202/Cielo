@@ -1,9 +1,11 @@
 import { setRequestLocale } from "next-intl/server";
 import { LEGAL } from "@/content/legal";
+import { pageMeta } from "@/lib/seo";
 import { LegalPage } from "../LegalPage";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: "fr" | "en" }> }) {
-  return { title: LEGAL[(await params).locale].privacy.title };
+  const locale = (await params).locale;
+  return pageMeta(locale, "/legal/confidentialite", { title: LEGAL[locale].privacy.title });
 }
 
 export default async function Page({ params }: { params: Promise<{ locale: "fr" | "en" }> }) {

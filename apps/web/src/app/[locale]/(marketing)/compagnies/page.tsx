@@ -3,10 +3,12 @@ import { Building2, CalendarClock, ShieldCheck, Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { PageHeader } from "@/components/marketing/sections";
 import { BrowserFrame, Shot } from "@/components/marketing/Shot";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
-  const t = await getTranslations({ locale: (await params).locale, namespace: "nav" });
-  return { title: t("airlines") };
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo.airlines" });
+  return pageMeta(locale, "/compagnies", { title: t("title"), description: t("description") });
 }
 
 export default async function AirlinesPage({ params }: { params: Promise<{ locale: string }> }) {

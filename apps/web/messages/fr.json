@@ -1139,5 +1139,31 @@
       "climb": "MONTÉE",
       "cruise": "CROISIÈRE"
     }
+  },
+  "seo": {
+    "home": {
+      "title": "Cielo — Carnet de vol électronique EASA pour pilotes",
+      "description": "Carnet de vol électronique conforme EASA Part-FCL : temps de nuit calculé automatiquement, export PDF officiel, licences, FTL, roster, offres d'emploi pilote et CV. Essai gratuit, web, iOS et Android."
+    },
+    "features": {
+      "title": "Fonctionnalités du carnet de vol électronique",
+      "description": "Toutes les colonnes AMC1 FCL.050, import de roster, audit du carnet, suivi des licences et du médical, limites FTL, statistiques, signature, mode hors ligne, offres d'emploi et CV pilote."
+    },
+    "pricing": {
+      "title": "Tarifs — carnet de vol électronique dès 0 €",
+      "description": "Gratuit pour découvrir, Basic pour les pilotes privés et élèves, Premium pour les pilotes professionnels (roster, FTL, exports illimités). Sans engagement, -33 % à l'année."
+    },
+    "airlines": {
+      "title": "Carnet de vol électronique pour compagnies et écoles",
+      "description": "Cielo pour les compagnies, opérateurs d'affaires et écoles de pilotage : rosters importés, suivi des licences de l'équipage, conformité EASA et exports officiels."
+    },
+    "blog": {
+      "title": "Blog — réglementation EASA et métier de pilote",
+      "description": "Temps de nuit EASA, expérience récente FCL.060, FTL, tenue du carnet de vol : des articles clairs pour les pilotes de ligne, d'affaires et privés."
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "Une question sur Cielo, le carnet de vol électronique ? Écrivez-nous, réponse sous 48 h."
+    }
   }
 }
