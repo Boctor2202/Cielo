@@ -339,7 +339,8 @@
       "synced": "Synced",
       "offline": "Offline",
       "signOut": "Sign out",
-      "jobs": "Pilot jobs"
+      "jobs": "Pilot jobs",
+      "cv": "Pilot CV"
     },
     "dashboard": {
       "hello": "Hello {name}",
@@ -846,7 +847,10 @@
         "position": "Position",
         "all": "All",
         "onType": "My types only",
-        "segment": "Sector"
+        "segment": "Sector",
+        "region": "Region",
+        "myRegions": "Where I can work",
+        "allRegions": "All regions"
       },
       "positions": {
         "CPT": "Captain",
@@ -890,14 +894,115 @@
         "jetHours": "Jet hours",
         "turbineHours": "Turbine hours",
         "typeRating": "Type rating",
-        "english": "ICAO English"
+        "english": "ICAO English",
+        "workRights": "Right to work",
+        "licenceAuthority": "Country licence"
       },
       "you": "you: {value}",
       "gaps": "To build up",
       "empty": "No offer matches these filters.",
       "loading": "Loading offers…",
       "error": "Offers could not be loaded. Please try again later.",
-      "posted": "Posted {date}"
+      "posted": "Posted {date}",
+      "regions": {
+        "EU": "Europe (EU/EEA)",
+        "UK": "United Kingdom",
+        "US": "United States",
+        "CA": "Canada",
+        "ME": "Middle East",
+        "APAC": "Asia-Pacific",
+        "AFRICA": "Africa",
+        "LATAM": "Latin America",
+        "OTHER": "Other"
+      },
+      "work": {
+        "title": "Where can you work?",
+        "help": "Based on your nationality and visas. Licence(s): {authorities}. Offers outside these regions are capped unless the employer sponsors the visa.",
+        "noRights": "Right to work needed: {region}",
+        "licenceNeeded": "{authority} licence needed",
+        "visa": "Visa sponsored"
+      }
+    },
+    "cv": {
+      "title": "Pilot CV",
+      "subtitle": "Your hours come from your logbook, broken down by category, in a layout built for airlines' screening software and AI readers.",
+      "lang": "CV language",
+      "en": "English",
+      "fr": "French",
+      "download": "Download PDF",
+      "copy": "Copy text",
+      "copied": "Text copied",
+      "json": "Structured data (JSON)",
+      "sections": {
+        "identity": "Identity and contact",
+        "summary": "Summary",
+        "target": "Target position",
+        "experience": "Professional experience",
+        "education": "Education",
+        "languages": "Languages",
+        "skills": "Skills",
+        "hours": "Hours (from your logbook)"
+      },
+      "f": {
+        "fullName": "Full name",
+        "headline": "Headline (optional)",
+        "headlinePh": "First Officer · Citation Latitude",
+        "email": "Email",
+        "phone": "Phone",
+        "location": "City, country",
+        "nationality": "Nationality",
+        "dob": "Date of birth",
+        "linkedin": "LinkedIn",
+        "rightToWork": "Right to work",
+        "rightToWorkPh": "EU passport",
+        "summary": "3–4 sentences: experience, types, what you bring",
+        "words": "{count} words (ideal: 25 to 90)",
+        "role": "Position",
+        "employer": "Employer",
+        "start": "Start",
+        "end": "End (empty = current)",
+        "aircraft": "Types (ICAO codes)",
+        "bullets": "Achievements (one per line)",
+        "titleEdu": "Degree / course",
+        "school": "School",
+        "language": "Language",
+        "icao": "ICAO level",
+        "level": "Level",
+        "skills": "Skills (comma separated)",
+        "add": "Add",
+        "remove": "Remove"
+      },
+      "target": {
+        "pick": "Tailor to an offer",
+        "none": "None (general CV)",
+        "help": "The CV puts the offer's types and keywords first, and the check verifies they appear."
+      },
+      "ats": {
+        "title": "Pre-submission check",
+        "subtitle": "What screening software looks for",
+        "keywordsFound": "Offer keywords present",
+        "keywordsMissing": "Missing keywords",
+        "checks": {
+          "name": "Name",
+          "contact": "Email and phone",
+          "summary": "Summary written",
+          "summaryLength": "Summary length ({detail} words)",
+          "totalHours": "Total flight time",
+          "picHours": "PIC hours",
+          "typeHours": "Hours by type",
+          "licence": "Licence",
+          "licenceNumber": "Licence number",
+          "medical": "Medical certificate",
+          "medicalValid": "Medical in date",
+          "language": "Language with ICAO level",
+          "experience": "Professional experience",
+          "experienceBullets": "At least 2 achievements per role",
+          "recency": "Flown in the last 90 days",
+          "targetKeywords": "Offer keywords",
+          "targetType": "Experience on the offer's type ({detail})"
+        }
+      },
+      "tips": "Tips: single column, no photo or tables, precise figures. Send the PDF: its text is readable by AI tools and it carries a structured copy of your CV."
     }
   },
   "why": {

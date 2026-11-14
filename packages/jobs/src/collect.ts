@@ -1,5 +1,6 @@
 import { extractAircraft, extractRequirements, extractSalary, detectPosition, finishSalary, isPilotJob } from "./extract";
 import { FETCHERS } from "./fetchers";
+import { authorityOf, countryFrom, regionOf } from "./regions";
 import { SOURCES } from "./sources";
 import type { Job, RawPosting, Salary, Source } from "./types";
 
@@ -12,6 +13,7 @@ export function toJob(raw: RawPosting, src: Source, now = new Date().toISOString
   if (raw.salary && (raw.salary.min || raw.salary.max) && raw.salary.currency) {
     salary = finishSalary(raw.salary.min, raw.salary.max, raw.salary.currency.toUpperCase(), PERIODS[(raw.salary.period ?? "year").toLowerCase()] ?? "year") ?? salary;
   }
+  const country = countryFrom(raw.country, raw.location) ?? src.country;
   return {
     id: raw.id,
     source: src.ats,
@@ -21,7 +23,9 @@ export function toJob(raw: RawPosting, src: Source, now = new Date().toISOString
     position: detectPosition(raw.title, raw.text),
     aircraft: extractAircraft(raw.title, raw.text),
     location: raw.location || undefined,
-    country: raw.country || src.country,
+    country,
+    region: regionOf(country),
+    authority: authorityOf(country),
     employment: raw.employment,
     postedAt: raw.postedAt,
     url: raw.url,

@@ -3,9 +3,10 @@
 import { Briefcase, Check, ExternalLink, Lock, MapPin, Plane, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { buildProfile, detectAircraft, matchJob, type GapCode, type Job, type Match, type Position } from "@cielo/jobs";
+import { buildProfile, defaultWorkRegions, detectAircraft, matchJob, REGIONS, authorityFromText, type GapCode, type Job, type Match, type Position, type RegionId } from "@cielo/jobs";
+
 import { Badge, Card, Empty, PageTitle, Segmented, Toggle, type Level } from "@/components/app/ui";
-import { useFlights, useFormatDate, useTable, useTypes } from "@/lib/hooks";
+import { useFlights, useFormatDate, usePilot, useTable, useTypes } from "@/lib/hooks";
 
 type Sort = "match" | "experience" | "salary" | "recent";
 interface Feed {
@@ -29,6 +30,22 @@ export default function JobsPage() {
   const [sort, setSort] = useState<Sort>("match");
   const [position, setPosition] = useState<Position | "ALL">("ALL");
   const [onTypeOnly, setOnTypeOnly] = useState(false);
+  const pilot = usePilot();
+  // Where the pilot may work (citizenship, visas): saved on this device, defaults from the licence regime
+  const [workRegions, setWorkRegions] = useState<RegionId[] | null>(null);
+  const [region, setRegion] = useState<RegionId | "MINE" | "ALL">("MINE");
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem("cielo-work-regions");
+      if (v) setWorkRegions(JSON.parse(v));
+    } catch {}
+  }, []);
+  const saveWork = (r: RegionId[]) => {
+    setWorkRegions(r);
+    try {
+      localStorage.setItem("cielo-work-regions", JSON.stringify(r));
+    } catch {}
+  };
 
   useEffect(() => {
     fetch("/api/jobs")
@@ -41,8 +58,9 @@ export default function JobsPage() {
   const profile = useMemo(() => {
     if (!flights || !opening || !licenses || !types) return null;
     const engine = new Map(types.map((x) => [x.icao, x.engineType]));
-    return buildProfile(flights, opening, licenses, (i) => engine.get(i), (code) => detectAircraft(code));
-  }, [flights, opening, licenses, types]);
+    return buildProfile(flights, opening, licenses, (i) => engine.get(i), (code) => detectAircraft(code), { framework: pilot?.regulatoryFramework, workRegions: workRegions ?? undefined });
+  }, [flights, opening, licenses, types, pilot?.regulatoryFramework, workRegions]);
+  const myRegions = profile?.workRegions ?? [];
   const hasLogbook = !!profile && profile.totalMin > 0;
 
   const rows = useMemo(() => {
@@ -50,6 +68,8 @@ export default function JobsPage() {
     let list = feed.jobs.map((job) => ({ job, match: matchJob(job, profile) }));
     if (position !== "ALL") list = list.filter((r) => r.job.position === position);
     if (onTypeOnly) list = list.filter((r) => r.match.onType);
+    if (region === "MINE" && myRegions.length) list = list.filter((r) => r.match.canWork || r.job.region === "OTHER");
+    else if (region !== "ALL" && region !== "MINE") list = list.filter((r) => r.job.region === region);
     // offers without a published requirement go last when sorting by experience
     const exp = (j: Job) => j.requirements.totalHours ?? Number.POSITIVE_INFINITY;
     const sal = (j: Job) => j.salary?.annualEur ?? -1;
@@ -60,7 +80,12 @@ export default function JobsPage() {
       : (b.job.postedAt ?? "").localeCompare(a.job.postedAt ?? ""),
     );
     return list;
-  }, [feed, profile, position, onTypeOnly, sort]);
+  }, [feed, profile, position, onTypeOnly, sort, region, myRegions]);
+  const regionCounts = useMemo(() => {
+    const m = new Map<RegionId, number>();
+    for (const j of feed?.jobs ?? []) m.set(j.region, (m.get(j.region) ?? 0) + 1);
+    return m;
+  }, [feed]);
 
   const positions = useMemo(() => [...new Set((feed?.jobs ?? []).map((j) => j.position))] as Position[], [feed]);
   const followed = feed?.sources.filter((s) => s.ok).length ?? 0;
@@ -89,7 +114,35 @@ export default function JobsPage() {
               <option key={p} value={p}>{t(`positions.${p}`)}</option>
             ))}
           </select>
+          <select className="input !w-auto" value={region} onChange={(e) => setRegion(e.target.value as RegionId | "MINE" | "ALL")} aria-label={t("filter.region")}>
+            <option value="MINE">{t("filter.myRegions")}</option>
+            <option value="ALL">{t("filter.allRegions")}</option>
+            {REGIONS.filter((r) => regionCounts.get(r)).map((r) => (
+              <option key={r} value={r}>{t(`regions.${r}`)} ({regionCounts.get(r)})</option>
+            ))}
+          </select>
           {hasLogbook && <Toggle checked={onTypeOnly} onChange={setOnTypeOnly} label={t("filter.onType")} />}
+        </div>
+      </div>
+
+      <div className="mb-5 rounded-xl border border-border bg-surface p-4">
+        <p className="text-sm font-semibold">{t("work.title")}</p>
+        <p className="mt-0.5 text-xs text-muted">{t("work.help", { authorities: profile?.authorities.join(", ") || "—" })}</p>
+        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t("work.title")}>
+          {REGIONS.filter((r) => r !== "OTHER").map((r) => {
+            const on = myRegions.includes(r);
+            return (
+              <button
+                key={r}
+                type="button"
+                aria-pressed={on}
+                onClick={() => saveWork(on ? myRegions.filter((x) => x !== r) : [...myRegions, r])}
+                className={`min-h-9 cursor-pointer rounded-full border px-3 text-[13px] font-medium transition-colors ${on ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:border-accent/50 hover:text-text"}`}
+              >
+                {on ? "✓ " : ""}{t(`regions.${r}`)}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -161,6 +214,7 @@ function JobCard({ job, match, showMatch, profileHours }: { job: Job; match: Mat
             <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
               <span>{t(`positions.${job.position}`)}</span>
               <span>{t(`segments.${job.segment}`)}</span>
+              <span className="num rounded bg-surface-2 px-1.5 py-0.5 text-[11px] font-semibold text-text">{t(`regions.${job.region}`)}{job.authority !== "LOCAL" ? ` · ${job.authority}` : ""}</span>
               {(job.location || job.country) && (
                 <span className="flex items-center gap-1"><MapPin size={13} aria-hidden /> {[job.location, job.country].filter(Boolean).join(" · ")}</span>
               )}
@@ -179,6 +233,9 @@ function JobCard({ job, match, showMatch, profileHours }: { job: Job; match: Mat
             </span>
           ))}
           {showMatch && match.onType && <Badge level="ok">{t("onType")}</Badge>}
+          {!match.canWork && <Badge level="warning">{t("work.noRights", { region: t(`regions.${job.region}`) })}</Badge>}
+          {match.canWork && !match.licenceValid && <Badge level="caution">{t("work.licenceNeeded", { authority: job.authority })}</Badge>}
+          {r.visaSponsored && <Badge level="info">{t("work.visa")}</Badge>}
           {r.typeRatingRequired && <Badge level={showMatch && !match.onType ? "caution" : "neutral"}>{t("tr.required")}</Badge>}
           {r.typeRatingProvided && <Badge level="info">{t("tr.provided")}</Badge>}
         </div>

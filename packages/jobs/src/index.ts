@@ -5,3 +5,4 @@ export * from "./match";
 export * from "./sources";
 export * from "./fetchers";
 export * from "./collect";
+export * from "./regions";

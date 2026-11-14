@@ -1,4 +1,5 @@
 import { sameFamily, typeInfo } from "./aircraft";
+import { authorityFromText, defaultWorkRegions, type Authority, type RegionId } from "./regions";
 import type { Job, LicenceLevel, PilotProfile } from "./types";
 
 /**
@@ -6,7 +7,7 @@ import type { Job, LicenceLevel, PilotProfile } from "./types";
  * Runs on the subscriber's device — the logbook never leaves it.
  */
 
-export type GapCode = "licence" | "totalHours" | "picHours" | "onTypeHours" | "multiPilotHours" | "jetHours" | "turbineHours" | "typeRating" | "english";
+export type GapCode = "workRights" | "licenceAuthority" | "licence" | "totalHours" | "picHours" | "onTypeHours" | "multiPilotHours" | "jetHours" | "turbineHours" | "typeRating" | "english";
 
 export interface Gap {
   code: GapCode;
@@ -24,6 +25,10 @@ export interface Match {
   met: GapCode[];
   /** job's aircraft the pilot is rated / has logged on */
   onType: boolean;
+  /** the pilot may work in the job's region (or the employer sponsors the visa) */
+  canWork: boolean;
+  /** the pilot holds the licence regime the job's country requires */
+  licenceValid: boolean;
 }
 
 const RANK: Record<LicenceLevel, number> = { PPL: 0, CPL: 1, MPL: 2, FATPL: 2, ATPL: 3 };
@@ -68,6 +73,13 @@ export function matchJob(job: Job, me: PilotProfile): Match {
     { code: "english", weight: 4, ratio: r.englishLevel ? (me.englishLevel ? (me.englishLevel >= r.englishLevel ? 1 : 0.4) : 0.6) : null, required: r.englishLevel, have: me.englishLevel ?? "—" },
   ];
 
+  // Where the job is: licence regime and right to work. Unknown country → not penalised.
+  const known = job.region !== "OTHER" && job.authority !== "LOCAL";
+  const licenceValid = !known || me.authorities.length === 0 || me.authorities.includes(job.authority);
+  const canWork = job.region === "OTHER" || me.workRegions.length === 0 || me.workRegions.includes(job.region) || !!r.visaSponsored;
+  if (known && me.authorities.length) crit.push({ code: "licenceAuthority", weight: 15, ratio: licenceValid ? 1 : 0.15, required: job.authority, have: me.authorities.join(", ") });
+  if (job.region !== "OTHER" && me.workRegions.length) crit.push({ code: "workRights", weight: 15, ratio: canWork ? 1 : 0, required: job.region, have: me.workRegions.join(", ") });
+
   // Position realism when nothing else is stated: a captain seat with little PIC time is a long shot.
   if (job.position === "CPT" && !r.picHours) crit.push({ code: "picHours", weight: 10, ratio: Math.min(1, me.picMin / (1500 * 60)), required: 1500, have: h(me.picMin) });
   if (jobMultiPilot && !r.multiPilotHours) crit.push({ code: "multiPilotHours", weight: 5, ratio: Math.min(1, me.multiPilotMin / (500 * 60)), required: 500, have: h(me.multiPilotMin) });
@@ -77,7 +89,9 @@ export function matchJob(job: Job, me: PilotProfile): Match {
   const raw = totalW ? stated.reduce((s, c) => s + c.weight * c.ratio!, 0) / totalW : 0.5;
   // A hard blocker (required type rating not held, licence two levels short) caps the score.
   const blocked = stated.some((c) => (c.code === "typeRating" && r.typeRatingRequired && c.ratio === 0) || (c.code === "licence" && c.ratio === 0));
-  const score = Math.round(Math.min(blocked ? 0.55 : 1, raw) * 100);
+  // No right to work there is the hardest blocker; a foreign licence can be converted, at a cost.
+  const cap = !canWork ? 0.35 : !licenceValid ? 0.5 : blocked ? 0.55 : 1;
+  const score = Math.round(Math.min(cap, raw) * 100);
 
   const gaps: Gap[] = [];
   const met: GapCode[] = [];
@@ -89,18 +103,19 @@ export function matchJob(job: Job, me: PilotProfile): Match {
   const readable = ["licence", "totalHours", "picHours", "typeRating"] as const;
   const confidence = readable.filter((k) => (k === "typeRating" ? job.aircraft.length > 0 : r[k as "licence"] !== undefined)).length / readable.length;
 
-  return { score, confidence, gaps, met, onType: rated };
+  return { score, confidence, gaps, met, onType: rated, canWork, licenceValid };
 }
 
 /** Builds the profile from logbook rows (kept generic so web and mobile share it). */
 export function buildProfile(
   flights: { totalMin: number; picMin: number; picusMin: number; multiPilotMin: number; singlePilotMeMin: number; aircraftTypeIcao?: string; isFstd: boolean; deletedAt?: string | null }[],
   opening: { totalMin: number; picMin: number; multiPilotMin: number; singlePilotMeMin: number; aircraftTypeIcao?: string | null; deletedAt?: string | null }[],
-  licences: { code: string; kind: string; deletedAt?: string | null; validUntil?: string | null }[],
+  licences: { code: string; kind: string; authority?: string; deletedAt?: string | null; validUntil?: string | null }[],
   engineTypeOf: (icao: string) => string | undefined,
   icaoFromRating: (code: string) => string[],
+  opts: { framework?: string; workRegions?: RegionId[] } = {},
 ): PilotProfile {
-  const p: PilotProfile = { totalMin: 0, picMin: 0, multiPilotMin: 0, multiEngineMin: 0, turbineMin: 0, jetMin: 0, typeMin: {}, ratedTypes: [] };
+  const p: PilotProfile = { totalMin: 0, picMin: 0, multiPilotMin: 0, multiEngineMin: 0, turbineMin: 0, jetMin: 0, typeMin: {}, ratedTypes: [], authorities: [], workRegions: [] };
   const add = (icao: string | null | undefined, min: number) => {
     if (!icao) return;
     p.typeMin[icao] = (p.typeMin[icao] ?? 0) + min;
@@ -128,6 +143,8 @@ export function buildProfile(
     if (l.deletedAt) continue;
     const c = l.code.toUpperCase();
     if (l.kind === "licence") {
+      const a = authorityFromText(l.authority) ?? authorityFromText(c);
+      if (a && !p.authorities.includes(a)) p.authorities.push(a);
       const lvl: LicenceLevel | undefined = /ATPL/.test(c) ? (/FROZEN/.test(c) ? "FATPL" : "ATPL") : /MPL/.test(c) ? "MPL" : /CPL/.test(c) ? "CPL" : /PPL|LAPL/.test(c) ? "PPL" : undefined;
       if (lvl && (!p.licence || RANK[lvl] > RANK[p.licence])) p.licence = lvl;
     }
@@ -138,5 +155,11 @@ export function buildProfile(
     }
   }
   for (const icao of Object.keys(p.typeMin)) if (!p.ratedTypes.includes(icao)) p.ratedTypes.push(icao);
+  // Licence regime from the pilot's settings when the licence record does not say
+  if (!p.authorities.length && opts.framework) {
+    const a = ({ EASA: "EASA", FAA: "FAA", CASA: "CASA" } as Record<string, Authority>)[opts.framework];
+    if (a) p.authorities.push(a);
+  }
+  p.workRegions = opts.workRegions?.length ? opts.workRegions : defaultWorkRegions(p.authorities);
   return p;
 }

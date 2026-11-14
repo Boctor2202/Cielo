@@ -339,7 +339,8 @@
       "synced": "Synchronisé",
       "offline": "Hors ligne",
       "signOut": "Se déconnecter",
-      "jobs": "Offres d'emploi"
+      "jobs": "Offres d'emploi",
+      "cv": "CV pilote"
     },
     "dashboard": {
       "hello": "Bonjour {name}",
@@ -846,7 +847,10 @@
         "position": "Poste",
         "all": "Tous",
         "onType": "Sur mes types uniquement",
-        "segment": "Secteur"
+        "segment": "Secteur",
+        "region": "Région",
+        "myRegions": "Mes régions de travail",
+        "allRegions": "Toutes les régions"
       },
       "positions": {
         "CPT": "Commandant",
@@ -890,14 +894,115 @@
         "jetHours": "Heures jet",
         "turbineHours": "Heures turbine",
         "typeRating": "Qualification",
-        "english": "Anglais OACI"
+        "english": "Anglais OACI",
+        "workRights": "Droit de travailler",
+        "licenceAuthority": "Licence du pays"
       },
       "you": "vous : {value}",
       "gaps": "À compléter",
       "empty": "Aucune offre ne correspond à ces filtres.",
       "loading": "Chargement des offres…",
       "error": "Les offres n'ont pas pu être chargées. Réessayez plus tard.",
-      "posted": "Publiée le {date}"
+      "posted": "Publiée le {date}",
+      "regions": {
+        "EU": "Europe (UE/EEE)",
+        "UK": "Royaume-Uni",
+        "US": "États-Unis",
+        "CA": "Canada",
+        "ME": "Moyen-Orient",
+        "APAC": "Asie-Pacifique",
+        "AFRICA": "Afrique",
+        "LATAM": "Amérique latine",
+        "OTHER": "Autre"
+      },
+      "work": {
+        "title": "Où pouvez-vous travailler ?",
+        "help": "Selon votre nationalité et vos visas. Licence(s) : {authorities}. Les offres hors de ces régions sont plafonnées, sauf si l'employeur parraine le visa.",
+        "noRights": "Droit de travailler requis : {region}",
+        "licenceNeeded": "Licence {authority} requise",
+        "visa": "Visa parrainé"
+      }
+    },
+    "cv": {
+      "title": "CV pilote",
+      "subtitle": "Vos heures sont reprises de votre carnet et classées par catégorie, dans une mise en page conçue pour les logiciels et les IA de tri des compagnies.",
+      "lang": "Langue du CV",
+      "en": "Anglais",
+      "fr": "Français",
+      "download": "Télécharger le PDF",
+      "copy": "Copier le texte",
+      "copied": "Texte copié",
+      "json": "Données structurées (JSON)",
+      "sections": {
+        "identity": "Identité et contact",
+        "summary": "Profil",
+        "target": "Poste visé",
+        "experience": "Expérience professionnelle",
+        "education": "Formation",
+        "languages": "Langues",
+        "skills": "Compétences",
+        "hours": "Heures (depuis votre carnet)"
+      },
+      "f": {
+        "fullName": "Nom complet",
+        "headline": "Titre (facultatif)",
+        "headlinePh": "First Officer · Citation Latitude",
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "location": "Ville, pays",
+        "nationality": "Nationalité",
+        "dob": "Date de naissance",
+        "linkedin": "LinkedIn",
+        "rightToWork": "Autorisation de travail",
+        "rightToWorkPh": "Passeport UE",
+        "summary": "3 à 4 phrases : expérience, types, ce que vous apportez",
+        "words": "{count} mots (idéal : 25 à 90)",
+        "role": "Poste",
+        "employer": "Employeur",
+        "start": "Début",
+        "end": "Fin (vide = en poste)",
+        "aircraft": "Types (codes OACI)",
+        "bullets": "Réalisations (une par ligne)",
+        "titleEdu": "Diplôme / formation",
+        "school": "École",
+        "language": "Langue",
+        "icao": "Niveau OACI",
+        "level": "Niveau",
+        "skills": "Compétences (séparées par des virgules)",
+        "add": "Ajouter",
+        "remove": "Retirer"
+      },
+      "target": {
+        "pick": "Adapter à une offre",
+        "none": "Aucune (CV général)",
+        "help": "Le CV met en avant les types et les mots-clés de l'offre, et le contrôle vérifie qu'ils y figurent."
+      },
+      "ats": {
+        "title": "Contrôle avant envoi",
+        "subtitle": "Ce que regardent les logiciels de tri",
+        "keywordsFound": "Mots-clés de l'offre présents",
+        "keywordsMissing": "Mots-clés absents",
+        "checks": {
+          "name": "Nom renseigné",
+          "contact": "E-mail et téléphone",
+          "summary": "Profil rédigé",
+          "summaryLength": "Longueur du profil ({detail} mots)",
+          "totalHours": "Temps de vol total",
+          "picHours": "Heures CDB",
+          "typeHours": "Heures par type",
+          "licence": "Licence",
+          "licenceNumber": "Numéro de licence",
+          "medical": "Aptitude médicale",
+          "medicalValid": "Médical en cours de validité",
+          "language": "Langue avec niveau OACI",
+          "experience": "Expérience professionnelle",
+          "experienceBullets": "Au moins 2 réalisations par poste",
+          "recency": "Vol dans les 90 derniers jours",
+          "targetKeywords": "Mots-clés de l'offre",
+          "targetType": "Expérience sur le type de l'offre ({detail})"
+        }
+      },
+      "tips": "Conseils : une seule colonne, pas de photo ni de tableau, des chiffres précis. Envoyez le PDF : son texte est lisible par les IA et il contient une copie structurée de votre CV."
     }
   },
   "why": {

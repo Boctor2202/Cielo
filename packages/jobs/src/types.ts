@@ -3,6 +3,8 @@
  * plus a link to the original posting. The posting text itself is never stored or republished.
  */
 
+import type { Authority, RegionId } from "./regions";
+
 export type Ats = "greenhouse" | "lever" | "personio" | "recruitee" | "teamtailor" | "workable" | "ashby" | "smartrecruiters";
 
 export interface Source {
@@ -50,6 +52,10 @@ export interface Requirements {
   typeRatingProvided?: boolean;
   /** ICAO language proficiency level */
   englishLevel?: number;
+  /** The employer sponsors the visa / work permit */
+  visaSponsored?: boolean;
+  /** The ad says applicants must already have the right to work there */
+  rightToWorkRequired?: boolean;
 }
 
 export interface Salary {
@@ -72,6 +78,9 @@ export interface Job {
   aircraft: string[];
   location?: string;
   country?: string;
+  /** World region of the job, and the licence regime it normally requires */
+  region: RegionId;
+  authority: Authority;
   employment?: string;
   postedAt?: string;
   url: string;
@@ -94,4 +103,8 @@ export interface PilotProfile {
   ratedTypes: string[];
   licence?: LicenceLevel;
   englishLevel?: number;
+  /** Licence regimes held (EASA, FAA, UK CAA…) */
+  authorities: Authority[];
+  /** Regions where the pilot is allowed to work (citizenship, visas) */
+  workRegions: RegionId[];
 }

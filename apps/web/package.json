@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@cielo/core": "workspace:*",
+    "@cielo/cv": "workspace:*",
     "@cielo/export": "workspace:*",
     "@cielo/jobs": "workspace:*",
     "@cielo/reference-data": "workspace:*",

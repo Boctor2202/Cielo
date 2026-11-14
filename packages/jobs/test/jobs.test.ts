@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildProfile, detectAircraft, detectPosition, extractRequirements, extractSalary, isPilotJob, matchJob, toJob, toText, type Job, type PilotProfile } from "../src";
+import { buildProfile, countryFrom, regionOf, authorityOf, detectAircraft, detectPosition, extractRequirements, extractSalary, isPilotJob, matchJob, toJob, toText, type Job, type PilotProfile } from "../src";
 
 // Synthetic ads written for the tests (no real posting text is stored anywhere).
 const ADS = {
@@ -46,7 +46,7 @@ describe("extraction", () => {
 });
 
 describe("matching", () => {
-  const src = { company: "Test", ats: "recruitee" as const, token: "t", segment: "business" as const };
+  const src = { company: "Test", ats: "recruitee" as const, token: "t", segment: "business" as const, country: "FR" };
   const job = (ad: { title: string; text: string }): Job => toJob({ id: ad.title, company: "Test", title: ad.title, url: "https://example.com", text: ad.text }, src);
 
   // A Citation Latitude / Global captain-to-be: 3,200 h, 900 PIC, rated on the Latitude
@@ -56,7 +56,7 @@ describe("matching", () => {
   ];
   const opening = [{ totalMin: 400 * 60, picMin: 0, multiPilotMin: 0, singlePilotMeMin: 0, aircraftTypeIcao: "DR40" }];
   const engines: Record<string, string> = { C68A: "jet", BE20: "turboprop", DR40: "piston" };
-  const me: PilotProfile = buildProfile(flights, opening, [{ code: "ATPL(A)", kind: "licence" }, { code: "LPE English 6", kind: "language" }, { code: "TR C680A", kind: "rating" }], (i) => engines[i], () => ["C68A"]);
+  const me: PilotProfile = buildProfile(flights, opening, [{ code: "ATPL(A)", kind: "licence", authority: "DGAC France" }, { code: "LPE English 6", kind: "language" }, { code: "TR C680A", kind: "rating" }], (i) => engines[i], () => ["C68A"]);
 
   it("builds the profile from the logbook", () => {
     expect(me).toMatchObject({ totalMin: 3200 * 60, picMin: 900 * 60, jetMin: 2400 * 60, turbineMin: 2800 * 60, licence: "ATPL", englishLevel: 6 });
@@ -76,5 +76,46 @@ describe("matching", () => {
   });
   it("a cadet programme with a sponsored rating is a strong match for an experienced pilot", () => {
     expect(matchJob(job(ADS.cadet), me).score).toBeGreaterThanOrEqual(80);
+  });
+});
+
+describe("regions", () => {
+  it("finds the country and region from feed fields", () => {
+    expect(countryFrom(undefined, "Miami, FL, USA")).toBe("US");
+    expect(countryFrom("United Kingdom", "Gatwick")).toBe("GB");
+    expect(countryFrom("mt", "Saint Julian's")).toBe("MT");
+    expect(countryFrom(undefined, "Brussel, Brussels Hoofdstedelijk Gewest, België")).toBe("BE");
+    expect(regionOf("MT")).toBe("EU");
+    expect(regionOf("GB")).toBe("UK");
+    expect(regionOf("AE")).toBe("ME");
+    expect(authorityOf("CH")).toBe("EASA");
+    expect(authorityOf("US")).toBe("FAA");
+  });
+
+  const src = (country: string) => ({ company: "Test", ats: "recruitee" as const, token: "t", segment: "airline" as const, country });
+  const ad = { title: "First Officer A320", text: "ATPL, 1500 hours total. Type rating provided." };
+  const engines: Record<string, string> = { A320: "jet" };
+  const eu = buildProfile([{ totalMin: 3000 * 60, picMin: 0, picusMin: 0, multiPilotMin: 3000 * 60, singlePilotMeMin: 0, aircraftTypeIcao: "A320", isFstd: false }], [], [{ code: "ATPL(A)", kind: "licence", authority: "DGAC France" }], (i) => engines[i], () => []);
+
+  it("an EASA pilot defaults to EU work rights", () => {
+    expect(eu.authorities).toEqual(["EASA"]);
+    expect(eu.workRegions).toEqual(["EU"]);
+  });
+  it("caps US jobs for a European pilot without US work rights or FAA licence", () => {
+    const fr = matchJob(toJob({ id: "a", company: "T", title: ad.title, url: "u", text: ad.text }, src("FR")), eu);
+    const us = matchJob(toJob({ id: "b", company: "T", title: ad.title, url: "u", text: ad.text }, src("US")), eu);
+    expect(fr.canWork && fr.licenceValid).toBe(true);
+    expect(us.canWork).toBe(false);
+    expect(us.licenceValid).toBe(false);
+    expect(us.score).toBeLessThanOrEqual(35);
+    expect(fr.score).toBeGreaterThan(us.score);
+    expect(us.gaps.map((g) => g.code)).toEqual(expect.arrayContaining(["workRights", "licenceAuthority"]));
+  });
+  it("visa sponsorship lifts the work-rights block, and declared work rights count", () => {
+    const sponsored = toJob({ id: "c", company: "T", title: ad.title, url: "u", text: ad.text + " Visa sponsorship is available." }, src("AE"));
+    expect(sponsored.requirements.visaSponsored).toBe(true);
+    expect(matchJob(sponsored, eu).canWork).toBe(true);
+    const withUs = { ...eu, workRegions: ["EU", "US"] as const };
+    expect(matchJob(toJob({ id: "d", company: "T", title: ad.title, url: "u", text: ad.text }, src("US")), { ...withUs, workRegions: [...withUs.workRegions] }).canWork).toBe(true);
   });
 });
