@@ -14,6 +14,7 @@ import {
 } from "@cielo/core";
 import { Button, Card, Dot, Fab, Row, Screen, Stat, Txt, statusColor } from "../../src/components/ui";
 import { formatDate, type I18nKey } from "../../src/i18n";
+import { isCloudEnabled } from "../../src/auth";
 import { todayUtc, useApp } from "../../src/state";
 import { ftlSettingsFor } from "../../src/ftlSettings";
 import { space, useTheme } from "../../src/theme";
@@ -21,7 +22,7 @@ import { space, useTheme } from "../../src/theme";
 const FTL_KEYS = ["duty7d", "duty14d", "duty28d", "flight28d", "flightYear", "flight12m"] as const;
 
 export default function Dashboard() {
-  const { t, locale, flights, balances, licenses, pilot } = useApp();
+  const { t, locale, flights, balances, licenses, pilot, session } = useApp();
   const c = useTheme();
   const today = todayUtc();
   const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
@@ -65,9 +66,22 @@ export default function Dashboard() {
   return (
     <View style={{ flex: 1 }}>
       <Screen>
+        <View style={{ gap: 2, marginTop: 4 }}>
+          <Txt variant="muted">{locale === "fr" ? "Bonjour" : "Hello"} {pilot.fullName?.split(" ")[0] ?? ""}</Txt>
+          <Txt variant="title">{locale === "fr" ? "Vue d'ensemble" : "Overview"}</Txt>
+        </View>
+
+        {isCloudEnabled && !session ? (
+          <Card>
+            <Txt variant="h2">{t("dash.signInTitle")}</Txt>
+            <Txt variant="muted">{t("dash.signInText")}</Txt>
+            <Button title={t("dash.signIn")} onPress={() => router.push("/auth")} />
+          </Card>
+        ) : null}
+
         <Card>
           <Txt variant="label">{t("dash.totalHours")}</Txt>
-          <Txt mono style={{ fontSize: 44, fontWeight: "700", letterSpacing: -1 }} color={c.accent}>
+          <Txt mono style={{ fontSize: 52, fontFamily: "Manrope_400Regular", letterSpacing: -2 }}>
             {fmt(periods.all.totalMin)}
           </Txt>
           <Row gap={space.lg}>
@@ -138,8 +152,8 @@ export default function Dashboard() {
                     {formatDuration(actual)} / {formatDuration(limit)}
                   </Txt>
                 </Row>
-                <View style={{ height: 4, borderRadius: 2, backgroundColor: c.surface2 }}>
-                  <View style={{ height: 4, borderRadius: 2, width: `${pct * 100}%`, backgroundColor: statusColor(c, level) }} />
+                <View style={{ height: 6, borderRadius: 3, backgroundColor: c.scheme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(10,22,38,0.10)" }}>
+                  <View style={{ height: 6, borderRadius: 3, width: `${pct * 100}%`, backgroundColor: statusColor(c, level) }} />
                 </View>
               </View>
             );

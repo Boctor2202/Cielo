@@ -22,7 +22,7 @@ export default function AuthCallback() {
   }, [url]);
 
   return (
-    <Screen>
+    <Screen backdrop>
       {error ? <Txt color={c.warning}>{`${t("auth.failed")}: ${error}`}</Txt> : <Txt variant="muted">{t("auth.completing")}</Txt>}
       {!error ? <ActivityIndicator color={c.accent} /> : null}
     </Screen>

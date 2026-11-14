@@ -23,16 +23,16 @@ export default function Documents() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <FlatList
         data={items}
         keyExtractor={(x) => x.l.id}
-        contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: 100, flexGrow: 1 }}
+        contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: 140, flexGrow: 1 }}
         ListEmptyComponent={<EmptyState title={t("docs.empty")} hint={t("docs.emptyHint")} />}
         renderItem={({ item: { l, s } }) => {
           const color = statusColor(c, s.state);
           return (
-            <Card onPress={() => router.push({ pathname: "/document/[id]", params: { id: l.id } })} style={{ borderLeftWidth: 4, borderLeftColor: color }}>
+            <Card onPress={() => router.push({ pathname: "/document/[id]", params: { id: l.id } })}>
               <Row style={{ justifyContent: "space-between" }}>
                 <View style={{ flex: 1 }}>
                   <Txt variant="h2">{l.code}</Txt>

@@ -6,6 +6,7 @@ import { PILOT_FUNCTIONS, type IfrDefault, type Locale, type PilotFunction, type
 import { Button, Card, Chip, Field, Row, Screen, Segmented, Txt } from "../../src/components/ui";
 import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf } from "../../src/exporters";
 import { isCloudEnabled } from "../../src/auth";
+import { pickAndImportCsv } from "../../src/importer";
 import { useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
 
@@ -61,8 +62,24 @@ export default function More() {
       },
     ]);
 
+  const importCsv = () =>
+    run("import", async () => {
+      const r = await pickAndImportCsv(store, pilot, app.aircraftTypes, flights);
+      if (!r) return;
+      await app.reload();
+      Alert.alert(t("more.import"), r.imported || r.duplicates ? t("more.importDone", { n: r.imported, d: r.duplicates, s: r.skipped }) : t("more.importEmpty"));
+    });
+
   return (
     <Screen>
+      <Card>
+        <Txt variant="h2">{t("more.shortcuts")}</Txt>
+        <Button kind="secondary" title={t("more.roster")} onPress={() => router.push("/roster")} />
+        <Button kind="secondary" title={t("more.documents")} onPress={() => router.push("/documents")} />
+        <Button kind="secondary" title={t("more.import")} loading={busy === "import"} onPress={importCsv} />
+        <Txt variant="small">{t("more.importHint")}</Txt>
+      </Card>
+
       <Card>
         <Txt variant="h2">{t("more.profile")}</Txt>
         <Field label={t("more.fullName")} value={fullName} onChangeText={setFullName} autoCapitalize="words" />

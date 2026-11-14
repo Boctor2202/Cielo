@@ -1,32 +1,44 @@
 import React from "react";
-import type { ColorValue } from "react-native";
+import { StyleSheet, type ColorValue } from "react-native";
+import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router/js-tabs";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useApp } from "../../src/state";
-import { useTheme } from "../../src/theme";
+import { font, glass, useTheme } from "../../src/theme";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
 export default function TabsLayout() {
   const { t } = useApp();
   const c = useTheme();
+  const g = glass(c);
   const icon = (name: IconName) => ({ color, size }: { color: ColorValue; size: number }) => <Ionicons name={name} color={color as string} size={size} />;
+  // frosted header and tab bar over the photo backdrop, like the web app's glass panes
+  const bar = () => <BlurView tint={g.tint} intensity={g.intensity + 20} style={[StyleSheet.absoluteFill, { backgroundColor: g.pane }]} />;
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: c.accent,
         tabBarInactiveTintColor: c.muted,
-        tabBarStyle: { backgroundColor: c.surface, borderTopColor: c.border },
-        headerStyle: { backgroundColor: c.surface },
+        tabBarStyle: { position: "absolute", backgroundColor: "transparent", borderTopColor: g.edge },
+        tabBarBackground: bar,
+        tabBarLabelStyle: { fontFamily: font.medium, fontSize: 11 },
+        headerTransparent: false,
+        headerStyle: { backgroundColor: "transparent" },
+        headerBackground: bar,
+        headerShadowVisible: false,
+        headerTitleStyle: { fontFamily: font.semibold },
         headerTintColor: c.text,
-        sceneStyle: { backgroundColor: c.bg },
+        sceneStyle: { backgroundColor: "transparent" },
       }}
     >
       <Tabs.Screen name="index" options={{ title: t("tabs.dashboard"), headerTitle: t("dash.title"), tabBarIcon: icon("speedometer-outline") }} />
       <Tabs.Screen name="logbook" options={{ title: t("tabs.logbook"), headerTitle: t("log.title"), tabBarIcon: icon("book-outline") }} />
-      <Tabs.Screen name="roster" options={{ title: t("tabs.roster"), headerTitle: t("roster.title"), tabBarIcon: icon("calendar-outline") }} />
-      <Tabs.Screen name="documents" options={{ title: t("tabs.documents"), headerTitle: t("docs.title"), tabBarIcon: icon("id-card-outline") }} />
+      <Tabs.Screen name="layovers" options={{ title: t("tabs.layovers"), headerTitle: t("lay.title"), tabBarIcon: icon("bed-outline") }} />
+      <Tabs.Screen name="radar" options={{ title: t("tabs.radar"), headerTitle: t("radar.title"), tabBarIcon: icon("radio-outline") }} />
       <Tabs.Screen name="more" options={{ title: t("tabs.more"), headerTitle: t("more.title"), tabBarIcon: icon("ellipsis-horizontal-circle-outline") }} />
+      <Tabs.Screen name="roster" options={{ href: null, headerTitle: t("roster.title") }} />
+      <Tabs.Screen name="documents" options={{ href: null, headerTitle: t("docs.title") }} />
     </Tabs>
   );
 }

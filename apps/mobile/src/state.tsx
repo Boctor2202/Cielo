@@ -5,6 +5,7 @@ import {
   type Aircraft,
   type AircraftType,
   type Flight,
+  type Layover,
   type License,
   type Locale,
   type OpeningBalance,
@@ -30,6 +31,7 @@ export interface AppData {
   licenses: License[];
   rosterEvents: RosterEvent[];
   balances: OpeningBalance[];
+  layovers: Layover[];
 }
 
 export interface AppState extends AppData {
@@ -54,13 +56,14 @@ const alive = <T extends SyncedRecord>(rows: T[]) => rows.filter((r) => !r.delet
 
 async function loadAll(store: SqliteStore): Promise<AppData> {
   const pilot = await ensureLocalPilot(store);
-  const [flights, aircraft, aircraftTypes, licenses, rosterEvents, balances] = await Promise.all([
+  const [flights, aircraft, aircraftTypes, licenses, rosterEvents, balances, layovers] = await Promise.all([
     store.all("flights"),
     store.all("aircraft"),
     store.all("aircraft_types"),
     store.all("licenses"),
     store.all("roster_events"),
     store.all("opening_balances"),
+    store.all("layovers"),
   ]);
   return {
     pilot,
@@ -70,6 +73,7 @@ async function loadAll(store: SqliteStore): Promise<AppData> {
     licenses: alive(licenses),
     rosterEvents: alive(rosterEvents).sort((a, b) => a.startUtc.localeCompare(b.startUtc)),
     balances: alive(balances),
+    layovers: alive(layovers).sort((a, b) => (b.arrivalUtc ?? b.createdAt).localeCompare(a.arrivalUtc ?? a.createdAt)),
   };
 }
 

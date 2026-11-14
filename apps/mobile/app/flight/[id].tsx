@@ -259,7 +259,7 @@ export default function FlightForm() {
           headerRight: () => <Button kind="ghost" small title={t("common.save")} onPress={save} disabled={locked} loading={saving} />,
         }}
       />
-      <Screen>
+      <Screen backdrop>
         {locked ? <Txt color={c.caution}>{t("flight.locked")}</Txt> : null}
 
         {/* Live preview of the values computed by @cielo/core deriveFlightTimes */}

@@ -80,7 +80,7 @@ export default function DocumentForm() {
           headerRight: () => <Button kind="ghost" small title={t("common.save")} onPress={save} />,
         }}
       />
-      <Screen>
+      <Screen backdrop>
         <Card>
           <Txt variant="label">{t("docs.kind")}</Txt>
           <Row style={{ flexWrap: "wrap" }}>

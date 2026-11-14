@@ -1,11 +1,11 @@
 import React, { useMemo } from "react";
-import { Alert, Pressable, SectionList, View } from "react-native";
+import { Alert, Pressable, SectionList, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { formatClock, formatDuration, sumFlights, type Flight } from "@cielo/core";
 import { EmptyState, Fab, Row, Txt } from "../../src/components/ui";
 import { formatDate, formatMonth } from "../../src/i18n";
 import { useApp } from "../../src/state";
-import { space, useTheme } from "../../src/theme";
+import { glass, space, useTheme } from "../../src/theme";
 
 interface Section {
   key: string;
@@ -37,15 +37,15 @@ export default function Logbook() {
     ]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.bg }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <SectionList
         sections={sections}
         keyExtractor={(f) => f.id}
         stickySectionHeadersEnabled
-        contentContainerStyle={{ paddingBottom: 100, flexGrow: 1 }}
+        contentContainerStyle={{ paddingBottom: 140, paddingTop: space.sm, flexGrow: 1 }}
         ListEmptyComponent={<EmptyState title={t("log.empty")} hint={t("log.emptyHint")} />}
         renderSectionHeader={({ section }) => (
-          <Row style={{ justifyContent: "space-between", paddingHorizontal: space.lg, paddingVertical: space.sm, backgroundColor: c.surface2 }}>
+          <Row style={{ justifyContent: "space-between", marginHorizontal: space.md, marginTop: space.md, paddingHorizontal: space.lg, paddingVertical: 10, borderRadius: 14, backgroundColor: glass(c).strong }}>
             <Txt variant="h2" style={{ fontSize: 15 }}>
               {section.title}
             </Txt>
@@ -63,11 +63,12 @@ export default function Logbook() {
             onLongPress={() => confirmDelete(f)}
             delayLongPress={350}
             style={({ pressed }) => ({
+              marginHorizontal: space.md,
               paddingHorizontal: space.lg,
               paddingVertical: space.md,
-              borderBottomWidth: 1,
-              borderBottomColor: c.border,
-              backgroundColor: pressed ? c.surface : c.bg,
+              borderBottomWidth: StyleSheet.hairlineWidth,
+              borderBottomColor: glass(c).edge,
+              backgroundColor: pressed ? glass(c).pane : glass(c).strong,
             })}
           >
             <Row style={{ justifyContent: "space-between" }}>
@@ -76,7 +77,7 @@ export default function Logbook() {
                   {formatDate(f.date, locale).slice(0, 6)}
                 </Txt>
                 <View style={{ flex: 1 }}>
-                  <Txt mono style={{ fontWeight: "600" }}>
+                  <Txt mono style={{ fontWeight: "600", fontSize: 15.5 }}>
                     {f.isFstd ? `${t("log.fstd")} ${f.fstdType ?? ""}` : `${f.depIcao} → ${f.arrIcao}`}
                   </Txt>
                   <Txt variant="small" numberOfLines={1}>

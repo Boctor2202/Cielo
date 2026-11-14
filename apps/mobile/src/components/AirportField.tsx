@@ -57,7 +57,7 @@ export function AirportField({ label, value, onChange }: { label: string; value:
         {match ? `${match.name}${match.city ? ` · ${match.city}` : ""}` : value ? t("airport.unknown") : " "}
       </Txt>
       {focused && results.length > 0 ? (
-        <View style={{ borderWidth: 1, borderColor: c.border, borderRadius: 10, backgroundColor: c.surface, overflow: "hidden" }}>
+        <View style={{ borderWidth: 1, borderColor: c.border, borderRadius: 12, backgroundColor: c.bg, overflow: "hidden" }}>
           {results.map((a) => (
             <Pressable key={a.icao} onPress={() => pick(a)} style={({ pressed }) => ({ padding: 10, opacity: pressed ? 0.6 : 1 })}>
               <Txt mono style={{ fontWeight: "600" }}>

@@ -17,10 +17,10 @@ export default function Roster() {
 
   return (
     <FlatList
-      style={{ flex: 1, backgroundColor: c.bg }}
+      style={{ flex: 1, backgroundColor: "transparent" }}
       data={upcoming}
       keyExtractor={(e) => e.id}
-      contentContainerStyle={{ padding: space.lg, gap: space.md, flexGrow: 1 }}
+      contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: 140, flexGrow: 1 }}
       ListEmptyComponent={<EmptyState title={t("roster.empty")} hint={t("roster.emptyHint")} />}
       renderItem={({ item: e }) => {
         const kindColor = e.kind === "FLIGHT" ? c.accent : e.kind === "OFF" || e.kind === "REST" || e.kind === "LEAVE" ? c.success : c.caution;

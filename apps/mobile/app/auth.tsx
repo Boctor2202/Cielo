@@ -35,13 +35,13 @@ export default function AuthScreen() {
 
   if (!isCloudEnabled)
     return (
-      <Screen>
+      <Screen backdrop>
         <Txt variant="muted">{t("auth.unavailable")}</Txt>
       </Screen>
     );
 
   return (
-    <Screen>
+    <Screen backdrop>
       <Txt variant="muted">{t("auth.intro")}</Txt>
       <Card>
         <Field

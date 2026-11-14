@@ -45,7 +45,7 @@ export default function Subscription() {
   };
 
   return (
-    <Screen>
+    <Screen backdrop>
       <Txt variant="title">{t("sub.title")}</Txt>
       <Txt variant="muted">{t("sub.pitch")}</Txt>
       {isPremium(info) || pilot.subscriptionTier === "premium" ? (

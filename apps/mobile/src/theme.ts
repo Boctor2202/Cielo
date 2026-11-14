@@ -1,4 +1,4 @@
-import { Platform, useColorScheme, type TextStyle } from "react-native";
+import { useColorScheme, type TextStyle } from "react-native";
 
 export interface Palette {
   scheme: "light" | "dark";
@@ -41,7 +41,7 @@ export const LIGHT: Palette = {
   text: "#0A1626",
   muted: "#4A5D73",
   brand: "#0E2A47",
-  accent: "#0891B2",
+  accent: "#0E7490",
   onAccent: "#FFFFFF",
   success: "#15803D",
   caution: "#B45309",
@@ -49,13 +49,38 @@ export const LIGHT: Palette = {
 };
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
-export const radius = { sm: 6, md: 10, lg: 14 } as const;
+export const radius = { sm: 8, md: 12, lg: 20, xl: 28 } as const;
 
-/** Platform monospace with tabular figures — used for every number, time and ICAO code. */
+/** Manrope, as on the web app (loaded in app/_layout.tsx). */
+export const font = {
+  regular: "Manrope_400Regular",
+  medium: "Manrope_500Medium",
+  semibold: "Manrope_600SemiBold",
+  bold: "Manrope_700Bold",
+} as const;
+export const fontFor = (weight?: TextStyle["fontWeight"]) =>
+  weight === "700" || weight === "bold" || weight === "800" ? font.bold : weight === "600" ? font.semibold : weight === "500" ? font.medium : font.regular;
+
+/** Figures: Manrope with tabular digits (same as the web dashboard). */
 export const mono: TextStyle = {
-  fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }),
+  fontFamily: font.medium,
   fontVariant: ["tabular-nums"],
+  letterSpacing: -0.3,
 };
+
+/** Glass material of the web dashboard (blur 22, surface at ~30–45 %). */
+export function glass(c: Palette) {
+  const dark = c.scheme === "dark";
+  return {
+    tint: (dark ? "dark" : "light") as "dark" | "light",
+    intensity: dark ? 40 : 50,
+    pane: dark ? "rgba(17,34,58,0.45)" : "rgba(243,246,249,0.42)",
+    strong: dark ? "rgba(17,34,58,0.72)" : "rgba(243,246,249,0.72)",
+    edge: dark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.65)",
+    shade: dark ? "rgba(10,22,38,0.62)" : "rgba(255,255,255,0.18)",
+    input: dark ? "rgba(10,22,38,0.45)" : "rgba(255,255,255,0.6)",
+  };
+}
 
 export function useTheme(): Palette {
   return useColorScheme() === "dark" ? DARK : LIGHT;
