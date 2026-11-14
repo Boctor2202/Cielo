@@ -2,7 +2,7 @@
  * The Geardown web services, shared with the web app (Google Places, Ticketmaster, adsb.lol run server-side,
  * so no key ships in the app).
  */
-export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "https://cielo-ecru.vercel.app").replace(/\/$/, "");
+export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "https://geardown.app").replace(/\/$/, "");
 
 export class ApiError extends Error {
   constructor(public code: string, public status: number) {
