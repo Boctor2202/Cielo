@@ -6,6 +6,7 @@ slug, owner and projectId in sync with `apps/mobile/app.json`.
 
 ```bash
 cd tools/ios-credentials
+npm install --no-audit --no-fund
 npx eas-cli login
 npx eas-cli credentials -p ios   # production > Build Credentials > Set up all > log in to Apple
 ```
