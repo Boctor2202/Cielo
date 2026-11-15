@@ -18,6 +18,9 @@ const { chromium } = pw;
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
 const LOCALES = (process.argv[3] ?? "fr,en").split(",");
+/** optional: only these screenshots, e.g. "signature,cv" */
+const ONLY = process.argv[4]?.split(",");
+const want = (...names) => !ONLY || names.some((n) => ONLY.includes(n));
 const OUT = path.resolve("public/screens");
 
 const L = {
@@ -113,14 +116,17 @@ async function shoot(locale, theme) {
     await page.goto(BASE + p, { waitUntil: "networkidle" });
     await page.waitForTimeout(wait);
   };
-  const snap = (name) => page.screenshot({ path: path.join(dir, `${name}.png`) });
+  const snap = (name) => (want(name) ? page.screenshot({ path: path.join(dir, `${name}.png`) }) : null);
 
   await login(page, l);
-  await go(l.app, 2500);
-  await snap("dashboard");
-  await go(l.logbook);
-  await snap("logbook");
+  if (want("dashboard", "logbook")) {
+    await go(l.app, 2500);
+    await snap("dashboard");
+    await go(l.logbook);
+    await snap("logbook");
+  }
 
+  if (want("import", "audit")) {
   // Import: automatic column detection + preview, then import (feeds the audit screenshot)
   await go(l.import);
   const tmp = path.join(OUT, `_sample-${locale}.csv`);
@@ -133,24 +139,31 @@ async function shoot(locale, theme) {
   await page.getByRole("button", { name: l.importBtn }).click();
   await page.waitForTimeout(1500);
   fs.rmSync(tmp);
-
   await go(l.audit);
   await snap("audit");
-  await go(l.documents);
-  await snap("licenses");
-  await go(l.ftl);
-  await snap("ftl");
-  await go(l.stats, 2500);
-  await snap("stats");
-  await go(l.roster);
-  await snap("roster");
+  }
+  if (want("licenses", "ftl", "stats", "roster")) {
+    await go(l.documents);
+    await snap("licenses");
+    await go(l.ftl);
+    await snap("ftl");
+    await go(l.stats, 2500);
+    await snap("stats");
+    await go(l.roster);
+    await snap("roster");
+  }
 
   // Signature: open the latest flight and draw
+  if (want("signature")) {
   await go(l.logbook);
   await page.locator("tbody tr").first().click();
   await page.waitForTimeout(2000);
-  await page.getByRole("button", { name: l.sign }).click();
-  await page.waitForTimeout(500);
+  // the button sits low in the form and the dialog locks scrolling when it opens: open it from the top of
+  // the page, with a DOM click that does not scroll the button into view
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: l.sign }).evaluate((b) => b.click());
+  await page.waitForTimeout(800);
   await page.getByRole("dialog").locator("input").first().fill(l.signer);
   const box = await page.getByRole("dialog").locator("canvas").boundingBox();
   if (box) {
@@ -159,10 +172,13 @@ async function shoot(locale, theme) {
     for (const [x, y] of [[60, 60], [90, 110], [120, 50], [150, 115], [190, 70], [230, 95], [270, 60], [320, 100], [360, 80]]) await page.mouse.move(box.x + x, box.y + y, { steps: 6 });
     await page.mouse.up();
   }
+  await page.evaluate(() => window.getSelection()?.removeAllRanges());
   await page.waitForTimeout(400);
   await snap("signature");
+  }
 
   // Offline: same app, network cut (client-side navigation keeps working)
+  if (want("offline", "jobs", "cv")) {
   await go(l.newFlight, 1800);
   await ctx.setOffline(true);
   await page.evaluate(() => window.dispatchEvent(new Event("offline")));
@@ -174,8 +190,10 @@ async function shoot(locale, theme) {
   await snap("jobs");
   await go(l.cv, 2500);
   await snap("cv");
+  }
 
   // Mobile
+  if (want("mobile-logbook", "mobile-dashboard")) {
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: theme, locale: l.tz, isMobile: true, hasTouch: true });
   await mctx.addInitScript((t) => localStorage.setItem("cielo-theme", t), theme);
   const m = await mctx.newPage();
@@ -186,6 +204,7 @@ async function shoot(locale, theme) {
   await m.goto(BASE + l.app, { waitUntil: "networkidle" });
   await m.waitForTimeout(2500);
   await m.screenshot({ path: path.join(dir, "mobile-dashboard.png") });
+  }
 
   await browser.close();
   console.log(`✓ ${locale} ${theme}`);

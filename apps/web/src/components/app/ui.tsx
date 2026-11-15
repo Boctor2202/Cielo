@@ -2,6 +2,18 @@
 
 import { X } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+
+/**
+ * Renders overlays on <body>. The app's glass panes use backdrop-filter, which makes them the containing block
+ * of position:fixed descendants: a dialog or toast rendered inside a pane would be placed relative to the pane
+ * (often off screen on long pages) instead of the viewport.
+ */
+function Overlay({ children }: { children: ReactNode }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
+  return ready ? createPortal(children, document.body) : null;
+}
 import { formatDuration, parseDuration } from "@cielo/core";
 
 export function PageTitle({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
@@ -154,6 +166,7 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   }, [open, onClose]);
   if (!open) return null;
   return (
+    <Overlay>
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#0a1626]/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={onClose}>
       <div
         role="dialog"
@@ -171,6 +184,7 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
         <div className="p-5">{children}</div>
       </div>
     </div>
+    </Overlay>
   );
 }
 
@@ -220,9 +234,11 @@ export function useToast() {
     return () => clearTimeout(t);
   }, [msg]);
   const node = msg ? (
-    <div role="status" className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-text px-4 py-2.5 text-sm font-medium text-bg shadow-lg lg:bottom-6">
-      {msg}
-    </div>
+    <Overlay>
+      <div role="status" className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-text px-4 py-2.5 text-sm font-medium text-bg shadow-lg lg:bottom-6">
+        {msg}
+      </div>
+    </Overlay>
   ) : null;
   return { toast: setMsg, toastNode: node };
 }
