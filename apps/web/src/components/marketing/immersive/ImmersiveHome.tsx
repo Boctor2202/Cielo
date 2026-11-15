@@ -255,8 +255,10 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
 
   useEffect(() => {
     if (reduce) return;
+    // frame size from the pixels actually drawn (CSS width × device pixel ratio, capped as in the draw loop)
     const small = window.innerWidth < 900 || (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
-    const q = small ? "720" : "1280";
+    const drawn = window.innerWidth * Math.min(window.devicePixelRatio || 1, 1.5);
+    const q = small ? "720" : drawn >= 1700 ? "1920" : "1280";
     let alive = true;
     const queue: [ShotId, number][] = [];
     const seen = new Set<string>();
@@ -323,6 +325,9 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
           cv.width = w;
           cv.height = h;
         }
+        // high-quality resampling when the frame is scaled up (browsers default to a softer filter)
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
         const { speed, push, cy } = speedFx(id, v);
         // object-fit: cover
         const fit = Math.max(w / img.naturalWidth, h / img.naturalHeight);
