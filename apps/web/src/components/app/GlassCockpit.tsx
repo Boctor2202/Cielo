@@ -37,6 +37,9 @@ const HOST_TOKENS = {
   // the app shell draws the photo behind every page; the dashboard shows it through
   background: "transparent",
   "--gw-shade": "transparent",
+  // the brand tile is the Geardown mark: green dots on the dark navy tile, never the accent colour
+  "--gw-brand": "#0B1A2E",
+  "--gw-brand-ink": "#22C55E",
   minHeight: "calc(100svh - 7rem)",
   borderRadius: 28,
 } as CSSProperties;
@@ -187,9 +190,9 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
       brand="Geardown"
       brandMark={
         <svg viewBox="0 0 40 40" width="18" height="18" fill="none" aria-hidden="true">
-          <circle cx="20" cy="12.5" r="5.5" fill="currentColor" />
-          <circle cx="10.5" cy="27" r="5.5" fill="currentColor" />
-          <circle cx="29.5" cy="27" r="5.5" fill="currentColor" />
+          <circle cx="20" cy="13.5" r="5" fill="#22C55E" />
+          <circle cx="11.5" cy="26.5" r="5" fill="#22C55E" />
+          <circle cx="28.5" cy="26.5" r="5" fill="#22C55E" />
         </svg>
       }
       userName={first}
