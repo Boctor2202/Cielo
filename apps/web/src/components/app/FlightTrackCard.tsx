@@ -86,7 +86,7 @@ function TrackMap({ points }: { points: TrackPoint[] }) {
           backgroundColor: dark ? "#0a1626" : "#e9eef3",
         });
         const path = points.map((p) => ({ lat: p[1], lng: p[2] }));
-        new google.maps.Polyline({ path, map: m, geodesic: true, strokeColor: dark ? "#22d3ee" : "#0891b2", strokeOpacity: 0.95, strokeWeight: 3 });
+        new google.maps.Polyline({ path, map: m, geodesic: true, strokeColor: dark ? "#22c55e" : "#16a34a", strokeOpacity: 0.95, strokeWeight: 3 });
         for (const p of [path[0], path[path.length - 1]])
           new google.maps.Marker({ position: p, map: m, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 5, fillColor: dark ? "#e8eef5" : "#0e2a47", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 } });
         const b = new google.maps.LatLngBounds();

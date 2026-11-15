@@ -146,7 +146,7 @@ export function StoreBadges({ className = "" }: { className?: string }) {
       </a>
       <a href={SITE.stores.playStoreUrl} className={badge} aria-label={t("playStore")}>
         <svg width="18" height="20" viewBox="0 0 22 24" aria-hidden>
-          <path d="M1 1.2 12.4 12 1 22.8c-.3-.2-.5-.6-.5-1.1V2.3c0-.5.2-.9.5-1.1z" fill="#22D3EE" />
+          <path d="M1 1.2 12.4 12 1 22.8c-.3-.2-.5-.6-.5-1.1V2.3c0-.5.2-.9.5-1.1z" fill="#22C55E" />
           <path d="m16.2 8.3-3.8 3.7L1 1.2l.2-.1c.4-.2.9-.2 1.4.1z" fill="#4ADE80" />
           <path d="m16.2 15.7-13.6 7.8c-.5.3-1 .3-1.4.1L1 22.8 12.4 12z" fill="#F87171" />
           <path d="m20.6 13.3-4.4 2.4L12.4 12l3.8-3.7 4.4 2.4c.9.6.9 2 0 2.6z" fill="#FBBF24" />
@@ -176,7 +176,7 @@ export function ProofBand() {
       <div className={`mx-auto grid max-w-6xl grid-cols-1 divide-y divide-white/10 px-4 sm:divide-x sm:divide-y-0 sm:px-6 ${items.length === 3 ? "sm:grid-cols-3" : items.length === 2 ? "sm:grid-cols-2" : ""}`}>
         {items.map((i) => (
           <div key={i.l} className="flex items-baseline justify-center gap-3 py-7 sm:flex-col sm:items-center sm:gap-1">
-            <span className="num text-3xl font-semibold text-[#22D3EE] sm:text-4xl">{nf.format(i.v!)}</span>
+            <span className="num text-3xl font-semibold text-[#22C55E] sm:text-4xl">{nf.format(i.v!)}</span>
             <span className="text-sm uppercase tracking-[0.12em] text-white/70">{i.l}</span>
           </div>
         ))}
@@ -284,7 +284,7 @@ export function CtaBand() {
         <div className="chart-grid pointer-events-none absolute inset-0 opacity-60 [--grid:rgba(34,211,238,0.08)]" />
         <h2 className="relative text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
         <p className="relative mx-auto mt-3 max-w-xl text-white/75">{t("text")}</p>
-        <Link href="/inscription" className="btn relative mt-8 min-h-12 !bg-[#22D3EE] !px-6 text-base !text-[#0A1626] hover:!bg-[#67E8F9]">
+        <Link href="/inscription" className="btn relative mt-8 min-h-12 !bg-[#22C55E] !px-6 text-base !text-[#0A1626] hover:!bg-[#86EFAC]">
           {t("button")} <ArrowRight size={18} aria-hidden />
         </Link>
         <StoreBadges className="relative mt-8 justify-center [&_a]:!border-white/20 [&_a]:!bg-white [&_a]:!text-[#0A1626]" />

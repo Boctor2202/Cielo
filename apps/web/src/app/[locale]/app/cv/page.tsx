@@ -286,7 +286,7 @@ function Preview({ doc }: { doc: CvDocument }) {
         <p className="text-[#475569]">{doc.headline}</p>
         {doc.sections.map((s) => (
           <section key={s.id} className="mt-5">
-            <h3 className="border-b border-[#cbd5e1] pb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#0e7490]">{s.heading}</h3>
+            <h3 className="border-b border-[#cbd5e1] pb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#15803d]">{s.heading}</h3>
             <div className="mt-1.5 space-y-1">
               {s.lines.map((l, i) =>
                 l.kind === "pair" ? (

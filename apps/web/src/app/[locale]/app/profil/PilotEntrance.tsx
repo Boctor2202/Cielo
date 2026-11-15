@@ -60,7 +60,7 @@ export function PilotEntrance({ photo, name, rank, employer, base }: { photo?: s
           <motion.div className="ml-auto mr-[4%] [transform-style:preserve-3d]" {...walk}>
             <div className="w-[min(78vw,300px)] rounded-2xl border border-white/15 bg-[#02040b]/65 p-5 text-white shadow-[0_30px_60px_-20px_rgba(0,0,0,.7)] backdrop-blur-xl">
               <div className="flex items-center gap-4">
-                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl ring-2 ring-[#22d3ee]/80 ring-offset-2 ring-offset-transparent">
+                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl ring-2 ring-[#22c55e]/80 ring-offset-2 ring-offset-transparent">
                   {photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={photo} alt={name} className="h-full w-full object-cover" />
@@ -69,7 +69,7 @@ export function PilotEntrance({ photo, name, rank, employer, base }: { photo?: s
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="mono-label !text-[10px] !text-[#67e8f9]">{t("crew")}</p>
+                  <p className="mono-label !text-[10px] !text-[#86efac]">{t("crew")}</p>
                   <p className="truncate font-display text-xl font-semibold leading-tight">{name || t("noName")}</p>
                   {rank && <p className="truncate text-sm text-white/80">{rank}</p>}
                 </div>

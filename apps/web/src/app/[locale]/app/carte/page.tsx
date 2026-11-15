@@ -79,7 +79,7 @@ export default function MapPage() {
       map.on("load", () => {
         map.addSource("routes", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
         map.addSource("airports", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-        map.addLayer({ id: "routes", type: "line", source: "routes", paint: { "line-color": dark ? "#22d3ee" : "#0891b2", "line-width": ["interpolate", ["linear"], ["get", "n"], 1, 1.2, 30, 3.5], "line-opacity": 0.75 } });
+        map.addLayer({ id: "routes", type: "line", source: "routes", paint: { "line-color": dark ? "#22c55e" : "#16a34a", "line-width": ["interpolate", ["linear"], ["get", "n"], 1, 1.2, 30, 3.5], "line-opacity": 0.75 } });
         map.addLayer({ id: "airports", type: "circle", source: "airports", paint: { "circle-radius": ["interpolate", ["linear"], ["get", "n"], 1, 3.5, 100, 8], "circle-color": dark ? "#e8eef5" : "#0e2a47", "circle-stroke-color": dark ? "#0a1626" : "#ffffff", "circle-stroke-width": 2 } });
         map.addLayer({ id: "labels", type: "symbol", source: "airports", layout: { "text-field": ["get", "icao"], "text-font": ["Open Sans Semibold"], "text-size": 11, "text-offset": [0, 1.2], "text-anchor": "top" }, paint: { "text-color": dark ? "#e8eef5" : "#0e2a47", "text-halo-color": dark ? "#0a1626" : "#ffffff", "text-halo-width": 1.5 } });
         map.on("mouseenter", "airports", () => (map.getCanvas().style.cursor = "pointer"));

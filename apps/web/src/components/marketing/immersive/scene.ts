@@ -287,7 +287,7 @@ export class FlightScene {
       for (let k = 0; k < ts.length; k++) ts[k] = Math.floor(k / (radial + 1)) / tubular;
       geo.setAttribute("aT", new THREE.BufferAttribute(ts, 1));
       const mat = new THREE.ShaderMaterial({
-        uniforms: { uDraw: { value: 0 }, uHead: { value: -1 }, uColor: { value: new THREE.Color(i % 3 === 2 ? 0xfde68a : 0x67e8f9) } },
+        uniforms: { uDraw: { value: 0 }, uHead: { value: -1 }, uColor: { value: new THREE.Color(i % 3 === 2 ? 0xfde68a : 0x86efac) } },
         vertexShader: ROUTE_VERT,
         fragmentShader: ROUTE_FRAG,
         transparent: true,
@@ -442,8 +442,8 @@ function glowTexture(): THREE.Texture {
   const g = c.getContext("2d")!;
   const grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
   grd.addColorStop(0, "rgba(255,255,255,1)");
-  grd.addColorStop(0.2, "rgba(170,240,255,.7)");
-  grd.addColorStop(1, "rgba(34,211,238,0)");
+  grd.addColorStop(0.2, "rgba(190,250,210,.7)");
+  grd.addColorStop(1, "rgba(34,197,94,0)");
   g.fillStyle = grd;
   g.fillRect(0, 0, 64, 64);
   const t = new THREE.CanvasTexture(c);

@@ -15,7 +15,7 @@ function altColor(alt: LiveAircraft["alt"]) {
   if (alt < 2000) return "#22c55e";
   if (alt < 10000) return "#eab308";
   if (alt < 20000) return "#f97316";
-  if (alt < 30000) return "#22d3ee";
+  if (alt < 30000) return "#38bdf8"; // altitude scale (data colours), not the brand accent
   return "#a78bfa";
 }
 

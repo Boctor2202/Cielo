@@ -16,7 +16,7 @@ function altColor(alt: LiveAircraft["alt"]) {
   if (alt < 2000) return "#22c55e";
   if (alt < 10000) return "#eab308";
   if (alt < 20000) return "#f97316";
-  if (alt < 30000) return "#22d3ee";
+  if (alt < 30000) return "#38bdf8"; // altitude scale (data colours), not the brand accent
   return "#a78bfa";
 }
 
@@ -182,7 +182,7 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
     if (!google || !m || !leg || !selected) return;
     const path = leg.map((p) => ({ lat: p[1], lng: p[2] }));
     path.push({ lat: selected.lat, lng: selected.lon });
-    trail.current = new google.maps.Polyline({ path, map: m, geodesic: true, strokeColor: dark ? "#22d3ee" : "#0891b2", strokeOpacity: 0.9, strokeWeight: 3, clickable: false, zIndex: 5 });
+    trail.current = new google.maps.Polyline({ path, map: m, geodesic: true, strokeColor: dark ? "#22c55e" : "#16a34a", strokeOpacity: 0.9, strokeWeight: 3, clickable: false, zIndex: 5 });
   }, [track, selected, dark]);
 
   const findReg = async (reg: string) => {

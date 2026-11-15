@@ -95,7 +95,7 @@ export function GoogleRoutesMap({ apiKey, lang, dark, lines, points, onError }: 
           clickableIcons: false,
           backgroundColor: dark ? "#0a1626" : "#e9eef3",
         });
-        const accent = dark ? "#22d3ee" : "#0891b2";
+        const accent = dark ? "#22c55e" : "#16a34a";
         m.data.setStyle((f) => {
           if (f.getGeometry().getType() === "LineString") {
             const n = Number(f.getProperty("n")) || 1;

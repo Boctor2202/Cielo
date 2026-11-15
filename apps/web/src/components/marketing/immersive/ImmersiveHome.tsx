@@ -178,14 +178,14 @@ export function ImmersiveHome() {
       {/* ---------- Story ---------- */}
       <div className="pointer-events-none relative z-10 -mt-[100svh]">
         <Chapter align="left" eager>
-          <p className="mono-label inline-flex items-center gap-2 rounded-full border border-[#22d3ee]/40 bg-[#22d3ee]/10 px-3 py-1.5 !text-[#67e8f9]">
-            <span className="blink h-1.5 w-1.5 rounded-full bg-[#22d3ee]" aria-hidden />
+          <p className="mono-label inline-flex items-center gap-2 rounded-full border border-[#22c55e]/40 bg-[#22c55e]/10 px-3 py-1.5 !text-[#86efac]">
+            <span className="blink h-1.5 w-1.5 rounded-full bg-[#22c55e]" aria-hidden />
             {th("eyebrow")}
           </p>
           <SplitTitle text={th("title")} />
           <p className="mt-6 max-w-lg text-pretty text-lg leading-relaxed text-white/85 [text-shadow:0_1px_20px_rgba(2,4,11,.6)]">{th("subtitle")}</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/inscription" className="btn min-h-12 !bg-[#22d3ee] !px-6 text-base !text-[#0a1626] shadow-[0_10px_40px_-10px_#22d3ee] hover:!bg-[#67e8f9]">
+            <Link href="/inscription" className="btn min-h-12 !bg-[#22c55e] !px-6 text-base !text-[#0a1626] shadow-[0_10px_40px_-10px_#22c55e] hover:!bg-[#86efac]">
               {th("ctaTrial")} <ArrowRight size={18} aria-hidden />
             </Link>
             <Link href={{ pathname: "/connexion", query: { demo: "1" } }} className="btn min-h-12 border border-white/25 bg-[#02040b]/30 !px-6 text-base text-white backdrop-blur-md hover:border-white/60 hover:bg-white/10">
@@ -228,7 +228,7 @@ export function ImmersiveHome() {
             <Label>{t("c3.label")}</Label>
             <Title>{t("c3.title")}</Title>
             <p className="mt-4 leading-relaxed text-white/80">{t("c3.text")}</p>
-            <Link href="/inscription" className="btn mt-7 min-h-12 !bg-[#22d3ee] !px-6 text-base !text-[#0a1626] hover:!bg-[#67e8f9]">
+            <Link href="/inscription" className="btn mt-7 min-h-12 !bg-[#22c55e] !px-6 text-base !text-[#0a1626] hover:!bg-[#86efac]">
               {t("c3.cta")} <ArrowRight size={18} aria-hidden />
             </Link>
           </Panel>
@@ -425,7 +425,7 @@ function Chapter({ align, children, eager }: { align: "left" | "right"; children
 const Panel = ({ children }: { children: ReactNode }) => (
   <div className="hud-frame rounded-2xl border border-white/10 bg-[#02040b]/55 p-6 shadow-2xl backdrop-blur-xl sm:p-8">{children}</div>
 );
-const Label = ({ children }: { children: ReactNode }) => <p className="mono-label !text-[#67e8f9]">{children}</p>;
+const Label = ({ children }: { children: ReactNode }) => <p className="mono-label !text-[#86efac]">{children}</p>;
 const Title = ({ children }: { children: ReactNode }) => (
   <h2 className="mt-3 text-balance font-display text-[2rem] font-semibold leading-[1.1] tracking-[-0.01em] sm:text-[2.6rem]">{children}</h2>
 );
@@ -514,20 +514,20 @@ function NightHud({ readouts }: { readouts: React.RefObject<Readouts> }) {
         </div>
         <div>
           <p className="mono-label !text-[10px] !text-white/55">{t("night")}</p>
-          <span ref={night} className="num mt-1 block text-2xl font-semibold text-[#67e8f9]">0:00</span>
+          <span ref={night} className="num mt-1 block text-2xl font-semibold text-[#86efac]">0:00</span>
         </div>
       </div>
       <div className="mt-4">
         <div className="relative h-2 rounded-full bg-gradient-to-r from-[#f2c08a] via-[#7a4d78] to-[#0b1533]">
           <span className="absolute -top-1 bottom-[-4px] w-px bg-white/70" style={{ left: "70%" }} />
-          <span ref={needle} className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#22d3ee] shadow-[0_0_14px_#22d3ee]" style={{ left: "75%" }} />
+          <span ref={needle} className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#22c55e] shadow-[0_0_14px_#22c55e]" style={{ left: "75%" }} />
         </div>
         <div className="mt-2 flex items-center justify-between text-[11px] text-white/55">
           <span className="num">+8°</span>
           <span className="num">{t("threshold")}</span>
           <span
             ref={badge}
-            className="num rounded px-1.5 py-0.5 font-semibold data-[night=false]:bg-[#fbbf24]/20 data-[night=false]:text-[#fbbf24] data-[night=true]:bg-[#22d3ee]/20 data-[night=true]:text-[#67e8f9]"
+            className="num rounded px-1.5 py-0.5 font-semibold data-[night=false]:bg-[#fbbf24]/20 data-[night=false]:text-[#fbbf24] data-[night=true]:bg-[#22c55e]/20 data-[night=true]:text-[#86efac]"
             data-night="true"
           >
             {t("nightOn")}
@@ -558,7 +558,7 @@ function FlightStrip({ readouts }: { readouts: React.RefObject<Readouts> }) {
   const item = "flex items-baseline gap-1.5";
   return (
     <div className="num pointer-events-none absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-4 whitespace-nowrap rounded-full border border-white/10 bg-[#02040b]/55 px-4 py-2 text-[11px] text-white/85 backdrop-blur-md sm:gap-6 sm:px-5 sm:text-xs" aria-hidden>
-      <span ref={phase} className="font-semibold text-[#67e8f9] data-[phase=gearUp]:text-[#fde68a]" />
+      <span ref={phase} className="font-semibold text-[#86efac] data-[phase=gearUp]:text-[#fde68a]" />
       <span className={item}><span className="text-white/45">IAS</span><span ref={ias}>0 kt</span></span>
       <span className={item}><span className="text-white/45">ALT</span><span ref={alt}>0 ft</span></span>
     </div>
@@ -577,13 +577,13 @@ function ProgressRail({ readouts, labels }: { readouts: React.RefObject<Readouts
     <div className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 items-stretch gap-3 xl:flex" aria-hidden>
       <ol className="flex flex-col justify-between gap-9 text-right">
         {labels.map((l, i) => (
-          <li key={l} ref={(el) => { items.current[i] = el; }} className="mono-label !text-[10px] !text-white/45 transition-colors data-[active=true]:!text-[#67e8f9]">
+          <li key={l} ref={(el) => { items.current[i] = el; }} className="mono-label !text-[10px] !text-white/45 transition-colors data-[active=true]:!text-[#86efac]">
             {String(i + 1).padStart(2, "0")} {l}
           </li>
         ))}
       </ol>
       <span className="relative w-px overflow-hidden bg-white/15">
-        <span ref={fill} className="absolute inset-0 origin-top bg-[#22d3ee]" style={{ transform: "scaleY(0)" }} />
+        <span ref={fill} className="absolute inset-0 origin-top bg-[#22c55e]" style={{ transform: "scaleY(0)" }} />
       </span>
     </div>
   );
