@@ -287,6 +287,13 @@ const en = {
   "photo.alt": "Photo of aircraft {reg}",
   "photo.credit": "Photo © {name} ·",
   "photo.open": "Open the photo on Planespotters.net",
+  "report.title": "Report a problem or an idea",
+  "report.bug": "Problem",
+  "report.idea": "Idea",
+  "report.placeholder": "What happened, or what would you like?",
+  "report.context": "The device and app version are attached. No logbook data is sent.",
+  "report.send": "Send",
+  "report.thanks": "Thank you! Your message has arrived.",
 } as const;
 
 export type I18nKey = keyof typeof en;
@@ -578,6 +585,13 @@ const fr: Dict = {
   "photo.alt": "Photo de l'appareil {reg}",
   "photo.credit": "Photo © {name} ·",
   "photo.open": "Ouvrir la photo sur Planespotters.net",
+  "report.title": "Signaler un problème ou une idée",
+  "report.bug": "Problème",
+  "report.idea": "Idée",
+  "report.placeholder": "Que s'est-il passé, ou qu'aimeriez-vous ?",
+  "report.context": "L'appareil et la version de l'app sont joints. Aucune donnée de votre carnet n'est envoyée.",
+  "report.send": "Envoyer",
+  "report.thanks": "Merci ! Votre message est bien arrivé.",
 };
 
 const DICTS: Record<Locale, Dict> = { en, fr };

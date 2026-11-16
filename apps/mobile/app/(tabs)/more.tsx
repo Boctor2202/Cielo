@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import { router } from "expo-router";
 import Constants from "expo-constants";
 import { PILOT_FUNCTIONS, type IfrDefault, type Locale, type PilotFunction, type RegulatoryFramework, type TimeDisplay } from "@cielo/core";
@@ -7,6 +7,7 @@ import { Button, Card, Chip, Field, Row, Screen, Segmented, Txt } from "../../sr
 import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf } from "../../src/exporters";
 import { isCloudEnabled } from "../../src/auth";
 import { pickAndImportCsv } from "../../src/importer";
+import { sendReport } from "../../src/api";
 import { useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
 
@@ -68,6 +69,15 @@ export default function More() {
       if (!r) return;
       await app.reload();
       Alert.alert(t("more.import"), r.imported || r.duplicates ? t("more.importDone", { n: r.imported, d: r.duplicates, s: r.skipped }) : t("more.importEmpty"));
+    });
+
+  const [report, setReport] = useState("");
+  const [reportKind, setReportKind] = useState<"bug" | "idea">("bug");
+  const send = () =>
+    run("report", async () => {
+      await sendReport(reportKind, report.trim(), Platform.OS === "android" ? "android" : "ios", Constants.expoConfig?.version ?? "0", session?.access_token);
+      setReport("");
+      Alert.alert(t("report.title"), t("report.thanks"));
     });
 
   return (
@@ -170,6 +180,21 @@ export default function More() {
           </>
         )}
         <Button kind="ghost" title={t("more.subscription")} onPress={() => router.push("/subscription")} />
+      </Card>
+
+      <Card>
+        <Txt variant="h2">{t("report.title")}</Txt>
+        <Segmented<"bug" | "idea">
+          value={reportKind}
+          onChange={setReportKind}
+          options={[
+            { value: "bug", label: t("report.bug") },
+            { value: "idea", label: t("report.idea") },
+          ]}
+        />
+        <Field value={report} onChangeText={setReport} multiline placeholder={t("report.placeholder")} maxLength={4000} />
+        <Txt variant="small">{t("report.context")}</Txt>
+        <Button title={t("report.send")} disabled={!report.trim()} loading={busy === "report"} onPress={send} />
       </Card>
 
       <Card>

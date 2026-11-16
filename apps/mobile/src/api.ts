@@ -83,3 +83,13 @@ export interface Track {
 }
 
 export const fmtDistance = (m?: number) => (m == null ? "" : m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(m < 10000 ? 1 : 0)} km`);
+
+/** "Report a problem / idea" from the app, to the Geardown admin back office (signed-in reporter when possible). */
+export async function sendReport(kind: "bug" | "idea", message: string, platform: "ios" | "android", appVersion: string, token?: string) {
+  const r = await fetch(`${API_URL}/api/report`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ kind, message, page: "mobile", platform, appVersion }),
+  });
+  if (!r.ok) throw new ApiError("report", r.status);
+}
