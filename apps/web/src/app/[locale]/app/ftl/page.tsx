@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertOctagon, Info } from "lucide-react";
+import { AirportInput } from "@/components/app/AirportInput";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -124,9 +125,11 @@ export default function FtlPage() {
           <div className="space-y-4">
             <Field label={t("reportBefore")}><input type="number" min={0} max={180} className="input num" value={settings.reportBeforeMin} onChange={(e) => update({ ...settings, reportBeforeMin: +e.target.value || 0 })} /></Field>
             <Field label={t("releaseAfter")}><input type="number" min={0} max={120} className="input num" value={settings.releaseAfterMin} onChange={(e) => update({ ...settings, releaseAfterMin: +e.target.value || 0 })} /></Field>
-            <Field label={t("homeBase")}>
-              <input className="input num uppercase" value={settings.homeBaseIcao ?? ""} onChange={(e) => { const icao = e.target.value.toUpperCase(); update({ ...settings, homeBaseIcao: icao || undefined, homeTimezone: airports?.get(icao)?.timezone ?? settings.homeTimezone }); }} />
-            </Field>
+            <AirportInput
+              label={t("homeBase")}
+              value={settings.homeBaseIcao ?? ""}
+              onChange={(icao) => update({ ...settings, homeBaseIcao: icao || undefined, homeTimezone: airports?.get(icao)?.timezone ?? settings.homeTimezone })}
+            />
             <Field label={t("timezone")}><input className="input num" value={settings.homeTimezone} onChange={(e) => update({ ...settings, homeTimezone: e.target.value })} /></Field>
             <Toggle checked={includeRoster} onChange={setIncludeRoster} label={t("includeRoster")} />
           </div>

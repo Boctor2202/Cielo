@@ -1204,7 +1204,19 @@
           "targetType": "Expérience sur le type de l'offre ({detail})"
         }
       },
-      "tips": "Conseils : une seule colonne, pas de photo ni de tableau, des chiffres précis. Envoyez le PDF : son texte est lisible par les IA et il contient une copie structurée de votre CV."
+      "tips": "Conseils : une seule colonne, pas de photo ni de tableau, des chiffres précis. Envoyez le PDF : son texte est lisible par les IA et il contient une copie structurée de votre CV.",
+      "design": {
+        "look": "Apparence",
+        "theme": "Couleur",
+        "photo": "Afficher ma photo (celle de mon profil)",
+        "noPhoto": "Ajoutez une photo dans votre profil pour l'afficher sur le CV.",
+        "themes": {
+          "navy": "Marine",
+          "burgundy": "Bordeaux",
+          "forest": "Forêt",
+          "graphite": "Graphite et or"
+        }
+      }
     },
     "profile": {
       "eyebrow": "Profil pilote",
@@ -1290,6 +1302,7 @@
       "trackSince": "Trace depuis {time} UTC",
       "noTrack": "Pas de trace enregistrée.",
       "attribution": "Données ADS-B : contributeurs",
+      "keyRefused": "Le service de carte refuse l'adresse de ce site : la clé Google Maps doit autoriser ce domaine.",
       "needKey": "La carte Google n'est pas configurée."
     },
     "track": {

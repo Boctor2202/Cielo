@@ -1,12 +1,14 @@
 "use client";
 
 import { Download, LogOut, RefreshCw, Trash2, Upload } from "lucide-react";
+import { AirportInput } from "@/components/app/AirportInput";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { PILOT_FUNCTIONS, type Pilot } from "@cielo/core";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Card, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { usePilot } from "@/lib/hooks";
+import { useAirports } from "@/lib/airports";
 import { deleteAllLocal, exportAll, importAll, updatePilot } from "@/lib/repo";
 import { downloadBlob } from "@/lib/download";
 import { useCloud } from "@/lib/cloud";
@@ -24,6 +26,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const pilot = usePilot();
+  const airports = useAirports();
   const cloud = useCloud();
   const { toast, toastNode } = useToast();
   const [v, setV] = useState<Pilot | null>(null);
@@ -59,7 +62,15 @@ export default function SettingsPage() {
             <Field label={t("fullName")}><input className="input" value={v.fullName} onChange={(e) => setV({ ...v, fullName: e.target.value })} onBlur={() => patch({ fullName: v.fullName })} /></Field>
             <Field label={t("email")}><input className="input" type="email" value={cloud.session?.user.email ?? v.email} disabled={!!cloud.session} onChange={(e) => setV({ ...v, email: e.target.value })} onBlur={() => patch({ email: v.email })} /></Field>
             <Field label={t("licenceNumber")}><input className="input num" value={v.licenceNumber ?? ""} onChange={(e) => setV({ ...v, licenceNumber: e.target.value })} onBlur={() => patch({ licenceNumber: v.licenceNumber })} /></Field>
-            <Field label={t("homeBase")}><input className="input num uppercase" maxLength={4} value={v.homeBaseIcao ?? ""} onChange={(e) => setV({ ...v, homeBaseIcao: e.target.value.toUpperCase() })} onBlur={() => patch({ homeBaseIcao: v.homeBaseIcao || undefined })} /></Field>
+            <AirportInput
+              label={t("homeBase")}
+              value={v.homeBaseIcao ?? ""}
+              onChange={(x) => {
+                setV({ ...v, homeBaseIcao: x });
+                // saved once it is a known aerodrome (picked from the list or typed in full), or cleared
+                if (!x || airports?.get(x)?.icao === x) patch({ homeBaseIcao: x || undefined });
+              }}
+            />
           </div>
         </Card>
 

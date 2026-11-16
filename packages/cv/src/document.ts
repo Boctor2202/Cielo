@@ -8,7 +8,17 @@ import type { CvData, CvLicence, FlightExperience, TypeHours } from "./types";
 
 export type Line =
   | { kind: "pair"; label: string; value: string; strong?: boolean }
-  | { kind: "item"; title: string; meta?: string; bullets?: string[] }
+  | {
+      kind: "item";
+      title: string;
+      meta?: string;
+      /** dates, shown in the timeline gutter */
+      when?: string;
+      /** a figure shown on the right (hours on type) and its share of the largest one, for the bar */
+      value?: string;
+      ratio?: number;
+      bullets?: string[];
+    }
   | { kind: "text"; text: string };
 
 export interface Section {
@@ -23,6 +33,8 @@ export interface CvDocument {
   sections: Section[];
   /** keywords an applicant-tracking system will look for, in priority order */
   keywords: string[];
+  /** the four headline figures shown under the name */
+  figures: { label: string; value: string }[];
 }
 
 const L = {
@@ -35,7 +47,7 @@ const L = {
     instructor: "Instructor", dual: "Dual received", landings: "Landings", last12m: "Last 12 months", last90d: "Last 90 days", sectors: "Sectors flown",
     asOf: "Hours as of", lastFlight: "Last flight", validUntil: "valid until", noExpiry: "no expiry", present: "Present", email: "Email", phone: "Phone",
     location: "Location", nationality: "Nationality", dob: "Date of birth", linkedin: "LinkedIn", rightToWork: "Right to work", onType: "on type",
-    asPic: "PIC", asCopilot: "SIC", lastFlown: "last flown", targetRole: "Target position", icao: "ICAO level", source: "Hours computed from an electronic logbook (Geardown).",
+    asPic: "PIC", asCopilot: "SIC", lastFlown: "last flown", targetRole: "Target position", icao: "ICAO level", source: "Hours computed from the pilot's logbook.", figTotal: "Total time", figPic: "PIC", figMp: "Multi-pilot", figTurbine: "Turbine", figNight: "Night", fig12m: "Last 12 months",
   },
   fr: {
     contact: "Contact", summary: "Profil", hours: "Expérience de vol", types: "Types d'avions", licences: "Licences, qualifications et aptitude médicale",
@@ -47,7 +59,8 @@ const L = {
     asOf: "Heures arrêtées au", lastFlight: "Dernier vol", validUntil: "valide jusqu'au", noExpiry: "sans échéance", present: "Aujourd'hui", email: "E-mail",
     phone: "Téléphone", location: "Lieu", nationality: "Nationalité", dob: "Date de naissance", linkedin: "LinkedIn", rightToWork: "Autorisation de travail",
     onType: "sur type", asPic: "CDB", asCopilot: "OPL", lastFlown: "dernier vol", targetRole: "Poste visé", icao: "niveau OACI",
-    source: "Heures calculées à partir d'un carnet de vol électronique (Geardown).",
+    source: "Heures calculées à partir du carnet de vol du pilote.", figTotal: "Temps total", figPic: "CDB (PIC)", figMp: "Multipilote", figTurbine: "Turbine",
+    figNight: "Nuit", fig12m: "12 derniers mois",
   },
 };
 
@@ -133,6 +146,8 @@ export function buildCvDocument(cv: CvData): CvDocument {
       lines: types.slice(0, 12).map((x) => ({
         kind: "item" as const,
         title: `${x.name} (${x.icao})`,
+        value: fmtH(x.totalMin, locale),
+        ratio: x.totalMin / Math.max(1, ...types.map((y) => y.totalMin)),
         meta: [`${fmtH(x.totalMin, locale)} ${t.onType}`, x.picMin ? `${fmtH(x.picMin, locale)} ${t.asPic}` : "", x.copilotMin ? `${fmtH(x.copilotMin, locale)} ${t.asCopilot}` : "", x.lastFlown ? `${t.lastFlown} ${month(x.lastFlown, locale)}` : ""]
           .filter(Boolean)
           .join(" · "),
@@ -153,7 +168,8 @@ export function buildCvDocument(cv: CvData): CvDocument {
         .map((x) => ({
           kind: "item" as const,
           title: `${x.role} — ${x.employer}`,
-          meta: [`${month(x.start, locale)} – ${x.end ? month(x.end, locale) : t.present}`, x.location, x.aircraft?.length ? x.aircraft.join(", ") : ""].filter(Boolean).join(" · "),
+          when: `${month(x.start, locale)} – ${x.end ? month(x.end, locale) : t.present}`,
+          meta: [x.location, x.aircraft?.length ? x.aircraft.join(", ") : ""].filter(Boolean).join(" · ") || undefined,
           bullets: x.bullets.filter((b) => b.trim()),
         })),
     });
@@ -163,7 +179,12 @@ export function buildCvDocument(cv: CvData): CvDocument {
     sections.push({
       id: "education",
       heading: t.education,
-      lines: p.education.map((x) => ({ kind: "item" as const, title: `${x.title} — ${x.school}`, meta: [x.start || x.end ? `${month(x.start, locale)}${x.end ? ` – ${month(x.end, locale)}` : ""}` : "", x.details].filter(Boolean).join(" · ") })),
+      lines: p.education.map((x) => ({
+        kind: "item" as const,
+        title: `${x.title} — ${x.school}`,
+        when: [month(x.start, locale), month(x.end, locale)].filter(Boolean).join(" – ") || undefined,
+        meta: x.details || undefined,
+      })),
     });
   }
 
@@ -194,7 +215,13 @@ export function buildCvDocument(cv: CvData): CvDocument {
   for (const k of p.target?.keywords ?? []) kw.add(k);
 
   const headline = p.headline?.trim() || [p.target?.title, types[0] ? `${fmtH(h.totalMin, locale)} TT · ${types[0].name}` : `${fmtH(h.totalMin, locale)} TT`].filter(Boolean).join(" · ");
-  return { name: p.fullName.trim() || "—", headline, sections, keywords: [...kw] };
+  const figures = [
+    { label: t.figTotal, value: fmtH(h.totalMin, locale) },
+    { label: t.figPic, value: fmtH(h.picMin, locale) },
+    h.multiPilotMin ? { label: t.figMp, value: fmtH(h.multiPilotMin, locale) } : h.turbineMin ? { label: t.figTurbine, value: fmtH(h.turbineMin, locale) } : { label: t.figNight, value: fmtH(h.nightMin, locale) },
+    { label: t.fig12m, value: fmtH(h.last12mMin, locale) },
+  ];
+  return { name: p.fullName.trim() || "—", headline, sections, keywords: [...kw], figures };
 }
 
 /** Plain text version (what a parser "sees"); also good for pasting into application forms. */
@@ -206,7 +233,7 @@ export function cvToText(doc: CvDocument): string {
       if (l.kind === "pair") out.push(`${l.label}: ${l.value}`);
       else if (l.kind === "text") out.push(l.text);
       else {
-        out.push(l.title + (l.meta ? ` | ${l.meta}` : ""));
+        out.push([l.title, l.when, l.meta].filter(Boolean).join(" | "));
         for (const b of l.bullets ?? []) out.push(`- ${b}`);
       }
     }

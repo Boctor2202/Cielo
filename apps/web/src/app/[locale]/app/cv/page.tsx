@@ -3,7 +3,7 @@
 import { AlertTriangle, Check, Copy, FileDown, FileJson, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { atsReport, buildCvDocument, buildCvPdf, cvToText, flightExperience, toJsonResume, type CvData, type CvDocument, type CvProfile } from "@cielo/cv";
+import { atsReport, buildCvDocument, buildCvPdf, cvToText, CV_THEMES, flightExperience, toJsonResume, type CvData, type CvDocument, type CvProfile, type CvTheme } from "@cielo/cv";
 import type { Job } from "@cielo/jobs";
 import { Card, Field, PageTitle, Segmented, useToast, type Level } from "@/components/app/ui";
 import { localStore } from "@/lib/db";
@@ -77,8 +77,20 @@ export default function CvPage() {
     set("target", job ? { title: job.title, company: job.company, aircraft: job.aircraft.slice(0, 3), keywords: keywordsFor(job) } : undefined);
   };
 
+  const photoUrl = profile.photo ? pilot?.photoDataUrl : undefined;
   const download = async () => {
-    const bytes = await buildCvPdf(doc, { jsonResume: toJsonResume(data), lang: locale, author: profile.fullName });
+    const font = async (w: number) => new Uint8Array(await (await fetch(`/fonts/cv/Inter-${w}.ttf`)).arrayBuffer());
+    const fonts = await Promise.all([font(400), font(600), font(700)])
+      .then(([regular, semibold, bold]) => ({ regular, semibold, bold }))
+      .catch(() => undefined);
+    const bytes = await buildCvPdf(doc, {
+      jsonResume: toJsonResume(data),
+      lang: locale,
+      author: profile.fullName,
+      theme: profile.theme,
+      fonts,
+      photo: photoUrl ? await squareJpeg(photoUrl) : undefined,
+    });
     const slug = (profile.fullName || "pilot").toLowerCase().normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "");
     downloadBlob(bytes as BlobPart, `cv-${slug}-${locale}.pdf`, "application/pdf");
   };
@@ -116,6 +128,30 @@ export default function CvPage() {
                 ))}
               </select>
             </Field>
+          </Card>
+
+          <Card title={t("design.look")}>
+            <div className="space-y-4">
+              <Field label={t("design.theme")}>
+                <div className="flex flex-wrap gap-2">
+                  {(Object.keys(CV_THEMES) as CvTheme[]).map((k) => {
+                    const on = (profile.theme ?? "navy") === k;
+                    return (
+                      <button key={k} type="button" onClick={() => set("theme", k)} aria-pressed={on}
+                        className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${on ? "border-accent bg-accent/10 font-semibold" : "border-border"}`}>
+                        <span className="h-4 w-4 rounded-full" style={{ background: `linear-gradient(135deg, ${CV_THEMES[k].swatch} 55%, ${CV_THEMES[k].accent} 55%)` }} />
+                        {t(`design.themes.${k}`)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Field>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={!!profile.photo} disabled={!pilot?.photoDataUrl} onChange={(e) => set("photo", e.target.checked)} />
+                {t("design.photo")}
+              </label>
+              {!pilot?.photoDataUrl && <p className="text-xs text-muted">{t("design.noPhoto")}</p>}
+            </div>
           </Card>
 
           <Card title={t("sections.identity")}>
@@ -204,7 +240,7 @@ export default function CvPage() {
         {/* ---------- Check + preview ---------- */}
         <div className="min-w-0 space-y-5 xl:sticky xl:top-6 xl:self-start">
           <AtsPanel report={report} />
-          <Preview doc={doc} />
+          <Preview doc={doc} theme={profile.theme ?? "navy"} photo={photoUrl} />
           <p className="text-xs text-muted">{t("tips")}</p>
         </div>
       </div>
@@ -277,40 +313,121 @@ function KwRow({ label, items, ok }: { label: string; items: string[]; ok?: bool
   );
 }
 
-/** On-screen rendering of exactly what goes into the PDF. */
-function Preview({ doc }: { doc: CvDocument }) {
+/** The photo as a square JPEG (the PDF takes PNG or JPEG; profile photos can be anything the browser reads). */
+async function squareJpeg(url: string): Promise<Uint8Array | undefined> {
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const side = Math.min(img.naturalWidth, img.naturalHeight);
+    const c = document.createElement("canvas");
+    c.width = c.height = Math.min(600, side);
+    c.getContext("2d")!.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, c.width, c.height);
+    const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/jpeg", 0.9));
+    return blob ? new Uint8Array(await blob.arrayBuffer()) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** On-screen rendering of the PDF: same structure, same layout, same colours. */
+function Preview({ doc, theme, photo }: { doc: CvDocument; theme: CvTheme; photo?: string }) {
+  const c = CV_THEMES[theme];
+  const contact = doc.sections.find((s) => s.id === "contact");
+  const items = (s: CvDocument["sections"][number]) => s.lines.filter((l) => l.kind === "item") as Extract<CvDocument["sections"][number]["lines"][number], { kind: "item" }>[];
+  const pairs = (s: CvDocument["sections"][number]) => s.lines.filter((l) => l.kind === "pair") as Extract<CvDocument["sections"][number]["lines"][number], { kind: "pair" }>[];
+  const texts = (s: CvDocument["sections"][number]) => s.lines.filter((l) => l.kind === "text") as Extract<CvDocument["sections"][number]["lines"][number], { kind: "text" }>[];
+  const Pill = ({ a, b }: { a: string; b?: string }) => (
+    <span className="rounded-full px-2.5 py-1 text-[11px]" style={{ background: c.tint }}>
+      <b style={{ color: c.dark }}>{a}</b>{b && <span className="ml-1.5 text-[#5B6878]">{b}</span>}
+    </span>
+  );
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-white text-[#0f172a] shadow-sm">
-      <div className="max-h-[78svh] overflow-auto px-7 py-6 text-[13px] leading-relaxed">
-        <p className="text-2xl font-bold">{doc.name}</p>
-        <p className="text-[#475569]">{doc.headline}</p>
-        {doc.sections.map((s) => (
-          <section key={s.id} className="mt-5">
-            <h3 className="border-b border-[#cbd5e1] pb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#15803d]">{s.heading}</h3>
-            <div className="mt-1.5 space-y-1">
-              {s.lines.map((l, i) =>
-                l.kind === "pair" ? (
-                  <p key={i} className="grid grid-cols-[minmax(0,210px)_1fr] gap-3">
-                    <span className={l.strong ? "font-semibold" : "text-[#475569]"}>{l.label}</span>
-                    <span className={`num ${l.strong ? "font-semibold" : ""}`}>{l.value}</span>
-                  </p>
-                ) : l.kind === "text" ? (
-                  <p key={i}>{l.text}</p>
-                ) : (
-                  <div key={i} className="pt-1">
-                    <p className="font-semibold">{l.title}</p>
-                    {l.meta && <p className="text-[12px] text-[#475569]">{l.meta}</p>}
-                    {!!l.bullets?.length && (
-                      <ul className="mt-0.5 list-disc pl-5">
-                        {l.bullets.map((b, j) => <li key={j}>{b}</li>)}
-                      </ul>
-                    )}
+    <div className="overflow-hidden rounded-xl border border-border bg-white text-[#16202C] shadow-sm" style={{ fontFamily: "\"CV Inter\", sans-serif" }}>
+      <div className="max-h-[78svh] overflow-auto text-[12px] leading-relaxed">
+        <div className="flex items-center gap-5 px-7 py-6 text-white" style={{ background: c.dark, borderBottom: `3px solid ${c.accent}` }}>
+          <div className="min-w-0 flex-1">
+            <p className="text-[26px] font-bold leading-tight">{doc.name}</p>
+            {doc.headline && <p className="mt-1 text-[13px] text-[#C9D3DF]">{doc.headline}</p>}
+            {contact && <p className="mt-3 text-[11px] text-[#E8EDF3]">{pairs(contact).map((p) => p.value).join("   ·   ")}</p>}
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element -- local data URL */}
+          {photo && <img src={photo} alt="" className="h-20 w-20 shrink-0 rounded-full border-[3px] border-white object-cover" />}
+        </div>
+        <div className="px-7 pb-7">
+          <div className="mt-4 grid grid-cols-4 rounded-lg py-3" style={{ background: c.tint }}>
+            {doc.figures.map((f, i) => (
+              <div key={f.label} className={`text-center ${i ? "border-l border-[#DCE2E9]" : ""}`}>
+                <p className="num text-[18px] font-bold" style={{ color: c.dark }}>{f.value}</p>
+                <p className="text-[9px] font-semibold uppercase" style={{ color: c.accent }}>{f.label}</p>
+              </div>
+            ))}
+          </div>
+          {doc.sections.filter((s) => s.id !== "contact").map((s) => (
+            <section key={s.id} className="mt-5">
+              <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase" style={{ color: c.dark }}>
+                <span className="h-3 w-[3px]" style={{ background: c.accent }} />{s.heading}<span className="h-px flex-1 bg-[#DCE2E9]" />
+              </h3>
+              {s.id === "hours" ? (
+                <>
+                  <div className="mt-2 grid grid-cols-2 gap-x-6">
+                    {pairs(s).map((p) => (
+                      <p key={p.label} className="flex justify-between border-b border-[#DCE2E9] py-0.5">
+                        <span className={p.strong ? "font-semibold" : "text-[#5B6878]"}>{p.label}</span>
+                        <span className="num font-semibold" style={p.strong ? { color: c.dark } : undefined}>{p.value}</span>
+                      </p>
+                    ))}
                   </div>
-                ),
+                  {texts(s).map((x, i) => <p key={i} className="mt-1 text-[10px] text-[#5B6878]">{x.text}</p>)}
+                </>
+              ) : s.id === "types" ? (
+                <div className="mt-2 space-y-2.5">
+                  {items(s).map((it) => (
+                    <div key={it.title}>
+                      <p className="flex justify-between font-semibold"><span>{it.title}</span><span className="num" style={{ color: c.dark }}>{it.value}</span></p>
+                      <div className="mt-1 h-1 rounded-full" style={{ background: c.tint }}><div className="h-1 rounded-full" style={{ width: `${Math.round((it.ratio ?? 0) * 100)}%`, background: c.accent }} /></div>
+                      {it.meta && <p className="mt-0.5 text-[10px] text-[#5B6878]">{it.meta.split(" · ").slice(it.value ? 1 : 0).join("  ·  ")}</p>}
+                    </div>
+                  ))}
+                </div>
+              ) : s.id === "experience" || s.id === "education" ? (
+                <div className="mt-2 space-y-3">
+                  {items(s).map((it, i) => (
+                    <div key={i} className="grid grid-cols-[92px_1fr] gap-4">
+                      <p className="text-[10.5px] font-semibold" style={{ color: c.accent }}>{it.when}</p>
+                      <div className="border-l border-[#DCE2E9] pl-3.5">
+                        <p className="font-bold">{it.title}</p>
+                        {it.meta && <p className="text-[10.5px] text-[#5B6878]">{it.meta}</p>}
+                        {!!it.bullets?.length && <ul className="mt-0.5 list-disc pl-4 marker:text-[var(--m)]" style={{ ["--m" as string]: c.accent }}>{it.bullets.map((b, j) => <li key={j}>{b}</li>)}</ul>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : s.id === "languages" ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">{pairs(s).map((p) => <Pill key={p.label} a={p.label} b={p.value === "—" ? undefined : p.value} />)}</div>
+              ) : s.id === "skills" ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">{texts(s).flatMap((x) => x.text.split(" · ")).map((a) => <Pill key={a} a={a} />)}</div>
+              ) : (
+                <div className="mt-2 space-y-1">
+                  {s.id === "licences" ? (
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                      {items(s).map((it) => (
+                        <div key={it.title} className="border-l-2 pl-2.5" style={{ borderColor: c.accent }}>
+                          <p className="font-semibold">{it.title}</p>
+                          {it.meta && <p className="text-[10.5px] text-[#5B6878]">{it.meta}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  {pairs(s).map((p) => (
+                    <p key={p.label}>{s.id === "summary" ? <><b style={{ color: c.accent }}>{p.label} : </b><b>{p.value}</b></> : <>{p.label} — {p.value}</>}</p>
+                  ))}
+                  {texts(s).map((x, i) => <p key={i}>{x.text}</p>)}
+                </div>
               )}
-            </div>
-          </section>
-        ))}
+            </section>
+          ))}
+        </div>
       </div>
     </div>
   );

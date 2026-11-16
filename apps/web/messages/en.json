@@ -1204,7 +1204,19 @@
           "targetType": "Experience on the offer's type ({detail})"
         }
       },
-      "tips": "Tips: single column, no photo or tables, precise figures. Send the PDF: its text is readable by AI tools and it carries a structured copy of your CV."
+      "tips": "Tips: single column, no photo or tables, precise figures. Send the PDF: its text is readable by AI tools and it carries a structured copy of your CV.",
+      "design": {
+        "look": "Appearance",
+        "theme": "Colour",
+        "photo": "Show my photo (from my profile)",
+        "noPhoto": "Add a photo to your profile to show it on the CV.",
+        "themes": {
+          "navy": "Navy",
+          "burgundy": "Burgundy",
+          "forest": "Forest",
+          "graphite": "Graphite and gold"
+        }
+      }
     },
     "profile": {
       "eyebrow": "Pilot profile",
@@ -1290,6 +1302,7 @@
       "trackSince": "Track since {time} UTC",
       "noTrack": "No recorded track.",
       "attribution": "ADS-B data: contributors of",
+      "keyRefused": "The map service refused this site's address. The Google Maps key must allow this domain.",
       "needKey": "Google Maps is not configured."
     },
     "track": {

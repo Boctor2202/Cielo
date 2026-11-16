@@ -1,6 +1,7 @@
 "use client";
 
 import { BadgeCheck, Camera, Check, Pencil, Plane, Trash2, X } from "lucide-react";
+import { AirportInput } from "@/components/app/AirportInput";
 import { motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -150,7 +151,7 @@ export default function ProfilePage() {
                 <datalist id="p-ranks">{RANKS.map((r) => <option key={r} value={r} />)}</datalist>
               </Field>
               <Field label={t("f.employer")}><input id="p-employer" className="input" value={draft.employer ?? ""} onChange={(e) => set("employer", e.target.value || undefined)} /></Field>
-              <Field label={t("f.base")}><input id="p-base" className="input num uppercase" maxLength={4} value={draft.homeBaseIcao ?? ""} onChange={(e) => set("homeBaseIcao", e.target.value.toUpperCase() || undefined)} /></Field>
+              <AirportInput label={t("f.base")} value={draft.homeBaseIcao ?? ""} onChange={(x) => set("homeBaseIcao", x || undefined)} />
               <Field label={t("f.nationality")} hint={t("f.nationalityHint")}><input id="p-nat" className="input uppercase" maxLength={2} value={draft.nationality ?? ""} onChange={(e) => set("nationality", e.target.value.toUpperCase() || undefined)} /></Field>
               <Field label={t("f.licenceNumber")}><input id="p-lic" className="input num" value={draft.licenceNumber ?? ""} onChange={(e) => set("licenceNumber", e.target.value || undefined)} /></Field>
               <Field label={t("f.phone")}><input id="p-phone" className="input" type="tel" value={draft.phone ?? ""} onChange={(e) => set("phone", e.target.value || undefined)} /></Field>

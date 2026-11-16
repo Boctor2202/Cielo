@@ -19,6 +19,10 @@ export interface CvProfile {
   skills: string[];
   /** right to work, e.g. "EU passport", "Valid US visa" */
   rightToWork?: string;
+  /** colour theme of the PDF */
+  theme?: CvTheme;
+  /** show the profile photo in the header */
+  photo?: boolean;
 }
 
 export interface CvExperience {
@@ -88,3 +92,5 @@ export interface CvData {
   licences: CvLicence[];
   locale: "en" | "fr";
 }
+
+export type CvTheme = "navy" | "burgundy" | "forest" | "graphite";

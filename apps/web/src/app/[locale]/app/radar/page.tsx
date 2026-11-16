@@ -29,7 +29,7 @@ export default function RadarPage() {
   return (
     <>
       <PageTitle title={t("title")} subtitle={t("subtitle")} />
-      {key && !failed ? <RadarMap apiKey={key} lang={locale} dark={dark} myRegs={myRegs} onError={() => setFailed(true)} /> : <p className="card p-6 text-sm text-muted">{t("needKey")}</p>}
+      {key && !failed ? <RadarMap apiKey={key} lang={locale} dark={dark} myRegs={myRegs} onError={() => setFailed(true)} /> : <p className="card p-6 text-sm text-muted">{t(key ? "keyRefused" : "needKey")}</p>}
     </>
   );
 }
