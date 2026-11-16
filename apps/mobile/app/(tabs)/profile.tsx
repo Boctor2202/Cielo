@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import type { Pilot } from "@cielo/core";
 import { Button, Card, Field, Row, Screen, Txt } from "../../src/components/ui";
 import { AirportField } from "../../src/components/AirportField";
@@ -19,6 +20,17 @@ export default function Profile() {
   useEffect(() => setD(draftOf(pilot)), [pilot]);
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
   const initials = (d.fullName || "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+  /** Square photo, compressed JPEG so it stays light to sync. */
+  const pickPhoto = async (camera: boolean) => {
+    const perm = camera ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) return;
+    const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.35, base64: true };
+    const r = camera ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
+    const a = r.canceled ? undefined : r.assets[0];
+    if (!a?.base64) return;
+    await app.savePilot({ photoDataUrl: `data:image/jpeg;base64,${a.base64}` });
+  };
 
   const save = async () => {
     const clean = (s?: string) => s?.trim() || undefined;
@@ -53,6 +65,11 @@ export default function Profile() {
           </View>
         </Row>
         {!pilot.photoDataUrl ? <Txt variant="small">{t("profile.photoHint")}</Txt> : null}
+        <Row style={{ flexWrap: "wrap" }} gap={8}>
+          <Button kind="secondary" small title={t("profile.pickPhoto")} onPress={() => void pickPhoto(false)} />
+          <Button kind="secondary" small title={t("profile.takePhoto")} onPress={() => void pickPhoto(true)} />
+          {pilot.photoDataUrl ? <Button kind="ghost" small title={t("profile.removePhoto")} onPress={() => void app.savePilot({ photoDataUrl: undefined })} /> : null}
+        </Row>
       </Card>
       <Card>
         <Field label={t("more.fullName")} value={d.fullName} onChangeText={(v) => set("fullName", v)} autoCapitalize="words" />

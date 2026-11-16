@@ -38,10 +38,14 @@
     },
     "locales": {
       "fr": {
-        "CFBundleDisplayName": "Geardown"
+        "CFBundleDisplayName": "Geardown",
+        "NSPhotoLibraryUsageDescription": "Geardown utilise vos photos pour votre photo de profil et la photo de votre CV.",
+        "NSCameraUsageDescription": "Geardown utilise l'appareil photo pour prendre votre photo de profil."
       },
       "en": {
-        "CFBundleDisplayName": "Geardown"
+        "CFBundleDisplayName": "Geardown",
+        "NSPhotoLibraryUsageDescription": "Geardown uses your photos for your profile picture and the photo on your CV.",
+        "NSCameraUsageDescription": "Geardown uses the camera to take your profile picture."
       }
     },
     "plugins": [
@@ -70,7 +74,18 @@
           }
         }
       ],
-      "expo-image"
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Geardown uses your photos for your profile picture and the photo on your CV.",
+          "cameraPermission": "Geardown uses the camera to take your profile picture.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-font",
+      "expo-sharing",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

@@ -19,6 +19,7 @@ import { AirportField } from "../../src/components/AirportField";
 import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPicker";
 import { AircraftPhoto } from "../../src/components/AircraftPhoto";
 import { FlightTrackCard } from "../../src/components/FlightTrack";
+import { FlightSignature } from "../../src/components/FlightSignature";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, ToggleRow, Txt } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
 import type { I18nKey } from "../../src/i18n";
@@ -455,6 +456,7 @@ function FlightForm() {
         </Card>
 
         {existing && !existing.isFstd ? <FlightTrackCard flightId={existing.id} /> : null}
+        {existing ? <FlightSignature flight={existing} /> : null}
 
         {error ? <Txt color={c.warning}>{error}</Txt> : null}
         <Button title={t("common.save")} onPress={save} disabled={locked} loading={saving} />
