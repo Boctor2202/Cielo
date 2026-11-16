@@ -13,7 +13,7 @@ async function get(url: string, accept = "application/json"): Promise<string> {
   return res.text();
 }
 
-const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", hellip: "…", ndash: "–", mdash: "—", rsquo: "’" };
 export function toText(html: string | undefined): string {
   if (!html) return "";
   const decode = (s: string) =>
@@ -124,7 +124,9 @@ const successfactors: Fetcher = async (s) => {
   const seen = new Set<string>();
   for (let start = 0; start < 200; start += 25) {
     const html = await get(`https://${s.token}/search/?q=pilot&locale=en_US&startrow=${start}`, "text/html");
-    const rows = html.split(/<tr[^>]*class="[^"]*data-row[^"]*"/i).slice(1);
+    let rows = html.split(/<tr[^>]*class="[^"]*data-row[^"]*"/i).slice(1);
+    // other SuccessFactors templates have no table rows: one chunk per job link
+    if (!rows.length) rows = html.split(/(?=<a[^>]+href="\/[^"]*\/job\/[^"]+\/\d+\/?")/i).slice(1);
     let added = 0;
     for (const row of rows) {
       const a = row.match(/<a[^>]+href="(\/[^"]*\/job\/[^"]+\/(\d+)\/?)"[^>]*>([\s\S]*?)<\/a>/i);
@@ -139,7 +141,8 @@ const successfactors: Fetcher = async (s) => {
         company: s.company,
         title: toText(a[3]).replace(/\s*\([^)]*\)\s*$/, ""),
         url: `https://${s.token}${a[1]}`,
-        location: loc ? toText(loc) : undefined,
+        // "US +36 more…" for multi-base postings: the first place only
+        location: loc ? toText(loc).split(/\n|\s\+\d+\s*more/i)[0]!.trim() || undefined : undefined,
         postedAt: when && !Number.isNaN(when.getTime()) ? when.toISOString() : undefined,
         text: toText(a[3]),
       });
