@@ -1283,6 +1283,7 @@
     "radar": {
       "title": "Radar",
       "subtitle": "Le trafic en direct, partout dans le monde.",
+      "airports": "Aéroports",
       "searchReg": "Immatriculation (ex. F-GTAM)",
       "notAirborne": "{reg} n'émet pas en ce moment.",
       "loading": "Chargement du trafic…",

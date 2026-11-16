@@ -30,6 +30,17 @@ function distNm(a: { lat: number; lng: number }, b: { lat: number; lng: number }
 
 const POLL_MS = 15_000;
 
+/** [icao, name, lat, lon, size] — size 3 large, 2 medium, 1 small aerodrome */
+type Aerodrome = [string, string, number, number, number];
+let aerodromes: Promise<Aerodrome[]> | null = null;
+/** The airport file the app already ships, reduced to what the map draws (loaded once). */
+const loadAerodromes = () =>
+  (aerodromes ??= fetch("/data/airports.json")
+    .then((r) => r.json())
+    .then((d: { rows: (string | number | null)[][] }) => d.rows.map((r) => [r[0], r[2], r[5], r[6], r[9]] as Aerodrome)));
+/** Smallest size shown at a zoom level: large airports from 5, medium from 8, all aerodromes from 10. */
+const minSize = (zoom: number) => (zoom >= 10 ? 1 : zoom >= 8 ? 2 : zoom >= 5 ? 3 : 4);
+
 export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: string; lang: string; dark: boolean; myRegs: string[]; onError: () => void }) {
   const t = useTranslations("app.radar");
   const el = useRef<HTMLDivElement>(null);
@@ -47,6 +58,49 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
   const [notFound, setNotFound] = useState("");
   const selectedHex = useRef<string | null>(null);
   selectedHex.current = selected?.hex ?? null;
+  const [showAirports, setShowAirports] = useState(true);
+  const airportMarkers = useRef<Map<string, any>>(new Map());
+
+  /** Airports in view, as small rings labelled with their ICAO code. */
+  const drawAirports = useCallback(async () => {
+    const m = map.current;
+    const google = g.current;
+    if (!m || !google) return;
+    const shown = airportMarkers.current;
+    const b = m.getBounds();
+    const size = minSize(m.getZoom() ?? 0);
+    const want = new Set<string>();
+    if (showAirports && b && size <= 3) {
+      for (const [icao, name, lat, lon, sz] of await loadAerodromes()) {
+        if (sz < size || !b.contains({ lat, lng: lon })) continue;
+        want.add(icao);
+        if (want.size > 400) break;
+        if (shown.has(icao)) continue;
+        shown.set(
+          icao,
+          new google.maps.Marker({
+            map: m,
+            position: { lat, lng: lon },
+            title: `${icao} · ${name}`,
+            zIndex: 0,
+            clickable: false,
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: sz === 3 ? 4.5 : 3.5, fillColor: dark ? "#0a1626" : "#ffffff", fillOpacity: 1, strokeColor: dark ? "#e8eef5" : "#0e2a47", strokeWeight: 1.6, labelOrigin: new google.maps.Point(0, 3.4) },
+            label: { text: icao, fontSize: "10px", fontWeight: "600", color: dark ? "#e8eef5" : "#0e2a47", className: "radar-airport-label" },
+          }),
+        );
+      }
+    }
+    for (const [icao, mk] of shown) {
+      if (want.has(icao)) continue;
+      mk.setMap(null);
+      shown.delete(icao);
+    }
+  }, [showAirports, dark]);
+  useEffect(() => {
+    void drawAirports();
+  }, [drawAirports]);
+  const drawAirportsRef = useRef(drawAirports);
+  drawAirportsRef.current = drawAirports;
 
   const refresh = useCallback(async () => {
     const v = view.current;
@@ -103,7 +157,11 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
           const hex = String(e.feature.getProperty("hex"));
           setSelected((cur) => (cur?.hex === hex ? cur : (e.feature.getProperty("raw") as LiveAircraft)));
         });
+        // a new map (theme change): the old airport markers belong to the previous one
+        for (const mk of airportMarkers.current.values()) mk.setMap(null);
+        airportMarkers.current.clear();
         m.addListener("idle", () => {
+          void drawAirportsRef.current();
           const c = m.getCenter();
           const b = m.getBounds();
           if (!c || !b) return;
@@ -232,6 +290,14 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
             ))}
           </div>
         )}
+        <button
+          type="button"
+          aria-pressed={showAirports}
+          className={`rounded-full border px-2.5 py-1 text-xs font-medium shadow backdrop-blur ${showAirports ? "border-accent bg-accent/15 text-text" : "border-border bg-bg/95 text-muted"}`}
+          onClick={() => setShowAirports((v) => !v)}
+        >
+          {t("airports")}
+        </button>
         {notFound && <p className="rounded-lg bg-bg/95 px-3 py-2 text-xs text-muted shadow">{t("notAirborne", { reg: notFound })}</p>}
       </div>
 
