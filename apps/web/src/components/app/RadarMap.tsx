@@ -4,6 +4,7 @@
 import { Loader2, Search, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { classifyRunwayUse, RunwayUseTracker, runwayUseLabel, type RunwayThreshold, type RunwayUseSummary } from "@cielo/core";
 import type { LiveAircraft, Track } from "@/lib/adsb";
 import { DAY, NIGHT, loadGoogle } from "./GoogleRoutesMap";
 import { WeatherBody, fetchWeather } from "./AirportWeather";
@@ -31,14 +32,28 @@ function distNm(a: { lat: number; lng: number }, b: { lat: number; lng: number }
 
 const POLL_MS = 15_000;
 
-/** [icao, name, lat, lon, size] — size 3 large, 2 medium, 1 small aerodrome */
-type Aerodrome = [string, string, number, number, number];
+/** [icao, name, lat, lon, size, elevation ft] — size 3 large, 2 medium, 1 small aerodrome */
+type Aerodrome = [string, string, number, number, number, number];
 let aerodromes: Promise<Aerodrome[]> | null = null;
 /** The airport file the app already ships, reduced to what the map draws (loaded once). */
 const loadAerodromes = () =>
   (aerodromes ??= fetch("/data/airports.json")
     .then((r) => r.json())
-    .then((d: { rows: (string | number | null)[][] }) => d.rows.map((r) => [r[0], r[2], r[5], r[6], r[9]] as Aerodrome)));
+    .then((d: { rows: (string | number | null)[][] }) => d.rows.map((r) => [r[0], r[2], r[5], r[6], r[9], r[7] ?? 0] as Aerodrome)));
+let runwayData: Promise<Record<string, RunwayThreshold[]>> | null = null;
+/** Runway thresholds (OurAirports), only the ends whose position is known. */
+const loadRunways = () =>
+  (runwayData ??= fetch("/data/runways.json")
+    .then((r) => r.json())
+    .then((d: { airports: Record<string, [string, number, number, number | null, number | null][]> }) => {
+      const out: Record<string, RunwayThreshold[]> = {};
+      for (const [icao, ends] of Object.entries(d.airports)) {
+        const ok = ends.filter((e) => e[3] != null && e[4] != null).map(([ident, headingTrue, lengthFt, lat, lon]) => ({ ident, headingTrue, lengthFt, lat: lat!, lon: lon! }));
+        if (ok.length) out[icao] = ok;
+      }
+      return out;
+    })
+    .catch(() => ({}) as Record<string, RunwayThreshold[]>));
 /** Smallest size shown at a zoom level: large airports from 5, medium from 8, all aerodromes from 10. */
 const minSize = (zoom: number) => (zoom >= 10 ? 1 : zoom >= 8 ? 2 : zoom >= 5 ? 3 : 4);
 
@@ -63,6 +78,23 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
   const [airport, setAirport] = useState<{ icao: string; name: string } | null>(null);
   const airportMarkers = useRef<Map<string, any>>(new Map());
   const sizeOf = useRef<Map<string, number>>(new Map());
+  /** runway the wind favours (METAR), and runways the traffic is seen using */
+  const windRwy = useRef<Map<string, string>>(new Map());
+  const tracker = useRef(new RunwayUseTracker());
+  const [useTick, setUseTick] = useState(0);
+  const trafficOf = (icao: string): RunwayUseSummary | null => tracker.current.summary(icao);
+  const labelFor = (icao: string) => {
+    const seen = runwayUseLabel(tracker.current.summary(icao));
+    const wind = windRwy.current.get(icao);
+    return seen ? `${icao} ${seen}` : wind ? `${icao} ≈${wind}` : icao;
+  };
+  const relabel = useCallback(() => {
+    for (const [icao, mk] of airportMarkers.current) {
+      const text = labelFor(icao);
+      if (mk.getLabel()?.text !== text) mk.setLabel({ ...mk.getLabel(), text });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /** Airports in view, as small rings labelled with their ICAO code. */
   const drawAirports = useCallback(async () => {
@@ -89,7 +121,7 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
             zIndex: 0,
             cursor: "pointer",
             icon: { path: google.maps.SymbolPath.CIRCLE, scale: sz === 3 ? 4.5 : 3.5, fillColor: dark ? "#0a1626" : "#ffffff", fillOpacity: 1, strokeColor: dark ? "#e8eef5" : "#0e2a47", strokeWeight: 1.6, labelOrigin: new google.maps.Point(0, 3.4) },
-            label: { text: icao, fontSize: "10px", fontWeight: "600", color: dark ? "#e8eef5" : "#0e2a47", className: "radar-airport-label" },
+            label: { text: labelFor(icao), fontSize: "10px", fontWeight: "600", color: dark ? "#e8eef5" : "#0e2a47", className: "radar-airport-label" },
           }),
         );
         shown.get(icao).addListener("click", () => {
@@ -109,11 +141,40 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
     const wx = await fetchWeather(ids, { taf: false });
     for (const icao of ids) {
       const r = wx?.runways?.[icao];
-      const mk = shown.get(icao);
-      if (!mk || !r || r.calm) continue;
-      mk.setLabel({ ...mk.getLabel(), text: `${icao} ${r.ident}` });
+      if (r && !r.calm) windRwy.current.set(icao, r.ident);
     }
-  }, [showAirports, dark]);
+    relabel();
+  }, [showAirports, dark, relabel]);
+
+  // every traffic update: aircraft low near an aerodrome, lined up with one of its runways
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const low = aircraft.filter((a) => typeof a.alt === "number" && a.alt < 9000 && a.trk != null);
+      if (!low.length) return;
+      const [fields, rwys] = await Promise.all([loadAerodromes(), loadRunways()]);
+      if (!alive) return;
+      const near = fields.filter((f) => f[4] >= 2 && rwys[f[0]] && low.some((a) => Math.abs(a.lat - f[2]) < 0.3 && Math.abs(a.lon - f[3]) < 0.45));
+      let changed = false;
+      for (const a of low) {
+        for (const [icao, , lat, lon, , elev] of near) {
+          if (Math.abs(a.lat - lat) > 0.25 || Math.abs(a.lon - lon) > 0.4) continue;
+          const use = classifyRunwayUse({ hex: a.hex, lat: a.lat, lon: a.lon, alt: a.alt, trk: a.trk, gs: a.gs, vr: a.vr }, elev, rwys[icao]!);
+          if (use) {
+            tracker.current.observe(icao, a.hex, use);
+            changed = true;
+          }
+        }
+      }
+      if (changed) {
+        relabel();
+        setUseTick((n) => n + 1);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [aircraft, relabel]);
   useEffect(() => {
     void drawAirports();
   }, [drawAirports]);
@@ -338,6 +399,7 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
             </div>
             <button type="button" className="btn btn-ghost !p-1" aria-label={t("close")} onClick={() => setAirport(null)}><X size={16} /></button>
           </div>
+          <TrafficRunways summary={trafficOf(airport.icao)} key={useTick} />
           <WeatherBody icao={airport.icao} compact />
           <p className="mt-2 text-[10px] text-muted">aviationweather.gov (NOAA)</p>
         </div>
@@ -390,6 +452,36 @@ function Item({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="mono-label !text-[10px]">{label}</dt>
       <dd className="num font-medium">{value}</dd>
+    </div>
+  );
+}
+
+/** Runways the live traffic was seen landing on and taking off from (last 20 minutes). */
+function TrafficRunways({ summary }: { summary: RunwayUseSummary | null }) {
+  const t = useTranslations("app.radar");
+  const ago = (ms: number) => Math.max(0, Math.round((Date.now() - ms) / 60000));
+  const row = (label: string, list: RunwayUseSummary["arr"]) =>
+    list.length ? (
+      <p className="flex flex-wrap items-baseline gap-x-2">
+        <span className="text-muted">{label}</span>
+        {list.map((e) => (
+          <span key={e.ident}>
+            <b className="num text-base">{e.ident}</b> <span className="num text-xs text-muted">{t("rwySeen", { n: e.count, min: ago(e.lastAt) })}</span>
+          </span>
+        ))}
+      </p>
+    ) : null;
+  return (
+    <div className="mb-3 space-y-1 rounded-lg border border-border px-3 py-2 text-sm">
+      <p className="label-caps">{t("rwyTraffic")}</p>
+      {summary ? (
+        <>
+          {row(t("rwyArr"), summary.arr)}
+          {row(t("rwyDep"), summary.dep)}
+        </>
+      ) : (
+        <p className="text-xs text-muted">{t("rwyNone")}</p>
+      )}
     </div>
   );
 }

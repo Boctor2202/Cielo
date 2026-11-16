@@ -29,3 +29,8 @@ if (!fs.existsSync(globeDst) || fs.statSync(globeDst).mtimeMs < fs.statSync(src)
   }
   fs.writeFileSync(globeDst, JSON.stringify(dots));
 }
+
+// Runway thresholds, for the radar to tell which runways the live traffic uses.
+const rwySrc = path.resolve("../../packages/reference-data/data/runways.json");
+const rwyDst = path.resolve("public/data/runways.json");
+if (!fs.existsSync(rwyDst) || fs.statSync(rwyDst).mtimeMs < fs.statSync(rwySrc).mtimeMs) fs.copyFileSync(rwySrc, rwyDst);

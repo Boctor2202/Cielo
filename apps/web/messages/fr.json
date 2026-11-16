@@ -1304,7 +1304,12 @@
       "noTrack": "Pas de trace enregistrée.",
       "attribution": "Données ADS-B : contributeurs",
       "keyRefused": "Le service de carte refuse l'adresse de ce site : la clé Google Maps doit autoriser ce domaine.",
-      "needKey": "La carte Google n'est pas configurée."
+      "needKey": "La carte Google n'est pas configurée.",
+      "rwyTraffic": "Pistes utilisées (trafic en direct)",
+      "rwyArr": "Atterrissages",
+      "rwyDep": "Décollages",
+      "rwySeen": "{n, plural, one {# avion} other {# avions}}, il y a {min} min",
+      "rwyNone": "Aucun mouvement observé depuis l'ouverture du radar. Les pistes apparaissent dès qu'un avion se pose ou décolle (laissez la carte ouverte quelques minutes)."
     },
     "track": {
       "title": "Trace réelle",

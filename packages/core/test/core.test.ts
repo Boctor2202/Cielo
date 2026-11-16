@@ -324,3 +324,27 @@ describe("favoured runway", () => {
     expect(favouredRunway({ wdir: "VRB", wspd: 2 }, lfpb)).toEqual({ calm: true });
   });
 });
+
+describe("runway use from traffic", () => {
+  it("sees a landing on 26L and a departure from 27L", async () => {
+    const { classifyRunwayUse, RunwayUseTracker, runwayUseLabel } = await import("../src/runwayUse");
+    const ends = [
+      { ident: "08R", headingTrue: 85, lengthFt: 8858, lat: 48.9929, lon: 2.56566 },
+      { ident: "26L", headingTrue: 265, lengthFt: 8858, lat: 48.9949, lon: 2.60243 },
+      { ident: "09R", headingTrue: 86, lengthFt: 13780, lat: 49.0206, lon: 2.51306 },
+      { ident: "27L", headingTrue: 266, lengthFt: 13780, lat: 49.0237, lon: 2.57029 },
+    ];
+    // 6 NM east of the 26L threshold, on the centreline, 2 000 ft above the field, descending westbound
+    const arr = { hex: "a", lat: 48.9949 + (6 / 60) * Math.sin((5 * Math.PI) / 180) * 0, lon: 2.60243 + 6 / (60 * Math.cos((49 * Math.PI) / 180)), alt: 2400, trk: 265, vr: -700, gs: 150 };
+    expect(classifyRunwayUse(arr, 392, ends)).toEqual({ ident: "26L", kind: "arr" });
+    // 3 NM west of the 27L runway end (past 09R threshold), climbing westbound
+    const dep = { hex: "b", lat: 49.0206, lon: 2.51306 - 3 / (60 * Math.cos((49 * Math.PI) / 180)), alt: 2600, trk: 266, vr: 2000, gs: 180 };
+    expect(classifyRunwayUse(dep, 392, ends)).toEqual({ ident: "27L", kind: "dep" });
+    // eastbound at 2 400 ft over the same point: aligned with 08R but neither approaching nor climbing out
+    expect(classifyRunwayUse({ ...arr, trk: 85, vr: 0 }, 392, ends)).toBeNull();
+    const tr = new RunwayUseTracker();
+    tr.observe("LFPG", "a", { ident: "26L", kind: "arr" });
+    tr.observe("LFPG", "b", { ident: "27L", kind: "dep" });
+    expect(runwayUseLabel(tr.summary("LFPG"))).toBe("↓26L ↑27L");
+  });
+});

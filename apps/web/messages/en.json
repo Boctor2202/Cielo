@@ -1304,7 +1304,12 @@
       "noTrack": "No recorded track.",
       "attribution": "ADS-B data: contributors of",
       "keyRefused": "The map service refused this site's address. The Google Maps key must allow this domain.",
-      "needKey": "Google Maps is not configured."
+      "needKey": "Google Maps is not configured.",
+      "rwyTraffic": "Runways in use (live traffic)",
+      "rwyArr": "Landings",
+      "rwyDep": "Departures",
+      "rwySeen": "{n, plural, one {# aircraft} other {# aircraft}}, {min} min ago",
+      "rwyNone": "No movement seen since the radar opened. Runways show up as soon as an aircraft lands or takes off (keep the map open a few minutes)."
     },
     "track": {
       "title": "Actual track",

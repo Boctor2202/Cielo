@@ -6,7 +6,8 @@ import { Glass, Row, Txt } from "../../src/components/ui";
 import { api, ApiError, type LiveAircraft, type Track } from "../../src/api";
 import { airports } from "../../src/airports";
 import { AirportWeather, fetchRunways } from "../../src/components/Weather";
-import type { Airport } from "@cielo/core";
+import { classifyRunwayUse, RunwayUseTracker, runwayUseLabel, type Airport, type RunwayThreshold, type RunwayUseSummary } from "@cielo/core";
+import { API_URL } from "../../src/api";
 import { useApp } from "../../src/state";
 import { Requires } from "../../src/components/Access";
 import { font, useTheme } from "../../src/theme";
@@ -32,6 +33,24 @@ export default function Radar() {
   );
 }
 
+let runwayData: Promise<Record<string, RunwayThreshold[]>> | null = null;
+/** Runway thresholds (OurAirports), fetched once from the website (about 480 KB). */
+const loadRunways = () =>
+  (runwayData ??= fetch(`${API_URL}/data/runways.json`)
+    .then((r) => r.json())
+    .then((d: { airports: Record<string, [string, number, number, number | null, number | null][]> }) => {
+      const out: Record<string, RunwayThreshold[]> = {};
+      for (const [icao, ends] of Object.entries(d.airports)) {
+        const ok = ends.filter((e) => e[3] != null && e[4] != null).map(([ident, headingTrue, lengthFt, lat, lon]) => ({ ident, headingTrue, lengthFt, lat: lat!, lon: lon! }));
+        if (ok.length) out[icao] = ok;
+      }
+      return out;
+    })
+    .catch(() => {
+      runwayData = null;
+      return {} as Record<string, RunwayThreshold[]>;
+    }));
+
 function RadarScreen() {
   const { t, flights } = useApp();
   const c = useTheme();
@@ -49,6 +68,38 @@ function RadarScreen() {
   const [fields, setFields] = useState<Airport[]>([]);
   const [apt, setApt] = useState<Airport | null>(null);
   const [rwy, setRwy] = useState<Record<string, string>>({});
+  const tracker = useRef(new RunwayUseTracker());
+  const [seen, setSeen] = useState<Record<string, string>>({});
+  // every traffic update: aircraft low near a larger aerodrome, lined up with one of its runways
+  useEffect(() => {
+    let alive = true;
+    const low = ac.filter((a) => typeof a.alt === "number" && a.alt < 9000 && a.trk != null);
+    if (!low.length) return;
+    void loadRunways().then((rwys) => {
+      if (!alive) return;
+      const near = airports().list.filter((f) => (f.size ?? 1) >= 2 && rwys[f.icao] && low.some((a) => Math.abs(a.lat - f.lat) < 0.25 && Math.abs(a.lon - f.lon) < 0.4));
+      const touched = new Set<string>();
+      for (const a of low)
+        for (const f of near) {
+          if (Math.abs(a.lat - f.lat) > 0.25 || Math.abs(a.lon - f.lon) > 0.4) continue;
+          const use = classifyRunwayUse({ hex: a.hex, lat: a.lat, lon: a.lon, alt: a.alt, trk: a.trk, gs: a.gs, vr: a.vr }, f.elevationFt ?? 0, rwys[f.icao]!);
+          if (use) {
+            tracker.current.observe(f.icao, a.hex, use);
+            touched.add(f.icao);
+          }
+        }
+      if (touched.size)
+        setSeen((cur) => {
+          const next = { ...cur };
+          for (const i of touched) next[i] = runwayUseLabel(tracker.current.summary(i));
+          return next;
+        });
+    });
+    return () => {
+      alive = false;
+    };
+  }, [ac]);
+  const labelOf = (icao: string) => (seen[icao] ? `${icao} ${seen[icao]}` : rwy[icao] ? `${icao} ≈${rwy[icao]}` : icao);
   /** Airports in view: large ones when zoomed out, medium, then every aerodrome closer in. */
   const placeAirports = useCallback((r: Region) => {
     const span = Math.max(r.latitudeDelta, r.longitudeDelta);
@@ -139,7 +190,7 @@ function RadarScreen() {
       >
         {showAirports
           ? fields.map((a) => (
-              <Marker key={`apt-${a.icao}-${rwy[a.icao] ?? ""}`} coordinate={{ latitude: a.lat, longitude: a.lon }} anchor={{ x: 0.5, y: 0.25 }} tracksViewChanges={false}
+              <Marker key={`apt-${a.icao}-${labelOf(a.icao)}`} coordinate={{ latitude: a.lat, longitude: a.lon }} anchor={{ x: 0.5, y: 0.25 }} tracksViewChanges={false}
                 zIndex={0}
                 onPress={(e) => {
                   e.stopPropagation();
@@ -149,7 +200,7 @@ function RadarScreen() {
               >
                 <View style={{ alignItems: "center" }}>
                   <View style={{ width: a.size === 3 ? 10 : 8, height: a.size === 3 ? 10 : 8, borderRadius: 5, borderWidth: 1.6, borderColor: c.text, backgroundColor: c.scheme === "dark" ? "#0a1626" : "#ffffff" }} />
-                  <Txt style={{ fontSize: 10, fontWeight: "600", textShadowColor: c.scheme === "dark" ? "#0a1626" : "#ffffff", textShadowRadius: 3 }}>{rwy[a.icao] ? `${a.icao} ${rwy[a.icao]}` : a.icao}</Txt>
+                  <Txt style={{ fontSize: 10, fontWeight: "600", textShadowColor: c.scheme === "dark" ? "#0a1626" : "#ffffff", textShadowRadius: 3 }}>{labelOf(a.icao)}</Txt>
                 </View>
               </Marker>
             ))
@@ -227,6 +278,7 @@ function RadarScreen() {
                   <Ionicons name="close" size={20} color={c.muted} />
                 </Pressable>
               </Row>
+              <TrafficRunways summary={tracker.current.summary(apt.icao)} />
               <AirportWeather icao={apt.icao} compact />
             </View>
           </Glass>
@@ -285,3 +337,33 @@ const styles = StyleSheet.create({
   bottom: { position: "absolute", left: 12, right: 12, bottom: 100 },
   status: { position: "absolute", left: 12, bottom: 100, alignItems: "flex-start" },
 });
+
+/** Runways the live traffic was seen landing on and taking off from (last 20 minutes). */
+function TrafficRunways({ summary }: { summary: RunwayUseSummary | null }) {
+  const { t } = useApp();
+  const ago = (ms: number) => Math.max(0, Math.round((Date.now() - ms) / 60000));
+  const row = (label: string, list: RunwayUseSummary["arr"]) =>
+    list.length ? (
+      <Row style={{ flexWrap: "wrap", columnGap: 8 }}>
+        <Txt variant="small">{label}</Txt>
+        {list.map((e) => (
+          <Txt key={e.ident} variant="small">
+            <Txt mono style={{ fontWeight: "800", fontSize: 15 }}>{e.ident}</Txt> {t("radar.rwySeen", { n: e.count, min: ago(e.lastAt) })}
+          </Txt>
+        ))}
+      </Row>
+    ) : null;
+  return (
+    <View style={{ gap: 3 }}>
+      <Txt variant="label">{t("radar.rwyTraffic")}</Txt>
+      {summary ? (
+        <>
+          {row(t("radar.rwyArr"), summary.arr)}
+          {row(t("radar.rwyDep"), summary.dep)}
+        </>
+      ) : (
+        <Txt variant="small">{t("radar.rwyNone")}</Txt>
+      )}
+    </View>
+  );
+}
