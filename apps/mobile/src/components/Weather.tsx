@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { ageMin, ceilingFt, tafLines, visibilityText, windText, type FlightCategory, type Metar, type Taf } from "@cielo/core";
+import { ageMin, ceilingFt, tafLines, visibilityText, windText, type FlightCategory, type Metar, type RunwayEstimate, type Taf } from "@cielo/core";
 import { api } from "../api";
 import { useApp } from "../state";
 import { mono, useTheme } from "../theme";
@@ -9,8 +9,16 @@ import { Row, Txt } from "./ui";
 /** Flight category colours, the convention of aviation weather maps. */
 const CATEGORY_COLOR: Record<FlightCategory, string> = { VFR: "#16a34a", MVFR: "#2563eb", IFR: "#dc2626", LIFR: "#c026d3" };
 
-type Wx = { metars: Record<string, Metar>; tafs: Record<string, Taf> };
+type Wx = { metars: Record<string, Metar>; tafs: Record<string, Taf>; runways?: Record<string, RunwayEstimate> };
 const cache = new Map<string, { at: number; p: Promise<Wx | null> }>();
+/** METARs of several aerodromes (no TAF), for the runway shown next to each code on the radar. */
+export function fetchRunways(ids: string[]): Promise<Record<string, RunwayEstimate>> {
+  const key = [...ids].sort().join(",");
+  return api<Wx>(`/api/weather?ids=${key}&taf=0`)
+    .then((d) => d.runways ?? {})
+    .catch(() => ({}));
+}
+
 function fetchWeather(icao: string) {
   const hit = cache.get(icao);
   if (hit && Date.now() - hit.at < 5 * 60_000) return hit.p;
@@ -23,11 +31,11 @@ function fetchWeather(icao: string) {
 export function AirportWeather({ icao, compact }: { icao: string; compact?: boolean }) {
   const { t } = useApp();
   const c = useTheme();
-  const [wx, setWx] = useState<{ metar?: Metar; taf?: Taf } | null | undefined>(undefined);
+  const [wx, setWx] = useState<{ metar?: Metar; taf?: Taf; runway?: RunwayEstimate } | null | undefined>(undefined);
   useEffect(() => {
     let alive = true;
     setWx(undefined);
-    fetchWeather(icao).then((d) => alive && setWx(d ? { metar: d.metars[icao], taf: d.tafs[icao] } : null));
+    fetchWeather(icao).then((d) => alive && setWx(d ? { metar: d.metars[icao], taf: d.tafs[icao], runway: d.runways?.[icao] } : null));
     return () => {
       alive = false;
     };
@@ -60,6 +68,22 @@ export function AirportWeather({ icao, compact }: { icao: string; compact?: bool
             {m.tempC != null ? kv(t("wx.temp"), `${m.tempC}°/${m.dewpC ?? "—"}°`) : null}
             {m.qnhHpa != null ? kv("QNH", String(Math.round(m.qnhHpa))) : null}
           </Row>
+          {wx.runway ? (
+            <View style={{ gap: 2 }}>
+              <Row style={{ flexWrap: "wrap", columnGap: 8 }}>
+                <Txt variant="small">{t("wx.runway")}</Txt>
+                {wx.runway.calm ? (
+                  <Txt variant="small" style={{ fontWeight: "700" }} color={c.text}>{t("wx.runwayCalm")}</Txt>
+                ) : (
+                  <>
+                    <Txt mono style={{ fontWeight: "800", fontSize: 16 }}>{wx.runway.ident}</Txt>
+                    <Txt variant="small" mono>{t("wx.components", { head: wx.runway.headwindKt, cross: wx.runway.crosswindKt })}</Txt>
+                  </>
+                )}
+              </Row>
+              <Txt variant="small">{t("wx.runwayNote")}</Txt>
+            </View>
+          ) : null}
           <View style={box}>
             <Txt variant="label">METAR{age != null ? ` · ${t("wx.ago", { min: age })}` : ""}</Txt>
             <Txt style={[mono, { fontSize: 13 }]} color={age != null && age > 90 ? c.warning : c.text}>{m.raw}</Txt>

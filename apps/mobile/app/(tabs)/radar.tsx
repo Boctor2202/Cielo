@@ -5,7 +5,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Glass, Row, Txt } from "../../src/components/ui";
 import { api, ApiError, type LiveAircraft, type Track } from "../../src/api";
 import { airports } from "../../src/airports";
-import { AirportWeather } from "../../src/components/Weather";
+import { AirportWeather, fetchRunways } from "../../src/components/Weather";
 import type { Airport } from "@cielo/core";
 import { useApp } from "../../src/state";
 import { Requires } from "../../src/components/Access";
@@ -48,6 +48,7 @@ function RadarScreen() {
   const [showAirports, setShowAirports] = useState(true);
   const [fields, setFields] = useState<Airport[]>([]);
   const [apt, setApt] = useState<Airport | null>(null);
+  const [rwy, setRwy] = useState<Record<string, string>>({});
   /** Airports in view: large ones when zoomed out, medium, then every aerodrome closer in. */
   const placeAirports = useCallback((r: Region) => {
     const span = Math.max(r.latitudeDelta, r.longitudeDelta);
@@ -62,6 +63,14 @@ function RadarScreen() {
       if (out.length >= 150) break;
     }
     setFields(out);
+    // runway the wind favours, for the larger aerodromes in view
+    const ids = out.filter((a) => (a.size ?? 1) >= 2).sort((a, b) => (b.size ?? 0) - (a.size ?? 0)).slice(0, 40).map((a) => a.icao);
+    if (ids.length)
+      void fetchRunways(ids).then((r) => {
+        const next: Record<string, string> = {};
+        for (const [k, v] of Object.entries(r)) if (!v.calm) next[k] = v.ident;
+        setRwy((cur) => ({ ...cur, ...next }));
+      });
   }, []);
   useEffect(() => placeAirports(region.current), [placeAirports]);
 
@@ -130,7 +139,7 @@ function RadarScreen() {
       >
         {showAirports
           ? fields.map((a) => (
-              <Marker key={`apt-${a.icao}`} coordinate={{ latitude: a.lat, longitude: a.lon }} anchor={{ x: 0.5, y: 0.25 }} tracksViewChanges={false}
+              <Marker key={`apt-${a.icao}-${rwy[a.icao] ?? ""}`} coordinate={{ latitude: a.lat, longitude: a.lon }} anchor={{ x: 0.5, y: 0.25 }} tracksViewChanges={false}
                 zIndex={0}
                 onPress={(e) => {
                   e.stopPropagation();
@@ -140,7 +149,7 @@ function RadarScreen() {
               >
                 <View style={{ alignItems: "center" }}>
                   <View style={{ width: a.size === 3 ? 10 : 8, height: a.size === 3 ? 10 : 8, borderRadius: 5, borderWidth: 1.6, borderColor: c.text, backgroundColor: c.scheme === "dark" ? "#0a1626" : "#ffffff" }} />
-                  <Txt style={{ fontSize: 10, fontWeight: "600", textShadowColor: c.scheme === "dark" ? "#0a1626" : "#ffffff", textShadowRadius: 3 }}>{a.icao}</Txt>
+                  <Txt style={{ fontSize: 10, fontWeight: "600", textShadowColor: c.scheme === "dark" ? "#0a1626" : "#ffffff", textShadowRadius: 3 }}>{rwy[a.icao] ? `${a.icao} ${rwy[a.icao]}` : a.icao}</Txt>
                 </View>
               </Marker>
             ))

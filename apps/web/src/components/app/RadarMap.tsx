@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { LiveAircraft, Track } from "@/lib/adsb";
 import { DAY, NIGHT, loadGoogle } from "./GoogleRoutesMap";
-import { WeatherBody } from "./AirportWeather";
+import { WeatherBody, fetchWeather } from "./AirportWeather";
 
 /** Plane silhouette in a 24×24 box, nose up (rotated by the track). */
 const PLANE = "M12 1.5c.8 0 1.4 1 1.4 2.4V9l7.6 4.4v2.1l-7.6-2.3v4.9l2.2 1.7v1.7L12 20.6l-3.6.9v-1.7l2.2-1.7v-4.9L3 15.5v-2.1L10.6 9V3.9c0-1.4.6-2.4 1.4-2.4z";
@@ -62,6 +62,7 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
   const [showAirports, setShowAirports] = useState(true);
   const [airport, setAirport] = useState<{ icao: string; name: string } | null>(null);
   const airportMarkers = useRef<Map<string, any>>(new Map());
+  const sizeOf = useRef<Map<string, number>>(new Map());
 
   /** Airports in view, as small rings labelled with their ICAO code. */
   const drawAirports = useCallback(async () => {
@@ -76,6 +77,7 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
       for (const [icao, name, lat, lon, sz] of await loadAerodromes()) {
         if (sz < size || !b.contains({ lat, lng: lon })) continue;
         want.add(icao);
+        sizeOf.current.set(icao, sz);
         if (want.size > 400) break;
         if (shown.has(icao)) continue;
         shown.set(
@@ -100,6 +102,16 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
       if (want.has(icao)) continue;
       mk.setMap(null);
       shown.delete(icao);
+    }
+    // runway the wind favours, next to the code: METARs of the larger aerodromes in view (40 at most)
+    const ids = [...want].filter((i) => (sizeOf.current.get(i) ?? 1) >= 2).sort((a, b) => (sizeOf.current.get(b) ?? 0) - (sizeOf.current.get(a) ?? 0)).slice(0, 40);
+    if (!ids.length) return;
+    const wx = await fetchWeather(ids, { taf: false });
+    for (const icao of ids) {
+      const r = wx?.runways?.[icao];
+      const mk = shown.get(icao);
+      if (!mk || !r || r.calm) continue;
+      mk.setLabel({ ...mk.getLabel(), text: `${icao} ${r.ident}` });
     }
   }, [showAirports, dark]);
   useEffect(() => {

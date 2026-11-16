@@ -314,3 +314,13 @@ describe("weather", () => {
     expect(tafLines("TAF LFPB 161100Z 1612/1712 24012KT 9999 BKN015 TEMPO 1614/1618 4000 SHRA BECMG 1700/1702 VRB03KT PROB30 TEMPO 1703/1707 BR")).toHaveLength(4);
   });
 });
+
+describe("favoured runway", () => {
+  it("picks the end facing the wind, calm below 4 kt", async () => {
+    const { favouredRunway } = await import("../src/weather");
+    const lfpb = [["03", 26, 7858], ["21", 206, 7858], ["07", 69, 9843], ["25", 249, 9843], ["09", 86, 6060], ["27", 266, 6060]].map(([ident, headingTrue, lengthFt]) => ({ ident: String(ident), headingTrue: Number(headingTrue), lengthFt: Number(lengthFt) }));
+    expect(favouredRunway({ wdir: 230, wspd: 9 }, lfpb)).toMatchObject({ ident: "25", headwindKt: 9 });
+    expect(favouredRunway({ wdir: 40, wspd: 12 }, lfpb)).toMatchObject({ ident: "03" });
+    expect(favouredRunway({ wdir: "VRB", wspd: 2 }, lfpb)).toEqual({ calm: true });
+  });
+});

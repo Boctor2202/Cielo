@@ -136,3 +136,42 @@ export function tafLines(raw: string): string[] {
 
 /** Minutes since the observation. */
 export const ageMin = (isoTime: string | undefined, now = Date.now()) => (isoTime ? Math.max(0, Math.round((now - Date.parse(isoTime)) / 60000)) : null);
+
+/** One runway end: designator and true heading (OurAirports). */
+export interface RunwayEnd {
+  ident: string;
+  headingTrue: number;
+  lengthFt: number;
+}
+
+/** The runway the wind favours: the end with the most headwind (longest one on a tie). */
+export interface RunwayChoice {
+  ident: string;
+  headwindKt: number;
+  /** absolute crosswind component */
+  crosswindKt: number;
+  /** wind under 4 kt or variable: no runway is favoured, the aerodrome uses its preferential one */
+  calm?: false;
+}
+export type RunwayEstimate = RunwayChoice | { calm: true };
+
+/**
+ * Estimated runway in use from the METAR wind. This is what the wind favours, not the runway the ATIS
+ * announces: noise abatement, preferential runways or works can make the tower choose otherwise.
+ */
+export function favouredRunway(m: Pick<Metar, "wdir" | "wspd">, ends: RunwayEnd[]): RunwayEstimate | null {
+  if (!ends.length || m.wspd == null) return null;
+  if (m.wspd < 4 || m.wdir === "VRB" || m.wdir == null) return { calm: true };
+  const dir = m.wdir;
+  let best: (RunwayChoice & { len: number }) | null = null;
+  for (const e of ends) {
+    const a = ((dir - e.headingTrue) * Math.PI) / 180;
+    const head = m.wspd * Math.cos(a);
+    const cross = Math.abs(m.wspd * Math.sin(a));
+    if (!best || head > best.headwindKt + 0.5 || (Math.abs(head - best.headwindKt) <= 0.5 && e.lengthFt > best.len)) {
+      best = { ident: e.ident, headwindKt: head, crosswindKt: cross, len: e.lengthFt };
+    }
+  }
+  if (!best) return null;
+  return { ident: best.ident, headwindKt: Math.round(best.headwindKt), crosswindKt: Math.round(best.crosswindKt) };
+}

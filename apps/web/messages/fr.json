@@ -1491,7 +1491,11 @@
       "temp": "Temp.",
       "ago": "il y a {min} min",
       "source": "Source : Aviation Weather Center (NOAA), aviationweather.gov. Information indicative : seule la documentation officielle fait foi pour la préparation du vol.",
-      "show": "Météo"
+      "show": "Météo",
+      "runway": "Piste favorable au vent",
+      "runwayCalm": "vent calme ou variable : piste préférentielle",
+      "components": "vent de face {head} kt · travers {cross} kt",
+      "runwayNote": "Estimation à partir du vent du METAR, pas la piste annoncée par l'ATIS."
     }
   },
   "why": {

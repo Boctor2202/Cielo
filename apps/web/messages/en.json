@@ -1491,7 +1491,11 @@
       "temp": "Temp",
       "ago": "{min} min ago",
       "source": "Source: Aviation Weather Center (NOAA), aviationweather.gov. For information only: use official sources for flight preparation.",
-      "show": "Weather"
+      "show": "Weather",
+      "runway": "Runway favoured by the wind",
+      "runwayCalm": "calm or variable wind: preferential runway",
+      "components": "headwind {head} kt · crosswind {cross} kt",
+      "runwayNote": "Estimated from the METAR wind, not the runway announced on the ATIS."
     }
   },
   "why": {
