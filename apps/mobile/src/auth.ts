@@ -135,3 +135,15 @@ export async function signOut(): Promise<void> {
   if (!supabase) return;
   await supabase.auth.signOut();
 }
+
+/** Sign-in methods switched on in Supabase (Apple / Google each need their own setup there). */
+export async function enabledProviders(): Promise<{ apple: boolean; google: boolean }> {
+  if (!url || !anonKey) return { apple: false, google: false };
+  try {
+    const r = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: anonKey } });
+    const d = (await r.json()) as { external?: Record<string, boolean> };
+    return { apple: !!d.external?.apple, google: !!d.external?.google };
+  } catch {
+    return { apple: false, google: false };
+  }
+}

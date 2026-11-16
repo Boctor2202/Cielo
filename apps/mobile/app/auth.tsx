@@ -3,7 +3,7 @@ import { Alert, Platform } from "react-native";
 import { router } from "expo-router";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { Button, Card, Field, Screen, Txt } from "../src/components/ui";
-import { isAppleSignInAvailable, isCloudEnabled, signInWithApple, signInWithGoogle, signInWithMagicLink } from "../src/auth";
+import { enabledProviders, isAppleSignInAvailable, isCloudEnabled, signInWithApple, signInWithGoogle, signInWithMagicLink } from "../src/auth";
 import { useApp } from "../src/state";
 import { useTheme } from "../src/theme";
 
@@ -15,8 +15,12 @@ export default function AuthScreen() {
   const [busy, setBusy] = useState<string | null>(null);
   const [apple, setApple] = useState(false);
 
+  const [google, setGoogle] = useState(false);
   useEffect(() => {
-    void isAppleSignInAvailable().then(setApple);
+    void enabledProviders().then(async (p) => {
+      setApple(p.apple && (await isAppleSignInAvailable()));
+      setGoogle(p.google);
+    });
   }, []);
   useEffect(() => {
     if (session && router.canGoBack()) router.back();
@@ -74,7 +78,7 @@ export default function AuthScreen() {
       ) : apple ? (
         <Button kind="secondary" title={t("auth.apple")} loading={busy === "apple"} onPress={() => run("apple", signInWithApple)} />
       ) : null}
-      <Button kind="secondary" title={t("auth.google")} loading={busy === "google"} onPress={() => run("google", signInWithGoogle)} />
+      {google ? <Button kind="secondary" title={t("auth.google")} loading={busy === "google"} onPress={() => run("google", signInWithGoogle)} /> : null}
     </Screen>
   );
 }
