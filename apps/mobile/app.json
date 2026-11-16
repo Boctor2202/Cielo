@@ -102,7 +102,7 @@
     },
     "owner": "strato-app",
     "runtimeVersion": {
-      "policy": "sdkVersion"
+      "policy": "fingerprint"
     },
     "updates": {
       "url": "https://u.expo.dev/c9d2903e-0e29-4c2d-a381-cd385e436c1e"
