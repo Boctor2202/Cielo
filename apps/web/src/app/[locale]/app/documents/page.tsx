@@ -1,6 +1,8 @@
 "use client";
 
 import { BadgeCheck, Bell, Plus, Trash2 } from "lucide-react";
+import { AircraftTypeInput } from "@/components/app/AircraftTypeInput";
+import { useTypes } from "@/lib/hooks";
 import { AuthorityInput } from "@/components/app/AuthorityInput";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -16,6 +18,7 @@ const blank = (): Draft => ({ kind: "licence", code: "", alertDays: [...DEFAULT_
 
 export default function DocumentsPage() {
   const t = useTranslations("app.documents");
+  const types = useTypes();
   const td = useTranslations("app.dashboard");
   const tc = useTranslations("common");
   const licenses = useTable("licenses");
@@ -114,6 +117,17 @@ export default function DocumentsPage() {
                 <input className="input" required list="lic-cat" value={draft.code} onChange={(e) => setDraft({ ...draft, code: e.target.value })} />
                 <datalist id="lic-cat">{LICENSE_CATALOGUE.filter((c) => c.kind === draft.kind).map((c) => <option key={c.code} value={c.code} />)}</datalist>
               </Field>
+              {draft.kind === "rating" && (
+                <div className="sm:col-span-2">
+                  <AircraftTypeInput
+                    types={types ?? []}
+                    value={ratedType(draft.code, types ?? [])}
+                    label={t("aircraftType")}
+                    hint={t("aircraftTypeHint")}
+                    onPick={(ty) => setDraft({ ...draft, code: ratingTitle(ty) })}
+                  />
+                </div>
+              )}
               <AuthorityInput label={t("authority")} value={draft.authority ?? ""} onChange={(v) => setDraft({ ...draft, authority: v })} />
               <Field label={t("number")}><input className="input num" value={draft.number ?? ""} onChange={(e) => setDraft({ ...draft, number: e.target.value })} /></Field>
               <Field label={t("issuedOn")}><input type="date" className="input num" value={draft.issuedOn ?? ""} onChange={(e) => setDraft({ ...draft, issuedOn: e.target.value || null })} /></Field>
@@ -149,4 +163,20 @@ export default function DocumentsPage() {
       </Modal>
     </>
   );
+}
+
+/** "TR A320", "TR C680A"; class ratings ("SEP(L)", "MEP(L)") as they are. */
+function ratingTitle(t: { icao: string; classOrTypeRating?: string }): string {
+  const r = t.classOrTypeRating?.trim();
+  if (!r) return `TR ${t.icao}`;
+  return /\(|^(SEP|MEP|SET|TMG)/i.test(r) ? r : `TR ${r}`;
+}
+
+/** The ICAO type a rating title refers to ("TR A320", "A320 TR", "SEP(L)"). */
+function ratedType(code: string, types: { icao: string; classOrTypeRating?: string }[]): string {
+  const c = code.trim().toUpperCase();
+  const m = c.match(/^TR\s+([A-Z0-9-]{2,7})\b/) ?? c.match(/^([A-Z0-9-]{2,7})\s+TR\b/);
+  const r = m?.[1] ?? c;
+  const same = types.filter((t) => t.classOrTypeRating?.toUpperCase() === r || t.icao === r);
+  return (same.find((t) => t.icao === r) ?? same[0])?.icao ?? "";
 }

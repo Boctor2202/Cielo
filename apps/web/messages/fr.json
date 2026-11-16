@@ -944,7 +944,9 @@
       "enableNotifications": "Activer les notifications du navigateur",
       "notificationsOn": "Notifications activées sur ce navigateur",
       "notificationsInfo": "Geardown vous prévient sur cet appareil avant chaque échéance (notifications du navigateur ou du téléphone).",
-      "recency": "Expérience récente"
+      "recency": "Expérience récente",
+      "aircraftType": "Type d'avion",
+      "aircraftTypeHint": "Cherchez par code OACI, constructeur ou modèle : le titre de la qualification se remplit seul."
     },
     "stats": {
       "title": "Statistiques",

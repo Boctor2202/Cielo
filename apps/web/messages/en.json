@@ -944,7 +944,9 @@
       "enableNotifications": "Enable browser notifications",
       "notificationsOn": "Notifications enabled on this browser",
       "notificationsInfo": "Geardown warns you on this device before each expiry (browser or phone notifications).",
-      "recency": "Recent experience"
+      "recency": "Recent experience",
+      "aircraftType": "Aircraft type",
+      "aircraftTypeHint": "Search by ICAO code, manufacturer or model: the rating title fills in by itself."
     },
     "stats": {
       "title": "Statistics",

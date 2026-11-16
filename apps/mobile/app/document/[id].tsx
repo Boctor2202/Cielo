@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { AuthorityField } from "../../src/components/AuthorityField";
+import { AircraftTypeField, ratingTitle } from "../../src/components/AircraftTypeField";
 import { Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { DEFAULT_ALERT_DAYS, LICENSE_CATALOGUE, licenseStatus, type License, type LicenseKind } from "@cielo/core";
@@ -23,7 +24,7 @@ export default function DocumentFormRoute() {
 
 function DocumentForm() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t, licenses, pilot, put, remove } = useApp();
+  const { t, licenses, pilot, put, remove, aircraftTypes } = useApp();
   const c = useTheme();
   const existing = id && id !== "new" ? licenses.find((l) => l.id === id) : undefined;
 
@@ -97,6 +98,7 @@ function DocumentForm() {
               <Chip key={k} label={t(`docs.kind.${k}` as I18nKey)} selected={kind === k} onPress={() => setKind(k)} />
             ))}
           </Row>
+          {kind === "rating" ? <AircraftTypeField types={aircraftTypes} label={t("docs.aircraftType")} hint={t("docs.aircraftTypeHint")} onPick={(ty) => setCode(ratingTitle(ty))} /> : null}
           <Field label={t("docs.code")} value={code} onChangeText={setCode} placeholder={t("docs.codePlaceholder")} error={error && !code.trim()} />
           <Row style={{ flexWrap: "wrap" }}>
             {suggestions.map((s) => (
