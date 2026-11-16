@@ -38,4 +38,7 @@ export const SOURCES: Source[] = [
   { company: "Air New Zealand", ats: "smartrecruiters", token: "AirNewZealand", country: "NZ", segment: "airline" },
   { company: "Airlink", ats: "workable", token: "airlink", country: "ZA", segment: "regional" },
   { company: "FlySafair", ats: "workable", token: "flysafair", country: "ZA", segment: "airline" },
+  // SAP SuccessFactors career sites
+  { company: "NetJets", ats: "successfactors", token: "netjets.jobs.hr.cloud.sap", country: "US", segment: "business" },
+  { company: "KLM", ats: "successfactors", token: "vacancy.klm.com", country: "NL", segment: "airline" },
 ];

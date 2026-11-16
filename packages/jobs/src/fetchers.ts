@@ -115,5 +115,39 @@ const smartrecruiters: Fetcher = async (s) => {
   }));
 };
 
+/**
+ * SAP SuccessFactors career sites (token = host, e.g. "netjets.jobs.hr.cloud.sap"): the public search page,
+ * 25 results a page. Their robots.txt keeps robots out of /services/ (where the RSS lives), not out of /search/.
+ */
+const successfactors: Fetcher = async (s) => {
+  const out: RawPosting[] = [];
+  const seen = new Set<string>();
+  for (let start = 0; start < 200; start += 25) {
+    const html = await get(`https://${s.token}/search/?q=pilot&locale=en_US&startrow=${start}`, "text/html");
+    const rows = html.split(/<tr[^>]*class="[^"]*data-row[^"]*"/i).slice(1);
+    let added = 0;
+    for (const row of rows) {
+      const a = row.match(/<a[^>]+href="(\/[^"]*\/job\/[^"]+\/(\d+)\/?)"[^>]*>([\s\S]*?)<\/a>/i);
+      if (!a || seen.has(a[2]!)) continue;
+      seen.add(a[2]!);
+      added++;
+      const loc = row.match(/class="[^"]*jobLocation[^"]*"[^>]*>([\s\S]*?)<\/span>/i)?.[1];
+      const date = row.match(/class="[^"]*jobDate[^"]*"[^>]*>([\s\S]*?)<\/span>/i)?.[1];
+      const when = date ? new Date(`${toText(date)} 12:00 UTC`) : null;
+      out.push({
+        id: `sf-${s.token.split(".")[0]}-${a[2]}`,
+        company: s.company,
+        title: toText(a[3]).replace(/\s*\([^)]*\)\s*$/, ""),
+        url: `https://${s.token}${a[1]}`,
+        location: loc ? toText(loc) : undefined,
+        postedAt: when && !Number.isNaN(when.getTime()) ? when.toISOString() : undefined,
+        text: toText(a[3]),
+      });
+    }
+    if (added < 25) break;
+  }
+  return out;
+};
+
 // Adzuna is not a per-employer feed: it is read once for all countries (see adzuna.ts)
-export const FETCHERS: Record<Source["ats"], Fetcher> = { greenhouse, lever, recruitee, teamtailor, personio, ashby, workable, smartrecruiters, adzuna: async () => [] };
+export const FETCHERS: Record<Source["ats"], Fetcher> = { greenhouse, lever, recruitee, teamtailor, personio, ashby, workable, smartrecruiters, successfactors, adzuna: async () => [] };
