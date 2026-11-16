@@ -34,7 +34,14 @@ export function CloudProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!sb) return;
     sb.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data } = sb.auth.onAuthStateChange((_e, s) => setSession(s));
+    const { data } = sb.auth.onAuthStateChange((e, s) => {
+      setSession(s);
+      // arrived from the password e-mail's link (until codes replace links): ask for the new password
+      if (e === "PASSWORD_RECOVERY" && !/[?&]reset=1/.test(window.location.search)) {
+        const lang = window.location.pathname.split("/")[1] === "en" ? "en" : "fr";
+        window.location.assign(`/${lang}/${lang === "en" ? "login" : "connexion"}?reset=1`);
+      }
+    });
     return () => data.subscription.unsubscribe();
   }, [sb]);
 

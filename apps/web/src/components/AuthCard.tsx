@@ -18,8 +18,14 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const search = useSearchParams();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
+  const [code, setCode] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "sent" | "error">("idle");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  /** form → (sign-up) verify the e-mail code; forgot → code + new password */
+  const [step, setStep] = useState<"form" | "verify" | "forgot" | "reset" | "newPassword">(search.get("reset") === "1" ? "newPassword" : "form");
   const cloud = isCloudEnabled();
   // only the sign-in methods actually switched on in Supabase (Apple / Google need their own setup)
   const [providers, setProviders] = useState<{ apple: boolean; google: boolean }>({ apple: false, google: false });
@@ -31,6 +37,7 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
       .catch(() => undefined);
   }, [cloud]);
   const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/${locale}/app` : undefined;
+  const resetTo = typeof window !== "undefined" ? `${window.location.origin}/${locale}/${locale === "en" ? "login" : "connexion"}?reset=1` : undefined;
   // plan picked on the pricing page: the 7-day trial checkout opens right after the first sign-in
   useEffect(() => {
     const plan = search.get("plan");
@@ -48,16 +55,115 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
     router.push("/app");
   }
 
-  async function magic(e: React.FormEvent) {
+  /** Supabase errors in the pilot's words; its own messages (and its name) never reach the screen. */
+  function fail(e: { message?: string; code?: string } | null) {
+    const m = `${e?.code ?? ""} ${e?.message ?? ""}`.toLowerCase();
+    const key = /invalid login|invalid_credentials/.test(m)
+      ? "errCredentials"
+      : /not confirmed|email_not_confirmed/.test(m)
+        ? "errNotConfirmed"
+        : /already registered|already exists|user_already_exists/.test(m)
+          ? "errExists"
+          : /expired|invalid.*(otp|token)|otp_expired/.test(m)
+            ? "errCode"
+            : /rate|too many|over_email_send_rate_limit|security purposes/.test(m)
+              ? "errRate"
+              : /password/.test(m)
+                ? "errPassword"
+                : "errGeneric";
+    setError(t(key));
+    setState("error");
+  }
+  const busy = () => (setState("busy"), setError(""), setInfo(""));
+  const enter = () => router.push("/app");
+
+  async function signIn(e: React.FormEvent) {
     e.preventDefault();
     const sb = supabase();
     if (!sb) return;
-    setState("busy");
-    const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
-    if (error) {
-      setError(error.message);
-      setState("error");
-    } else setState("sent");
+    busy();
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (!error) return enter();
+    if (/not confirmed/i.test(error.message)) {
+      await sb.auth.resend({ type: "signup", email });
+      setStep("verify");
+      setInfo(t("codeSent", { email }));
+      setState("idle");
+      return;
+    }
+    fail(error);
+  }
+
+  async function signUp(e: React.FormEvent) {
+    e.preventDefault();
+    const sb = supabase();
+    if (!sb) return;
+    if (password.length < 8) return (setError(t("errPassword")), setState("error"));
+    if (password !== password2) return (setError(t("errMismatch")), setState("error"));
+    busy();
+    const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } });
+    if (error) return fail(error);
+    if (data.session) return enter();
+    setStep("verify");
+    setInfo(t("codeSent", { email }));
+    setState("idle");
+  }
+
+  async function verifySignup(e: React.FormEvent) {
+    e.preventDefault();
+    const sb = supabase();
+    if (!sb) return;
+    busy();
+    const { error } = await sb.auth.verifyOtp({ email, token: code.trim(), type: "signup" });
+    if (error) return fail(error);
+    enter();
+  }
+
+  async function sendReset(e: React.FormEvent) {
+    e.preventDefault();
+    const sb = supabase();
+    if (!sb) return;
+    busy();
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: resetTo });
+    if (error) return fail(error);
+    setStep("reset");
+    setInfo(t("codeSent", { email }));
+    setState("idle");
+  }
+
+  async function reset(e: React.FormEvent) {
+    e.preventDefault();
+    const sb = supabase();
+    if (!sb) return;
+    if (password.length < 8) return (setError(t("errPassword")), setState("error"));
+    busy();
+    const v = await sb.auth.verifyOtp({ email, token: code.trim(), type: "recovery" });
+    if (v.error) return fail(v.error);
+    const u = await sb.auth.updateUser({ password });
+    if (u.error) return fail(u.error);
+    enter();
+  }
+
+  /** Signed in by the reset link: only the new password is missing. */
+  async function setNewPassword(e: React.FormEvent) {
+    e.preventDefault();
+    const sb = supabase();
+    if (!sb) return;
+    if (password.length < 8) return (setError(t("errPassword")), setState("error"));
+    busy();
+    const u = await sb.auth.updateUser({ password });
+    if (u.error) return fail(u.error);
+    enter();
+  }
+
+  async function resend(type: "signup" | "recovery") {
+    const sb = supabase();
+    if (!sb) return;
+    busy();
+    const { error } = type === "signup" ? await sb.auth.resend({ type: "signup", email, options: { emailRedirectTo: redirectTo } }) : await sb.auth.resetPasswordForEmail(email, { redirectTo: resetTo });
+    if (error) return fail(error);
+    setInfo(t("codeSent", { email }));
+    setState("idle");
   }
 
   async function oauth(provider: "apple" | "google") {
@@ -101,17 +207,96 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
               <span className="h-px flex-1 bg-border" /> {t("or")} <span className="h-px flex-1 bg-border" />
             </div>
             )}
-            <form onSubmit={magic} className="space-y-3">
-              <label className="block">
-                <span className="mb-1.5 block text-sm font-medium">{t("email")}</span>
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input" autoComplete="email" />
-              </label>
-              <button className="btn btn-primary w-full" disabled={state === "busy"}>
-                {t("magicLink")}
-              </button>
-              {state === "sent" && <p className="text-sm text-success">{t("magicSent")}</p>}
-              {state === "error" && <p className="text-sm text-warning">{error}</p>}
-            </form>
+            {(() => {
+              const field = (label: string, input: React.ReactNode) => (
+                <label className="block">
+                  <span className="mb-1.5 block text-sm font-medium">{label}</span>
+                  {input}
+                </label>
+              );
+              const emailInput = field(t("email"), <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input" autoComplete="email" />);
+              const codeInput = field(
+                t("code"),
+                <input inputMode="numeric" autoComplete="one-time-code" required value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} className="input num text-center text-xl tracking-[0.4em]" placeholder="••••••" />,
+              );
+              const feedback = (
+                <>
+                  {info && <p className="text-sm text-success">{info}</p>}
+                  {state === "error" && <p className="text-sm text-warning">{error}</p>}
+                </>
+              );
+              const back = (
+                <button type="button" className="text-sm font-semibold text-muted underline" onClick={() => (setStep("form"), setError(""), setInfo(""), setState("idle"))}>
+                  {t("back")}
+                </button>
+              );
+              if (step === "verify")
+                return (
+                  <form onSubmit={verifySignup} className="space-y-3">
+                    <p className="text-sm text-muted">{t("verifyIntro")}</p>
+                    {codeInput}
+                    <button className="btn btn-primary w-full" disabled={state === "busy" || code.length < 6}>{t("verify")}</button>
+                    {feedback}
+                    <div className="flex justify-between">
+                      {back}
+                      <button type="button" className="text-sm font-semibold text-accent" onClick={() => resend("signup")}>{t("resend")}</button>
+                    </div>
+                  </form>
+                );
+              if (step === "newPassword")
+                return (
+                  <form onSubmit={setNewPassword} className="space-y-3">
+                    <p className="text-sm text-muted">{t("newPasswordIntro")}</p>
+                    {field(t("newPassword"), <input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} className="input" autoComplete="new-password" />)}
+                    <button className="btn btn-primary w-full" disabled={state === "busy"}>{t("savePassword")}</button>
+                    {feedback}
+                  </form>
+                );
+              if (step === "forgot")
+                return (
+                  <form onSubmit={sendReset} className="space-y-3">
+                    <p className="text-sm text-muted">{t("forgotIntro")}</p>
+                    {emailInput}
+                    <button className="btn btn-primary w-full" disabled={state === "busy"}>{t("sendCode")}</button>
+                    {feedback}
+                    {back}
+                  </form>
+                );
+              if (step === "reset")
+                return (
+                  <form onSubmit={reset} className="space-y-3">
+                    {codeInput}
+                    {field(t("newPassword"), <input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} className="input" autoComplete="new-password" />)}
+                    <button className="btn btn-primary w-full" disabled={state === "busy" || code.length < 6}>{t("savePassword")}</button>
+                    {feedback}
+                    <div className="flex justify-between">
+                      {back}
+                      <button type="button" className="text-sm font-semibold text-accent" onClick={() => resend("recovery")}>{t("resend")}</button>
+                    </div>
+                  </form>
+                );
+              return mode === "login" ? (
+                <form onSubmit={signIn} className="space-y-3">
+                  {emailInput}
+                  {field(t("password"), <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="input" autoComplete="current-password" />)}
+                  <button className="btn btn-primary w-full" disabled={state === "busy"}>{t("signIn")}</button>
+                  {feedback}
+                  <button type="button" className="text-sm font-semibold text-accent" onClick={() => (setStep("forgot"), setError(""), setState("idle"))}>
+                    {t("forgot")}
+                  </button>
+                  <p className="text-xs text-muted">{t("firstPasswordHint")}</p>
+                </form>
+              ) : (
+                <form onSubmit={signUp} className="space-y-3">
+                  {emailInput}
+                  {field(t("password"), <input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} className="input" autoComplete="new-password" />)}
+                  {field(t("password2"), <input type="password" required minLength={8} value={password2} onChange={(e) => setPassword2(e.target.value)} className="input" autoComplete="new-password" />)}
+                  <p className="text-xs text-muted">{t("passwordRule")}</p>
+                  <button className="btn btn-primary w-full" disabled={state === "busy"}>{t("register")}</button>
+                  {feedback}
+                </form>
+              );
+            })()}
           </>
         ) : (
           <>
