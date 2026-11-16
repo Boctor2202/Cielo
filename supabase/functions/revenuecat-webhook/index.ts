@@ -5,6 +5,7 @@
 import { errorResponse, json, readJson, requireEnv, safeEqual } from "../_shared/http.ts";
 import { adminClient } from "../_shared/supabase.ts";
 import { isUuid, refreshPilotSubscription, type Source, type Tier, upsertSubscription } from "../_shared/subscriptions.ts";
+import { recordRevenue } from "../_shared/revenue.ts";
 
 interface RevenueCatEvent {
   id: string;
@@ -22,7 +23,19 @@ interface RevenueCatEvent {
   environment?: "SANDBOX" | "PRODUCTION";
   transferred_from?: string[];
   transferred_to?: string[];
+  /** USD, negative for refunds */
+  price?: number | null;
+  price_in_purchased_currency?: number | null;
+  currency?: string | null;
+  country_code?: string | null;
+  takehome_percentage?: number | null;
+  event_timestamp_ms?: number;
+  purchased_at_ms?: number;
 }
+
+// Rough USD→EUR rate for store amounts not charged in euros (store proceeds are converted by the stores anyway).
+const USD_EUR = Number(Deno.env.get("USD_EUR_RATE") ?? "0.92");
+const PAYMENT_TYPES = new Set(["INITIAL_PURCHASE", "RENEWAL", "NON_RENEWING_PURCHASE", "PRODUCT_CHANGE"]);
 
 const STORE_SOURCE: Record<string, Source> = {
   APP_STORE: "apple",
@@ -101,6 +114,25 @@ Deno.serve(async (req) => {
       currentPeriodEnd: ev.expiration_at_ms ? new Date(ev.expiration_at_ms).toISOString() : null,
       raw: ev,
     });
+    // money received (or refunded) for the admin's tax thresholds
+    const refund = ev.type === "CANCELLATION" && (ev.price ?? 0) < 0;
+    if ((PAYMENT_TYPES.has(ev.type) && (ev.price ?? 0) > 0) || refund) {
+      const local = ev.price_in_purchased_currency ?? ev.price ?? 0;
+      const eur = (ev.currency ?? "").toUpperCase() === "EUR" ? local : (ev.price ?? 0) * USD_EUR;
+      await recordRevenue(admin, {
+        occurredAt: new Date(ev.purchased_at_ms ?? ev.event_timestamp_ms ?? Date.now()).toISOString(),
+        source,
+        externalId: ev.id,
+        pilotId,
+        kind: refund ? "refund" : "payment",
+        amountCents: local * 100,
+        currency: ev.currency ?? "USD",
+        amountEurCents: eur * 100,
+        proceedsEurCents: eur * 100 * (ev.takehome_percentage ?? 0.85),
+        country: ev.country_code ?? null,
+        environment: ev.environment === "SANDBOX" ? "test" : "production",
+      });
+    }
   } catch (e) {
     console.error("revenuecat-webhook", ev.type, ev.id, e);
     return errorResponse(500, "processing failed"); // RevenueCat retries

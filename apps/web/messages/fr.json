@@ -1358,7 +1358,32 @@
         "flights": "Vols enregistrés",
         "openReports": "Signalements à traiter",
         "canceled": "{n} résiliations en 30 j",
-        "signupsChart": "Inscriptions (30 derniers jours)"
+        "signupsChart": "Inscriptions (30 derniers jours)",
+        "thresholds": {
+          "title": "Seuils de la micro-entreprise ({year})",
+          "tolerance": "majoré {max}",
+          "projected": "projection au 31 décembre : {amount}",
+          "micro": {
+            "label": "Plafond de chiffre d'affaires",
+            "help": "Au-delà deux années de suite, sortie du régime micro (passage en société)"
+          },
+          "vat": {
+            "label": "Franchise de TVA",
+            "help": "Au-delà du seuil majoré, la TVA est due dès le dépassement : il faudra la facturer"
+          },
+          "oss": {
+            "label": "Ventes web aux particuliers des autres pays de l'UE",
+            "help": "Au-delà, appliquer la TVA du pays du client via le guichet unique OSS"
+          },
+          "alert": {
+            "micro": "Chiffre d'affaires {value} sur un plafond de {limit} (projection {projected}). Parlez-en à votre comptable : le passage en société se prépare.",
+            "vat": "Ventes web {value} pour un seuil de franchise de TVA de {limit} (projection {projected}). Préparez la facturation de la TVA avec votre comptable.",
+            "oss": "Ventes aux particuliers des autres pays de l'UE : {value} pour un seuil de {limit} (projection {projected}). Préparez l'inscription au guichet OSS et l'activation de Stripe Tax."
+          },
+          "detail": "Encaissé cette année : web {web}, stores (net de commission) {stores}.",
+          "unknownCountry": "{amount} de ventes web sans pays connu.",
+          "disclaimer": "Seuils en vigueur pour 2026, à vérifier chaque année avec un expert-comptable. Paiements réels uniquement (les tests sont exclus)."
+        }
       },
       "users": {
         "search": "E-mail ou nom",

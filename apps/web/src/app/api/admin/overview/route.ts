@@ -1,5 +1,6 @@
 import { PRICES_EUR } from "@cielo/core";
 import { handle, requireAdmin } from "@/lib/server/admin";
+import { thresholdStatus, type Revenue } from "@/lib/server/thresholds";
 
 export const dynamic = "force-dynamic";
 
@@ -9,12 +10,14 @@ const daysAgo = (n: number) => new Date(Date.now() - n * 86400_000).toISOString(
 export function GET(req: Request) {
   return handle(async () => {
     const { db } = await requireAdmin(req);
-    const [{ data: pilots }, { data: subs }, { data: stats }, { count: openReports }, { count: flights }] = await Promise.all([
+    const yearStart = `${new Date().getUTCFullYear()}-01-01T00:00:00Z`;
+    const [{ data: pilots }, { data: subs }, { data: stats }, { count: openReports }, { count: flights }, { data: revenue }] = await Promise.all([
       db.from("pilots").select("id, created_at, subscription_tier, subscription_source, subscription_expires_at").is("deleted_at", null),
       db.from("subscriptions").select("pilot_id, source, tier, status, current_period_end"),
       db.from("admin_pilot_stats").select("pilot_id, flights, last_flight_change"),
       db.from("feedback").select("id", { count: "exact", head: true }).in("status", ["new", "in_progress"]),
       db.from("flights").select("id", { count: "exact", head: true }).is("deleted_at", null),
+      db.from("revenue_events").select("occurred_at, source, amount_eur_cents, proceeds_eur_cents, country").eq("environment", "production").gte("occurred_at", yearStart),
     ]);
     const now = Date.now();
     const live = (exp?: string | null) => !exp || Date.parse(exp) > now;
@@ -47,6 +50,7 @@ export function GET(req: Request) {
       active7,
       flights: flights ?? 0,
       openReports: openReports ?? 0,
+      thresholds: thresholdStatus((revenue ?? []) as Revenue[]),
     });
   });
 }

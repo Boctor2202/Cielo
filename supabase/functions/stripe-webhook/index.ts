@@ -1,10 +1,44 @@
 // Stripe webhook: keeps subscriptions + pilots.subscription_* in sync with Stripe.
-// Events: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted.
+// Events: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted,
+// invoice.paid and charge.refunded (money received, for the admin's tax thresholds).
 // Secrets: STRIPE_WEBHOOK_SECRET, STRIPE_SECRET_KEY, STRIPE_PRICE_{BASIC,PREMIUM}_{MONTHLY,YEARLY}.
 import { errorResponse, json, requireEnv } from "../_shared/http.ts";
 import { adminClient } from "../_shared/supabase.ts";
 import { stripeRequest, type StripeSubscription, subscriptionPeriodEnd, tierForPrice, verifyStripeSignature } from "../_shared/stripe.ts";
 import { isUuid, upsertSubscription } from "../_shared/subscriptions.ts";
+import { recordRevenue } from "../_shared/revenue.ts";
+
+interface StripeInvoice {
+  id: string;
+  amount_paid: number;
+  currency: string;
+  status_transitions?: { paid_at?: number | null };
+  created: number;
+  livemode: boolean;
+  charge?: string | null;
+  customer_address?: { country?: string | null } | null;
+  subscription_details?: { metadata?: Record<string, string> } | null;
+  parent?: { subscription_details?: { metadata?: Record<string, string> } | null } | null;
+}
+interface StripeCharge {
+  id: string;
+  amount_refunded: number;
+  currency: string;
+  livemode: boolean;
+  created: number;
+  payment_method_details?: { card?: { country?: string | null } | null } | null;
+  billing_details?: { address?: { country?: string | null } | null } | null;
+  metadata?: Record<string, string>;
+  refunds?: { data?: { id: string; amount: number; created: number }[] };
+}
+
+/** Customer country: billing address, else the card's issuing country. */
+async function countryOf(invoice: StripeInvoice): Promise<string | null> {
+  if (invoice.customer_address?.country) return invoice.customer_address.country;
+  if (!invoice.charge) return null;
+  const ch = await stripeRequest<StripeCharge>("GET", `/charges/${invoice.charge}`);
+  return ch.billing_details?.address?.country ?? ch.payment_method_details?.card?.country ?? null;
+}
 
 interface StripeEvent {
   id: string;
@@ -54,6 +88,42 @@ Deno.serve(async (req) => {
         }
         if (!(await pilotExists(admin, pilotId))) break; // account deleted (gdpr-delete): nothing to update
         await saveSubscription(admin, pilotId, event.type === "customer.subscription.deleted" ? { ...sub, status: "canceled" } : sub);
+        break;
+      }
+      case "invoice.paid": {
+        const inv = event.data.object as unknown as StripeInvoice;
+        if (!inv.amount_paid) break; // the 7-day trial's 0 € invoice
+        if (inv.currency.toLowerCase() !== "eur") console.warn("stripe-webhook: non-EUR invoice", inv.id, inv.currency);
+        const meta = inv.parent?.subscription_details?.metadata ?? inv.subscription_details?.metadata;
+        await recordRevenue(admin, {
+          occurredAt: new Date(((inv.status_transitions?.paid_at ?? inv.created) as number) * 1000).toISOString(),
+          source: "stripe",
+          externalId: inv.id,
+          pilotId: isUuid(meta?.pilot_id) ? meta!.pilot_id : null,
+          kind: "payment",
+          amountCents: inv.amount_paid,
+          currency: inv.currency,
+          amountEurCents: inv.amount_paid, // prices are in EUR
+          country: await countryOf(inv),
+          environment: inv.livemode ? "production" : "test",
+        });
+        break;
+      }
+      case "charge.refunded": {
+        const ch = event.data.object as unknown as StripeCharge;
+        for (const r of ch.refunds?.data ?? []) {
+          await recordRevenue(admin, {
+            occurredAt: new Date(r.created * 1000).toISOString(),
+            source: "stripe",
+            externalId: r.id,
+            kind: "refund",
+            amountCents: -r.amount,
+            currency: ch.currency,
+            amountEurCents: -r.amount,
+            country: ch.billing_details?.address?.country ?? ch.payment_method_details?.card?.country ?? null,
+            environment: ch.livemode ? "production" : "test",
+          });
+        }
         break;
       }
       default:

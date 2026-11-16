@@ -22,6 +22,15 @@ interface Overview {
   active7: number;
   flights: number;
   openReports: number;
+  thresholds: Thresholds;
+}
+interface Thresholds {
+  year: number;
+  turnover: number;
+  webTotal: number;
+  storeProceeds: number;
+  unknownCountry: number;
+  items: { key: "micro" | "vat" | "oss"; value: number; limit: number; limitMax: number | null; projected: number; ratio: number; level: "ok" | "warning" | "over" }[];
 }
 interface User {
   id: string;
@@ -119,8 +128,14 @@ function OverviewTab() {
   if (error) return <p className="text-warning">{t("error")}</p>;
   if (!data) return <Loader2 className="animate-spin text-muted" />;
   const max = Math.max(1, ...data.signupsPerDay.map((d) => d.n));
+  const alerts = data.thresholds.items.filter((i) => i.level !== "ok");
   return (
     <div className="space-y-5">
+      {alerts.map((a) => (
+        <div key={a.key} className={`rounded-2xl px-4 py-3 text-sm ${a.level === "over" ? "bg-warning/15 text-warning" : "bg-caution/15"}`}>
+          ⚠️ {t(`thresholds.alert.${a.key}`, { value: eur(a.value), limit: eur(a.limit), projected: eur(a.projected) })}
+        </div>
+      ))}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Readout label={t("mrr")} value={eur(data.mrr)} sub={t("mrrSub", { basic: data.paying.basic, max: data.paying.max })} level="ok" />
         <Readout label={t("paying")} value={data.paying.total} sub={t("sources", { stripe: data.paying.stripe, apple: data.paying.apple, google: data.paying.google })} />
@@ -132,6 +147,7 @@ function OverviewTab() {
         <Readout label={t("flights")} value={data.flights.toLocaleString(locale)} level="neutral" />
         <Readout label={t("openReports")} value={data.openReports} sub={t("canceled", { n: data.canceled30 })} level={data.openReports ? "warning" : "neutral"} />
       </div>
+      <ThresholdsCard data={data.thresholds} eur={eur} />
       <Card title={t("signupsChart")}>
         <div className="flex h-36 items-end gap-1">
           {data.signupsPerDay.map((d) => (
@@ -146,6 +162,39 @@ function OverviewTab() {
         </div>
       </Card>
     </div>
+  );
+}
+
+function ThresholdsCard({ data, eur }: { data: Thresholds; eur: (n: number) => string }) {
+  const t = useTranslations("app.admin.overview.thresholds");
+  return (
+    <Card title={t("title", { year: data.year })}>
+      <div className="space-y-5">
+        {data.items.map((i) => {
+          const color = i.level === "over" ? "bg-warning" : i.level === "warning" ? "bg-caution" : "bg-accent";
+          return (
+            <div key={i.key}>
+              <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+                <span className="font-medium">{t(`${i.key}.label`)}</span>
+                <span className="num">
+                  {eur(i.value)} <span className="text-muted">/ {eur(i.limit)}{i.limitMax ? ` (${t("tolerance", { max: eur(i.limitMax) })})` : ""}</span>
+                </span>
+              </div>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-surface-2">
+                <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, i.ratio * 100)}%` }} />
+              </div>
+              <p className="mt-1 text-xs text-muted">
+                {t(`${i.key}.help`)} · {t("projected", { amount: eur(i.projected) })}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-5 text-xs text-muted">
+        {t("detail", { web: eur(data.webTotal), stores: eur(data.storeProceeds) })}
+        {data.unknownCountry > 0 ? ` ${t("unknownCountry", { amount: eur(data.unknownCountry) })}` : ""} {t("disclaimer")}
+      </p>
+    </Card>
   );
 }
 

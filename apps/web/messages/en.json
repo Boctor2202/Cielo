@@ -1358,7 +1358,32 @@
         "flights": "Flights logged",
         "openReports": "Reports to handle",
         "canceled": "{n} cancellations in 30 d",
-        "signupsChart": "Sign-ups (last 30 days)"
+        "signupsChart": "Sign-ups (last 30 days)",
+        "thresholds": {
+          "title": "Micro-entreprise thresholds ({year})",
+          "tolerance": "raised {max}",
+          "projected": "projected at 31 December: {amount}",
+          "micro": {
+            "label": "Turnover ceiling",
+            "help": "Above it two years running, you leave the micro regime (switch to a company)"
+          },
+          "vat": {
+            "label": "VAT franchise",
+            "help": "Above the raised threshold, VAT is due from that point: you will need to charge it"
+          },
+          "oss": {
+            "label": "Web sales to consumers in other EU countries",
+            "help": "Above it, charge the customer's country VAT through the OSS one-stop shop"
+          },
+          "alert": {
+            "micro": "Turnover {value} against a {limit} ceiling (projected {projected}). Talk to your accountant: plan the move to a company.",
+            "vat": "Web sales {value} against a {limit} VAT franchise threshold (projected {projected}). Prepare to charge VAT with your accountant.",
+            "oss": "Sales to consumers in other EU countries: {value} against a {limit} threshold (projected {projected}). Prepare the OSS registration and switch on Stripe Tax."
+          },
+          "detail": "Received this year: web {web}, stores (net of commission) {stores}.",
+          "unknownCountry": "{amount} of web sales with no known country.",
+          "disclaimer": "Thresholds in force for 2026, to check every year with an accountant. Real payments only (tests excluded)."
+        }
       },
       "users": {
         "search": "E-mail or name",
