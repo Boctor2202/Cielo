@@ -8,7 +8,7 @@ export const GREEN = "#22C55E";
 function ThreeGreensO({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 40 40" fill="none" aria-hidden className={className}>
-      <circle cx="20" cy="20" r="16.5" stroke="currentColor" strokeWidth="5" />
+      <circle cx="20" cy="20" r="17.3" stroke="currentColor" strokeWidth="3.4" />
       <circle cx="20" cy="13.4" r="4.6" fill={GREEN} />
       <circle cx="14" cy="23.8" r="4.6" fill={GREEN} />
       <circle cx="26" cy="23.8" r="4.6" fill={GREEN} />
@@ -33,11 +33,13 @@ export function LogoMark({ size = 28, className }: { size?: number; className?: 
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={`inline-flex items-baseline text-[17px] font-bold leading-none tracking-[0.18em] ${className ?? ""}`} aria-label="Geardown">
-      <span aria-hidden>GEARD</span>
+      {/* GEAR bold, DOWN regular: the ring of the O drawn at the weight of the regular letters */}
+      <span aria-hidden>GEAR</span>
+      <span aria-hidden className="font-normal">D</span>
       {/* 1.3 times the height of the letters, centred on them: the box sits on the baseline (flex, items-baseline),
           so it is lowered by half its height less the middle of the capitals (0.36em) */}
       <ThreeGreensO className="relative top-[0.29em] mr-[0.18em] h-[1.3em] w-[1.3em] shrink-0" />
-      <span aria-hidden>WN</span>
+      <span aria-hidden className="font-normal">WN</span>
     </span>
   );
 }
