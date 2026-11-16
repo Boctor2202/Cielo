@@ -624,6 +624,7 @@
       "rowsOk": "{ok} lignes valides sur {total}",
       "errors": "Erreurs",
       "importN": "Importer {count, plural, one {# vol} other {# vols}}",
+      "skipped": "{count, plural, one {# déjà présent ignoré} other {# déjà présents ignorés}}",
       "done": "{count, plural, one {# vol importé} other {# vols importés}}",
       "rosterHelp": "Importez votre planning au format iCal (.ics) ou CSV depuis la page Roster : les vols effectués peuvent ensuite être créés en un clic.",
       "goRoster": "Aller au roster",
@@ -663,6 +664,7 @@
       "autoDetected": "{count} colonnes sur {total} reconnues automatiquement. Vérifiez l'aperçu ci-dessous puis importez.",
       "checkColumns": "Vérifier ou corriger les colonnes",
       "checks": {
+        "blockTooLong": "« {field} » donne des vols de plus de 16 h ou recopie la durée sur {pct} % des lignes : c'est sans doute une colonne de durée, pas une heure d'arrivée. Choisissez la bonne colonne.",
         "totalVsBlock": "« {field} » ne correspond pas à l'écart off-block → on-block sur {pct} % des vols. Vérifiez la colonne choisie.",
         "exceedsTotal": "« {field} » dépasse le temps total sur {pct} % des vols : ce n'est probablement pas la bonne colonne.",
         "functionsVsTotal": "Les temps de fonction (CDB, copilote, double, instructeur) n'atteignent pas le temps total sur {pct} % des vols : une colonne de fonction manque peut-être.",
@@ -871,7 +873,7 @@
     "ftl": {
       "title": "Limites de temps de vol (FTL)",
       "subtitle": "Calcul indicatif selon EASA ORO.FTL pour un membre d'équipage acclimaté, à partir de vos vols et de votre roster.",
-      "disclaimer": "Outil d'aide : il ne remplace pas le système de suivi FTL de votre exploitant. Non couverts à ce stade : prolongations, équipage renforcé, temps de service fractionné, état d'acclimatation inconnu, réserve.",
+      "disclaimer": "Outil d'aide : il ne remplace pas le système de suivi FTL de votre exploitant. Résultats estimés : le carnet ne contient pas vos heures de présentation et de fin de service (réglées ci-contre). Une attente au sol de 3 h ou plus est traitée en service fractionné ; un dépassement de moins d'1 h apparaît en avertissement (prolongation possible). Non couverts : équipage renforcé, état d'acclimatation inconnu, réserve.",
       "cumulative": "Cumuls",
       "duty7d": "Temps de service · 7 jours",
       "duty14d": "Temps de service · 14 jours",
@@ -886,6 +888,7 @@
       "maxFdp": "FDP max",
       "rest": "Repos précédent",
       "minRest": "min.",
+      "withinExtension": "dépassement couvrable par une prolongation",
       "violations": "Dépassements",
       "noViolation": "Aucun dépassement détecté.",
       "settings": "Réglages",

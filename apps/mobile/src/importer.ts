@@ -14,7 +14,7 @@ import {
   type Flight,
   type Pilot,
 } from "@cielo/core";
-import { lookupAirport } from "./airports";
+import { lookupAirport, toIcao } from "./airports";
 import type { SqliteStore } from "./db/sqliteStore";
 
 export interface ImportResult {
@@ -44,7 +44,7 @@ export async function pickAndImportCsv(store: SqliteStore, pilot: Pilot, types: 
       skipped++;
       continue;
     }
-    const input = r.input;
+    const input = { ...r.input, depIcao: toIcao(r.input.depIcao), arrIcao: toIcao(r.input.arrIcao) };
     const type = input.aircraftTypeIcao ? types.find((t) => t.icao.toUpperCase() === input.aircraftTypeIcao!.toUpperCase()) : undefined;
     const d = deriveFlightTimes(input, { airports: lookupAirport, aircraftType: type });
     const ex = r.explicit;
@@ -72,8 +72,8 @@ export async function pickAndImportCsv(store: SqliteStore, pilot: Pilot, types: 
       flightNumber: input.flightNumber || undefined,
       source: "import",
       rosterEventId: null,
-      depIcao: input.depIcao.toUpperCase(),
-      arrIcao: input.arrIcao.toUpperCase(),
+      depIcao: input.depIcao,
+      arrIcao: input.arrIcao,
       outUtc: d.outUtc,
       offUtc: d.offUtc,
       onUtc: d.onUtc,

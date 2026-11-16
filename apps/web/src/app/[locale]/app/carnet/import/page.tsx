@@ -9,7 +9,7 @@ import {
 import { Link } from "@/i18n/navigation";
 import { Card, Field, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { useAirports } from "@/lib/airports";
-import { buildFlight } from "@/lib/repo";
+import { buildFlight, flightKey } from "@/lib/repo";
 import { db } from "@/lib/db";
 import { parseOcrText } from "@/lib/ocr";
 import { DropZone } from "@/components/app/DropZone";
@@ -96,11 +96,21 @@ function FileImport() {
   async function run() {
     if (!airports) return;
     setBusy(true);
+    // flights already in the logbook (or twice in the file) are skipped: importing the same file again adds nothing
+    const seen = new Set((await db().t("flights").toArray()).filter((f) => !f.deletedAt).map(flightKey));
     const built = [];
-    for (const r of ok) built.push(await buildFlight(r.input!, airports, { source: "import", explicit: r.explicit }));
+    let skipped = 0;
+    for (const r of ok) {
+      const f = await buildFlight(r.input!, airports, { source: "import", explicit: r.explicit });
+      if (seen.has(flightKey(f))) skipped++;
+      else {
+        seen.add(flightKey(f));
+        built.push(f);
+      }
+    }
     await db().t("flights").bulkPut(built);
     setBusy(false);
-    toast(t("done", { count: built.length }));
+    toast(t("done", { count: built.length }) + (skipped ? ` · ${t("skipped", { count: skipped })}` : ""));
     setRows(null);
     setMapping(null);
   }

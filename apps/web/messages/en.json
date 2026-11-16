@@ -624,6 +624,7 @@
       "rowsOk": "{ok} valid rows out of {total}",
       "errors": "Errors",
       "importN": "Import {count, plural, one {# flight} other {# flights}}",
+      "skipped": "{count, plural, one {# already in the logbook, skipped} other {# already in the logbook, skipped}}",
       "done": "{count, plural, one {# flight imported} other {# flights imported}}",
       "rosterHelp": "Import your schedule as iCal (.ics) or CSV from the Roster page: completed flights can then be logged in one click.",
       "goRoster": "Go to roster",
@@ -663,6 +664,7 @@
       "autoDetected": "{count} of {total} columns recognised automatically. Check the preview below, then import.",
       "checkColumns": "Check or fix the columns",
       "checks": {
+        "blockTooLong": "“{field}” gives flights over 16 h or repeats the duration on {pct} % of rows: it is probably a duration column, not an arrival time. Pick the right column.",
         "totalVsBlock": "“{field}” does not match off-block → on-block on {pct} % of flights. Check the chosen column.",
         "exceedsTotal": "“{field}” exceeds the total time on {pct} % of flights: probably not the right column.",
         "functionsVsTotal": "Function times (PIC, co-pilot, dual, instructor) do not reach the total on {pct} % of flights: a function column may be missing.",
@@ -871,7 +873,7 @@
     "ftl": {
       "title": "Flight time limitations (FTL)",
       "subtitle": "Indicative calculation under EASA ORO.FTL for an acclimatised crew member, from your flights and roster.",
-      "disclaimer": "An aid only: it doesn't replace your operator's FTL monitoring system. Not covered yet: extensions, augmented crew, split duty, unknown acclimatisation state, standby.",
+      "disclaimer": "An aid only: it doesn't replace your operator's FTL monitoring system. Estimated results: the logbook has no report or release times (set alongside). A ground wait of 3 h or more is treated as split duty; an overrun of less than 1 h shows as a warning (an extension may cover it). Not covered: augmented crew, unknown acclimatisation state, standby.",
       "cumulative": "Cumulative",
       "duty7d": "Duty time · 7 days",
       "duty14d": "Duty time · 14 days",
@@ -886,6 +888,7 @@
       "maxFdp": "Max FDP",
       "rest": "Previous rest",
       "minRest": "min.",
+      "withinExtension": "overrun an extension can cover",
       "violations": "Exceedances",
       "noViolation": "No exceedance detected.",
       "settings": "Settings",

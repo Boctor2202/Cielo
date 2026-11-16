@@ -83,10 +83,10 @@ export default function FtlPage() {
               <ul className="divide-y divide-border">
                 {report.violations.slice(0, 30).map((v, i) => (
                   <li key={i} className="flex gap-3 px-5 py-3 text-sm">
-                    <AlertOctagon size={16} className="mt-0.5 shrink-0 text-warning" />
+                    <AlertOctagon size={16} className={`mt-0.5 shrink-0 ${v.severity === "warning" ? "text-caution" : "text-warning"}`} />
                     <div>
                       <p className="font-medium">{t(`codes.${v.code}`, { actual: f(v.actualMin), limit: f(v.limitMin) })}</p>
-                      <p className="num text-xs text-muted">{fd(v.atUtc, { dateStyle: "medium", timeStyle: "short" })} UTC{v.atUtc > now ? " · roster" : ""}</p>
+                      <p className="num text-xs text-muted">{fd(v.atUtc, { dateStyle: "medium", timeStyle: "short" })} UTC{v.atUtc > now ? " · roster" : ""}{v.severity === "warning" && v.code === "fdpExceeded" ? ` · ${t("withinExtension")}` : ""}</p>
                     </div>
                   </li>
                 ))}

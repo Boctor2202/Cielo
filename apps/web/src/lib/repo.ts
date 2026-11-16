@@ -144,6 +144,12 @@ export async function buildFlight(
   airports: AirportIndex,
   opts: { id?: string; explicit?: ExplicitTimes; source?: Flight["source"]; rosterEventId?: string | null } = {},
 ): Promise<Flight> {
+  // logbooks often use IATA codes (ARN): store the ICAO code (ESSA) when the airport is known
+  const icao = (c: string) => {
+    const code = c.trim().toUpperCase();
+    return (code.length === 3 && airports.iataToIcao(code)) || code;
+  };
+  input = { ...input, depIcao: icao(input.depIcao), arrIcao: icao(input.arrIcao) };
   const pilot = await ensurePilot();
   const types = await allTypes();
   const { aircraft, type } = await resolveAircraft(input, types);
@@ -382,3 +388,7 @@ export async function importAll(data: Record<string, unknown>) {
 export async function deleteAllLocal() {
   await localStore.clear();
 }
+
+/** Identity of a flight for duplicate detection: route and off-block minute, or route, date and duration. */
+export const flightKey = (f: Pick<Flight, "date" | "depIcao" | "arrIcao" | "outUtc" | "offUtc" | "totalMin">) =>
+  `${f.depIcao}|${f.arrIcao}|${(f.outUtc ?? f.offUtc)?.slice(0, 16) ?? `${f.date}|${f.totalMin}`}`;

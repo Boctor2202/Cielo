@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  accessFor, analyseTable, analyseFtl, checkMapping, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
+  accessFor, analyseTable, DEFAULT_FTL_SETTINGS, analyseFtl, checkMapping, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
   detectMapping, formatDuration, icalToRosterEvent, licenseStatus, maxDailyFdp, parseCsv, parseDuration,
   parseFlexibleDate, parseIcal, rowsToFlights, sumFlights, sunElevation, type Airport, type Flight,
 } from "../src";
@@ -143,14 +143,34 @@ describe("ftl", () => {
     const flights = [
       flight({ id: "1", outUtc: "2026-11-01T05:00:00Z", inUtc: "2026-11-01T09:00:00Z", totalMin: 240 }),
       flight({ id: "2", depIcao: "LFMN", arrIcao: "LFPG", outUtc: "2026-11-01T10:00:00Z", inUtc: "2026-11-01T18:00:00Z", totalMin: 480 }),
-      flight({ id: "3", outUtc: "2026-11-02T03:00:00Z", inUtc: "2026-11-02T05:00:00Z", totalMin: 120 }),
+      flight({ id: "3", outUtc: "2026-11-02T06:00:00Z", inUtc: "2026-11-02T08:00:00Z", totalMin: 120 }),
     ];
     const duties = buildDutyPeriods(flights);
     expect(duties).toHaveLength(2);
     const r = analyseFtl(duties, "2026-11-10T00:00:00Z");
     const codes = r.violations.map((v) => v.code);
     expect(codes).toContain("fdpExceeded");
-    expect(codes).toContain("restTooShort");
+    // 11:30 of rest after a 14:30 duty
+    expect(r.violations.find((v) => v.code === "restTooShort")?.limitMin).toBe(14 * 60 + 30);
+  });
+  it("treats a long wait on the ground as split duty, not as a rest", () => {
+    const flights = [
+      flight({ id: "1", outUtc: "2026-11-01T07:00:00Z", inUtc: "2026-11-01T09:00:00Z", totalMin: 120 }),
+      flight({ id: "1b", outUtc: "2026-11-01T07:00:00Z", inUtc: "2026-11-01T09:00:00Z", totalMin: 120 }), // logged twice
+      flight({ id: "2", depIcao: "LFMN", arrIcao: "LFPG", outUtc: "2026-11-01T15:00:00Z", inUtc: "2026-11-01T17:00:00Z", totalMin: 120 }),
+    ];
+    const duties = buildDutyPeriods(flights);
+    expect(duties).toHaveLength(1);
+    expect(duties[0]!.sectors).toBe(2);
+    const r = analyseFtl(duties, "2026-11-10T00:00:00Z", { ...DEFAULT_FTL_SETTINGS, homeTimezone: "UTC" });
+    // FDP 06:00→17:00 = 11:00; max 13:00 + (6:00 − 0:30) / 2
+    expect(r.duties[0]!.splitExtensionMin).toBe(165);
+    expect(r.violations).toEqual([]);
+  });
+  it("warns rather than errs on an overrun within the 1 h extension", () => {
+    const flights = [flight({ id: "1", outUtc: "2026-11-01T07:00:00Z", inUtc: "2026-11-01T19:30:00Z", totalMin: 750 })];
+    const r = analyseFtl(buildDutyPeriods(flights), "2026-11-10T00:00:00Z", { ...DEFAULT_FTL_SETTINGS, homeTimezone: "UTC" });
+    expect(r.violations.find((v) => v.code === "fdpExceeded")?.severity).toBe("warning");
   });
 });
 

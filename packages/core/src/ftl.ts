@@ -2,8 +2,10 @@
  * EASA ORO.FTL — base implementation.
  * Covers: max daily FDP for acclimatised crew (ORO.FTL.205(b)(1)), minimum rest (ORO.FTL.235(a)(b)),
  * cumulative duty and flight time limits (ORO.FTL.210) and recurrent extended recovery rest (ORO.FTL.235(d)).
- * Not covered yet: extensions, in-flight rest / augmented crew, split duty, unknown acclimatisation state,
- * standby counting rules and operator-specific schemes (CS FTL.1). Results are indicative.
+ * Also: split duty (CS FTL.1.220, a ground break of 3 h or more extends the FDP by half the break) and
+ * FDP overruns within the 1 h extension (ORO.FTL.205(d)) shown as warnings.
+ * Not covered yet: in-flight rest / augmented crew, unknown acclimatisation state, standby counting rules and
+ * operator-specific schemes. A logbook has no report or release times: results are estimates.
  */
 import { minutesBetween } from "./time";
 import type { Flight, RosterEvent } from "./types";
@@ -36,6 +38,23 @@ export interface DutyPeriod {
   startIcao?: string;
   endIcao?: string;
   flightIds: string[];
+  /** longest time on the ground between two sectors of this duty (split duty), minutes */
+  longestBreakMin?: number;
+}
+
+/** A ground break counts for split duty from 3 h (CS FTL.1.220). */
+export const SPLIT_MIN_BREAK = 3 * 60;
+/** Post- and pre-flight duties taken off the break (CS FTL.1.220: at least 30 min). */
+const SPLIT_DUTIES_MIN = 30;
+/** Longest FDP extension (ORO.FTL.205(d)): overruns within it are warnings. */
+export const FDP_EXTENSION_MAX = 60;
+/** Shortest rest the rules allow (away from base, ORO.FTL.235(b)). */
+const MIN_REST_AWAY = 10 * 60;
+
+/** FDP increase earned by a split duty break: half the break less the post/pre-flight duties. */
+export function splitDutyExtension(breakMin: number | undefined): number {
+  if (!breakMin || breakMin < SPLIT_MIN_BREAK) return 0;
+  return Math.round((breakMin - SPLIT_DUTIES_MIN) / 2);
 }
 
 /** ORO.FTL.205(b)(1) table: [startMinuteOfDay, endMinuteOfDay (exclusive), max FDP for 1–2 sectors]. */
@@ -74,18 +93,34 @@ export function localMinuteOfDay(iso: string, timeZone: string): number {
   return h * 60 + mm;
 }
 
-/** Groups logged flights (or flight roster events) into duty periods. A gap > 6 h between blocks starts a new duty. */
+/**
+ * Groups logged flights into duty periods. Two blocks belong to the same duty unless the time between them leaves
+ * room for the shortest legal rest (10 h) plus the release and report times: a shorter gap cannot have been a rest,
+ * it is a wait on the ground (split duty). The same leg logged twice is counted once.
+ */
 export function buildDutyPeriods(flights: Flight[], settings: FtlSettings = DEFAULT_FTL_SETTINGS): DutyPeriod[] {
+  const seen = new Set<string>();
   const legs = flights
     .filter((f) => !f.deletedAt && !f.isFstd && (f.outUtc || f.offUtc) && (f.inUtc || f.onUtc))
     .map((f) => ({ f, start: (f.outUtc ?? f.offUtc)!, end: (f.inUtc ?? f.onUtc)! }))
-    .sort((a, b) => a.start.localeCompare(b.start));
+    .sort((a, b) => a.start.localeCompare(b.start))
+    .filter((l) => {
+      const k = `${l.start}|${l.end}|${l.f.depIcao}|${l.f.arrIcao}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  const maxGap = settings.releaseAfterMin + MIN_REST_AWAY + settings.reportBeforeMin;
   const duties: DutyPeriod[] = [];
   let cur: DutyPeriod | null = null;
   for (const leg of legs) {
-    if (cur && minutesBetween(cur.fdpEndUtc, leg.start) <= 6 * 60) {
-      cur.fdpEndUtc = leg.end;
-      cur.releaseUtc = shift(leg.end, settings.releaseAfterMin);
+    const gap = cur ? minutesBetween(cur.fdpEndUtc, leg.start) : Infinity;
+    if (cur && gap < maxGap) {
+      if (gap > (cur.longestBreakMin ?? 0)) cur.longestBreakMin = gap;
+      if (leg.end > cur.fdpEndUtc) {
+        cur.fdpEndUtc = leg.end;
+        cur.releaseUtc = shift(leg.end, settings.releaseAfterMin);
+      }
       cur.sectors++;
       cur.flightMin += leg.f.totalMin;
       cur.endIcao = leg.f.arrIcao;
@@ -170,7 +205,10 @@ export interface FtlViolation {
 export interface DutyAnalysis {
   duty: DutyPeriod;
   fdpMin: number;
+  /** max FDP including the split duty extension */
   maxFdpMin: number;
+  /** of which split duty extension */
+  splitExtensionMin: number;
   dutyMin: number;
   restBeforeMin?: number;
   minRestBeforeMin?: number;
@@ -210,17 +248,20 @@ export function analyseFtl(duties: DutyPeriod[], nowUtc: string, settings: FtlSe
   sorted.forEach((d, i) => {
     const fdpMin = minutesBetween(d.reportUtc, d.fdpEndUtc);
     const dutyMin = minutesBetween(d.reportUtc, d.releaseUtc);
-    const maxFdpMin = d.kind === "FDP" ? maxDailyFdp(localMinuteOfDay(d.reportUtc, settings.homeTimezone), d.sectors) : Infinity;
-    const a: DutyAnalysis = { duty: d, fdpMin, maxFdpMin, dutyMin };
+    const splitExtensionMin = splitDutyExtension(d.longestBreakMin);
+    const maxFdpMin = d.kind === "FDP" ? maxDailyFdp(localMinuteOfDay(d.reportUtc, settings.homeTimezone), d.sectors) + splitExtensionMin : Infinity;
+    const a: DutyAnalysis = { duty: d, fdpMin, maxFdpMin, splitExtensionMin, dutyMin };
     if (d.kind === "FDP" && fdpMin > maxFdpMin) {
-      violations.push({ code: "fdpExceeded", severity: "error", dutyId: d.id, atUtc: d.reportUtc, actualMin: fdpMin, limitMin: maxFdpMin });
+      const severity = fdpMin - maxFdpMin <= FDP_EXTENSION_MAX ? "warning" : "error";
+      violations.push({ code: "fdpExceeded", severity, dutyId: d.id, atUtc: d.reportUtc, actualMin: fdpMin, limitMin: maxFdpMin });
     }
     const prev = sorted[i - 1];
     if (prev) {
       const rest = minutesBetween(prev.releaseUtc, d.reportUtc);
       const prevDuty = minutesBetween(prev.reportUtc, prev.releaseUtc);
-      const atHome = !settings.homeBaseIcao || prev.endIcao === settings.homeBaseIcao;
-      const minRest = Math.max(prevDuty, atHome ? 12 * 60 : 10 * 60);
+      // 12 h at home base, 10 h away; without a home base we cannot tell, so the lower one
+      const atHome = !!settings.homeBaseIcao && prev.endIcao === settings.homeBaseIcao;
+      const minRest = Math.max(prevDuty, atHome ? 12 * 60 : MIN_REST_AWAY);
       a.restBeforeMin = rest;
       a.minRestBeforeMin = minRest;
       if (rest < minRest) {

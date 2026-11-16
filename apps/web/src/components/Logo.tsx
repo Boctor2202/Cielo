@@ -9,9 +9,9 @@ function ThreeGreensO({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 40 40" fill="none" aria-hidden className={className}>
       <circle cx="20" cy="20" r="16.5" stroke="currentColor" strokeWidth="5" />
-      <circle cx="20" cy="13.4" r="4.1" fill={GREEN} />
-      <circle cx="14" cy="23.8" r="4.1" fill={GREEN} />
-      <circle cx="26" cy="23.8" r="4.1" fill={GREEN} />
+      <circle cx="20" cy="13.4" r="4.6" fill={GREEN} />
+      <circle cx="14" cy="23.8" r="4.6" fill={GREEN} />
+      <circle cx="26" cy="23.8" r="4.6" fill={GREEN} />
     </svg>
   );
 }
@@ -34,9 +34,9 @@ export function Logo({ className }: { className?: string }) {
   return (
     <span className={`inline-flex items-baseline text-[17px] font-bold leading-none tracking-[0.18em] ${className ?? ""}`} aria-label="Geardown">
       <span aria-hidden>GEARD</span>
-      {/* sized like Manrope's O (0.76em tall, 0.02em below the baseline): the ring's outer edge is 38/40 of the box,
-          and as a flex item aligned on the baseline the box sits on it */}
-      <ThreeGreensO className="relative top-[0.06em] mr-[0.18em] h-[0.8em] w-[0.8em] shrink-0" />
+      {/* 1.3 times the height of the letters, centred on them: the box sits on the baseline (flex, items-baseline),
+          so it is lowered by half its height less the middle of the capitals (0.36em) */}
+      <ThreeGreensO className="relative top-[0.29em] mr-[0.18em] h-[1.3em] w-[1.3em] shrink-0" />
       <span aria-hidden>WN</span>
     </span>
   );

@@ -13,3 +13,9 @@ export function airports(): AirportIndex {
 }
 
 export const lookupAirport = (icao: string) => airports().get(icao);
+
+/** ICAO code for a code typed or imported as IATA (ARN → ESSA); other codes unchanged, upper-cased. */
+export const toIcao = (code: string) => {
+  const c = code.trim().toUpperCase();
+  return (c.length === 3 && airports().iataToIcao(c)) || c;
+};

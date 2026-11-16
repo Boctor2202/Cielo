@@ -237,7 +237,7 @@ const clockPart = (v: string) => {
 export interface MappingCheck {
   field: ImportField;
   /** i18n key: totalVsBlock, exceedsTotal, functionsVsTotal, notACount */
-  issue: "totalVsBlock" | "exceedsTotal" | "functionsVsTotal" | "notACount";
+  issue: "totalVsBlock" | "exceedsTotal" | "functionsVsTotal" | "notACount" | "blockTooLong";
   /** share of the checked rows that disagree (0..1) */
   ratio: number;
   rows: number;
@@ -269,6 +269,20 @@ export function checkMapping(rows: string[][], mapping: Record<ImportField, numb
       if (Math.abs(diff - t) > 5) bad++;
     }
     add("total", "totalVsBlock", bad, n);
+  }
+  // a duration read as a clock time ("0:45" taken as 00:45) gives blocks of 10 h or more
+  if (mapping.out >= 0 && mapping.in >= 0) {
+    let n = 0;
+    let bad = 0;
+    for (const r of sample) {
+      const a = parseClock(clockPart(val(r, "out")));
+      const b = parseClock(clockPart(val(r, "in")));
+      if (!a || !b) continue;
+      n++;
+      if ((b.h * 60 + b.m - (a.h * 60 + a.m) + 1440) % 1440 > 16 * 60) bad++;
+      else if (mapping.total >= 0 && dur(val(r, "total")) === b.h * 60 + b.m && b.h * 60 + b.m < a.h * 60 + a.m) bad++;
+    }
+    add("in", "blockTooLong", bad, n);
   }
   for (const f of ["night", "ifr", "pic", "copilot", "dual", "instructor", "multiPilot"] as const) {
     if (mapping[f] < 0 || mapping.total < 0) continue;
