@@ -103,6 +103,10 @@ export interface PilotProfile {
   ratedTypes: string[];
   licence?: LicenceLevel;
   englishLevel?: number;
+  /** holds an instructor rating or certificate (FI, CRI, IRI, TRI, SFI…) */
+  instructor?: boolean;
+  /** holds an examiner certificate (FE, TRE, SFE, IRE…) */
+  examiner?: boolean;
   /** Licence regimes held (EASA, FAA, UK CAA…) */
   authorities: Authority[];
   /** Regions where the pilot is allowed to work (citizenship, visas) */

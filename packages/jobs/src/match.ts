@@ -7,7 +7,7 @@ import type { Job, LicenceLevel, PilotProfile } from "./types";
  * Runs on the subscriber's device — the logbook never leaves it.
  */
 
-export type GapCode = "workRights" | "licenceAuthority" | "licence" | "totalHours" | "picHours" | "onTypeHours" | "multiPilotHours" | "jetHours" | "turbineHours" | "typeRating" | "english";
+export type GapCode = "instructorRating" | "examinerRating" | "workRights" | "licenceAuthority" | "licence" | "totalHours" | "picHours" | "onTypeHours" | "multiPilotHours" | "jetHours" | "turbineHours" | "typeRating" | "english";
 
 export interface Gap {
   code: GapCode;
@@ -84,14 +84,21 @@ export function matchJob(job: Job, me: PilotProfile): Match {
   if (job.position === "CPT" && !r.picHours) crit.push({ code: "picHours", weight: 10, ratio: Math.min(1, me.picMin / (1500 * 60)), required: 1500, have: h(me.picMin) });
   if (jobMultiPilot && !r.multiPilotHours) crit.push({ code: "multiPilotHours", weight: 5, ratio: Math.min(1, me.multiPilotMin / (500 * 60)), required: 500, have: h(me.multiPilotMin) });
 
+  // Instructor and examiner posts need the rating or certificate itself: hours alone do not qualify.
+  const title = job.title;
+  const wantsExaminer = /\b(examiner|examinateur|TRE|SFE|FE|CRE|IRE)\b/i.test(title);
+  const wantsInstructor = wantsExaminer || job.position === "FI" || /\b(instructor|instructeur|ausbilder|TRI|SFI|CRI|IRI|FI)\b/i.test(title);
+  if (wantsInstructor) crit.push({ code: "instructorRating", weight: 30, ratio: me.instructor ? 1 : 0, required: "FI / TRI / SFI", have: me.instructor ? "✓" : "—" });
+  if (wantsExaminer) crit.push({ code: "examinerRating", weight: 20, ratio: me.examiner ? 1 : 0, required: "TRE / SFE / FE", have: me.examiner ? "✓" : "—" });
+
   const stated = crit.filter((c) => c.ratio !== null);
   const totalW = stated.reduce((s, c) => s + c.weight, 0);
   const raw = totalW ? stated.reduce((s, c) => s + c.weight * c.ratio!, 0) / totalW : 0.5;
   // A hard blocker (required type rating not held, licence two levels short) caps the score.
   const blocked = stated.some((c) => (c.code === "typeRating" && r.typeRatingRequired && c.ratio === 0) || (c.code === "licence" && c.ratio === 0));
+  const notQualified = (wantsInstructor && !me.instructor) || (wantsExaminer && !me.examiner);
   // No right to work there is the hardest blocker; a foreign licence can be converted, at a cost.
-  const cap = !canWork ? 0.35 : !licenceValid ? 0.5 : blocked ? 0.55 : 1;
-  const score = Math.round(Math.min(cap, raw) * 100);
+  const cap = notQualified ? 0.2 : !canWork ? 0.35 : !licenceValid ? 0.5 : blocked ? 0.55 : 1;
 
   const gaps: Gap[] = [];
   const met: GapCode[] = [];
@@ -102,6 +109,9 @@ export function matchJob(job: Job, me: PilotProfile): Match {
   }
   const readable = ["licence", "totalHours", "picHours", "typeRating"] as const;
   const confidence = readable.filter((k) => (k === "typeRating" ? job.aircraft.length > 0 : r[k as "licence"] !== undefined)).length / readable.length;
+  // When the offer states little, the few criteria read cannot make a 100 %: the score leans towards 60 %.
+  const trust = 0.4 + 0.6 * confidence;
+  const score = Math.round(Math.min(cap, raw * trust + 0.6 * (1 - trust)) * 100);
 
   return { score, confidence, gaps, met, onType: rated, canWork, licenceValid };
 }
@@ -149,6 +159,8 @@ export function buildProfile(
       if (lvl && (!p.licence || RANK[lvl] > RANK[p.licence])) p.licence = lvl;
     }
     if (l.kind === "rating") for (const i of icaoFromRating(c)) if (!p.ratedTypes.includes(i)) p.ratedTypes.push(i);
+    if ((!l.validUntil || l.validUntil >= new Date().toISOString().slice(0, 10)) && /\b(FI|CRI|IRI|TRI|SFI|MCCI|STI|FIC|INSTRUCT\w*)\b/.test(c)) p.instructor = true;
+    if ((!l.validUntil || l.validUntil >= new Date().toISOString().slice(0, 10)) && /\b(FE|TRE|CRE|IRE|SFE|FIE|EXAMIN\w*)\b/.test(c)) p.examiner = true;
     if (l.kind === "language" && /ENGLISH|ANGLAIS/.test(c)) {
       const m = c.match(/([4-6])/);
       if (m) p.englishLevel = Math.max(p.englishLevel ?? 0, Number(m[1]));

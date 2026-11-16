@@ -1168,7 +1168,9 @@
         "typeRating": "Qualification",
         "english": "Anglais OACI",
         "workRights": "Droit de travailler",
-        "licenceAuthority": "Licence du pays"
+        "licenceAuthority": "Licence du pays",
+        "instructorRating": "Qualification d'instructeur",
+        "examinerRating": "Habilitation d'examinateur"
       },
       "you": "vous : {value}",
       "gaps": "À compléter",

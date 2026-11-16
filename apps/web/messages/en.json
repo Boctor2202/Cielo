@@ -1168,7 +1168,9 @@
         "typeRating": "Type rating",
         "english": "ICAO English",
         "workRights": "Right to work",
-        "licenceAuthority": "Country licence"
+        "licenceAuthority": "Country licence",
+        "instructorRating": "Instructor rating",
+        "examinerRating": "Examiner certificate"
       },
       "you": "you: {value}",
       "gaps": "To build up",

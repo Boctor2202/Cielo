@@ -70,7 +70,7 @@ describe("matching", () => {
   });
   it("ranks a type-rated job above one requiring another rating", () => {
     const lat = job({ title: "First Officer Cessna Citation Latitude", text: "ATPL, 1500 hours total, type rated on Latitude required." });
-    expect(matchJob(lat, me).score).toBe(100);
+    expect(matchJob(lat, me).score).toBeGreaterThanOrEqual(90);
     expect(matchJob(lat, me).onType).toBe(true);
     expect(matchJob(lat, me).score).toBeGreaterThan(matchJob(job(ADS.a320Cpt), me).score);
   });
@@ -127,5 +127,15 @@ describe("adzuna", () => {
     expect(segmentOf("HEMS helicopter pilot")).toBe("helicopter");
     expect(segmentOf("A320 First Officer")).toBe("airline");
     expect(segmentOf("B747 Captain, cargo")).toBe("cargo");
+  });
+});
+
+describe("instructor posts", () => {
+  it("are not a match without an instructor rating", async () => {
+    const { matchJob } = await import("../src/match");
+    const job = { id: "x", source: "adzuna", company: "Airbus", segment: "other", title: "Pilot Instructor / Examiner A350", position: "FI", aircraft: ["A359"], region: "EU", authority: "EASA", url: "", requirements: {}, fetchedAt: "" } as never;
+    const me = { totalMin: 600000, picMin: 300000, multiPilotMin: 500000, multiEngineMin: 500000, turbineMin: 500000, jetMin: 500000, typeMin: {}, ratedTypes: [], authorities: ["EASA"], workRegions: ["EU"] } as never;
+    expect(matchJob(job, me).score).toBeLessThanOrEqual(20);
+    expect(matchJob(job, { ...(me as object), instructor: true, examiner: true } as never).score).toBeGreaterThan(50);
   });
 });

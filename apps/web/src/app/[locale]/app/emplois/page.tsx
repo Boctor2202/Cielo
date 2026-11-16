@@ -68,7 +68,8 @@ export default function JobsPage() {
     let list = feed.jobs.map((job) => ({ job, match: matchJob(job, profile) }));
     if (position !== "ALL") list = list.filter((r) => r.job.position === position);
     if (onTypeOnly) list = list.filter((r) => r.match.onType);
-    if (region === "MINE" && myRegions.length) list = list.filter((r) => r.match.canWork || r.job.region === "OTHER");
+    // "my regions": where the pilot may work AND with a licence valid there (an FAA job is not for an EASA pilot)
+    if (region === "MINE" && myRegions.length) list = list.filter((r) => (r.match.canWork && r.match.licenceValid) || r.job.region === "OTHER");
     else if (region !== "ALL" && region !== "MINE") list = list.filter((r) => r.job.region === region);
     // offers without a published requirement go last when sorting by experience
     const exp = (j: Job) => j.requirements.totalHours ?? Number.POSITIVE_INFINITY;

@@ -44,7 +44,7 @@ function Jobs() {
     let list = (feed?.jobs ?? []).map((job) => ({ job, match: matchJob(job, profile) }));
     if (position !== "ALL") list = list.filter((r) => r.job.position === position);
     if (onType) list = list.filter((r) => r.match.onType);
-    if (mine && profile.workRegions.length) list = list.filter((r) => r.match.canWork || r.job.region === "OTHER");
+    if (mine && profile.workRegions.length) list = list.filter((r) => (r.match.canWork && r.match.licenceValid) || r.job.region === "OTHER");
     const sal = (j: Job) => j.salary?.annualEur ?? -1;
     list.sort((a, b) =>
       sort === "match" && hasLogbook

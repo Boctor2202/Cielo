@@ -85,7 +85,7 @@ export function extractRequirements(title: string, text: string): Requirements {
   const required = /\b(type rated|current on type|valid type rating|type rating(?: on [^.\n]{0,30})?(?: is)? (?:required|mandatory|essential)|type rating:|tr (?:required|valid)|qualifi[ée] sur|qualification de type (?:valide|requise|exig[ée]e)|g[üu]ltige(?:s)? (?:type rating|musterberechtigung))/i.test(all);
   if (provided) req.typeRatingProvided = true;
   if (required && !provided) req.typeRatingRequired = true;
-  if (/visa (?:sponsorship|support) (?:is )?(?:available|provided|offered)|we (?:will )?sponsor|sponsorship (?:is )?available|work permit (?:will be |is )?(?:provided|sponsored|arranged)|relocation (?:and visa )?(?:package|support)/i.test(all)) req.visaSponsored = true;
+  if (/visa (?:sponsorship|support) (?:is )?(?:available|provided|offered)|we (?:will )?sponsor|sponsorship (?:is )?available|work permit (?:will be |is )?(?:provided|sponsored|arranged)|(?:relocation and |relocation, )?visa (?:package|assistance|support)/i.test(all) && !/no (?:visa )?sponsorship|(?:right|authori[sz]ed|eligible) to work in/i.test(all)) req.visaSponsored = true;
   if (/(?:right|eligib\w*|authori[sz]ed|permit) to (?:live and )?work in|no (?:visa )?sponsorship|unable to (?:offer|provide) (?:visa )?sponsorship|must (?:hold|have) (?:a valid )?(?:eu|eea|uk|us|european) (?:passport|citizenship|work permit|right to work)|(?:eu|eea|uk|us) (?:passport|citizenship) (?:required|mandatory)|arbeitserlaubnis|droit de travailler/i.test(all) && !req.visaSponsored) req.rightToWorkRequired = true;
   const lvl = all.match(/(?:ICAO|English)[^.\n]{0,25}level\s*([4-6])|level\s*([4-6])\s*(?:english|icao)/i);
   if (lvl) req.englishLevel = Number(lvl[1] ?? lvl[2]);
