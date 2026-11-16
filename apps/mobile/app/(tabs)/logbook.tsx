@@ -1,11 +1,12 @@
-import React, { useMemo } from "react";
-import { Alert, Pressable, SectionList, StyleSheet, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Alert, Pressable, SectionList, StyleSheet, TextInput, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { formatClock, formatDuration, sumFlights, type Flight } from "@cielo/core";
 import { EmptyState, Fab, Row, Txt } from "../../src/components/ui";
 import { formatDate, formatMonth } from "../../src/i18n";
 import { useApp } from "../../src/state";
-import { glass, space, useTheme } from "../../src/theme";
+import { font, glass, space, useTheme } from "../../src/theme";
 
 interface Section {
   key: string;
@@ -19,16 +20,27 @@ export default function Logbook() {
   const c = useTheme();
   const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
 
+  const [q, setQ] = useState("");
+  /** Words all found in the flight: airports, registration, type, flight number, crew, remarks, date. */
+  const shown = useMemo(() => {
+    const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return flights;
+    return flights.filter((f) => {
+      const hay = [f.depIcao, f.arrIcao, f.registration, f.aircraftTypeIcao, f.flightNumber, f.picName, f.remarks, f.function, f.date].filter(Boolean).join(" ").toLowerCase();
+      return words.every((w) => hay.includes(w));
+    });
+  }, [flights, q]);
+
   const sections = useMemo<Section[]>(() => {
     const byMonth = new Map<string, Flight[]>();
-    for (const f of flights) {
+    for (const f of shown) {
       const k = f.date.slice(0, 7);
       const arr = byMonth.get(k) ?? [];
       arr.push(f);
       byMonth.set(k, arr);
     }
     return [...byMonth.entries()].map(([k, data]) => ({ key: k, title: formatMonth(k, locale), totals: sumFlights(data), data }));
-  }, [flights, locale]);
+  }, [shown, locale]);
 
   const confirmDelete = (f: Flight) =>
     Alert.alert(t("log.deleteTitle"), t("log.deleteBody", { route: `${f.depIcao}–${f.arrIcao}`, date: formatDate(f.date, locale) }), [
@@ -43,7 +55,32 @@ export default function Logbook() {
         keyExtractor={(f) => f.id}
         stickySectionHeadersEnabled
         contentContainerStyle={{ paddingBottom: 140, paddingTop: space.sm, flexGrow: 1 }}
-        ListEmptyComponent={<EmptyState title={t("log.empty")} hint={t("log.emptyHint")} />}
+        ListHeaderComponent={
+          flights.length ? (
+            <View style={{ marginHorizontal: space.md, marginTop: space.sm }}>
+              <Row style={{ paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: glass(c).strong }}>
+                <Ionicons name="search" size={16} color={c.muted} />
+                <TextInput
+                  style={{ flex: 1, color: c.text, fontFamily: font.regular, fontSize: 15 }}
+                  placeholder={t("log.search")}
+                  placeholderTextColor={c.muted}
+                  value={q}
+                  onChangeText={setQ}
+                  autoCorrect={false}
+                  autoCapitalize="characters"
+                  clearButtonMode="while-editing"
+                  returnKeyType="search"
+                />
+              </Row>
+              {q.trim() ? (
+                <Txt variant="small" style={{ marginTop: 6, marginLeft: 4 }}>
+                  {t("log.found", { n: shown.length, time: fmt(sumFlights(shown).totalMin) })}
+                </Txt>
+              ) : null}
+            </View>
+          ) : undefined
+        }
+        ListEmptyComponent={q.trim() ? <EmptyState title={t("log.noMatch")} /> : <EmptyState title={t("log.empty")} hint={t("log.emptyHint")} />}
         renderSectionHeader={({ section }) => (
           <Row style={{ justifyContent: "space-between", marginHorizontal: space.md, marginTop: space.md, paddingHorizontal: space.lg, paddingVertical: 10, borderRadius: 14, backgroundColor: glass(c).strong }}>
             <Txt variant="h2" style={{ fontSize: 15 }}>

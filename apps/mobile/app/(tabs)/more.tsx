@@ -71,6 +71,8 @@ export default function More() {
         <Button kind="secondary" title={t("more.map")} onPress={() => router.push("/map")} />
         <Button kind="secondary" title={t("more.jobs")} onPress={() => router.push("/jobs")} />
         <Button kind="secondary" title={t("more.cv")} onPress={() => router.push("/cv")} />
+        <Button kind="secondary" title={t("more.aircraft")} onPress={() => router.push("/aircraft")} />
+        <Button kind="secondary" title={t("more.opening")} onPress={() => router.push("/opening")} />
         <Button kind="secondary" title={t("more.roster")} onPress={() => router.push("/roster")} />
         <Button kind="secondary" title={t("more.documents")} onPress={() => router.push("/documents")} />
         <Button kind="secondary" title={t("more.import")} loading={busy === "import"} onPress={importCsv} />
