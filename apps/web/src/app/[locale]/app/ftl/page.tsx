@@ -5,12 +5,13 @@ import { AirportInput } from "@/components/app/AirportInput";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  analyseFtl, buildDutyPeriods, cumulativeLevel, DEFAULT_FTL_SETTINGS, dutyPeriodsFromRoster, formatDuration, FTL_LIMITS, type FtlSettings,
+  analyseFtl, buildDutyPeriods, cumulativeLevel, DEFAULT_FTL_SETTINGS, dutyPeriodsFromRoster, formatDuration, FTL_LIMITS, limitApplies, type FtlRegime, type FtlSettings,
 } from "@cielo/core";
 import { Card, Field, Meter, PageTitle, Toggle } from "@/components/app/ui";
 import { useAirports } from "@/lib/airports";
 import { useFlights, useFormatDate, usePilot, useTable } from "@/lib/hooks";
 import { localStore } from "@/lib/db";
+import { updatePilot } from "@/lib/repo";
 
 export default function FtlPage() {
   const t = useTranslations("app.ftl");
@@ -36,24 +37,27 @@ export default function FtlPage() {
     localStore.setMeta("ftlSettings", JSON.stringify(s));
   };
 
+  // the scheme is a pilot setting (synced with the phone); the rest of the settings stay on this device
+  const regime: FtlRegime = pilot?.ftlRegime ?? "oro";
+  const eff = useMemo(() => ({ ...settings, regime }), [settings, regime]);
   const report = useMemo(() => {
     if (!flights) return null;
     const now = new Date().toISOString();
-    const past = buildDutyPeriods(flights, settings);
-    const future = includeRoster ? dutyPeriodsFromRoster((roster ?? []).filter((e) => e.startUtc > now && !e.flightId), settings) : [];
-    return analyseFtl([...past, ...future], now, settings);
-  }, [flights, roster, settings, includeRoster]);
+    const past = buildDutyPeriods(flights, eff);
+    const future = includeRoster ? dutyPeriodsFromRoster((roster ?? []).filter((e) => e.startUtc > now && !e.flightId), eff) : [];
+    return analyseFtl([...past, ...future], now, eff);
+  }, [flights, roster, eff, includeRoster]);
 
   if (!report) return <p className="text-muted">…</p>;
   const f = (m: number) => formatDuration(m);
-  const cumul = [
+  const cumul = ([
     ["duty7d", report.cumulative.duty7d, FTL_LIMITS.duty7d],
     ["duty14d", report.cumulative.duty14d, FTL_LIMITS.duty14d],
     ["duty28d", report.cumulative.duty28d, FTL_LIMITS.duty28d],
     ["flight28d", report.cumulative.flight28d, FTL_LIMITS.flight28d],
     ["flightYear", report.cumulative.flightYear, FTL_LIMITS.flightYear],
     ["flight12m", report.cumulative.flight12m, FTL_LIMITS.flight12m],
-  ] as const;
+  ] as const).filter(([k]) => limitApplies(k, regime));
   const recent = report.duties.slice(-25).reverse();
   const now = new Date().toISOString();
 
@@ -123,6 +127,11 @@ export default function FtlPage() {
         </div>
         <Card title={t("settings")} className="self-start">
           <div className="space-y-4">
+            <Field label={t("regime")} hint={t(`regimeHint.${regime}`)}>
+              <select className="input" value={regime} onChange={(e) => void updatePilot({ ftlRegime: e.target.value as FtlRegime })}>
+                {(["oro", "subq", "none"] as FtlRegime[]).map((r) => <option key={r} value={r}>{t(`regimes.${r}`)}</option>)}
+              </select>
+            </Field>
             <Field label={t("reportBefore")}><input type="number" min={0} max={180} className="input num" value={settings.reportBeforeMin} onChange={(e) => update({ ...settings, reportBeforeMin: +e.target.value || 0 })} /></Field>
             <Field label={t("releaseAfter")}><input type="number" min={0} max={120} className="input num" value={settings.releaseAfterMin} onChange={(e) => update({ ...settings, releaseAfterMin: +e.target.value || 0 })} /></Field>
             <AirportInput

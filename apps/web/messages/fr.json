@@ -934,6 +934,17 @@
         "flightYear": "Temps de vol sur l'année civile : {actual} (max {limit})",
         "flight12m": "Temps de vol sur 12 mois : {actual} (max {limit})",
         "extendedRecovery": "Plus de 168 h sans repos hebdomadaire de 36 h ({actual})"
+      },
+      "regime": "Réglementation",
+      "regimes": {
+        "oro": "EASA ORO.FTL — transport aérien commercial",
+        "subq": "Subpart Q — aviation d'affaires, taxi aérien",
+        "none": "Aucune (vols privés)"
+      },
+      "regimeHint": {
+        "oro": "Compagnies aériennes en transport commercial (Part-ORO, sous-partie FTL).",
+        "subq": "EU-OPS Subpart Q (OPS 1.1090–1.1135) : FDP de 13 h moins 30 min par étape à partir de la 3e et réduction WOCL ; 60 h / 7 j, 190 h / 28 j, 100 h de vol / 28 j, 900 h / année civile.",
+        "none": "Aucune limite n'est contrôlée ; les cumuls restent affichés."
       }
     },
     "documents": {

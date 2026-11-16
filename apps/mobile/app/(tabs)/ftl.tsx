@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { FTL_LIMITS, analyseFtl, buildDutyPeriods, cumulativeLevel, formatDuration } from "@cielo/core";
-import { Card, Row, Screen, Txt, statusColor } from "../../src/components/ui";
+import { FTL_LIMITS, analyseFtl, buildDutyPeriods, cumulativeLevel, formatDuration, limitApplies, type FtlRegime } from "@cielo/core";
+import { Card, Row, Screen, Segmented, Txt, statusColor } from "../../src/components/ui";
 import { Track } from "../../src/components/Bars";
 import { Requires } from "../../src/components/Access";
 import { AirportField } from "../../src/components/AirportField";
@@ -35,7 +35,7 @@ function Ftl() {
     <Screen>
       <Card>
         <Txt variant="h2">{t("dash.ftl")}</Txt>
-        {KEYS.map((k) => {
+        {KEYS.filter((k) => limitApplies(k, settings.regime)).map((k) => {
           const actual = report.cumulative[k];
           const limit = FTL_LIMITS[k];
           const level = cumulativeLevel(actual, limit);
@@ -95,6 +95,17 @@ function Ftl() {
 
       <Card>
         <Txt variant="h2">{t("ftl.settings")}</Txt>
+        <Segmented<FtlRegime>
+          label={t("ftl.regime")}
+          value={pilot.ftlRegime ?? "oro"}
+          onChange={(v) => void app.savePilot({ ftlRegime: v })}
+          options={[
+            { value: "oro", label: "ORO.FTL" },
+            { value: "subq", label: "Subpart Q" },
+            { value: "none", label: t("ftl.regimeNone") },
+          ]}
+        />
+        <Txt variant="small">{t(`ftl.regimeHint.${pilot.ftlRegime ?? "oro"}` as I18nKey)}</Txt>
         <AirportField label={t("more.homeBase")} value={pilot.homeBaseIcao ?? ""} onChange={(icao) => void app.savePilot({ homeBaseIcao: icao || undefined })} />
         <Txt variant="small">{t("ftl.assumptions", { report: settings.reportBeforeMin, release: settings.releaseAfterMin, tz: settings.homeTimezone })}</Txt>
       </Card>

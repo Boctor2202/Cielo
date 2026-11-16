@@ -35,6 +35,8 @@ export interface Pilot extends SyncedRecord {
   locale: Locale;
   regulatoryFramework: RegulatoryFramework;
   homeBaseIcao?: string;
+  /** flight time limitation scheme: EASA ORO.FTL, EU-OPS Subpart Q (business aviation, air taxi) or none */
+  ftlRegime?: FtlRegime;
   licenceNumber?: string;
   defaultFunction: PilotFunction;
   defaultIfr: IfrDefault;
@@ -292,3 +294,5 @@ export interface Layover extends SyncedRecord {
   notes?: string;
   contacts: { name: string; phone?: string; role?: string }[];
 }
+
+export type FtlRegime = "oro" | "subq" | "none";

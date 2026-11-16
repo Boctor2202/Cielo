@@ -14,6 +14,7 @@ export function ftlSettingsFor(pilot: Pilot): FtlSettings {
   return {
     ...DEFAULT_FTL_SETTINGS,
     homeBaseIcao: pilot.homeBaseIcao,
+    regime: pilot.ftlRegime ?? "oro",
     homeTimezone: base?.timezone ?? deviceTz ?? DEFAULT_FTL_SETTINGS.homeTimezone,
   };
 }

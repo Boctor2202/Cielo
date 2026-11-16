@@ -8,7 +8,7 @@
  * operator-specific schemes. A logbook has no report or release times: results are estimates.
  */
 import { minutesBetween } from "./time";
-import type { Flight, RosterEvent } from "./types";
+import type { Flight, FtlRegime, RosterEvent } from "./types";
 
 export interface FtlSettings {
   /** minutes between report and first off-block */
@@ -18,6 +18,8 @@ export interface FtlSettings {
   homeBaseIcao?: string;
   /** IANA timezone of the home base, used as reference time for acclimatised crew */
   homeTimezone: string;
+  /** "oro" (default): EASA ORO.FTL; "subq": EU-OPS Subpart Q (air taxi, business aviation, single pilot) */
+  regime?: FtlRegime;
 }
 
 export const DEFAULT_FTL_SETTINGS: FtlSettings = {
@@ -74,6 +76,30 @@ const FDP_BANDS: [number, number, number][] = [
   [5 * 60 + 30, 5 * 60 + 45, 12 * 60 + 30],
   [5 * 60 + 45, 6 * 60, 12 * 60 + 45],
 ];
+
+/**
+ * EU-OPS Subpart Q, OPS 1.1105: 13 h, less 30 min per sector from the third (2 h at most). An FDP starting in the
+ * WOCL (02:00–05:59 reference time) loses 100 % of the encroachment, one ending in or spanning it 50 %, 2 h at most.
+ */
+export function subpartQMaxFdp(localStartMin: number, fdpMin: number, sectors: number): number {
+  const sectorCut = Math.min(120, Math.max(0, sectors - 2) * 30);
+  const s = ((localStartMin % 1440) + 1440) % 1440;
+  const wStart = 2 * 60;
+  const wEnd = 6 * 60;
+  let woclCut = 0;
+  if (s >= wStart && s < wEnd) woclCut = Math.min(120, wEnd - s);
+  else {
+    // overlap of [start, start + fdp] with the WOCL of the following night(s)
+    let overlap = 0;
+    for (const base of [0, 1440]) {
+      const a = Math.max(s, base + wStart);
+      const b = Math.min(s + fdpMin, base + wEnd);
+      if (b > a) overlap += b - a;
+    }
+    woclCut = Math.min(120, Math.round(overlap / 2));
+  }
+  return 13 * 60 - sectorCut - woclCut;
+}
 
 /** Max basic daily FDP (minutes) for an acclimatised crew member, from local reference start time and sectors. */
 export function maxDailyFdp(localStartMinuteOfDay: number, sectors: number): number {
@@ -240,6 +266,13 @@ export const FTL_LIMITS = {
 
 const WARN_RATIO = 0.9;
 
+/** Cumulative limits of each scheme: Subpart Q (OPS 1.1100) has no 14-day duty nor 12-month flight limit. */
+export function limitApplies(k: keyof typeof FTL_LIMITS, regime: FtlRegime | undefined): boolean {
+  if (regime === "none") return false;
+  if (regime === "subq") return k !== "duty14d" && k !== "flight12m";
+  return true;
+}
+
 export function analyseFtl(duties: DutyPeriod[], nowUtc: string, settings: FtlSettings = DEFAULT_FTL_SETTINGS): FtlReport {
   const sorted = [...duties].sort((a, b) => a.reportUtc.localeCompare(b.reportUtc));
   const violations: FtlViolation[] = [];
@@ -249,7 +282,9 @@ export function analyseFtl(duties: DutyPeriod[], nowUtc: string, settings: FtlSe
     const fdpMin = minutesBetween(d.reportUtc, d.fdpEndUtc);
     const dutyMin = minutesBetween(d.reportUtc, d.releaseUtc);
     const splitExtensionMin = splitDutyExtension(d.longestBreakMin);
-    const maxFdpMin = d.kind === "FDP" ? maxDailyFdp(localMinuteOfDay(d.reportUtc, settings.homeTimezone), d.sectors) + splitExtensionMin : Infinity;
+    const startLocal = localMinuteOfDay(d.reportUtc, settings.homeTimezone);
+    const base = settings.regime === "subq" ? subpartQMaxFdp(startLocal, fdpMin, d.sectors) : maxDailyFdp(startLocal, d.sectors);
+    const maxFdpMin = d.kind === "FDP" && settings.regime !== "none" ? base + splitExtensionMin : Infinity;
     const a: DutyAnalysis = { duty: d, fdpMin, maxFdpMin, splitExtensionMin, dutyMin };
     if (d.kind === "FDP" && fdpMin > maxFdpMin) {
       const severity = fdpMin - maxFdpMin <= FDP_EXTENSION_MAX ? "warning" : "error";
@@ -264,7 +299,7 @@ export function analyseFtl(duties: DutyPeriod[], nowUtc: string, settings: FtlSe
       const minRest = Math.max(prevDuty, atHome ? 12 * 60 : MIN_REST_AWAY);
       a.restBeforeMin = rest;
       a.minRestBeforeMin = minRest;
-      if (rest < minRest) {
+      if (rest < minRest && settings.regime !== "none") {
         violations.push({ code: "restTooShort", severity: "error", dutyId: d.id, atUtc: d.reportUtc, actualMin: rest, limitMin: minRest });
       }
     }
@@ -302,18 +337,19 @@ export function analyseFtl(duties: DutyPeriod[], nowUtc: string, settings: FtlSe
     reported.add(key);
     violations.push({ code, severity: "error", atUtc: at, actualMin: actual, limitMin: limit });
   };
-  for (const cp of checkpoints) {
+  const applies = (k: keyof typeof FTL_LIMITS) => limitApplies(k, settings.regime);
+  for (const cp of settings.regime === "none" ? [] : checkpoints) {
     flag("duty7d", cp, windowSum(cp, 7, dutyMinutes, true), FTL_LIMITS.duty7d);
-    flag("duty14d", cp, windowSum(cp, 14, dutyMinutes, true), FTL_LIMITS.duty14d);
+    if (applies("duty14d")) flag("duty14d", cp, windowSum(cp, 14, dutyMinutes, true), FTL_LIMITS.duty14d);
     flag("duty28d", cp, windowSum(cp, 28, dutyMinutes, true), FTL_LIMITS.duty28d);
     flag("flight28d", cp, windowSum(cp, 28, flightMinutes, false), FTL_LIMITS.flight28d);
     flag("flightYear", cp, yearSum(cp), FTL_LIMITS.flightYear);
-    flag("flight12m", cp, windowSum(cp, 365, flightMinutes, false), FTL_LIMITS.flight12m);
+    if (applies("flight12m")) flag("flight12m", cp, windowSum(cp, 365, flightMinutes, false), FTL_LIMITS.flight12m);
   }
 
   // Recurrent extended recovery rest: at least 36 h, and no more than 168 h between two of them.
   let lastRecoveryEnd: string | undefined = sorted[0]?.reportUtc;
-  for (let i = 1; i < sorted.length; i++) {
+  for (let i = 1; settings.regime !== "none" && i < sorted.length; i++) {
     const rest = minutesBetween(sorted[i - 1]!.releaseUtc, sorted[i]!.reportUtc);
     if (rest >= FTL_LIMITS.extendedRecoveryMin) {
       lastRecoveryEnd = sorted[i]!.reportUtc;

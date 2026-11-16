@@ -372,3 +372,14 @@ describe("medical validity", () => {
     expect(medicalValidUntil("Class 1", "2026-03-11", "u40")).toBe("2027-03-10");
   });
 });
+
+describe("Subpart Q", () => {
+  it("13 h less sectors and WOCL", async () => {
+    const { subpartQMaxFdp } = await import("../src/ftl");
+    expect(subpartQMaxFdp(8 * 60, 600, 2)).toBe(13 * 60);
+    expect(subpartQMaxFdp(8 * 60, 600, 5)).toBe(13 * 60 - 90);
+    expect(subpartQMaxFdp(8 * 60, 600, 8)).toBe(11 * 60);
+    expect(subpartQMaxFdp(4 * 60, 300, 2)).toBe(13 * 60 - 120); // starts at 04:00: 2 h of WOCL left, all of it
+    expect(subpartQMaxFdp(20 * 60, 600, 2)).toBe(13 * 60 - 120); // 20:00–06:00 spans the WOCL: 4 h × 50 %
+  });
+});

@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import {
   FTL_LIMITS,
   analyseFtl,
+  limitApplies,
   buildDutyPeriods,
   computeRecency,
   cumulativeLevel,
@@ -189,7 +190,7 @@ export default function Dashboard() {
 
         <Card>
           <Txt variant="h2">{t("dash.ftl")}</Txt>
-          {FTL_KEYS.map((k) => {
+          {FTL_KEYS.filter((k) => limitApplies(k, pilot.ftlRegime ?? "oro")).map((k) => {
             const actual = ftl.cumulative[k];
             const limit = FTL_LIMITS[k];
             const level = cumulativeLevel(actual, limit);

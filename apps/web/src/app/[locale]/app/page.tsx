@@ -4,7 +4,7 @@ import { AlertTriangle, ArrowRight, NotebookPen, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
-  addDays, analyseFtl, auditLogbook, buildDutyPeriods, computeRecency, cumulativeLevel, dashboardPeriods, FTL_LIMITS, licenseStatus,
+  addDays, analyseFtl, DEFAULT_FTL_SETTINGS, auditLogbook, buildDutyPeriods, computeRecency, cumulativeLevel, dashboardPeriods, FTL_LIMITS, licenseStatus,
 } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Badge, Card, Empty, Meter, PageTitle, Readout, type Level } from "@/components/app/ui";
@@ -44,10 +44,11 @@ export default function Dashboard() {
         minutes: flights.filter((f) => f.date.startsWith(key)).reduce((s, f) => s + f.totalMin, 0),
       });
     }
-    const ftl = analyseFtl(buildDutyPeriods(flights), new Date().toISOString());
+    const ftlSet = { ...DEFAULT_FTL_SETTINGS, regime: pilot?.ftlRegime ?? "oro" };
+    const ftl = analyseFtl(buildDutyPeriods(flights, ftlSet), new Date().toISOString(), ftlSet);
     const issues = airports ? auditLogbook(flights, { today, airports: (c) => airports.get(c) }).filter((i) => i.severity === "error").length : 0;
     return { periods, recency, months, ftl, issues };
-  }, [flights, balances, today, locale, airports]);
+  }, [flights, balances, today, locale, airports, pilot?.ftlRegime]);
 
   const expiries = useMemo(
     () =>
