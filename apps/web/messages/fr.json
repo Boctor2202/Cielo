@@ -1695,6 +1695,11 @@
       "exportFlights": "Exporter les {n} vols (CSV)",
       "empty": "Aucun vol ne correspond à ces filtres.",
       "airportNote": "Un vol compte pour son aéroport de départ et pour son aéroport d'arrivée : le total des lignes dépasse le total général."
+    },
+    "mapTheme": {
+      "label": "Fond de carte",
+      "light": "Clair",
+      "dark": "Sombre"
     }
   },
   "why": {

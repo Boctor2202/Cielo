@@ -1695,6 +1695,11 @@
       "exportFlights": "Export the {n} flights (CSV)",
       "empty": "No flight matches these filters.",
       "airportNote": "A flight counts for both its departure and its arrival airport: the rows add up to more than the total."
+    },
+    "mapTheme": {
+      "label": "Map style",
+      "light": "Light",
+      "dark": "Dark"
     }
   },
   "why": {

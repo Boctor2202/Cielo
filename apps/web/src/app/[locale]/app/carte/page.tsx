@@ -6,6 +6,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { GoogleRoutesMap } from "@/components/app/GoogleRoutesMap";
 import { greatCirclePath } from "@cielo/core";
 import { PageTitle } from "@/components/app/ui";
+import { MapThemeToggle } from "@/components/app/MapThemeToggle";
+import { useMapTheme } from "@/lib/mapTheme";
 import { useAirports } from "@/lib/airports";
 import { useFlights } from "@/lib/hooks";
 import { MAP_STYLE_URL } from "@/config/site";
@@ -39,8 +41,7 @@ export default function MapPage() {
   const googleKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY;
   const [googleFailed, setGoogleFailed] = useState(false);
   const useGoogle = !!googleKey && !googleFailed;
-  const [dark, setDark] = useState(false);
-  useEffect(() => setDark(currentTheme() === "dark"), []);
+  const { dark, setMode } = useMapTheme();
   const years = useMemo(() => [...new Set((flights ?? []).map((f) => f.date.slice(0, 4)))].sort().reverse(), [flights]);
 
   const geo = useMemo(() => {
@@ -118,10 +119,13 @@ export default function MapPage() {
         title={t("title")}
         subtitle={geo ? `${t("routes", { count: geo.lines.features.length })} · ${t("airports", { count: geo.points.features.length })}` : "…"}
         actions={
-          <select className="input !w-auto" value={year} onChange={(e) => setYear(e.target.value)} aria-label={t("filterYear")}>
-            <option value="">{tl("allYears")}</option>
-            {years.map((y) => <option key={y}>{y}</option>)}
-          </select>
+          <>
+            <MapThemeToggle dark={dark} onChange={(d) => setMode(d ? "dark" : "light")} />
+            <select className="input !w-auto" value={year} onChange={(e) => setYear(e.target.value)} aria-label={t("filterYear")}>
+              <option value="">{tl("allYears")}</option>
+              {years.map((y) => <option key={y}>{y}</option>)}
+            </select>
+          </>
         }
       />
       {useGoogle ? (
