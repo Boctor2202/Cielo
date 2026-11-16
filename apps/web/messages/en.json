@@ -1478,6 +1478,20 @@
           "flightaware": "Actual times (FlightAware)"
         }
       }
+    },
+    "weather": {
+      "title": "Weather {icao}",
+      "loading": "Loading weather…",
+      "none": "No METAR or TAF published for {icao}.",
+      "wind": "Wind",
+      "calm": "calm",
+      "visibility": "Visibility",
+      "ceiling": "Ceiling",
+      "noCeiling": "none",
+      "temp": "Temp",
+      "ago": "{min} min ago",
+      "source": "Source: Aviation Weather Center (NOAA), aviationweather.gov. For information only: use official sources for flight preparation.",
+      "show": "Weather"
     }
   },
   "why": {

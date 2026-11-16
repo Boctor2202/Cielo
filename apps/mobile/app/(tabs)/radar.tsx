@@ -5,6 +5,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Glass, Row, Txt } from "../../src/components/ui";
 import { api, ApiError, type LiveAircraft, type Track } from "../../src/api";
 import { airports } from "../../src/airports";
+import { AirportWeather } from "../../src/components/Weather";
 import type { Airport } from "@cielo/core";
 import { useApp } from "../../src/state";
 import { Requires } from "../../src/components/Access";
@@ -46,6 +47,7 @@ function RadarScreen() {
   selHex.current = sel?.hex ?? null;
   const [showAirports, setShowAirports] = useState(true);
   const [fields, setFields] = useState<Airport[]>([]);
+  const [apt, setApt] = useState<Airport | null>(null);
   /** Airports in view: large ones when zoomed out, medium, then every aerodrome closer in. */
   const placeAirports = useCallback((r: Region) => {
     const span = Math.max(r.latitudeDelta, r.longitudeDelta);
@@ -121,11 +123,21 @@ function RadarScreen() {
           placeAirports(r);
           void refresh();
         }}
-        onPress={() => setSel(null)}
+        onPress={() => {
+          setSel(null);
+          setApt(null);
+        }}
       >
         {showAirports
           ? fields.map((a) => (
-              <Marker key={`apt-${a.icao}`} coordinate={{ latitude: a.lat, longitude: a.lon }} anchor={{ x: 0.5, y: 0.25 }} tracksViewChanges={false} title={a.icao} description={a.name} zIndex={0}>
+              <Marker key={`apt-${a.icao}`} coordinate={{ latitude: a.lat, longitude: a.lon }} anchor={{ x: 0.5, y: 0.25 }} tracksViewChanges={false}
+                zIndex={0}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  setSel(null);
+                  setApt(a);
+                }}
+              >
                 <View style={{ alignItems: "center" }}>
                   <View style={{ width: a.size === 3 ? 10 : 8, height: a.size === 3 ? 10 : 8, borderRadius: 5, borderWidth: 1.6, borderColor: c.text, backgroundColor: c.scheme === "dark" ? "#0a1626" : "#ffffff" }} />
                   <Txt style={{ fontSize: 10, fontWeight: "600", textShadowColor: c.scheme === "dark" ? "#0a1626" : "#ffffff", textShadowRadius: 3 }}>{a.icao}</Txt>
@@ -193,6 +205,24 @@ function RadarScreen() {
         ) : null}
       </View>
 
+      {apt && !sel ? (
+        <View style={styles.bottom}>
+          <Glass strong radius={20}>
+            <View style={{ padding: 16, gap: 10 }}>
+              <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+                <View style={{ flex: 1 }}>
+                  <Txt mono style={{ fontSize: 20, fontWeight: "700" }}>{apt.icao}</Txt>
+                  <Txt variant="small" numberOfLines={1}>{apt.name}</Txt>
+                </View>
+                <Pressable onPress={() => setApt(null)} hitSlop={10}>
+                  <Ionicons name="close" size={20} color={c.muted} />
+                </Pressable>
+              </Row>
+              <AirportWeather icao={apt.icao} compact />
+            </View>
+          </Glass>
+        </View>
+      ) : null}
       {sel ? (
         <View style={styles.bottom}>
           <Glass strong radius={20}>

@@ -1478,6 +1478,20 @@
           "flightaware": "Horaires réels (FlightAware)"
         }
       }
+    },
+    "weather": {
+      "title": "Météo {icao}",
+      "loading": "Chargement de la météo…",
+      "none": "Pas de METAR ni de TAF publiés pour {icao}.",
+      "wind": "Vent",
+      "calm": "calme",
+      "visibility": "Visibilité",
+      "ceiling": "Plafond",
+      "noCeiling": "aucun",
+      "temp": "Temp.",
+      "ago": "il y a {min} min",
+      "source": "Source : Aviation Weather Center (NOAA), aviationweather.gov. Information indicative : seule la documentation officielle fait foi pour la préparation du vol.",
+      "show": "Météo"
     }
   },
   "why": {

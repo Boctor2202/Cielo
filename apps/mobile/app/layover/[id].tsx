@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { AirportWeather } from "../../src/components/Weather";
 import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, View } from "react-native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -102,6 +103,11 @@ function LayoverScreen() {
             {l.departureUtc ? ` → ${formatDate(l.departureUtc, locale)}` : ""}
           </Txt>
         </View>
+
+        <Card>
+          <Txt variant="h2">{t("wx.title", { icao: l.airportIcao })}</Txt>
+          <AirportWeather icao={l.airportIcao} />
+        </Card>
 
         <Card>
           <Row style={{ justifyContent: "space-between" }}>

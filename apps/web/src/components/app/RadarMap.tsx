@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { LiveAircraft, Track } from "@/lib/adsb";
 import { DAY, NIGHT, loadGoogle } from "./GoogleRoutesMap";
+import { WeatherBody } from "./AirportWeather";
 
 /** Plane silhouette in a 24×24 box, nose up (rotated by the track). */
 const PLANE = "M12 1.5c.8 0 1.4 1 1.4 2.4V9l7.6 4.4v2.1l-7.6-2.3v4.9l2.2 1.7v1.7L12 20.6l-3.6.9v-1.7l2.2-1.7v-4.9L3 15.5v-2.1L10.6 9V3.9c0-1.4.6-2.4 1.4-2.4z";
@@ -59,6 +60,7 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
   const selectedHex = useRef<string | null>(null);
   selectedHex.current = selected?.hex ?? null;
   const [showAirports, setShowAirports] = useState(true);
+  const [airport, setAirport] = useState<{ icao: string; name: string } | null>(null);
   const airportMarkers = useRef<Map<string, any>>(new Map());
 
   /** Airports in view, as small rings labelled with their ICAO code. */
@@ -83,11 +85,15 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
             position: { lat, lng: lon },
             title: `${icao} · ${name}`,
             zIndex: 0,
-            clickable: false,
+            cursor: "pointer",
             icon: { path: google.maps.SymbolPath.CIRCLE, scale: sz === 3 ? 4.5 : 3.5, fillColor: dark ? "#0a1626" : "#ffffff", fillOpacity: 1, strokeColor: dark ? "#e8eef5" : "#0e2a47", strokeWeight: 1.6, labelOrigin: new google.maps.Point(0, 3.4) },
             label: { text: icao, fontSize: "10px", fontWeight: "600", color: dark ? "#e8eef5" : "#0e2a47", className: "radar-airport-label" },
           }),
         );
+        shown.get(icao).addListener("click", () => {
+          setSelected(null);
+          setAirport({ icao, name });
+        });
       }
     }
     for (const [icao, mk] of shown) {
@@ -311,6 +317,19 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
       </div>
 
       {/* selected aircraft */}
+      {airport && !selected && (
+        <div className="absolute right-3 top-3 z-10 max-h-[calc(100%-24px)] w-[min(calc(100%-24px),380px)] overflow-auto rounded-xl border border-border bg-bg/95 p-4 shadow-xl backdrop-blur">
+          <div className="mb-3 flex items-start justify-between gap-2">
+            <div>
+              <p className="num text-lg font-bold leading-tight">{airport.icao}</p>
+              <p className="text-sm text-muted">{airport.name}</p>
+            </div>
+            <button type="button" className="btn btn-ghost !p-1" aria-label={t("close")} onClick={() => setAirport(null)}><X size={16} /></button>
+          </div>
+          <WeatherBody icao={airport.icao} compact />
+          <p className="mt-2 text-[10px] text-muted">aviationweather.gov (NOAA)</p>
+        </div>
+      )}
       {selected && (
         <div className="absolute right-3 top-3 z-10 w-[min(calc(100%-24px),300px)] rounded-xl border border-border bg-bg/95 p-4 shadow-xl backdrop-blur">
           <div className="flex items-start justify-between gap-2">

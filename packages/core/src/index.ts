@@ -15,3 +15,4 @@ export * from "./ical";
 export * from "./store";
 export * from "./track";
 export * from "./access";
+export * from "./weather";

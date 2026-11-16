@@ -13,6 +13,7 @@ import { useFormatDate, useTable } from "@/lib/hooks";
 import { saveLayover, softDelete } from "@/lib/repo";
 import { db } from "@/lib/db";
 import { Activities } from "./Activities";
+import { AirportWeather } from "@/components/app/AirportWeather";
 import { HotelPicker } from "./HotelPicker";
 
 export default function LayoverPage() {
@@ -66,6 +67,7 @@ export default function LayoverPage() {
         }}
       >
         <div className="space-y-5">
+          {v.airportIcao && <AirportWeather icao={v.airportIcao} />}
           <Card title={t("hotel")}>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t("hotel")}>

@@ -303,3 +303,14 @@ describe("import: cross-checks on the data", () => {
     expect(checkMapping(a.rows, bad).map((c) => c.issue)).toContain("totalVsBlock");
   });
 });
+
+describe("weather", () => {
+  it("decodes an AWC METAR and splits a TAF", async () => {
+    const { parseAwcMetar, tafLines, windText, visibilityText } = await import("../src/weather");
+    const m = parseAwcMetar({ icaoId: "LFPB", rawOb: "METAR LFPB 161030Z 24012G22KT 9999 BKN008 OVC020 12/10 Q1012 NOSIG", obsTime: 1794825000, wdir: 240, wspd: 12, wgst: 22, visib: "6+", temp: 12, dewp: 10, altim: 1012, clouds: [{ cover: "BKN", base: 800 }, { cover: "OVC", base: 2000 }] })!;
+    expect(m.category).toBe("IFR");
+    expect(windText(m)).toBe("240° 12 kt G22");
+    expect(visibilityText(m.visibSm)).toBe("≥ 10 km");
+    expect(tafLines("TAF LFPB 161100Z 1612/1712 24012KT 9999 BKN015 TEMPO 1614/1618 4000 SHRA BECMG 1700/1702 VRB03KT PROB30 TEMPO 1703/1707 BR")).toHaveLength(4);
+  });
+});
