@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseSync, type SupabaseSync, type SyncResult } from "@cielo/sync";
 import { localStore } from "./db";
-import { adoptPilotId } from "./repo";
+import { adoptPilotId, dedupeFlights } from "./repo";
 import { supabase } from "./supabase";
 
 interface CloudState {
@@ -49,9 +49,25 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     if (!sb || !session) return;
     let stopped = false;
     (async () => {
-      await adoptPilotId(session.user.id, session.user.email ?? undefined);
+      const merged = await adoptPilotId(session.user.id, session.user.email ?? undefined);
       if (stopped) return;
-      engine.current = createSupabaseSync({ supabase: sb, store: localStore, pilotId: session.user.id, onResult: (r) => (setLastSync(r), setSyncing(false)) });
+      let cleaned = !merged;
+      engine.current = createSupabaseSync({
+        supabase: sb,
+        store: localStore,
+        pilotId: session.user.id,
+        onResult: (r) => {
+          setLastSync(r);
+          setSyncing(false);
+          // first sync after this browser's logbook joined the account: drop flights it already had
+          if (!cleaned && r.ok) {
+            cleaned = true;
+            void dedupeFlights().then((n) => {
+              if (n) void engine.current?.syncNow();
+            });
+          }
+        },
+      });
       engine.current.start(60_000);
     })();
     const online = () => engine.current?.syncNow();

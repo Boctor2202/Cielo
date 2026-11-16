@@ -50,9 +50,10 @@ export async function updatePilot(patch: Partial<Pilot>) {
 }
 
 /** Rebind local data to the authenticated user id (first sign-in after local use). */
-export async function adoptPilotId(newPilotId: string, email?: string) {
+/** Returns true when this browser's own records were just brought into the account. */
+export async function adoptPilotId(newPilotId: string, email?: string): Promise<boolean> {
   const old = await localStore.getMeta("pilotId");
-  if (old === newPilotId) return;
+  if (old === newPilotId) return false;
   await db().transaction("rw", db().tables, async () => {
     for (const t of SYNC_TABLES) {
       const rows = (await db().t(t).toArray()) as unknown as Record<string, unknown>[];
@@ -69,6 +70,26 @@ export async function adoptPilotId(newPilotId: string, email?: string) {
     }
     await db().meta.put({ key: "pilotId", value: newPilotId });
   });
+  return true;
+}
+
+/**
+ * After a sign-in merged this browser's flights into an account that already had them (the same file imported
+ * on both sides), the copies are removed: same date, same off-block minute, same duration. The oldest record wins;
+ * flights without block times are left alone, since two of them can legitimately look alike.
+ */
+export async function dedupeFlights(): Promise<number> {
+  const all = (await db().t("flights").toArray()).filter((f) => !f.deletedAt && (f.outUtc || f.offUtc));
+  const seen = new Map<string, Flight>();
+  const extra: Flight[] = [];
+  for (const f of all.sort((a, b) => a.createdAt.localeCompare(b.createdAt))) {
+    const k = `${f.date}|${(f.outUtc ?? f.offUtc)!.slice(0, 16)}|${f.isFstd ? f.fstdMin : f.totalMin}|${f.isFstd ? 1 : 0}`;
+    if (seen.has(k)) extra.push(f);
+    else seen.set(k, f);
+  }
+  const t = now();
+  for (const f of extra) await db().t("flights").put({ ...f, deletedAt: t, updatedAt: t });
+  return extra.length;
 }
 
 /* ---------- Aircraft & types ---------- */
