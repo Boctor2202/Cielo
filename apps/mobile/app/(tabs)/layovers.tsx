@@ -6,12 +6,21 @@ import { Button, Card, EmptyState, Field, Row, Screen, Txt } from "../../src/com
 import { lookupAirport } from "../../src/airports";
 import { formatDate } from "../../src/i18n";
 import { todayUtc, useApp } from "../../src/state";
+import { Requires } from "../../src/components/Access";
 import { useTheme } from "../../src/theme";
 
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 
 /** Layovers, independent of the roster: an airport and dates are enough. */
 export default function Layovers() {
+  return (
+    <Requires feature="layovers">
+      <LayoversScreen />
+    </Requires>
+  );
+}
+
+function LayoversScreen() {
   const { t, layovers, put, pilot, locale } = useApp();
   const c = useTheme();
   const [adding, setAdding] = useState(false);

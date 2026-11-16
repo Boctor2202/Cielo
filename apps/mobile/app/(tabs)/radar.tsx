@@ -5,6 +5,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Glass, Row, Txt } from "../../src/components/ui";
 import { api, ApiError, type LiveAircraft, type Track } from "../../src/api";
 import { useApp } from "../../src/state";
+import { Requires } from "../../src/components/Access";
 import { font, useTheme } from "../../src/theme";
 
 const POLL_MS = 15_000;
@@ -21,6 +22,14 @@ function altColor(alt: LiveAircraft["alt"]) {
 
 /** Live traffic (adsb.lol through the Geardown API) on Apple Maps / Google Maps, with the selected aircraft's track. */
 export default function Radar() {
+  return (
+    <Requires feature="radar">
+      <RadarScreen />
+    </Requires>
+  );
+}
+
+function RadarScreen() {
   const { t, flights } = useApp();
   const c = useTheme();
   const map = useRef<MapView>(null);

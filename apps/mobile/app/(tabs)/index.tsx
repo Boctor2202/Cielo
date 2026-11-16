@@ -15,6 +15,7 @@ import {
 import { Button, Card, Dot, Fab, Row, Screen, Stat, Txt, statusColor } from "../../src/components/ui";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { isCloudEnabled } from "../../src/auth";
+import { AccessBanner } from "../../src/components/Access";
 import { todayUtc, useApp } from "../../src/state";
 import { ftlSettingsFor } from "../../src/ftlSettings";
 import { space, useTheme } from "../../src/theme";
@@ -22,7 +23,7 @@ import { space, useTheme } from "../../src/theme";
 const FTL_KEYS = ["duty7d", "duty14d", "duty28d", "flight28d", "flightYear", "flight12m"] as const;
 
 export default function Dashboard() {
-  const { t, locale, flights, balances, licenses, pilot, session } = useApp();
+  const { t, locale, flights, balances, licenses, pilot, session, access } = useApp();
   const c = useTheme();
   const today = todayUtc();
   const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
@@ -70,6 +71,8 @@ export default function Dashboard() {
           <Txt variant="muted">{locale === "fr" ? "Bonjour" : "Hello"} {pilot.fullName?.split(" ")[0] ?? ""}</Txt>
           <Txt variant="title">{locale === "fr" ? "Vue d'ensemble" : "Overview"}</Txt>
         </View>
+
+        <AccessBanner />
 
         {isCloudEnabled && !session ? (
           <Card>
@@ -161,7 +164,7 @@ export default function Dashboard() {
           <Txt variant="small">{t("dash.ftl.note")}</Txt>
         </Card>
       </Screen>
-      <Fab label={t("flight.new")} onPress={() => router.push("/flight/new")} />
+      <Fab label={t("flight.new")} onPress={() => router.push(access.canWrite ? "/flight/new" : "/subscription")} />
     </View>
   );
 }

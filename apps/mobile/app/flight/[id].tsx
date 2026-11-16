@@ -22,6 +22,7 @@ import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, Toggl
 import { lookupAirport } from "../../src/airports";
 import type { I18nKey } from "../../src/i18n";
 import { todayUtc, useApp } from "../../src/state";
+import { Paywall } from "../../src/components/Access";
 import { mono, space, useTheme } from "../../src/theme";
 
 type Clock = "out" | "off" | "on" | "in";
@@ -61,7 +62,14 @@ const normClock = (s: string) => {
   return c ? `${String(c.h).padStart(2, "0")}:${String(c.m).padStart(2, "0")}` : s.trim() === "" ? "" : s;
 };
 
-export default function FlightForm() {
+export default function FlightFormRoute() {
+  const { access } = useApp();
+  // read-only without a live subscription: viewing stays possible from the lists, editing does not
+  if (!access.canWrite) return <Paywall />;
+  return <FlightForm />;
+}
+
+function FlightForm() {
   const { id, rosterEventId } = useLocalSearchParams<{ id: string; rosterEventId?: string }>();
   const { t, flights, aircraft, aircraftTypes, rosterEvents, pilot, put } = useApp();
   const c = useTheme();
@@ -225,7 +233,7 @@ export default function FlightForm() {
       if (rosterEvent && !rosterEvent.flightId) await put("roster_events", { ...rosterEvent, flightId: saved.id });
       router.back();
     } catch (e) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : String(e));
+      Alert.alert(t("common.error"), e instanceof Error && e.message === "read_only" ? t("access.readOnlyBanner") : e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
     }

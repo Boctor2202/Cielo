@@ -7,7 +7,9 @@
 import { Platform } from "react-native";
 import type { CustomerInfo, PurchasesPackage } from "react-native-purchases";
 
+/** RevenueCat entitlements: "premium" = Max, "basic" = Basic (same ids as the webhook). */
 export const ENTITLEMENT_ID = "premium";
+export const BASIC_ENTITLEMENT_ID = "basic";
 
 const apiKey = Platform.select({
   ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
@@ -46,6 +48,22 @@ export async function getPackages(): Promise<PurchasesPackage[]> {
 }
 
 export const isPremium = (info: CustomerInfo | null | undefined) => !!info?.entitlements.active[ENTITLEMENT_ID];
+
+/** Plan granted by the store right now. */
+export function tierOf(info: CustomerInfo | null | undefined): { tier: "premium" | "basic" | null; store?: string; expires?: string | null } {
+  const e = info?.entitlements.active;
+  const ent = e?.[ENTITLEMENT_ID] ?? e?.[BASIC_ENTITLEMENT_ID];
+  if (!ent) return { tier: null };
+  return { tier: e?.[ENTITLEMENT_ID] ? "premium" : "basic", store: ent.store, expires: ent.expirationDate };
+}
+
+/** Which plan a store package sells: product or package id containing "max"/"premium" → Max, "basic" → Basic. */
+export function planOf(pkg: PurchasesPackage): "premium" | "basic" | null {
+  const id = `${pkg.identifier} ${pkg.product.identifier}`.toLowerCase();
+  if (/max|premium/.test(id)) return "premium";
+  if (/basic/.test(id)) return "basic";
+  return null;
+}
 
 export async function getCustomerInfo(): Promise<CustomerInfo | null> {
   const p = await client();

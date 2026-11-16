@@ -1,7 +1,9 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
+  accessFor,
   stamp,
+  type Access,
   type Aircraft,
   type AircraftType,
   type Flight,
@@ -39,6 +41,8 @@ export interface AppState extends AppData {
   locale: Locale;
   t: TFunction;
   session: Session | null;
+  /** plan granted now: trial/demo, Basic, Max (premium) or read-only (same rules as the web app) */
+  access: Access;
   /** Upsert (sets updatedAt via stamp) and reload. */
   put<T extends TableName>(table: T, row: Partial<TableMap[T]>): Promise<TableMap[T]>;
   /** Soft delete (deletedAt) so the deletion propagates through sync. */
@@ -47,6 +51,12 @@ export interface AppState extends AppData {
   reload(): Promise<void>;
   wipeAll(): Promise<void>;
   signOut(): Promise<void>;
+}
+
+export class ReadOnlyError extends Error {
+  constructor() {
+    super("read_only");
+  }
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -136,7 +146,10 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
 
   const value = useMemo<AppState | null>(() => {
     if (!store || !data) return null;
+    const access = accessFor(data.pilot, { signedIn: !!session });
     const put: AppState["put"] = async (table, row) => {
+      // read-only without a live subscription (the pilot's own settings stay editable)
+      if (!access.canWrite && table !== "pilots") throw new ReadOnlyError();
       const rec = stamp(row as Partial<SyncedRecord>) as unknown as TableMap[typeof table];
       await store.bulkPut(table, [rec]);
       const next = await loadAll(store);
@@ -151,6 +164,7 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
       locale,
       t,
       session,
+      access,
       put,
       async remove(table, id) {
         const row = await store.get(table, id);

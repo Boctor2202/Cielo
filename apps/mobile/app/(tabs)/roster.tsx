@@ -5,9 +5,18 @@ import { formatClock, formatDuration, minutesBetween } from "@cielo/core";
 import { Badge, Button, Card, EmptyState, Row, Txt } from "../../src/components/ui";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { useApp } from "../../src/state";
+import { Requires } from "../../src/components/Access";
 import { space, useTheme } from "../../src/theme";
 
 export default function Roster() {
+  return (
+    <Requires feature="roster">
+      <RosterScreen />
+    </Requires>
+  );
+}
+
+function RosterScreen() {
   const { t, locale, rosterEvents } = useApp();
   const c = useTheme();
   const upcoming = useMemo(() => {

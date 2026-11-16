@@ -11,7 +11,7 @@ import { space, useTheme } from "../../src/theme";
 const ORDER = { expired: 0, expiring: 1, valid: 2, no_expiry: 3 } as const;
 
 export default function Documents() {
-  const { t, locale, licenses } = useApp();
+  const { access, t, locale, licenses } = useApp();
   const c = useTheme();
   const today = todayUtc();
   const items = useMemo(
@@ -60,7 +60,7 @@ export default function Documents() {
           );
         }}
       />
-      <Fab label={t("docs.new")} onPress={() => router.push({ pathname: "/document/[id]", params: { id: "new" } })} />
+      <Fab label={t("docs.new")} onPress={() => (access.canWrite ? router.push({ pathname: "/document/[id]", params: { id: "new" } }) : router.push("/subscription"))} />
     </View>
   );
 }

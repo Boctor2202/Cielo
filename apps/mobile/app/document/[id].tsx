@@ -7,12 +7,20 @@ import type { I18nKey } from "../../src/i18n";
 import { todayUtc, useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
 import { statusLabel } from "../../src/licenseLabel";
+import { Paywall } from "../../src/components/Access";
 import { ensureNotificationPermission } from "../../src/notifications";
 
 const KINDS: LicenseKind[] = ["licence", "medical", "rating", "endorsement", "language", "other"];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export default function DocumentForm() {
+export default function DocumentFormRoute() {
+  const { access } = useApp();
+  // read-only without a live subscription: viewing stays possible from the lists, editing does not
+  if (!access.canWrite) return <Paywall />;
+  return <DocumentForm />;
+}
+
+function DocumentForm() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t, licenses, pilot, put, remove } = useApp();
   const c = useTheme();

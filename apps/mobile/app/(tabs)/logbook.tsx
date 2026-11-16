@@ -15,7 +15,7 @@ interface Section {
 }
 
 export default function Logbook() {
-  const { t, locale, flights, pilot, remove } = useApp();
+  const { access, t, locale, flights, pilot, remove } = useApp();
   const c = useTheme();
   const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
 
@@ -100,7 +100,7 @@ export default function Logbook() {
           </Pressable>
         )}
       />
-      <Fab label={t("flight.new")} onPress={() => router.push("/flight/new")} />
+      <Fab label={t("flight.new")} onPress={() => router.push(access.canWrite ? "/flight/new" : "/subscription")} />
     </View>
   );
 }

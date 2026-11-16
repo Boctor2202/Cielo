@@ -7,12 +7,21 @@ import { lookupAirport } from "../../src/airports";
 import { api, ApiError, fmtDistance, PLACE_CATEGORIES, type HotelHit, type LiveEvent, type Place, type PlaceCategory } from "../../src/api";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { useApp } from "../../src/state";
+import { Requires } from "../../src/components/Access";
 import { useTheme } from "../../src/theme";
 
 type Load<T> = { state: "idle" | "loading" | "ok" | "error" | "not_configured"; data: T };
 
 /** One layover: the crew hotel, then the best-rated places around it and the shows during the stay. */
-export default function LayoverScreen() {
+export default function LayoverRoute() {
+  return (
+    <Requires feature="layovers">
+      <LayoverScreen />
+    </Requires>
+  );
+}
+
+function LayoverScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t, layovers, put, remove, locale } = useApp();
   const c = useTheme();
