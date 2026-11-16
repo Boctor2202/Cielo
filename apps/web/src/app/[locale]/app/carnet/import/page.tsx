@@ -4,7 +4,7 @@ import { CalendarDays, Camera, FileSpreadsheet, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  analyseTable, IMPORT_FIELDS, parseCsv, rowsToFlights, type DateOrder, type ImportField, type ImportedRow,
+  analyseTable, checkMapping, IMPORT_FIELDS, parseCsv, rowsToFlights, type DateOrder, type ImportField, type ImportedRow,
 } from "@cielo/core";
 import { Link } from "@/i18n/navigation";
 import { Card, Field, PageTitle, Segmented, useToast } from "@/components/app/ui";
@@ -75,6 +75,14 @@ function FileImport() {
 
   const parsed = useMemo<ImportedRow[]>(() => (rows && mapping ? rowsToFlights(rows.slice(1), mapping, { dateOrder: order }) : []), [rows, mapping, order]);
   const recognised = mapping ? Object.values(mapping).filter((i) => i >= 0).length : 0;
+  // cross-checks on the data itself, recomputed whenever a column is changed by hand
+  const checks = useMemo(() => (rows && mapping ? checkMapping(rows.slice(1), mapping) : []), [rows, mapping]);
+  const doubtful = new Set(checks.map((c) => c.field));
+  const unused = useMemo(() => {
+    if (!rows || !mapping) return [];
+    const used = new Set(Object.values(mapping));
+    return rows[0]!.filter((h, i) => h && !used.has(i) && rows.slice(1).some((r) => (r[i] ?? "").trim()));
+  }, [rows, mapping]);
   const ok = parsed.filter((r) => r.errors.length === 0 && r.input);
 
   async function onFile(file: File) {
@@ -104,13 +112,21 @@ function FileImport() {
         <>
           <Card title={t("mapping")}>
             <p className="text-sm">{t("autoDetected", { count: recognised, total: rows[0]!.length })}</p>
-            <details className="mt-3">
+            {checks.length > 0 && (
+              <ul className="mt-3 space-y-1.5 rounded-xl bg-[var(--caution)]/12 p-3 text-sm">
+                {checks.map((c) => (
+                  <li key={c.field + c.issue}>⚠️ {t(`checks.${c.issue}`, { field: t(`fields.${c.field}`), pct: Math.round(c.ratio * 100) })}</li>
+                ))}
+              </ul>
+            )}
+            {unused.length > 0 && <p className="mt-2 text-xs text-muted">{t("unused", { cols: unused.join(", ") })}</p>}
+            <details className="mt-3" open={checks.length > 0}>
             <summary className="cursor-pointer text-sm text-accent">{t("checkColumns")}</summary>
             <p className="mb-4 mt-3 text-sm text-muted">{t("mappingHelp")}</p>
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {IMPORT_FIELDS.map((f) => (
-                <Field key={f} label={t(`fields.${f}`)}>
-                  <select className="input" value={mapping[f]} onChange={(e) => setMapping({ ...mapping, [f]: Number(e.target.value) })}>
+                <Field key={f} label={doubtful.has(f) ? `⚠️ ${t(`fields.${f}`)}` : t(`fields.${f}`)}>
+                  <select className={`input ${doubtful.has(f) ? "!border-[var(--caution)]" : ""}`} value={mapping[f]} onChange={(e) => setMapping({ ...mapping, [f]: Number(e.target.value) })}>
                     <option value={-1}>{t("ignore")}</option>
                     {rows[0]!.map((h, i) => (
                       <option key={i} value={i}>{h || `#${i + 1}`}</option>

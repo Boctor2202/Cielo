@@ -661,7 +661,14 @@
         "fstdTime": "FSTD time"
       },
       "autoDetected": "{count} of {total} columns recognised automatically. Check the preview below, then import.",
-      "checkColumns": "Check or fix the columns"
+      "checkColumns": "Check or fix the columns",
+      "checks": {
+        "totalVsBlock": "“{field}” does not match off-block → on-block on {pct} % of flights. Check the chosen column.",
+        "exceedsTotal": "“{field}” exceeds the total time on {pct} % of flights: probably not the right column.",
+        "functionsVsTotal": "Function times (PIC, co-pilot, dual, instructor) do not reach the total on {pct} % of flights: a function column may be missing.",
+        "notACount": "“{field}” does not hold landing or takeoff counts on {pct} % of rows."
+      },
+      "unused": "Unused columns: {cols}."
     },
     "audit": {
       "title": "Logbook audit",

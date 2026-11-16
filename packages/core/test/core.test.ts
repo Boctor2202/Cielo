@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  accessFor, analyseTable, analyseFtl, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
+  accessFor, analyseTable, analyseFtl, checkMapping, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
   detectMapping, formatDuration, icalToRosterEvent, licenseStatus, maxDailyFdp, parseCsv, parseDuration,
   parseFlexibleDate, parseIcal, rowsToFlights, sumFlights, sunElevation, type Airport, type Flight,
 } from "../src";
@@ -263,5 +263,23 @@ describe("import: automatic column detection", () => {
   it("does not take 'Total flight time' for the flight number", () => {
     const { named } = map("Flight date,Flight,From,To,Total flight time\n2025-01-01,AF1234,LFPG,LFMN,1:30");
     expect(named).toMatchObject({ flightNumber: "Flight", total: "Total flight time" });
+  });
+});
+
+describe("import: cross-checks on the data", () => {
+  it("maps an all-caps export with LDGS_/DURATION_/TIME_BLOCK_ columns and flags a wrong total", () => {
+    const header = "DATE,FLIGHT_NUMBER,DEPARTURE_AIRPORT,ARRIVAL_AIRPORT,TIME_BLOCK_START,TIME_TAKEOFF,TIME_LANDING,TIME_BLOCK_END,AIRCRAFT_REGISTRATION,AIRCRAFT_TYPE,NAME_PIC,DURATION_TOTAL,DURATION_NIGHT,TAKEOFFS_DAY,TAKEOFFS_NIGHT,LDGS_DAY,LDGS_NIGHT,DURATION_PIC,DURATION_SIC";
+    const rows = [
+      "2026-10-01,AF1,LFPG,LFML,06:10,06:25,07:35,07:45,F-HBXA,A320,X,1:35,0:00,1,0,1,0,0:00,1:35",
+      "2026-10-01,AF2,LFML,LFPG,08:40,08:52,10:05,10:15,F-HBXA,A320,X,1:35,0:20,0,1,0,1,0:00,1:35",
+      "2026-10-02,AF3,LFPG,EGLL,09:00,09:10,10:05,10:20,F-HBXA,A320,X,1:20,0:00,1,0,1,0,0:00,1:20",
+    ];
+    const a = analyseTable(parseCsv([header, ...rows].join("\n")));
+    const named = Object.fromEntries(Object.entries(a.mapping).filter(([, i]) => i >= 0).map(([f, i]) => [f, a.header[i]]));
+    expect(named).toMatchObject({ out: "TIME_BLOCK_START", in: "TIME_BLOCK_END", total: "DURATION_TOTAL", night: "DURATION_NIGHT", landingsDay: "LDGS_DAY", landingsNight: "LDGS_NIGHT", takeoffsNight: "TAKEOFFS_NIGHT" });
+    expect(a.checks).toEqual([]);
+    // a "total" that is not the block time is reported
+    const bad = { ...a.mapping, total: a.header.indexOf("TIME_TAKEOFF") };
+    expect(checkMapping(a.rows, bad).map((c) => c.issue)).toContain("totalVsBlock");
   });
 });

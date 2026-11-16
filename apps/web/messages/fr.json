@@ -661,7 +661,14 @@
         "fstdTime": "Temps FSTD"
       },
       "autoDetected": "{count} colonnes sur {total} reconnues automatiquement. Vérifiez l'aperçu ci-dessous puis importez.",
-      "checkColumns": "Vérifier ou corriger les colonnes"
+      "checkColumns": "Vérifier ou corriger les colonnes",
+      "checks": {
+        "totalVsBlock": "« {field} » ne correspond pas à l'écart off-block → on-block sur {pct} % des vols. Vérifiez la colonne choisie.",
+        "exceedsTotal": "« {field} » dépasse le temps total sur {pct} % des vols : ce n'est probablement pas la bonne colonne.",
+        "functionsVsTotal": "Les temps de fonction (CDB, copilote, double, instructeur) n'atteignent pas le temps total sur {pct} % des vols : une colonne de fonction manque peut-être.",
+        "notACount": "« {field} » ne contient pas des nombres d'atterrissages ou de décollages sur {pct} % des lignes."
+      },
+      "unused": "Colonnes non utilisées : {cols}."
     },
     "audit": {
       "title": "Audit du carnet",
