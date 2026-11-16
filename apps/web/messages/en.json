@@ -360,7 +360,8 @@
       "layovers": "Layovers",
       "radar": "Radar",
       "admin": "Admin",
-      "report": "Report a problem"
+      "report": "Report a problem",
+      "signIn": "Sign in"
     },
     "dashboard": {
       "hello": "Hello {name}",
@@ -1075,9 +1076,13 @@
       "restored": "Backup restored",
       "storage": "Storage",
       "storageLocal": "Your data is stored in this browser (local mode).",
-      "storageCloud": "Signed in: your data is synced.",
+      "storageCloud": "Synced with your account {email}: your data is also on your other devices.",
       "syncNow": "Sync now",
-      "checkoutUnavailable": "Online payment isn't open yet. Please try again soon."
+      "checkoutUnavailable": "Online payment isn't open yet. Please try again soon.",
+      "demoPlan": "Demo ({days} days left)",
+      "until": "until {date}",
+      "signedOut": "You are not signed in on this browser. Sign in to get your subscription and your logbook back.",
+      "storageSignedOut": "Not signed in: what you enter here stays in this browser until you sign in."
     },
     "functions": {
       "PIC": "Pilot in command (PIC)",

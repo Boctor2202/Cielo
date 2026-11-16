@@ -8,6 +8,8 @@ import { PILOT_FUNCTIONS, type Pilot } from "@cielo/core";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Card, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { usePilot } from "@/lib/hooks";
+import { useAccess } from "@/lib/access";
+import { Link } from "@/i18n/navigation";
 import { useAirports } from "@/lib/airports";
 import { deleteAllLocal, exportAll, importAll, updatePilot } from "@/lib/repo";
 import { downloadBlob } from "@/lib/download";
@@ -26,6 +28,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const pilot = usePilot();
+  const access = useAccess();
   const airports = useAirports();
   const cloud = useCloud();
   const { toast, toastNode } = useToast();
@@ -113,8 +116,19 @@ export default function SettingsPage() {
         </Card>
 
         <Card title={t("subscription")}>
-          <p className="text-sm">{t("currentPlan", { plan: tp(v.subscriptionTier) })}</p>
-          {cloud.session ? (
+          {/* the plan actually granted now (server tier once signed in, demo or nothing otherwise) */}
+          <p className="text-sm">
+            {t("currentPlan", { plan: access.demo ? t("demoPlan", { days: access.daysLeft ?? 0 }) : access.plan ? tp(access.plan) : tp("free") })}
+            {!access.demo && access.plan && v.subscriptionExpiresAt && <span className="text-muted"> · {t("until", { date: new Date(v.subscriptionExpiresAt).toLocaleDateString(locale) })}</span>}
+          </p>
+          {!cloud.enabled ? (
+            <p className="mt-3 text-sm text-muted">{t("cloudOff")}</p>
+          ) : !cloud.session ? (
+            <div className="mt-3 space-y-3">
+              <p className="text-sm text-muted">{t("signedOut")}</p>
+              <Link href="/connexion" className="btn btn-primary btn-sm">{tn("signIn")}</Link>
+            </div>
+          ) : (
             <div className="mt-4 space-y-3">
               <p className="text-xs text-muted">{tpr("trialNote")}</p>
               <div className="grid gap-2 sm:grid-cols-2">
@@ -125,13 +139,11 @@ export default function SettingsPage() {
                 ))}
               </div>
             </div>
-          ) : (
-            <p className="mt-3 text-sm text-muted">{t("cloudOff")}</p>
           )}
         </Card>
 
         <Card title={t("storage")}>
-          <p className="text-sm text-muted">{cloud.session ? t("storageCloud") : t("storageLocal")}</p>
+          <p className="text-sm text-muted">{cloud.session ? t("storageCloud", { email: cloud.session.user.email ?? "" }) : cloud.enabled ? t("storageSignedOut") : t("storageLocal")}</p>
           {cloud.session && (
             <div className="mt-4 flex flex-wrap gap-2">
               <button type="button" className="btn btn-secondary btn-sm" onClick={cloud.syncNow} disabled={cloud.syncing}><RefreshCw size={14} className={cloud.syncing ? "animate-spin" : ""} /> {t("syncNow")}</button>

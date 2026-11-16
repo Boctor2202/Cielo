@@ -360,7 +360,8 @@
       "layovers": "Escales",
       "radar": "Radar",
       "admin": "Admin",
-      "report": "Signaler un problème"
+      "report": "Signaler un problème",
+      "signIn": "Se connecter"
     },
     "dashboard": {
       "hello": "Bonjour {name}",
@@ -1075,9 +1076,13 @@
       "restored": "Sauvegarde restaurée",
       "storage": "Stockage",
       "storageLocal": "Vos données sont enregistrées dans ce navigateur (mode local).",
-      "storageCloud": "Connecté : vos données sont synchronisées.",
+      "storageCloud": "Synchronisé avec votre compte {email} : vos données sont aussi sur vos autres appareils.",
       "syncNow": "Synchroniser maintenant",
-      "checkoutUnavailable": "Le paiement en ligne n'est pas encore ouvert. Réessayez bientôt."
+      "checkoutUnavailable": "Le paiement en ligne n'est pas encore ouvert. Réessayez bientôt.",
+      "demoPlan": "Démo ({days} j restants)",
+      "until": "jusqu'au {date}",
+      "signedOut": "Vous n'êtes pas connecté sur ce navigateur. Connectez-vous pour retrouver votre abonnement et votre carnet.",
+      "storageSignedOut": "Non connecté : les données saisies ici restent dans ce navigateur jusqu'à votre connexion."
     },
     "functions": {
       "PIC": "Commandant de bord (PIC)",
