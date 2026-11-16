@@ -961,6 +961,54 @@
           "5": "valable 6 ans",
           "6": "sans limite de validité"
         }
+      },
+      "titleFor": {
+        "licence": "Licence",
+        "rating": "Qualification",
+        "endorsement": "Mention",
+        "other": "Intitulé"
+      },
+      "aemc": "Centre ou médecin (AeMC / AME)",
+      "aemcPh": "AeMC Paris, Dr …",
+      "organisation": "Organisme",
+      "licenceNumber": "N° de licence",
+      "dates": {
+        "issuedOn": "Délivrée le",
+        "examOn": "Date de l'examen",
+        "assessedOn": "Date de l'évaluation",
+        "obtainedOn": "Obtenue le"
+      },
+      "noExpiryLicence": "Une licence Part-FCL n'expire pas : la validité est portée par les qualifications et le médical.",
+      "addExpiry": "Ajouter une date d'expiration",
+      "lastCheckRating": "Dernier contrôle (prorogation, PC)",
+      "medical": {
+        "class": "Classe",
+        "classes": {
+          "Class1": "Classe 1",
+          "Class2": "Classe 2",
+          "LAPLmedical": "LAPL"
+        },
+        "age": "Âge à la date de l'examen",
+        "ageHint": "Sert à calculer la validité (MED.A.045). Vous pouvez corriger la date.",
+        "ages": {
+          "u40": "moins de 40 ans",
+          "40to49": "40 à 49 ans",
+          "50to59": "50 à 59 ans",
+          "60plus": "60 ans et plus"
+        },
+        "singlePilotPax": "Transport commercial de passagers en monopilote (validité réduite à 6 mois dès 40 ans)",
+        "limitations": "Limitations",
+        "lim": {
+          "VDL": "verres correcteurs à porter",
+          "VML": "verres multifocaux à porter",
+          "VNL": "verres pour la vision de près à emporter",
+          "CCL": "lentilles de contact uniquement",
+          "OML": "valable uniquement comme ou avec copilote qualifié",
+          "OCL": "valable uniquement comme copilote",
+          "SIC": "examens médicaux spécifiques",
+          "TML": "validité limitée dans le temps",
+          "RXO": "examen ophtalmologique spécialisé"
+        }
       }
     },
     "stats": {

@@ -102,3 +102,51 @@ export function parseLpe(code: string): { language: string; level?: number } {
   const m = code.trim().match(/^(?:LPE\s+)?(.*?)(?:\s+(?:level\s*|niveau\s*)?([4-6]))?$/i);
   return { language: m?.[1]?.trim() ?? "", level: m?.[2] ? Number(m[2]) : undefined };
 }
+
+/* ---------- Medical certificates (EASA MED.A.045) ---------- */
+
+export type MedicalClass = "Class 1" | "Class 2" | "LAPL medical";
+export const MEDICAL_CLASSES: MedicalClass[] = ["Class 1", "Class 2", "LAPL medical"];
+/** Age at the examination, in the bands the validity depends on. */
+export type AgeBand = "u40" | "40to49" | "50to59" | "60plus";
+export const AGE_BANDS: AgeBand[] = ["u40", "40to49", "50to59", "60plus"];
+/** Usual limitation codes written on a medical certificate. */
+export const MEDICAL_LIMITATIONS = ["VDL", "VML", "VNL", "CCL", "OML", "OCL", "SIC", "TML", "RXO"] as const;
+
+/**
+ * Months of validity of a medical certificate (MED.A.045): class 1 twelve months, six from 60 or from 40 in
+ * single-pilot commercial passenger operations; class 2 sixty months under 40, 24 under 50, then 12;
+ * LAPL sixty months under 40, then 24.
+ */
+export function medicalValidityMonths(cls: MedicalClass, age: AgeBand, singlePilotPax = false): number {
+  if (cls === "Class 1") return age === "60plus" || (singlePilotPax && age !== "u40") ? 6 : 12;
+  if (cls === "Class 2") return age === "u40" ? 60 : age === "40to49" ? 24 : 12;
+  return age === "u40" ? 60 : 24;
+}
+
+/** Valid until the end of the period counted from the examination date (the day before the anniversary). */
+export function medicalValidUntil(cls: MedicalClass, examOn: string | null | undefined, age: AgeBand, singlePilotPax = false): string | null {
+  if (!examOn) return null;
+  const d = new Date(`${examOn.slice(0, 10)}T12:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + medicalValidityMonths(cls, age, singlePilotPax));
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Which fields a document form shows, by category. */
+export interface DocumentForm {
+  number: boolean;
+  authority: "authority" | "aemc" | "organisation" | false;
+  issued: "issuedOn" | "examOn" | "assessedOn" | "obtainedOn" | false;
+  /** true: shown; "optional": hidden behind a link (licences do not expire); false: none */
+  validity: true | "optional" | false;
+  lastCheck: boolean;
+}
+export const DOCUMENT_FORMS: Record<License["kind"], DocumentForm> = {
+  licence: { number: true, authority: "authority", issued: "issuedOn", validity: "optional", lastCheck: false },
+  medical: { number: false, authority: "aemc", issued: "examOn", validity: true, lastCheck: false },
+  rating: { number: false, authority: "authority", issued: "issuedOn", validity: true, lastCheck: true },
+  endorsement: { number: false, authority: false, issued: "obtainedOn", validity: false, lastCheck: false },
+  language: { number: false, authority: "authority", issued: "assessedOn", validity: true, lastCheck: false },
+  other: { number: true, authority: "organisation", issued: "issuedOn", validity: true, lastCheck: false },
+};

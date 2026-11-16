@@ -360,3 +360,15 @@ describe("language proficiency", () => {
     expect(parseLpe("LPE French")).toEqual({ language: "French", level: undefined });
   });
 });
+
+describe("medical validity", () => {
+  it("follows MED.A.045", async () => {
+    const { medicalValidUntil, medicalValidityMonths } = await import("../src/licenses");
+    expect(medicalValidityMonths("Class 1", "u40")).toBe(12);
+    expect(medicalValidityMonths("Class 1", "40to49", true)).toBe(6);
+    expect(medicalValidityMonths("Class 1", "60plus")).toBe(6);
+    expect(medicalValidityMonths("Class 2", "40to49")).toBe(24);
+    expect(medicalValidityMonths("LAPL medical", "50to59")).toBe(24);
+    expect(medicalValidUntil("Class 1", "2026-03-11", "u40")).toBe("2027-03-10");
+  });
+});

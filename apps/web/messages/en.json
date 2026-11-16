@@ -961,6 +961,54 @@
           "5": "valid 6 years",
           "6": "no expiry"
         }
+      },
+      "titleFor": {
+        "licence": "Licence",
+        "rating": "Rating",
+        "endorsement": "Endorsement",
+        "other": "Title"
+      },
+      "aemc": "Medical centre or examiner (AeMC / AME)",
+      "aemcPh": "AeMC London, Dr …",
+      "organisation": "Organisation",
+      "licenceNumber": "Licence number",
+      "dates": {
+        "issuedOn": "Issued on",
+        "examOn": "Examination date",
+        "assessedOn": "Assessment date",
+        "obtainedOn": "Obtained on"
+      },
+      "noExpiryLicence": "A Part-FCL licence does not expire: validity comes from the ratings and the medical.",
+      "addExpiry": "Add an expiry date",
+      "lastCheckRating": "Last check (revalidation, PC)",
+      "medical": {
+        "class": "Class",
+        "classes": {
+          "Class1": "Class 1",
+          "Class2": "Class 2",
+          "LAPLmedical": "LAPL"
+        },
+        "age": "Age on the examination date",
+        "ageHint": "Used to compute the validity (MED.A.045). You can still change the date.",
+        "ages": {
+          "u40": "under 40",
+          "40to49": "40 to 49",
+          "50to59": "50 to 59",
+          "60plus": "60 and over"
+        },
+        "singlePilotPax": "Single-pilot commercial passenger operations (validity cut to 6 months from 40)",
+        "limitations": "Limitations",
+        "lim": {
+          "VDL": "wear corrective lenses",
+          "VML": "wear multifocal lenses",
+          "VNL": "carry near-vision glasses",
+          "CCL": "contact lenses only",
+          "OML": "valid only as or with a qualified co-pilot",
+          "OCL": "valid only as co-pilot",
+          "SIC": "specific medical examinations",
+          "TML": "time-limited validity",
+          "RXO": "specialist eye examination"
+        }
       }
     },
     "stats": {

@@ -6,7 +6,7 @@ import { useTypes } from "@/lib/hooks";
 import { AuthorityInput } from "@/components/app/AuthorityInput";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { alertsDueToday, computeRecency, DEFAULT_ALERT_DAYS, LICENSE_CATALOGUE, licenseStatus, LPE_LANGUAGES, lpeCode, lpeValidUntil, parseLpe, type License, type LicenseKind } from "@cielo/core";
+import { alertsDueToday, computeRecency, DEFAULT_ALERT_DAYS, LICENSE_CATALOGUE, licenseStatus, LPE_LANGUAGES, DOCUMENT_FORMS, MEDICAL_CLASSES, MEDICAL_LIMITATIONS, AGE_BANDS, medicalValidUntil, type AgeBand, type MedicalClass, lpeCode, lpeValidUntil, parseLpe, type License, type LicenseKind } from "@cielo/core";
 import { Badge, Card, Empty, Field, Modal, PageTitle, type Level } from "@/components/app/ui";
 import { useFlights, useFormatDate, useTable, useToday } from "@/lib/hooks";
 import { saveLicense, softDelete } from "@/lib/repo";
@@ -19,6 +19,7 @@ const blank = (): Draft => ({ kind: "licence", code: "", alertDays: [...DEFAULT_
 export default function DocumentsPage() {
   const t = useTranslations("app.documents");
   const types = useTypes();
+  const [showExpiry, setShowExpiry] = useState(false);
   const td = useTranslations("app.dashboard");
   const tc = useTranslations("common");
   const licenses = useTable("licenses");
@@ -97,8 +98,9 @@ export default function DocumentsPage() {
         </div>
       </div>
 
+      {/* fields shown for the category being edited */}
       <Modal open={!!draft} onClose={() => setDraft(null)} title={draft?.id ? draft.code : t("add")}>
-        {draft && (
+        {draft && (() => { const form = DOCUMENT_FORMS[draft.kind]; return (
           <form
             className="space-y-4"
             onSubmit={async (e) => {
@@ -111,16 +113,23 @@ export default function DocumentsPage() {
               <Field label={t("kind")}>
                 <select className="input" value={draft.kind} onChange={(e) => {
                   const kind = e.target.value as LicenseKind;
-                  // a language starts as "LPE English" rather than the previous category's title
-                  setDraft({ ...draft, kind, code: kind === "language" && !/^LPE/i.test(draft.code) ? "LPE English" : draft.code });
+                  // each category starts from its own first title rather than the previous category's
+                  const fits = LICENSE_CATALOGUE.some((c) => c.kind === kind && c.code === draft.code) || (kind === "language" && /^LPE/i.test(draft.code));
+                  const code = fits ? draft.code : kind === "language" ? "LPE English" : kind === "medical" ? "Class 1" : "";
+                  // dates and medical limitations belong to the previous category
+                  const notes = (draft.notes ?? "").replace(/^Limitations?: .*$\n?/m, "").trim() || undefined;
+                  setDraft({ ...draft, kind, code, issuedOn: null, validUntil: null, lastCheckOn: null, notes });
+                  setShowExpiry(false);
                 }}>
                   {KINDS.map((k) => <option key={k} value={k}>{t(`kinds.${k}`)}</option>)}
                 </select>
               </Field>
               {draft.kind === "language" ? (
                 <LpeFields draft={draft} setDraft={setDraft} />
+              ) : draft.kind === "medical" ? (
+                <MedicalFields draft={draft} setDraft={setDraft} />
               ) : (
-                <Field label={t("code")}>
+                <Field label={t(`titleFor.${draft.kind}`)}>
                   <input className="input" required list="lic-cat" value={draft.code} onChange={(e) => setDraft({ ...draft, code: e.target.value })} />
                   <datalist id="lic-cat">{LICENSE_CATALOGUE.filter((c) => c.kind === draft.kind).map((c) => <option key={c.code} value={c.code} />)}</datalist>
                 </Field>
@@ -136,25 +145,48 @@ export default function DocumentsPage() {
                   />
                 </div>
               )}
-              <AuthorityInput label={t("authority")} value={draft.authority ?? ""} onChange={(v) => setDraft({ ...draft, authority: v })} />
-              {draft.kind !== "language" && <Field label={t("number")}><input className="input num" value={draft.number ?? ""} onChange={(e) => setDraft({ ...draft, number: e.target.value })} /></Field>}
-              <Field label={draft.kind === "language" ? t("lpe.assessedOn") : t("issuedOn")}>
-                <input
-                  type="date"
-                  className="input num"
-                  value={draft.issuedOn ?? ""}
-                  onChange={(e) => {
-                    const issuedOn = e.target.value || null;
-                    const lvl = draft.kind === "language" ? parseLpe(draft.code).level : undefined;
-                    setDraft({ ...draft, issuedOn, ...(lvl ? { validUntil: lpeValidUntil(lvl, issuedOn) } : {}) });
-                  }}
-                />
-              </Field>
-              <Field label={t("validUntil")}><input type="date" className="input num" value={draft.validUntil ?? ""} onChange={(e) => setDraft({ ...draft, validUntil: e.target.value || null })} /></Field>
-              {draft.kind !== "language" && <Field label={t("lastCheck")}><input type="date" className="input num" value={draft.lastCheckOn ?? ""} onChange={(e) => setDraft({ ...draft, lastCheckOn: e.target.value || null })} /></Field>}
-              <Field label={t("alertDays")}>
-                <input className="input num" value={draft.alertDays.join(", ")} onChange={(e) => setDraft({ ...draft, alertDays: e.target.value.split(/[,; ]+/).map(Number).filter((n) => Number.isFinite(n) && n >= 0) })} />
-              </Field>
+              {form.authority === "authority" && <AuthorityInput label={t("authority")} value={draft.authority ?? ""} onChange={(v) => setDraft({ ...draft, authority: v })} />}
+              {(form.authority === "aemc" || form.authority === "organisation") && (
+                <Field label={t(form.authority === "aemc" ? "aemc" : "organisation")}>
+                  <input className="input" value={draft.authority ?? ""} placeholder={form.authority === "aemc" ? t("aemcPh") : ""} onChange={(e) => setDraft({ ...draft, authority: e.target.value })} />
+                </Field>
+              )}
+              {form.number && (
+                <Field label={t(draft.kind === "licence" ? "licenceNumber" : "number")}>
+                  <input className="input num" value={draft.number ?? ""} placeholder={draft.kind === "licence" ? "FRA.FCL.PA00012345" : ""} onChange={(e) => setDraft({ ...draft, number: e.target.value })} />
+                </Field>
+              )}
+              {form.issued && draft.kind !== "medical" && (
+                <Field label={t(`dates.${form.issued}`)}>
+                  <input
+                    type="date"
+                    className="input num"
+                    value={draft.issuedOn ?? ""}
+                    onChange={(e) => {
+                      const issuedOn = e.target.value || null;
+                      const lvl = draft.kind === "language" ? parseLpe(draft.code).level : undefined;
+                      setDraft({ ...draft, issuedOn, ...(lvl ? { validUntil: lpeValidUntil(lvl, issuedOn) } : {}) });
+                    }}
+                  />
+                </Field>
+              )}
+              {(form.validity === true || (form.validity === "optional" && (showExpiry || draft.validUntil))) && (
+                <Field label={t("validUntil")}><input type="date" className="input num" value={draft.validUntil ?? ""} onChange={(e) => setDraft({ ...draft, validUntil: e.target.value || null })} /></Field>
+              )}
+              {form.validity === "optional" && !showExpiry && !draft.validUntil && (
+                <p className="self-end pb-2 text-xs text-muted">
+                  {t("noExpiryLicence")}{" "}
+                  <button type="button" className="font-semibold underline" onClick={() => setShowExpiry(true)}>{t("addExpiry")}</button>
+                </p>
+              )}
+              {form.lastCheck && (
+                <Field label={t("lastCheckRating")}><input type="date" className="input num" value={draft.lastCheckOn ?? ""} onChange={(e) => setDraft({ ...draft, lastCheckOn: e.target.value || null })} /></Field>
+              )}
+              {(form.validity === true || draft.validUntil) && (
+                <Field label={t("alertDays")}>
+                  <input className="input num" value={draft.alertDays.join(", ")} onChange={(e) => setDraft({ ...draft, alertDays: e.target.value.split(/[,; ]+/).map(Number).filter((n) => Number.isFinite(n) && n >= 0) })} />
+                </Field>
+              )}
               <Field label={t("notes")} className="sm:col-span-2"><textarea className="input" rows={2} value={draft.notes ?? ""} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
               <Field label={t("attachment")} className="sm:col-span-2">
                 <input type="file" accept="image/*,application/pdf" className="text-sm" onChange={(e) => {
@@ -178,7 +210,7 @@ export default function DocumentsPage() {
               </div>
             </div>
           </form>
-        )}
+        ); })()}
       </Modal>
     </>
   );
@@ -224,6 +256,60 @@ function LpeFields({ draft, setDraft }: { draft: Draft; setDraft: (d: Draft) => 
             </button>
           ))}
         </div>
+      </Field>
+    </>
+  );
+}
+
+/** Medical: class, examination date and age band give the validity (MED.A.045); limitations go in the notes. */
+function MedicalFields({ draft, setDraft }: { draft: Draft; setDraft: (d: Draft) => void }) {
+  const t = useTranslations("app.documents");
+  const [age, setAge] = useState<AgeBand>("u40");
+  const [spPax, setSpPax] = useState(false);
+  const cls = (MEDICAL_CLASSES as string[]).includes(draft.code) ? (draft.code as MedicalClass) : "Class 1";
+  const recompute = (patch: Partial<Draft>, a = age, sp = spPax) => {
+    const next = { ...draft, ...patch };
+    const c = (MEDICAL_CLASSES as string[]).includes(next.code) ? (next.code as MedicalClass) : "Class 1";
+    setDraft({ ...next, validUntil: next.issuedOn ? medicalValidUntil(c, next.issuedOn, a, sp) : next.validUntil });
+  };
+  const lims = (draft.notes ?? "").match(/^Limitations?: (.*)$/m)?.[1]?.split(/,\s*/).filter(Boolean) ?? [];
+  const toggleLim = (l: string) => {
+    const set = lims.includes(l) ? lims.filter((x) => x !== l) : [...lims, l];
+    const rest = (draft.notes ?? "").replace(/^Limitations?: .*$\n?/m, "").trim();
+    setDraft({ ...draft, notes: [set.length ? `Limitations: ${set.join(", ")}` : "", rest].filter(Boolean).join("\n") });
+  };
+  const chip = (on: boolean) => `rounded-lg border px-3 py-1.5 text-sm ${on ? "border-accent bg-accent/12 font-semibold" : "border-border"}`;
+  return (
+    <>
+      <Field label={t("medical.class")}>
+        <div className="flex flex-wrap gap-2">
+          {MEDICAL_CLASSES.map((c) => (
+            <button key={c} type="button" aria-pressed={cls === c} className={chip(cls === c)} onClick={() => recompute({ code: c })}>{t(`medical.classes.${c.replace(/\s/g, "")}`)}</button>
+          ))}
+        </div>
+      </Field>
+      <Field label={t("dates.examOn")}>
+        <input type="date" className="input num" value={draft.issuedOn ?? ""} onChange={(e) => recompute({ issuedOn: e.target.value || null })} />
+      </Field>
+      <Field label={t("medical.age")} className="sm:col-span-2" hint={t("medical.ageHint")}>
+        <div className="flex flex-wrap gap-2">
+          {AGE_BANDS.map((a) => (
+            <button key={a} type="button" aria-pressed={age === a} className={chip(age === a)} onClick={() => (setAge(a), recompute({}, a))}>{t(`medical.ages.${a}`)}</button>
+          ))}
+        </div>
+        {cls === "Class 1" && (
+          <label className="mt-2 flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={spPax} onChange={(e) => (setSpPax(e.target.checked), recompute({}, age, e.target.checked))} /> {t("medical.singlePilotPax")}
+          </label>
+        )}
+      </Field>
+      <Field label={t("medical.limitations")} className="sm:col-span-2">
+        <div className="flex flex-wrap gap-1.5">
+          {MEDICAL_LIMITATIONS.map((l) => (
+            <button key={l} type="button" aria-pressed={lims.includes(l)} title={t(`medical.lim.${l}`)} className={`num ${chip(lims.includes(l))}`} onClick={() => toggleLim(l)}>{l}</button>
+          ))}
+        </div>
+        {lims.length > 0 && <p className="mt-1 text-xs text-muted">{lims.map((l) => `${l} : ${t(`medical.lim.${l}`)}`).join(" · ")}</p>}
       </Field>
     </>
   );
