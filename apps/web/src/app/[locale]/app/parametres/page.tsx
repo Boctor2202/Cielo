@@ -44,7 +44,9 @@ export default function SettingsPage() {
       const { url } = await cloud.invoke<{ url: string }>("create-checkout-session", { plan, interval: "monthly", returnPath: `/${locale}/app/parametres` });
       window.location.assign(url);
     } catch (e) {
-      toast(String((e as Error).message ?? e));
+      // payments not open yet (Stripe not configured) or temporarily unreachable
+      console.warn("checkout", e);
+      toast(t("checkoutUnavailable"));
     }
   }
 

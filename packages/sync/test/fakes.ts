@@ -166,6 +166,12 @@ export class FakeSupabase {
             const existing = fake.table(name).get(String(r.id));
             // cielo_lww_guard: keep the stored row when the incoming one is older
             if (existing && Date.parse(String(r.updated_at)) < Date.parse(String(existing.updated_at))) continue;
+            // pilots protection trigger: end users cannot change their subscription columns
+            if (name === "pilots") {
+              const keep = existing ?? { subscription_tier: "free", subscription_source: null, subscription_expires_at: null };
+              fake.seed(name, { ...r, subscription_tier: keep.subscription_tier, subscription_source: keep.subscription_source, subscription_expires_at: keep.subscription_expires_at });
+              continue;
+            }
             fake.seed(name, r);
           }
           return { data: null, error: null };

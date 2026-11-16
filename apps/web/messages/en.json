@@ -1001,7 +1001,8 @@
       "storage": "Storage",
       "storageLocal": "Your data is stored in this browser (local mode).",
       "storageCloud": "Signed in: your data is synced.",
-      "syncNow": "Sync now"
+      "syncNow": "Sync now",
+      "checkoutUnavailable": "Online payment isn't open yet. Please try again soon."
     },
     "functions": {
       "PIC": "Pilot in command (PIC)",

@@ -1001,7 +1001,8 @@
       "storage": "Stockage",
       "storageLocal": "Vos données sont enregistrées dans ce navigateur (mode local).",
       "storageCloud": "Connecté : vos données sont synchronisées.",
-      "syncNow": "Synchroniser maintenant"
+      "syncNow": "Synchroniser maintenant",
+      "checkoutUnavailable": "Le paiement en ligne n'est pas encore ouvert. Réessayez bientôt."
     },
     "functions": {
       "PIC": "Commandant de bord (PIC)",

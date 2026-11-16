@@ -196,3 +196,19 @@ describe("scheduling", () => {
     }
   });
 });
+
+describe("server-owned fields", () => {
+  it("brings the subscription back from the server even when the local profile is newer", async () => {
+    const { store, fake, sync } = setup(["pilots"]);
+    const local = { id: ME, createdAt: "2026-11-10T08:00:00.000Z", updatedAt: "2026-11-16T09:59:04.940Z", email: "a@b.c", fullName: "A", locale: "fr", regulatoryFramework: "EASA", defaultFunction: "PIC", defaultIfr: "ask", defaultPilotFlying: "always", timeDisplay: "hhmm", subscriptionTier: "free", subscriptionSource: null } as Pilot;
+    await store.bulkPut("pilots", [local]);
+    // the database granted Max; the client copy is newer and says free (the DB trigger refuses client tier changes)
+    fake.seed("pilots", { id: ME, created_at: "2026-11-10T08:00:00.000Z", updated_at: "2026-11-15T10:00:00.000Z", subscription_tier: "premium", subscription_source: null, subscription_expires_at: null });
+    const res = await sync.syncNow();
+    expect(res.errors).toEqual([]);
+    const after = (await store.get("pilots", ME)) as Pilot;
+    expect(after.subscriptionTier).toBe("premium");
+    // local edit time untouched: no endless push loop
+    expect(after.updatedAt).toBe("2026-11-16T09:59:04.940Z");
+  });
+});

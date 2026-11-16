@@ -182,6 +182,35 @@ export function createSupabaseSync(options: SupabaseSyncOptions): SupabaseSync {
     return pulled;
   }
 
+  /**
+   * Columns the server owns (the database refuses client changes to them): the subscription. A client that
+   * pushes its profile keeps its own updated_at, so a plain pull would never bring the server value back.
+   * Re-read them after each sync and patch the local profile without touching updatedAt.
+   */
+  async function refreshServerOwned(): Promise<void> {
+    if (!tables.includes("pilots")) return;
+    const { data, error } = await supabase
+      .from("pilots")
+      .select("subscription_tier, subscription_source, subscription_expires_at")
+      .eq("id", pilotId)
+      .limit(1);
+    if (error || !Array.isArray(data) || !data[0]) return;
+    const row = data[0] as Record<string, unknown>;
+    const local = (await store.get("pilots", pilotId)) as unknown as AnyRow | undefined;
+    if (!local) return;
+    const next = {
+      subscriptionTier: (row.subscription_tier as string) ?? "free",
+      subscriptionSource: (row.subscription_source as string | null) ?? null,
+      subscriptionExpiresAt: row.subscription_expires_at ? new Date(String(row.subscription_expires_at)).toISOString() : null,
+    };
+    const prev = local as unknown as Record<string, unknown>;
+    const changed =
+      prev.subscriptionTier !== next.subscriptionTier ||
+      (prev.subscriptionSource ?? null) !== next.subscriptionSource ||
+      (prev.subscriptionExpiresAt ? new Date(String(prev.subscriptionExpiresAt)).toISOString() : null) !== next.subscriptionExpiresAt;
+    if (changed) await store.bulkPut("pilots", [{ ...local, ...next } as never]);
+  }
+
   async function run(): Promise<SyncResult> {
     const startedAt = new Date().toISOString();
     const result: SyncResult = { ok: true, startedAt, finishedAt: startedAt, pushed: {}, pulled: {}, errors: [] };
@@ -197,6 +226,12 @@ export function createSupabaseSync(options: SupabaseSyncOptions): SupabaseSync {
       } catch (e) {
         result.errors.push({ table, phase: "pull", message: errorMessage(e) });
       }
+    }
+
+    try {
+      await refreshServerOwned();
+    } catch (e) {
+      result.errors.push({ table: "pilots", phase: "pull", message: errorMessage(e) });
     }
 
     result.ok = result.errors.length === 0;
