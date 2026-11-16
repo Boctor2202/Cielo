@@ -309,13 +309,31 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
       }
       return null;
     };
-    const loop = () => {
-      const v = p.get();
+    // The film follows the scroll through a critically damped ease (no stepping on wheel notches), and
+    // the two frames around the exact position are cross-faded, so motion stays fluid between frames.
+    let shown = p.get();
+    let last = performance.now();
+    let drawn = "";
+    const loop = (now: number) => {
+      const target = p.get();
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      shown += (target - shown) * (1 - Math.exp(-dt / 0.09));
+      if (Math.abs(target - shown) < 1e-5) shown = target;
+      const v = shown;
       const id = SHOT_IDS.find((k) => v < SHOTS[k].to) ?? SHOT_IDS[SHOT_IDS.length - 1]!;
       const s = SHOTS[id];
       const k = Math.min(1, Math.max(0, (v - s.from) / (s.to - s.from)));
-      const img = nearest(id, Math.round(k * (FRAME_COUNT[id] - 1)));
-      if (cv && ctx && img) {
+      const pos = k * (FRAME_COUNT[id] - 1);
+      const f0 = Math.floor(pos);
+      const frac = pos - f0;
+      const list = frames.current[id];
+      const exact = list[f0] && (frac < 0.02 || list[f0 + 1]);
+      const img = exact ? list[f0]! : nearest(id, Math.round(pos));
+      const next = exact && frac >= 0.02 ? list[f0 + 1] : null;
+      const key = `${cv?.clientWidth}x${cv?.clientHeight}:${id}:${img?.src}:${next ? frac.toFixed(3) : ""}`;
+      if (cv && ctx && img && key !== drawn) {
+        drawn = key;
         const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const w = Math.round(cv.clientWidth * dpr);
         const h = Math.round(cv.clientHeight * dpr);
@@ -336,7 +354,14 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         const x0 = (w - dw) / 2;
         const y0 = (h - dh) / 2;
         // the frame scaled around the focal point
-        ctx.drawImage(img, fx + (x0 - fx) * push, fy + (y0 - fy) * push, dw * push, dh * push);
+        const put = (im: HTMLImageElement) => ctx.drawImage(im, fx + (x0 - fx) * push, fy + (y0 - fy) * push, dw * push, dh * push);
+        ctx.globalAlpha = 1;
+        put(img);
+        if (next) {
+          ctx.globalAlpha = frac;
+          put(next);
+          ctx.globalAlpha = 1;
+        }
       }
       raf = requestAnimationFrame(loop);
     };
