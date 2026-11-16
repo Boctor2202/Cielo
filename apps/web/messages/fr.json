@@ -1234,7 +1234,7 @@
         "school": "École",
         "language": "Langue",
         "icao": "Niveau OACI",
-        "level": "Niveau",
+        "level": "Niveau général",
         "skills": "Compétences (séparées par des virgules)",
         "add": "Ajouter",
         "remove": "Retirer"
@@ -1281,7 +1281,28 @@
           "forest": "Forêt",
           "graphite": "Graphite et or"
         }
-      }
+      },
+      "levels": [
+        "Langue maternelle",
+        "Bilingue (C2)",
+        "Courant (C1)",
+        "Avancé (B2)",
+        "Intermédiaire (B1)",
+        "Notions (A2)"
+      ],
+      "langs": [
+        "Français",
+        "Anglais",
+        "Espagnol",
+        "Allemand",
+        "Italien",
+        "Portugais",
+        "Néerlandais",
+        "Arabe",
+        "Chinois",
+        "Russe",
+        "Japonais"
+      ]
     },
     "profile": {
       "eyebrow": "Profil pilote",

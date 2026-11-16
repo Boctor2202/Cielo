@@ -1234,7 +1234,7 @@
         "school": "School",
         "language": "Language",
         "icao": "ICAO level",
-        "level": "Level",
+        "level": "General level",
         "skills": "Skills (comma separated)",
         "add": "Add",
         "remove": "Remove"
@@ -1281,7 +1281,28 @@
           "forest": "Forest",
           "graphite": "Graphite and gold"
         }
-      }
+      },
+      "levels": [
+        "Native",
+        "Bilingual (C2)",
+        "Fluent (C1)",
+        "Advanced (B2)",
+        "Intermediate (B1)",
+        "Basic (A2)"
+      ],
+      "langs": [
+        "English",
+        "French",
+        "Spanish",
+        "German",
+        "Italian",
+        "Portuguese",
+        "Dutch",
+        "Arabic",
+        "Chinese",
+        "Russian",
+        "Japanese"
+      ]
     },
     "profile": {
       "eyebrow": "Pilot profile",

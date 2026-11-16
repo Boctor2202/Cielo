@@ -196,8 +196,21 @@ function Cv() {
           return (
             <View key={i} style={{ gap: 6 }}>
               <Row>
-                <Field style={{ flex: 2 }} label={t("cv.language")} value={x.name} onChangeText={(v) => upd({ name: v })} />
-                <Field style={{ flex: 2 }} label={t("cv.level")} value={x.level ?? ""} onChangeText={(v) => upd({ level: v })} />
+                <Field style={{ flex: 1 }} label={t("cv.language")} value={x.name} onChangeText={(v) => upd({ name: v })} />
+
+              </Row>
+              {!x.name ? (
+                <Row style={{ flexWrap: "wrap" }} gap={6}>
+                  {t("cv.langs").split("|").map((l) => (
+                    <Chip key={l} label={l} onPress={() => upd({ name: l })} />
+                  ))}
+                </Row>
+              ) : null}
+              <Txt variant="small">{t("cv.level")}</Txt>
+              <Row style={{ flexWrap: "wrap" }} gap={6}>
+                {t("cv.levels").split("|").map((l) => (
+                  <Chip key={l} label={l} selected={x.level === l} onPress={() => upd({ level: x.level === l ? undefined : l })} />
+                ))}
               </Row>
               <Row gap={6}>
                 <Txt variant="small">{t("cv.icao")}</Txt>

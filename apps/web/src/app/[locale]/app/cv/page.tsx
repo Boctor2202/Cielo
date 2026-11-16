@@ -220,15 +220,24 @@ export default function CvPage() {
               {profile.languages.map((x, i) => {
                 const upd = (patch: Partial<typeof x>) => set("languages", profile.languages.map((e, j) => (j === i ? { ...e, ...patch } : e)));
                 return (
-                  <div key={i} className="grid grid-cols-[1fr_110px_1fr_auto] items-end gap-2">
-                    <Field label={t("f.language")}><input className="input" value={x.name} onChange={(e) => upd({ name: e.target.value })} /></Field>
+                  <div key={i} className="grid grid-cols-[1fr_100px_1.2fr_auto] items-end gap-2">
+                    <Field label={t("f.language")}>
+                      <input className="input" list="cv-langs" value={x.name} onChange={(e) => upd({ name: e.target.value })} />
+                      <datalist id="cv-langs">{(t.raw("langs") as string[]).map((l) => <option key={l} value={l} />)}</datalist>
+                    </Field>
                     <Field label={t("f.icao")}>
                       <select className="input" value={x.icaoLevel ?? ""} onChange={(e) => upd({ icaoLevel: e.target.value ? Number(e.target.value) : undefined })}>
                         <option value="">—</option>
                         {[4, 5, 6].map((n) => <option key={n}>{n}</option>)}
                       </select>
                     </Field>
-                    <Field label={t("f.level")}><input className="input" value={x.level ?? ""} onChange={(e) => upd({ level: e.target.value })} /></Field>
+                    <Field label={t("f.level")}>
+                      <select className="input" value={x.level ?? ""} onChange={(e) => upd({ level: e.target.value || undefined })}>
+                        <option value="">—</option>
+                        {(t.raw("levels") as string[]).map((l) => <option key={l} value={l}>{l}</option>)}
+                        {x.level && !(t.raw("levels") as string[]).includes(x.level) && <option value={x.level}>{x.level}</option>}
+                      </select>
+                    </Field>
                     <button type="button" className="btn btn-ghost !px-2" aria-label={t("f.remove")} onClick={() => set("languages", profile.languages.filter((_, j) => j !== i))}><X size={16} /></button>
                   </div>
                 );
