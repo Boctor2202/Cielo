@@ -18,6 +18,7 @@ import {
 import { AirportField } from "../../src/components/AirportField";
 import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPicker";
 import { AircraftPhoto } from "../../src/components/AircraftPhoto";
+import { FlightTrackCard } from "../../src/components/FlightTrack";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, ToggleRow, Txt } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
 import type { I18nKey } from "../../src/i18n";
@@ -452,6 +453,8 @@ function FlightForm() {
         <Card>
           <Field label={t("flight.remarks")} value={form.remarks} multiline onChangeText={(s) => set("remarks", s)} />
         </Card>
+
+        {existing && !existing.isFstd ? <FlightTrackCard flightId={existing.id} /> : null}
 
         {error ? <Txt color={c.warning}>{error}</Txt> : null}
         <Button title={t("common.save")} onPress={save} disabled={locked} loading={saving} />
