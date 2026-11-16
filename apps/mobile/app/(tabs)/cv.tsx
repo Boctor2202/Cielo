@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, View } from "react-native";
 import { atsReport, buildCvDocument, buildCvPdf, CV_THEMES, cvToText, flightExperience, toJsonResume, type CvData, type CvExperience, type CvFonts, type CvProfile, type CvTheme } from "@cielo/cv";
+import { countryName } from "@cielo/core";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
 import { Requires } from "../../src/components/Access";
 import { API_URL } from "../../src/api";
@@ -39,7 +40,7 @@ export default function CvScreen() {
 }
 
 function Cv() {
-  const { t, store, pilot, flights, balances, licenses, aircraftTypes } = useApp();
+  const { t, store, pilot, flights, balances, licenses, aircraftTypes, locale: uiLocale } = useApp();
   const c = useTheme();
   const [profile, setProfile] = useState<CvProfile | null>(null);
   const [locale, setLocale] = useState<"en" | "fr">("en");
@@ -52,7 +53,11 @@ function Cv() {
     loaded.current = true;
     void store.getMeta("cv").then((raw) => {
       const saved = raw ? (JSON.parse(raw) as CvProfile) : null;
-      setProfile({ ...EMPTY, fullName: pilot.fullName, email: pilot.email || undefined, phone: pilot.phone, nationality: pilot.nationality, ...saved });
+      // what the profile already knows fills the empty CV fields
+      const known = { fullName: pilot.fullName, email: pilot.email || undefined, phone: pilot.phone || undefined, nationality: pilot.nationality ? countryName(pilot.nationality, uiLocale) : undefined };
+      const merged = { ...EMPTY, ...known, ...saved };
+      for (const k of Object.keys(known) as (keyof typeof known)[]) if (!merged[k]) merged[k] = known[k] as never;
+      setProfile(merged);
     });
   }, [store, pilot]);
   useEffect(() => {

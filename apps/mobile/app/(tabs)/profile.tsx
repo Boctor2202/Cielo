@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import type { Pilot } from "@cielo/core";
+import { AUTHORITIES, countryName, type Pilot } from "@cielo/core";
+import { CountryField } from "../../src/components/CountryField";
 import { Button, Card, Field, Row, Screen, Txt } from "../../src/components/ui";
 import { AirportField } from "../../src/components/AirportField";
 import { useApp } from "../../src/state";
@@ -13,11 +14,22 @@ const draftOf = (p: Pilot): Draft => ({ fullName: p.fullName, rank: p.rank, empl
 
 export default function Profile() {
   const app = useApp();
-  const { t, pilot } = app;
+  const { t, pilot, licenses, store, locale } = app;
+  // what the app already knows elsewhere: the licence document, its authority's country, the CV draft
+  const [cvPhone, setCvPhone] = useState<string | undefined>();
+  useEffect(() => {
+    void store.getMeta("cv").then((raw) => raw && setCvPhone((JSON.parse(raw) as { phone?: string }).phone || undefined));
+  }, [store]);
+  const known = useMemo(() => {
+    const lic = licenses.find((l) => !l.deletedAt && l.kind === "licence" && l.number);
+    const auth = licenses.map((l) => AUTHORITIES.find((a) => a.label === l.authority)).find((a) => a && a.country !== "EU");
+    return { licenceNumber: lic?.number, country: auth?.country, phone: cvPhone };
+  }, [licenses, cvPhone]);
   const c = useTheme();
+  const fill = (x: Draft): Draft => ({ ...x, licenceNumber: x.licenceNumber || known.licenceNumber, phone: x.phone || known.phone });
   const [d, setD] = useState<Draft>(draftOf(pilot));
   const [saved, setSaved] = useState(false);
-  useEffect(() => setD(draftOf(pilot)), [pilot]);
+  useEffect(() => setD(fill(draftOf(pilot))), [pilot, known]); // eslint-disable-line react-hooks/exhaustive-deps
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
   const initials = (d.fullName || "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
@@ -76,8 +88,18 @@ export default function Profile() {
         <Field label={t("profile.rank")} value={d.rank ?? ""} onChangeText={(v) => set("rank", v)} placeholder={t("profile.rankPh")} />
         <Field label={t("profile.employer")} value={d.employer ?? ""} onChangeText={(v) => set("employer", v)} />
         <AirportField label={t("more.homeBase")} value={d.homeBaseIcao ?? ""} onChange={(v) => set("homeBaseIcao", v)} />
-        <Field label={t("more.licenceNumber")} value={d.licenceNumber ?? ""} onChangeText={(v) => set("licenceNumber", v)} monoValue autoCapitalize="characters" />
-        <Field label={t("profile.nationality")} value={d.nationality ?? ""} onChangeText={(v) => set("nationality", v)} autoCapitalize="characters" maxLength={3} />
+        <Field
+          label={t("more.licenceNumber")}
+          value={d.licenceNumber ?? ""}
+          onChangeText={(v) => set("licenceNumber", v)}
+          monoValue
+          autoCapitalize="characters"
+          hint={known.licenceNumber && d.licenceNumber === known.licenceNumber && !pilot.licenceNumber ? t("profile.fromLicence") : undefined}
+        />
+        <CountryField label={t("profile.nationality")} value={d.nationality} onChange={(v) => set("nationality", v)} />
+        {!d.nationality && known.country ? (
+          <Button kind="ghost" small title={t("profile.suggestCountry", { country: countryName(known.country, locale) })} onPress={() => set("nationality", known.country)} />
+        ) : null}
         <Field label={t("profile.phone")} value={d.phone ?? ""} onChangeText={(v) => set("phone", v)} keyboardType="phone-pad" />
         <Field label={t("profile.bio")} value={d.bio ?? ""} onChangeText={(v) => set("bio", v)} multiline maxLength={600} />
         <Button title={saved ? t("more.saved") : t("common.save")} onPress={save} />

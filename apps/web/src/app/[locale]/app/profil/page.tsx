@@ -1,16 +1,18 @@
 "use client";
 
 import { BadgeCheck, Camera, Check, Pencil, Plane, Trash2, X } from "lucide-react";
+import { CountryInput } from "@/components/app/CountryInput";
 import { AirportInput } from "@/components/app/AirportInput";
 import { motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
-import { licenseStatus, type Pilot } from "@cielo/core";
+import { useLocale, useTranslations } from "next-intl";
+import { AUTHORITIES, countryName, licenseStatus, type Pilot } from "@cielo/core";
 import { flightExperience } from "@cielo/cv";
 import { Badge, Card, Field, useToast, type Level } from "@/components/app/ui";
 import { Link } from "@/i18n/navigation";
 import { useDuration, useFlights, usePilot, useTable, useToday, useTypes } from "@/lib/hooks";
 import { updatePilot } from "@/lib/repo";
+import { localStore } from "@/lib/db";
 import { PilotEntrance } from "./PilotEntrance";
 
 const RANKS = ["Captain", "Commandant de bord", "First Officer", "Officier pilote de ligne", "Senior First Officer", "Flight Instructor", "Instructeur", "Student Pilot", "Élève pilote", "Private Pilot", "Pilote privé"];
@@ -44,10 +46,22 @@ export default function ProfilePage() {
   const { toast, toastNode } = useToast();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const locale = useLocale();
+  /** What the app already knows elsewhere: the licence document, its authority's country, the CV draft. */
+  const [cvPhone, setCvPhone] = useState<string | undefined>();
+  useEffect(() => {
+    localStore.getMeta("cv").then((raw) => raw && setCvPhone((JSON.parse(raw) as { phone?: string }).phone || undefined));
+  }, []);
+  const known = useMemo(() => {
+    const lic = (licenses ?? []).find((l) => !l.deletedAt && l.kind === "licence" && l.number);
+    const auth = (licenses ?? []).map((l) => AUTHORITIES.find((a) => a.label === l.authority)).find((a) => a && a.country !== "EU");
+    return { licenceNumber: lic?.number, country: auth?.country, phone: cvPhone };
+  }, [licenses, cvPhone]);
 
   useEffect(() => {
-    if (pilot && !editing) setDraft({ fullName: pilot.fullName, rank: pilot.rank, employer: pilot.employer, homeBaseIcao: pilot.homeBaseIcao, nationality: pilot.nationality, licenceNumber: pilot.licenceNumber, phone: pilot.phone, bio: pilot.bio, photoDataUrl: pilot.photoDataUrl });
-  }, [pilot, editing]);
+    // empty fields start from what the app already knows (licence document, CV draft); nothing is saved until "Save"
+    if (pilot && !editing) setDraft({ fullName: pilot.fullName, rank: pilot.rank, employer: pilot.employer, homeBaseIcao: pilot.homeBaseIcao, nationality: pilot.nationality, licenceNumber: pilot.licenceNumber || known.licenceNumber, phone: pilot.phone || known.phone, bio: pilot.bio, photoDataUrl: pilot.photoDataUrl });
+  }, [pilot, editing, known]);
 
   const hours = useMemo(() => {
     if (!flights || !opening || !types) return null;
@@ -68,7 +82,7 @@ export default function ProfilePage() {
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => (d ? { ...d, [k]: v } : d));
   const save = async () => {
-    await updatePilot({ ...draft, fullName: draft.fullName.trim(), homeBaseIcao: draft.homeBaseIcao?.trim().toUpperCase() || undefined, nationality: draft.nationality?.trim().toUpperCase() || undefined });
+    await updatePilot({ ...draft, fullName: draft.fullName.trim(), homeBaseIcao: draft.homeBaseIcao?.trim().toUpperCase() || undefined, nationality: draft.nationality?.trim().toUpperCase() || undefined, licenceNumber: draft.licenceNumber?.trim() || undefined, phone: draft.phone?.trim() || undefined });
     setEditing(false);
     toast(t("saved"));
   };
@@ -152,9 +166,20 @@ export default function ProfilePage() {
               </Field>
               <Field label={t("f.employer")}><input id="p-employer" className="input" value={draft.employer ?? ""} onChange={(e) => set("employer", e.target.value || undefined)} /></Field>
               <AirportInput label={t("f.base")} value={draft.homeBaseIcao ?? ""} onChange={(x) => set("homeBaseIcao", x || undefined)} />
-              <Field label={t("f.nationality")} hint={t("f.nationalityHint")}><input id="p-nat" className="input uppercase" maxLength={2} value={draft.nationality ?? ""} onChange={(e) => set("nationality", e.target.value.toUpperCase() || undefined)} /></Field>
-              <Field label={t("f.licenceNumber")}><input id="p-lic" className="input num" value={draft.licenceNumber ?? ""} onChange={(e) => set("licenceNumber", e.target.value || undefined)} /></Field>
-              <Field label={t("f.phone")}><input id="p-phone" className="input" type="tel" value={draft.phone ?? ""} onChange={(e) => set("phone", e.target.value || undefined)} /></Field>
+              <CountryInput
+                label={t("f.nationality")}
+                value={draft.nationality}
+                onChange={(v) => set("nationality", v)}
+                hint={
+                  !draft.nationality && known.country ? (
+                    <button type="button" className="font-semibold text-accent underline" onClick={() => set("nationality", known.country)}>
+                      {t("f.suggestCountry", { country: countryName(known.country, locale) })}
+                    </button>
+                  ) : undefined
+                }
+              />
+              <Field label={t("f.licenceNumber")} hint={known.licenceNumber && draft.licenceNumber === known.licenceNumber ? t("f.fromLicence") : undefined}><input id="p-lic" className="input num" value={draft.licenceNumber ?? ""} onChange={(e) => set("licenceNumber", e.target.value || undefined)} /></Field>
+              <Field label={t("f.phone")} hint={known.phone && draft.phone === known.phone && !pilot.phone ? t("f.fromCv") : undefined}><input id="p-phone" className="input" type="tel" value={draft.phone ?? ""} onChange={(e) => set("phone", e.target.value || undefined)} /></Field>
               <Field label={t("f.email")}><input id="p-email" className="input" value={pilot.email} disabled /></Field>
               <Field label={t("f.bio")} className="sm:col-span-2"><textarea id="p-bio" className="input min-h-28" maxLength={600} value={draft.bio ?? ""} onChange={(e) => set("bio", e.target.value || undefined)} /></Field>
             </div>

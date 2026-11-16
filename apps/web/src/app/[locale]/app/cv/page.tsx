@@ -2,7 +2,8 @@
 
 import { AlertTriangle, Check, Copy, FileDown, FileJson, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { countryName } from "@cielo/core";
 import { atsReport, buildCvDocument, buildCvPdf, cvToText, CV_THEMES, flightExperience, toJsonResume, type CvData, type CvDocument, type CvProfile, type CvTheme } from "@cielo/cv";
 import type { Job } from "@cielo/jobs";
 import { Card, Field, PageTitle, Segmented, useToast, type Level } from "@/components/app/ui";
@@ -27,6 +28,7 @@ function keywordsFor(job: Job): string[] {
 
 export default function CvPage() {
   const t = useTranslations("app.cv");
+  const uiLocale = useLocale();
   const flights = useFlights();
   const opening = useTable("opening_balances");
   const licenses = useTable("licenses");
@@ -46,7 +48,11 @@ export default function CvPage() {
     loaded.current = true;
     localStore.getMeta("cv").then((raw) => {
       const saved = raw ? (JSON.parse(raw) as CvProfile) : null;
-      setProfile({ ...EMPTY, fullName: pilot.fullName, email: pilot.email || undefined, ...saved });
+      // what the profile already knows fills the empty CV fields
+      const known = { fullName: pilot.fullName, email: pilot.email || undefined, phone: pilot.phone || undefined, nationality: pilot.nationality ? countryName(pilot.nationality, uiLocale) : undefined };
+      const merged = { ...EMPTY, ...known, ...saved };
+      for (const k of Object.keys(known) as (keyof typeof known)[]) if (!merged[k]) merged[k] = known[k] as never;
+      setProfile(merged);
     });
     fetch("/api/jobs")
       .then((r) => (r.ok ? r.json() : { jobs: [] }))

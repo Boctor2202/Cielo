@@ -1329,7 +1329,10 @@
         "licenceNumber": "N° de licence",
         "phone": "Téléphone",
         "email": "E-mail",
-        "bio": "Présentation (600 caractères max.)"
+        "bio": "Présentation (600 caractères max.)",
+        "suggestCountry": "Suggestion : {country} (d'après votre licence)",
+        "fromLicence": "Repris de votre licence",
+        "fromCv": "Repris de votre CV"
       }
     },
     "layovers": {
