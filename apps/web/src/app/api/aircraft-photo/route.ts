@@ -9,7 +9,7 @@ export async function GET(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
   if (rateLimited(`photo:${ip}`, 30)) return Response.json({ error: "rate_limited" }, { status: 429 });
   try {
-    return Response.json({ photo: await photoForRegistration(reg) }, { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" } });
+    return Response.json({ photo: await photoForRegistration(reg) }, { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=64800" } });
   } catch {
     return Response.json({ error: "upstream" }, { status: 502 });
   }

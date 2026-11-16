@@ -30,12 +30,12 @@ export function AircraftPhoto({ registration, className = "" }: { registration?:
   if (!photo) return null;
   return (
     <figure className={`overflow-hidden rounded-xl ${className}`}>
-      <a href={photo.link} target="_blank" rel="noreferrer" title={t("open")}>
+      <a href={photo.link} target="_blank" rel="noopener" title={t("open")}>
         <img src={photo.src} width={photo.width} height={photo.height} alt={t("alt", { reg: reg ?? "" })} className="block h-auto w-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
       </a>
       <figcaption className="mt-1.5 text-[11px] text-muted">
         {t("credit", { name: photo.photographer })}{" "}
-        <a href={photo.link} target="_blank" rel="noreferrer" className="underline">Planespotters.net</a>
+        <a href={photo.link} target="_blank" rel="noopener" className="underline">Planespotters.net</a>
       </figcaption>
     </figure>
   );

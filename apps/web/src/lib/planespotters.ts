@@ -1,7 +1,11 @@
 /**
- * Aircraft photos by exact registration, from the Planespotters.net public photo API.
- * Only the photo metadata passes through Geardown; the image itself is shown from Planespotters' servers
- * (never copied or stored), uncropped, with the photographer's credit and a link back to the photo page.
+ * Aircraft photos by exact registration, from the Planespotters.net public photo API
+ * (terms: https://www.planespotters.net/photo/api#terms).
+ * - Only the JSON passes through Geardown, cached for less than 24 h in total (1 h here + 18 h stale at the CDN).
+ * - The browser loads the image straight from the returned URL, unchanged; it is never stored, proxied or re-hosted
+ *   (no next/image, no service worker), and never used for any AI/ML purpose.
+ * - The photographer is credited next to the image and the image links to `link` (plain anchor, no nofollow).
+ * - Server requests identify Geardown with a contact in the User-Agent.
  */
 export interface AircraftPhoto {
   id: string;
@@ -31,7 +35,7 @@ export const planespottersEnabled = () => process.env.NEXT_PUBLIC_PLANESPOTTERS 
 export async function photoForRegistration(registration: string): Promise<AircraftPhoto | null> {
   const reg = registration.trim().toUpperCase();
   const r = await fetch(`https://api.planespotters.net/pub/photos/reg/${encodeURIComponent(reg)}`, {
-    headers: { Accept: "application/json", "User-Agent": "Geardown pilot logbook (https://geardown.app)" },
+    headers: { Accept: "application/json", "User-Agent": "Geardown/1.0 (+mailto:contact@geardown.app; https://geardown.app)" },
     next: { revalidate: 3600 },
   });
   if (!r.ok) throw new Error(`planespotters ${r.status}`);
