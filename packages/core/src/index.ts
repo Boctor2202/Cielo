@@ -17,3 +17,4 @@ export * from "./track";
 export * from "./access";
 export * from "./weather";
 export * from "./runwayUse";
+export * from "./authorities";

@@ -1,6 +1,7 @@
 "use client";
 
 import { BadgeCheck, Bell, Plus, Trash2 } from "lucide-react";
+import { AuthorityInput } from "@/components/app/AuthorityInput";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { alertsDueToday, computeRecency, DEFAULT_ALERT_DAYS, LICENSE_CATALOGUE, licenseStatus, type License, type LicenseKind } from "@cielo/core";
@@ -113,7 +114,7 @@ export default function DocumentsPage() {
                 <input className="input" required list="lic-cat" value={draft.code} onChange={(e) => setDraft({ ...draft, code: e.target.value })} />
                 <datalist id="lic-cat">{LICENSE_CATALOGUE.filter((c) => c.kind === draft.kind).map((c) => <option key={c.code} value={c.code} />)}</datalist>
               </Field>
-              <Field label={t("authority")}><input className="input" value={draft.authority ?? ""} onChange={(e) => setDraft({ ...draft, authority: e.target.value })} /></Field>
+              <AuthorityInput label={t("authority")} value={draft.authority ?? ""} onChange={(v) => setDraft({ ...draft, authority: v })} />
               <Field label={t("number")}><input className="input num" value={draft.number ?? ""} onChange={(e) => setDraft({ ...draft, number: e.target.value })} /></Field>
               <Field label={t("issuedOn")}><input type="date" className="input num" value={draft.issuedOn ?? ""} onChange={(e) => setDraft({ ...draft, issuedOn: e.target.value || null })} /></Field>
               <Field label={t("validUntil")}><input type="date" className="input num" value={draft.validUntil ?? ""} onChange={(e) => setDraft({ ...draft, validUntil: e.target.value || null })} /></Field>
