@@ -294,15 +294,13 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
     };
   }, [base, reduce]);
 
-  // Draw loop. During the takeoff roll the image pushes in, the runway streaks outward (zoom blur, the aircraft
-  // at the centre stays sharp) and the camera shakes a little, all in proportion to the speed.
+  // Draw loop. During the takeoff roll the image pushes in gently; no shake or zoom blur, so the frame stays sharp.
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (reduce) return;
     let raf = 0;
     const cv = canvas.current;
     const ctx = cv?.getContext("2d", { alpha: false });
-    const layers = window.innerWidth < 768 ? 3 : 5;
     const nearest = (id: ShotId, f: number) => {
       const list = frames.current[id];
       for (let d = 0; d < FRAME_COUNT[id]; d++) {
@@ -328,27 +326,17 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         // high-quality resampling when the frame is scaled up (browsers default to a softer filter)
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
-        const { speed, push, cy } = speedFx(id, v);
+        const { push, cy } = speedFx(id, v);
         // object-fit: cover
         const fit = Math.max(w / img.naturalWidth, h / img.naturalHeight);
         const dw = img.naturalWidth * fit;
         const dh = img.naturalHeight * fit;
-        const t = performance.now() / 1000;
-        const shake = speed * dpr * (id === "takeoff" ? 2.2 : 0.8);
-        const ox = (Math.sin(t * 37.1) + Math.sin(t * 61.7) * 0.6) * shake;
-        const oy = (Math.sin(t * 43.3) + Math.sin(t * 71.9) * 0.5) * shake;
         const fx = w / 2;
         const fy = h * cy;
         const x0 = (w - dw) / 2;
         const y0 = (h - dh) / 2;
         // the frame scaled around the focal point
-        const draw = (scale: number, alpha: number) => {
-          ctx.globalAlpha = alpha;
-          ctx.drawImage(img, fx + (x0 - fx) * scale + ox, fy + (y0 - fy) * scale + oy, dw * scale, dh * scale);
-        };
-        draw(push, 1);
-        if (speed > 0.02) for (let i = 1; i <= layers; i++) draw(push * (1 + 0.016 * i * speed), 0.2 * speed);
-        ctx.globalAlpha = 1;
+        ctx.drawImage(img, fx + (x0 - fx) * push, fy + (y0 - fy) * push, dw * push, dh * push);
       }
       raf = requestAnimationFrame(loop);
     };
@@ -378,7 +366,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
 }
 
 /**
- * Speed effect per shot: `speed` 0..1 drives the zoom blur and the shake, `push` the dolly-in,
+ * Camera move per shot: `push` the dolly-in, `speed` its pace (kept for the HUD),
  * `cy` the point the image rushes away from (the end of the runway / the aircraft).
  */
 function speedFx(id: ShotId, v: number): { speed: number; push: number; cy: number } {
