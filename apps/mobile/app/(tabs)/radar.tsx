@@ -245,7 +245,7 @@ function RadarScreen() {
           <Row style={{ paddingHorizontal: 12, paddingVertical: 10 }}>
             <Ionicons name="search" size={16} color={c.muted} />
             <TextInput
-              style={{ flex: 1, color: c.text, fontFamily: font.regular, fontSize: 15 }}
+              style={{ flex: 1, color: c.text, ...font.regular, fontSize: 15 }}
               placeholder={t("radar.searchReg")}
               placeholderTextColor={c.muted}
               autoCapitalize="characters"

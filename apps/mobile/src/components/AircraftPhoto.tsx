@@ -10,7 +10,7 @@ import { Linking, Pressable, View } from "react-native";
 import { Image } from "expo-image";
 import { api } from "../api";
 import { useApp } from "../state";
-import { Txt } from "./ui";
+import { Glass, Row, Txt } from "./ui";
 
 interface Photo {
   id: string;
@@ -44,22 +44,31 @@ export function AircraftPhoto({ registration }: { registration?: string }) {
   }, [reg]);
   if (!photo) return null;
   const open = () => void Linking.openURL(photo.link);
+  // Planespotters' largest free size is about 420 px wide: shown at 160 pt it stays sharp on a Retina screen,
+  // where stretching it across the screen made it blurry.
+  const w = 160;
   return (
-    <View style={{ gap: 6 }}>
-      <Pressable onPress={open} accessibilityRole="link" accessibilityLabel={t("photo.open")}>
-        <Image
-          source={{ uri: photo.src }}
-          cachePolicy="none"
-          contentFit="contain"
-          style={{ width: "100%", aspectRatio: photo.width / photo.height, borderRadius: 12 }}
-          accessibilityLabel={t("photo.alt", { reg: reg ?? "" })}
-        />
-      </Pressable>
-      <Pressable onPress={open} hitSlop={8}>
-        <Txt variant="small">
-          {t("photo.credit", { name: photo.photographer })} <Txt variant="small" style={{ textDecorationLine: "underline" }}>Planespotters.net</Txt>
-        </Txt>
-      </Pressable>
-    </View>
+    <Glass radius={16}>
+      <Row style={{ padding: 10, gap: 12, alignItems: "center" }}>
+        <Pressable onPress={open} accessibilityRole="link" accessibilityLabel={t("photo.open")}>
+          <Image
+            source={{ uri: photo.src }}
+            cachePolicy="none"
+            contentFit="cover"
+            transition={250}
+            style={{ width: w, height: Math.round((w * photo.height) / photo.width), borderRadius: 10 }}
+            accessibilityLabel={t("photo.alt", { reg: reg ?? "" })}
+          />
+        </Pressable>
+        <View style={{ flex: 1, gap: 4 }}>
+          <Txt mono style={{ fontSize: 18, fontWeight: "700" }}>{reg}</Txt>
+          <Pressable onPress={open} hitSlop={8}>
+            <Txt variant="small">
+              {t("photo.credit", { name: photo.photographer })} <Txt variant="small" style={{ textDecorationLine: "underline" }}>Planespotters.net</Txt>
+            </Txt>
+          </Pressable>
+        </View>
+      </Row>
+    </Glass>
   );
 }

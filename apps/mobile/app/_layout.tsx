@@ -9,7 +9,6 @@ import { AppProvider, useApp, useBootError } from "../src/state";
 import { useTheme } from "../src/theme";
 import { Backdrop, Txt } from "../src/components/ui";
 import { glass } from "../src/theme";
-import { useFonts, Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold } from "@expo-google-fonts/manrope";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -43,7 +42,7 @@ function Navigator() {
         screenOptions={{
           headerStyle: { backgroundColor: glass(c).strong },
           headerTintColor: c.text,
-          headerTitleStyle: { fontFamily: "Manrope_600SemiBold" },
+          headerTitleStyle: { fontWeight: "600" },
           headerShadowVisible: false,
           contentStyle: { backgroundColor: "transparent" },
         }}
@@ -62,8 +61,6 @@ function Navigator() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({ Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold });
-  if (!fontsLoaded) return null;
   return (
     <SafeAreaProvider>
       <AppProvider fallback={<Boot />}>

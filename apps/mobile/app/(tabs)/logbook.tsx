@@ -61,7 +61,7 @@ export default function Logbook() {
               <Row style={{ paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: glass(c).strong }}>
                 <Ionicons name="search" size={16} color={c.muted} />
                 <TextInput
-                  style={{ flex: 1, color: c.text, fontFamily: font.regular, fontSize: 15 }}
+                  style={{ flex: 1, color: c.text, ...font.regular, fontSize: 15 }}
                   placeholder={t("log.search")}
                   placeholderTextColor={c.muted}
                   value={q}

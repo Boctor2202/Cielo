@@ -84,7 +84,7 @@ export default function Dashboard() {
 
         <Card>
           <Txt variant="label">{t("dash.totalHours")}</Txt>
-          <Txt mono style={{ fontSize: 52, fontFamily: "Manrope_400Regular", letterSpacing: -2 }}>
+          <Txt mono style={{ fontSize: 56, fontWeight: "200", letterSpacing: -1.5 }}>
             {fmt(periods.all.totalMin)}
           </Txt>
           <Row gap={space.lg}>

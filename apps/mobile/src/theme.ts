@@ -51,21 +51,23 @@ export const LIGHT: Palette = {
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
 export const radius = { sm: 8, md: 12, lg: 20, xl: 28 } as const;
 
-/** Manrope, as on the web app (loaded in app/_layout.tsx). */
+/**
+ * The system font (San Francisco on iPhone), as in Apple's own apps: it renders crisply at every size and weight
+ * and follows the user's text settings. Weights are styles to spread into a TextStyle.
+ */
 export const font = {
-  regular: "Manrope_400Regular",
-  medium: "Manrope_500Medium",
-  semibold: "Manrope_600SemiBold",
-  bold: "Manrope_700Bold",
-} as const;
-export const fontFor = (weight?: TextStyle["fontWeight"]) =>
-  weight === "700" || weight === "bold" || weight === "800" ? font.bold : weight === "600" ? font.semibold : weight === "500" ? font.medium : font.regular;
+  light: { fontWeight: "300" },
+  regular: { fontWeight: "400" },
+  medium: { fontWeight: "500" },
+  semibold: { fontWeight: "600" },
+  bold: { fontWeight: "700" },
+} as const satisfies Record<string, TextStyle>;
 
-/** Figures: Manrope with tabular digits (same as the web dashboard). */
+/** Figures: tabular digits so columns of times line up. */
 export const mono: TextStyle = {
-  fontFamily: font.medium,
+  ...font.medium,
   fontVariant: ["tabular-nums"],
-  letterSpacing: -0.3,
+  letterSpacing: -0.2,
 };
 
 /** Glass material of the web dashboard (blur 22, surface at ~30–45 %). */
