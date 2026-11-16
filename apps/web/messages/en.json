@@ -16,9 +16,9 @@
     "language": "Language"
   },
   "hero": {
-    "eyebrow": "EASA Part-FCL · FAA · CASA compliant",
-    "title": "Your logbook, finally digital",
-    "subtitle": "Log a flight in 20 seconds. Geardown computes your night time, checks your logbook, tracks your licences and FTL limits, then exports in the official EASA format.",
+    "eyebrow": "Built by pilots · EASA · FAA · CASA",
+    "title": "The logbook that works for your career",
+    "subtitle": "Log a flight in 20 seconds and Geardown does the rest: night time, FTL limits, licences and medical. Your CV updates itself and the jobs that fit you come to you.",
     "ctaTrial": "Try 7 days",
     "ctaDemo": "See the demo",
     "note": "7-day trial · No commitment · Your data stays yours",
@@ -28,7 +28,14 @@
     "readoutNight": "Night computed",
     "readoutRoute": "LFPG → LFMN",
     "readoutStatus": "Logbook consistent",
-    "liveDemo": "Live demo, no sign-up"
+    "liveDemo": "Live demo, no sign-up",
+    "features": [
+      "Night time computed",
+      "FTL ORO and Subpart Q",
+      "Licences and medical",
+      "CV and job matches",
+      "EASA · FAA · CASA export"
+    ]
   },
   "proof": {
     "hours": "hours logged",

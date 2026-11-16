@@ -16,9 +16,9 @@
     "language": "Langue"
   },
   "hero": {
-    "eyebrow": "Conforme EASA Part-FCL · FAA · CASA",
-    "title": "Votre carnet de vol, enfin digital",
-    "subtitle": "Saisissez un vol en 20 secondes. Geardown calcule votre temps de nuit, vérifie votre carnet, suit vos licences et vos limites FTL, puis exporte au format officiel EASA.",
+    "eyebrow": "Conçu par des pilotes · EASA · FAA · CASA",
+    "title": "Le carnet de vol qui travaille pour votre carrière",
+    "subtitle": "Un vol saisi en 20 secondes, et Geardown fait le reste : temps de nuit, limites FTL, licences et médical. Votre CV se met à jour tout seul et les offres qui vous correspondent viennent à vous.",
     "ctaTrial": "Essayer 7 jours",
     "ctaDemo": "Voir la démo",
     "note": "7 jours d'essai · Sans engagement · Vos données restent à vous",
@@ -28,7 +28,14 @@
     "readoutNight": "Nuit calculée",
     "readoutRoute": "LFPG → LFMN",
     "readoutStatus": "Carnet conforme",
-    "liveDemo": "Démo en direct, sans inscription"
+    "liveDemo": "Démo en direct, sans inscription",
+    "features": [
+      "Nuit calculée",
+      "FTL ORO et Subpart Q",
+      "Licences et médical",
+      "CV et offres d'emploi",
+      "Export EASA · FAA · CASA"
+    ]
   },
   "proof": {
     "hours": "heures loggées",

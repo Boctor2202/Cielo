@@ -196,6 +196,13 @@ export function ImmersiveHome() {
           </p>
           <SplitTitle text={th("title")} />
           <p className="mt-6 max-w-lg text-pretty text-lg leading-relaxed text-white/85 [text-shadow:0_1px_20px_rgba(2,4,11,.6)]">{th("subtitle")}</p>
+          <ul className="mt-5 flex max-w-xl flex-wrap gap-2">
+            {(th.raw("features") as string[]).map((f) => (
+              <li key={f} className="rounded-full border border-white/15 bg-[#02040b]/40 px-3 py-1 text-[13px] text-white/85 backdrop-blur-md">
+                {f}
+              </li>
+            ))}
+          </ul>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/inscription" className="btn min-h-12 !bg-[#22c55e] !px-6 text-base !text-[#0a1626] shadow-[0_10px_40px_-10px_#22c55e] hover:!bg-[#86efac]">
               {th("ctaTrial")} <ArrowRight size={18} aria-hidden />
@@ -421,8 +428,8 @@ function StillFrames({ base, p }: { base: string; p: MotionValue<number> }) {
 
 function Chapter({ align, children, eager }: { align: "left" | "right"; children: ReactNode; eager?: boolean }) {
   return (
-    <div className="flex items-start md:items-center" style={{ height: `${CHAPTER_VH}vh` }}>
-      <div className={`mx-auto flex w-full max-w-6xl px-4 pt-24 sm:px-6 md:pt-0 ${align === "right" ? "md:justify-end" : ""}`}>
+    <div className={`flex items-start ${eager ? "" : "md:items-center"}`} style={{ height: `${CHAPTER_VH}vh` }}>
+      <div className={`mx-auto flex w-full max-w-6xl px-4 pt-24 sm:px-6 ${eager ? "md:pt-[max(6rem,calc(50svh-17rem))]" : "md:pt-0"} ${align === "right" ? "md:justify-end" : ""}`}>
         <motion.div
           className="pointer-events-auto w-full max-w-xl"
           initial={eager ? false : { opacity: 0, y: 28 }}
@@ -449,7 +456,7 @@ const Title = ({ children }: { children: ReactNode }) => (
 function SplitTitle({ text }: { text: string }) {
   const words = text.split(" ");
   return (
-    <h1 className="mt-6 font-display text-[2.9rem] font-semibold leading-[1.02] tracking-[-0.02em] [filter:drop-shadow(0_2px_18px_rgba(2,4,11,.55))] sm:text-6xl lg:text-[4.6rem]" aria-label={text}>
+    <h1 className="mt-6 font-display text-[2.9rem] font-semibold leading-[1.02] tracking-[-0.02em] [filter:drop-shadow(0_2px_18px_rgba(2,4,11,.55))] sm:text-[3.4rem] lg:text-[3.9rem]" aria-label={text}>
       {words.map((w, i) => (
         <span key={i} className="inline-block overflow-hidden pb-[0.12em] align-bottom" aria-hidden>
           <motion.span className="inline-block motion-reduce:![transform:none]" initial={{ y: "115%" }} animate={{ y: 0 }} transition={{ duration: 0.8, delay: 0.15 + i * 0.07, ease: [0.2, 0.8, 0.2, 1] }}>
