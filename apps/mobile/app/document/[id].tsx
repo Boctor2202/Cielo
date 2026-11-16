@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { AuthorityField } from "../../src/components/AuthorityField";
 import { Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { DEFAULT_ALERT_DAYS, LICENSE_CATALOGUE, licenseStatus, type License, type LicenseKind } from "@cielo/core";
@@ -28,7 +29,7 @@ function DocumentForm() {
 
   const [kind, setKind] = useState<LicenseKind>(existing?.kind ?? "licence");
   const [code, setCode] = useState(existing?.code ?? "");
-  const [authority, setAuthority] = useState(existing?.authority ?? (pilot.regulatoryFramework === "EASA" ? "DGAC" : ""));
+  const [authority, setAuthority] = useState(existing?.authority ?? (pilot.regulatoryFramework === "EASA" ? "DGAC France" : ""));
   const [number, setNumber] = useState(existing?.number ?? pilot.licenceNumber ?? "");
   const [issuedOn, setIssuedOn] = useState(existing?.issuedOn ?? "");
   const [validUntil, setValidUntil] = useState(existing?.validUntil ?? "");
@@ -104,7 +105,7 @@ function DocumentForm() {
           </Row>
         </Card>
         <Card>
-          <Field label={t("docs.authority")} value={authority} onChangeText={setAuthority} autoCapitalize="characters" />
+          <AuthorityField label={t("docs.authority")} value={authority} onChange={setAuthority} />
           <Field label={t("docs.number")} value={number} onChangeText={setNumber} monoValue autoCapitalize="characters" />
           <Row>
             <Field

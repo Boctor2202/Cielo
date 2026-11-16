@@ -44,6 +44,8 @@ export default function TabsLayout() {
       <Tabs.Screen name="profile" options={{ href: null, headerTitle: t("profile.title") }} />
       <Tabs.Screen name="audit" options={{ href: null, headerTitle: t("audit.title") }} />
       <Tabs.Screen name="map" options={{ href: null, headerTitle: t("map.title") }} />
+      <Tabs.Screen name="jobs" options={{ href: null, headerTitle: t("jobs.title") }} />
+      <Tabs.Screen name="cv" options={{ href: null, headerTitle: t("cv.title") }} />
     </Tabs>
   );
 }

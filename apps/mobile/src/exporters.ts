@@ -3,7 +3,7 @@ import * as Sharing from "expo-sharing";
 import { SYNC_TABLES, isoDate, openingTotals, type LocalStore, type OpeningBalance, type Flight, type Pilot } from "@cielo/core";
 import { buildLogbookPdf, flightsToCsv, type LayoutId } from "@cielo/export";
 
-async function shareFile(name: string, content: string | Uint8Array, mimeType: string, UTI: string): Promise<void> {
+export async function shareFile(name: string, content: string | Uint8Array, mimeType: string, UTI: string): Promise<void> {
   const file = new File(Paths.cache, name);
   if (file.exists) file.delete();
   file.create();

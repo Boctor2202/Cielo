@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@cielo/core": "workspace:*",
+    "@cielo/cv": "workspace:*",
     "@cielo/export": "workspace:*",
+    "@cielo/jobs": "workspace:*",
     "@cielo/reference-data": "workspace:*",
     "@cielo/sync": "workspace:*",
     "@expo-google-fonts/manrope": "^0.4.3",

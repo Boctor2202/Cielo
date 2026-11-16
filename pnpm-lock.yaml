@@ -17,9 +17,15 @@ importers:
       '@cielo/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@cielo/cv':
+        specifier: workspace:*
+        version: link:../../packages/cv
       '@cielo/export':
         specifier: workspace:*
         version: link:../../packages/export
+      '@cielo/jobs':
+        specifier: workspace:*
+        version: link:../../packages/jobs
       '@cielo/reference-data':
         specifier: workspace:*
         version: link:../../packages/reference-data
