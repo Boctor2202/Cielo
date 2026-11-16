@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- google.maps is loaded at runtime, typed loosely here */
-import { Loader2, Search, X } from "lucide-react";
+import { Loader2, LocateFixed, Search, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { classifyRunwayUse, RunwayUseTracker, runwayUseLabel, type RunwayThreshold, type RunwayUseSummary } from "@cielo/core";
@@ -57,7 +57,7 @@ const loadRunways = () =>
 /** Smallest size shown at a zoom level: large airports from 5, medium from 8, all aerodromes from 10. */
 const minSize = (zoom: number) => (zoom >= 10 ? 1 : zoom >= 8 ? 2 : zoom >= 5 ? 3 : 4);
 
-export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: string; lang: string; dark: boolean; myRegs: string[]; onError: () => void }) {
+export function RadarMap({ apiKey, lang, dark, myRegs, fallback, onError }: { apiKey: string; lang: string; dark: boolean; myRegs: string[]; fallback?: { lat: number; lng: number }; onError: () => void }) {
   const t = useTranslations("app.radar");
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
@@ -75,6 +75,34 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
   const selectedHex = useRef<string | null>(null);
   selectedHex.current = selected?.hex ?? null;
   const [showAirports, setShowAirports] = useState(true);
+  const fallbackRef = useRef(fallback);
+  fallbackRef.current = fallback;
+  const me = useRef<any>(null);
+  const [locating, setLocating] = useState(false);
+  /** Centres the map on the user (the browser asks once); without permission it stays on the home base or Paris. */
+  const locate = useCallback((ask: boolean) => {
+    if (!("geolocation" in navigator)) return;
+    setLocating(ask);
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        setLocating(false);
+        const m = map.current;
+        const google = g.current;
+        if (!m || !google) return;
+        const pos = { lat: p.coords.latitude, lng: p.coords.longitude };
+        m.setCenter(pos);
+        if (ask) m.setZoom(9);
+        me.current?.setMap(null);
+        me.current = new google.maps.Marker({ map: m, position: pos, zIndex: 1000, clickable: false, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 7, fillColor: "#3b82f6", fillOpacity: 1, strokeColor: "#ffffff", strokeWeight: 2.5 } });
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+    );
+  }, []);
+  // the home base arrives after the map when the airport list loads late
+  useEffect(() => {
+    if (fallback && map.current && !me.current) map.current.setCenter(fallback);
+  }, [fallback]);
   const [airport, setAirport] = useState<{ icao: string; name: string } | null>(null);
   const airportMarkers = useRef<Map<string, any>>(new Map());
   const sizeOf = useRef<Map<string, number>>(new Map());
@@ -209,8 +237,8 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
         if (!alive || !el.current) return;
         g.current = google;
         const m = new google.maps.Map(el.current, {
-          center: { lat: 48.7, lng: 2.4 },
-          zoom: 7,
+          center: fallbackRef.current ?? { lat: 48.7, lng: 2.4 },
+          zoom: 8,
           styles: dark ? NIGHT : DAY,
           mapTypeControl: false,
           streetViewControl: false,
@@ -256,6 +284,7 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
           }
         });
         map.current = m;
+        locate(false);
       })
       .catch(() => alive && onError());
     return () => {
@@ -369,6 +398,14 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
             ))}
           </div>
         )}
+        <div className="flex gap-1.5">
+        <button
+          type="button"
+          onClick={() => locate(true)}
+          className="flex items-center gap-1 rounded-full border border-border bg-bg/95 px-2.5 py-1 text-xs font-medium shadow backdrop-blur hover:border-accent"
+        >
+          {locating ? <Loader2 size={12} className="animate-spin" /> : <LocateFixed size={12} />} {t("locate")}
+        </button>
         <button
           type="button"
           aria-pressed={showAirports}
@@ -377,6 +414,7 @@ export function RadarMap({ apiKey, lang, dark, myRegs, onError }: { apiKey: stri
         >
           {t("airports")}
         </button>
+        </div>
         {notFound && <p className="rounded-lg bg-bg/95 px-3 py-2 text-xs text-muted shadow">{t("notAirborne", { reg: notFound })}</p>}
       </div>
 

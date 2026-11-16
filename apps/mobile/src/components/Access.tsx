@@ -38,6 +38,8 @@ export function AccessBanner() {
     return (
       <Card>
         <Txt>{t("access.demo", { n: access.daysLeft })}</Txt>
+        {/* a subscriber on a new phone lands here until they sign in */}
+        <Button kind="secondary" title={t("access.haveAccount")} onPress={() => router.push("/auth")} />
         <Button title={t("access.startTrial")} onPress={() => router.push("/auth")} />
       </Card>
     );

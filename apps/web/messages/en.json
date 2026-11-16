@@ -1399,7 +1399,8 @@
       "rwyArr": "Landings",
       "rwyDep": "Departures",
       "rwySeen": "{n, plural, one {# aircraft} other {# aircraft}}, {min} min ago",
-      "rwyNone": "No movement seen since the radar opened. Runways show up as soon as an aircraft lands or takes off (keep the map open a few minutes)."
+      "rwyNone": "No movement seen since the radar opened. Runways show up as soon as an aircraft lands or takes off (keep the map open a few minutes).",
+      "locate": "Locate me"
     },
     "track": {
       "title": "Actual track",
@@ -1431,7 +1432,8 @@
       "readOnlyTitle": "Subscription required",
       "readOnlyText": "Without an active subscription your logbook stays viewable and exportable, but logging is off. Basic €6.99/month, Max €9.99/month.",
       "maxTitle": "Max feature",
-      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, real tracks, audit, signatures and scan are included in Max (€9.99/month)."
+      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, real tracks, audit, signatures and scan are included in Max (€9.99/month).",
+      "haveAccount": "Already subscribed? Sign in"
     },
     "photo": {
       "alt": "Photo of aircraft {reg}",

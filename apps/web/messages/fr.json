@@ -1399,7 +1399,8 @@
       "rwyArr": "Atterrissages",
       "rwyDep": "Décollages",
       "rwySeen": "{n, plural, one {# avion} other {# avions}}, il y a {min} min",
-      "rwyNone": "Aucun mouvement observé depuis l'ouverture du radar. Les pistes apparaissent dès qu'un avion se pose ou décolle (laissez la carte ouverte quelques minutes)."
+      "rwyNone": "Aucun mouvement observé depuis l'ouverture du radar. Les pistes apparaissent dès qu'un avion se pose ou décolle (laissez la carte ouverte quelques minutes).",
+      "locate": "Me localiser"
     },
     "track": {
       "title": "Trace réelle",
@@ -1431,7 +1432,8 @@
       "readOnlyTitle": "Abonnement nécessaire",
       "readOnlyText": "Sans abonnement actif, votre carnet reste consultable et exportable, mais la saisie est désactivée. Basic à 6,99 €/mois, Max à 9,99 €/mois.",
       "maxTitle": "Fonction réservée à Max",
-      "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces réelles, audit, signatures et scan sont inclus dans Max (9,99 €/mois)."
+      "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces réelles, audit, signatures et scan sont inclus dans Max (9,99 €/mois).",
+      "haveAccount": "Déjà abonné ? Se connecter"
     },
     "photo": {
       "alt": "Photo de l'appareil {reg}",

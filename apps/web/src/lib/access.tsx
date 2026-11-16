@@ -53,7 +53,11 @@ export function AccessBanner() {
     return (
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-accent/12 px-4 py-2.5 text-sm">
         <span>{t("demo", { days: a.daysLeft })}</span>
-        <Link href="/inscription" className="btn btn-primary btn-sm">{t("startTrial")}</Link>
+        <span className="flex flex-wrap items-center gap-2">
+          {/* a subscriber on a new browser or device lands here until they sign in */}
+          <Link href="/connexion" className="btn btn-secondary btn-sm">{t("haveAccount")}</Link>
+          <Link href="/inscription" className="btn btn-primary btn-sm">{t("startTrial")}</Link>
+        </span>
       </div>
     );
   }

@@ -4,7 +4,8 @@ import MapView, { Marker, Polyline, type Region } from "react-native-maps";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Glass, Row, Txt } from "../../src/components/ui";
 import { api, ApiError, type LiveAircraft, type Track } from "../../src/api";
-import { airports } from "../../src/airports";
+import * as Location from "expo-location";
+import { airports, lookupAirport } from "../../src/airports";
 import { AirportWeather, fetchRunways } from "../../src/components/Weather";
 import { classifyRunwayUse, RunwayUseTracker, runwayUseLabel, type Airport, type RunwayThreshold, type RunwayUseSummary } from "@cielo/core";
 import { API_URL } from "../../src/api";
@@ -52,10 +53,24 @@ const loadRunways = () =>
     }));
 
 function RadarScreen() {
-  const { t, flights } = useApp();
+  const { t, flights, pilot } = useApp();
   const c = useTheme();
   const map = useRef<MapView>(null);
-  const region = useRef<Region>({ latitude: 48.7, longitude: 2.4, latitudeDelta: 3, longitudeDelta: 3 });
+  // start on the home base (else Paris) until the position is known
+  const base = pilot.homeBaseIcao ? lookupAirport(pilot.homeBaseIcao) : undefined;
+  const region = useRef<Region>({ latitude: base?.lat ?? 48.7, longitude: base?.lon ?? 2.4, latitudeDelta: 2, longitudeDelta: 2 });
+  const [located, setLocated] = useState(false);
+  const locate = useCallback(async () => {
+    const perm = await Location.requestForegroundPermissionsAsync();
+    if (!perm.granted) return;
+    const last = await Location.getLastKnownPositionAsync();
+    const p = last ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
+    setLocated(true);
+    map.current?.animateToRegion({ latitude: p.coords.latitude, longitude: p.coords.longitude, latitudeDelta: 1.6, longitudeDelta: 1.6 }, 600);
+  }, []);
+  useEffect(() => {
+    void locate();
+  }, [locate]);
   const [ac, setAc] = useState<LiveAircraft[]>([]);
   const [sel, setSel] = useState<LiveAircraft | null>(null);
   const [track, setTrack] = useState<Track | null>(null);
@@ -178,6 +193,7 @@ function RadarScreen() {
         style={StyleSheet.absoluteFill}
         initialRegion={region.current}
         userInterfaceStyle={c.scheme}
+        showsUserLocation={located}
         onRegionChangeComplete={(r) => {
           region.current = r;
           placeAirports(r);
@@ -241,6 +257,14 @@ function RadarScreen() {
           </Row>
         </Glass>
         <Row style={{ flexWrap: "wrap", marginTop: 8 }} gap={6}>
+          <Pressable onPress={() => void locate()}>
+            <Glass strong radius={999}>
+              <Row gap={4} style={{ paddingHorizontal: 10, paddingVertical: 5 }}>
+                <Ionicons name="locate" size={13} color={c.accent} />
+                <Txt style={{ fontSize: 12, fontWeight: "600" }}>{t("radar.locate")}</Txt>
+              </Row>
+            </Glass>
+          </Pressable>
           <Pressable onPress={() => setShowAirports((v) => !v)} accessibilityState={{ selected: showAirports }}>
             <Glass strong radius={999}>
               <Txt style={{ paddingHorizontal: 10, paddingVertical: 5, fontSize: 12, fontWeight: "600" }} color={showAirports ? c.accent : c.muted}>{t("radar.airports")}</Txt>
