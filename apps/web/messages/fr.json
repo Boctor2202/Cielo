@@ -146,27 +146,30 @@
     "plans": {
       "basic": {
         "name": "Basic",
-        "desc": "Pour les pilotes privés et les élèves pilotes."
+        "desc": "Pour les pilotes privés, élèves et instructeurs."
       },
       "premium": {
         "name": "Max",
-        "desc": "Pour les pilotes professionnels : roster, FTL, escales, radar et traces réelles."
+        "desc": "Pour les pilotes de ligne et d'affaires : roster, FTL, escales, radar et traces réelles."
       }
     },
     "highlights": {
       "basic": [
-        "Vols illimités",
-        "Export PDF EASA, FAA, CASA",
-        "Licences, médical et alertes",
-        "Statistiques et carte des vols",
-        "Synchronisation multi-appareils"
+        "Vols illimités, temps de nuit calculé automatiquement",
+        "Import de votre ancien carnet (CSV, Excel), colonnes reconnues seules",
+        "Export officiel PDF EASA, FAA, CASA, et CSV / Excel",
+        "Licences, médical et expérience récente FCL.060, avec rappels d'échéance",
+        "Statistiques et carte de vos routes",
+        "Offres d'emploi pilote classées selon votre profil, et CV pilote",
+        "Web et mobile synchronisés, utilisable hors ligne"
       ],
       "premium": [
         "Tout Basic",
-        "Import roster et limites FTL",
-        "Escales : activités, restaurants, spectacles",
-        "Radar en direct et traces réelles des vols",
-        "Audit, signatures, scan photo"
+        "Import du roster compagnie et limites FTL ORO.FTL",
+        "Audit du carnet (17 contrôles) et signatures numériques",
+        "Escales : les meilleures adresses autour de l'hôtel équipage",
+        "Radar en direct et trace réelle de chaque vol",
+        "Scan photo du carnet papier (bêta)"
       ]
     },
     "compareTitle": "Comparaison détaillée",
@@ -175,21 +178,21 @@
       "flights": "Nombre de vols",
       "night": "Temps de nuit automatique",
       "airports": "Base aéroports et types d'avions",
-      "csv": "Import et export CSV / Excel",
+      "csv": "Import automatique (CSV, Excel) et export CSV / Excel",
       "pdf": "Export PDF officiel (EASA, FAA, CASA)",
       "carry": "Report des totaux du carnet papier",
-      "licenses": "Licences, médical et alertes",
+      "licenses": "Licences, médical et rappels d'échéance",
       "recency": "Expérience récente FCL.060",
-      "sync": "Synchronisation multi-appareils",
+      "sync": "Web et mobile synchronisés, hors ligne",
       "stats": "Statistiques et carte des vols",
+      "jobs": "Offres d'emploi pilote et CV pilote",
       "roster": "Import roster (iCal, CSV)",
       "ftl": "Calcul FTL ORO.FTL",
-      "audit": "Audit automatique du carnet",
-      "signature": "Signature numérique",
-      "scan": "Scan photo du carnet papier",
-      "support": "Support prioritaire",
+      "layovers": "Escales : meilleures adresses autour de l'hôtel",
       "radar": "Radar en direct et traces réelles des vols",
-      "layovers": "Module escales"
+      "audit": "Audit automatique du carnet (17 contrôles)",
+      "signature": "Signature numérique",
+      "scan": "Scan photo du carnet papier (bêta)"
     },
     "values": {
       "fifty": "50",
@@ -928,7 +931,7 @@
       "notifications": "Notifications",
       "enableNotifications": "Activer les notifications du navigateur",
       "notificationsOn": "Notifications activées sur ce navigateur",
-      "notificationsInfo": "Les e-mails de rappel sont envoyés automatiquement lorsque votre compte est synchronisé.",
+      "notificationsInfo": "Geardown vous prévient sur cet appareil avant chaque échéance (notifications du navigateur ou du téléphone).",
       "recency": "Expérience récente"
     },
     "stats": {

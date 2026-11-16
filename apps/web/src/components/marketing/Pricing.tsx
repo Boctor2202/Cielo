@@ -20,6 +20,7 @@ const MATRIX: { row: string; basic: Cell; premium: Cell }[] = [
   { row: "recency", basic: true, premium: true },
   { row: "sync", basic: true, premium: true },
   { row: "stats", basic: true, premium: true },
+  { row: "jobs", basic: true, premium: true },
   { row: "roster", basic: false, premium: true },
   { row: "ftl", basic: false, premium: true },
   { row: "layovers", basic: false, premium: true },
@@ -27,7 +28,6 @@ const MATRIX: { row: string; basic: Cell; premium: Cell }[] = [
   { row: "audit", basic: false, premium: true },
   { row: "signature", basic: false, premium: true },
   { row: "scan", basic: false, premium: true },
-  { row: "support", basic: false, premium: true },
 ];
 
 export function Pricing({ showCompare = true }: { showCompare?: boolean }) {

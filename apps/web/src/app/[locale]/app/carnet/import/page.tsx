@@ -13,11 +13,13 @@ import { buildFlight } from "@/lib/repo";
 import { db } from "@/lib/db";
 import { parseOcrText } from "@/lib/ocr";
 import { DropZone } from "@/components/app/DropZone";
+import { Paywall, useAccess } from "@/lib/access";
 
 type Tab = "file" | "roster" | "scan";
 
 export default function ImportPage() {
   const t = useTranslations("app.import");
+  const access = useAccess();
   const [tab, setTab] = useState<Tab>("file");
   return (
     <>
@@ -40,7 +42,7 @@ export default function ImportPage() {
           <Link href="/app/roster" className="btn btn-primary mt-4">{t("goRoster")}</Link>
         </Card>
       )}
-      {tab === "scan" && <ScanImport />}
+      {tab === "scan" && (access.has("scan") ? <ScanImport /> : <Paywall feature="scan" />)}
     </>
   );
 }

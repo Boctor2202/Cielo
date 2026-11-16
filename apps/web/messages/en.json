@@ -146,27 +146,30 @@
     "plans": {
       "basic": {
         "name": "Basic",
-        "desc": "For private pilots and student pilots."
+        "desc": "For private pilots, students and instructors."
       },
       "premium": {
         "name": "Max",
-        "desc": "For professional pilots: roster, FTL, layovers, radar and real tracks."
+        "desc": "For airline and business-jet pilots: roster, FTL, layovers, radar and real tracks."
       }
     },
     "highlights": {
       "basic": [
-        "Unlimited flights",
-        "EASA, FAA, CASA PDF export",
-        "Licences, medical and alerts",
-        "Statistics and flight map",
-        "Multi-device sync"
+        "Unlimited flights, night time computed automatically",
+        "Import your old logbook (CSV, Excel), columns recognised automatically",
+        "Official EASA, FAA, CASA PDF export, plus CSV / Excel",
+        "Licences, medical and FCL.060 recency, with expiry reminders",
+        "Statistics and a map of your routes",
+        "Pilot job offers ranked for your profile, and a pilot CV",
+        "Web and mobile in sync, works offline"
       ],
       "premium": [
         "Everything in Basic",
-        "Roster import and FTL limits",
-        "Layovers: activities, restaurants, shows",
-        "Live radar and real flight tracks",
-        "Audit, signatures, photo scan"
+        "Airline roster import and ORO.FTL limits",
+        "Logbook audit (17 checks) and digital signatures",
+        "Layovers: the best places around the crew hotel",
+        "Live radar and the real track of every flight",
+        "Paper logbook photo scan (beta)"
       ]
     },
     "compareTitle": "Detailed comparison",
@@ -175,21 +178,21 @@
       "flights": "Number of flights",
       "night": "Automatic night time",
       "airports": "Airport and aircraft type database",
-      "csv": "CSV / Excel import and export",
+      "csv": "Automatic import (CSV, Excel) and CSV / Excel export",
       "pdf": "Official PDF export (EASA, FAA, CASA)",
-      "carry": "Paper logbook carry-forward",
-      "licenses": "Licences, medical and alerts",
+      "carry": "Paper logbook carried-forward totals",
+      "licenses": "Licences, medical and expiry reminders",
       "recency": "FCL.060 recent experience",
-      "sync": "Multi-device sync",
+      "sync": "Web and mobile in sync, offline",
       "stats": "Statistics and flight map",
+      "jobs": "Pilot job offers and pilot CV",
       "roster": "Roster import (iCal, CSV)",
-      "ftl": "ORO.FTL calculation",
-      "audit": "Automatic logbook audit",
-      "signature": "Digital signature",
-      "scan": "Paper logbook photo scan",
-      "support": "Priority support",
+      "ftl": "ORO.FTL flight time limitations",
+      "layovers": "Layovers: best places around the hotel",
       "radar": "Live radar and real flight tracks",
-      "layovers": "Layovers module"
+      "audit": "Automatic logbook audit (17 checks)",
+      "signature": "Digital signature",
+      "scan": "Paper logbook photo scan (beta)"
     },
     "values": {
       "fifty": "50",
@@ -928,7 +931,7 @@
       "notifications": "Notifications",
       "enableNotifications": "Enable browser notifications",
       "notificationsOn": "Notifications enabled on this browser",
-      "notificationsInfo": "Reminder e-mails are sent automatically once your account is synced.",
+      "notificationsInfo": "Geardown warns you on this device before each expiry (browser or phone notifications).",
       "recency": "Recent experience"
     },
     "stats": {

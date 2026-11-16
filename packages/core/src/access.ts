@@ -9,7 +9,7 @@ export const TRIAL_DAYS = 7;
 export const PRICES_EUR = { basic: 6.99, premium: 9.99 } as const;
 
 /** Features reserved to Max (internal key "premium"). Everything else is in Basic. */
-export const MAX_FEATURES = ["roster", "ftl", "audit", "signature", "scan", "radar", "tracks", "layovers", "support"] as const;
+export const MAX_FEATURES = ["roster", "ftl", "audit", "signature", "scan", "radar", "tracks", "layovers"] as const;
 export type MaxFeature = (typeof MAX_FEATURES)[number];
 
 export interface Access {
