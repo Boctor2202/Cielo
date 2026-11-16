@@ -75,6 +75,7 @@ export default function More() {
         <MenuRow icon={<Ionicons name="timer" size={17} color="#fff" />} color="#FF453A" label={t("more.ftl")} onPress={() => router.push("/ftl")} />
         <MenuRow icon={<Ionicons name="calendar" size={17} color="#fff" />} color="#FF375F" label={t("more.roster")} onPress={() => router.push("/roster")} />
         <MenuRow icon={<Ionicons name="bar-chart" size={17} color="#fff" />} color="#32D74B" label={t("more.stats")} onPress={() => router.push("/stats")} />
+        <MenuRow icon={<Ionicons name="funnel" size={17} color="#fff" />} color="#0A84FF" label={t("more.reports")} onPress={() => router.push("/reports")} />
         <MenuRow icon={<Ionicons name="map" size={17} color="#fff" />} color="#64D2FF" label={t("more.map")} onPress={() => router.push("/map")} />
       </MenuGroup>
 
