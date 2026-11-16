@@ -322,43 +322,8 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
       }
       return null;
     };
-    // Decoded frames: browsers drop the decoded pixels of off-screen images under memory pressure and decode
-    // them again on draw, which is what makes a scrubbed sequence stutter. A sliding window of ImageBitmaps
-    // around the current frame keeps the next frames ready in GPU-friendly form; the rest stay compressed.
-    const WINDOW = 18;
-    const bitmaps = new Map<string, ImageBitmap>();
-    const pending = new Set<string>();
-    let alive = true;
-    const prepare = (id: ShotId, center: number, dir: number) => {
-      const list = frames.current[id];
-      for (let d = 0; d <= WINDOW && pending.size < 4; d++) {
-        for (const f of dir >= 0 ? [center + d, center - d] : [center - d, center + d]) {
-          const img = list[f];
-          const key = `${id}/${f}`;
-          if (!img || bitmaps.has(key) || pending.has(key) || pending.size >= 4) continue;
-          pending.add(key);
-          createImageBitmap(img)
-            .then((bm) => {
-              pending.delete(key);
-              if (alive) bitmaps.set(key, bm);
-              else bm.close();
-            })
-            .catch(() => pending.delete(key));
-        }
-      }
-      for (const [key, bm] of bitmaps) {
-        const [kid, kf] = key.split("/");
-        if (kid !== id || Math.abs(Number(kf) - center) > WINDOW + 6) {
-          bm.close();
-          bitmaps.delete(key);
-        }
-      }
-    };
-    const pick = (id: ShotId, f: number): HTMLImageElement | ImageBitmap | undefined => bitmaps.get(`${id}/${f}`) ?? frames.current[id][f] ?? undefined;
-
     // The two frames around the exact scroll position are cross-faded, so motion stays fluid between frames.
     let drawn = "";
-    let lastPos = 0;
     const loop = () => {
       const v = p.get();
       const id = SHOT_IDS.find((k) => v < SHOTS[k].to) ?? SHOT_IDS[SHOT_IDS.length - 1]!;
@@ -367,13 +332,11 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
       const pos = k * (FRAME_COUNT[id] - 1);
       const f0 = Math.floor(pos);
       const frac = pos - f0;
-      prepare(id, f0, pos - lastPos);
-      lastPos = pos;
       const list = frames.current[id];
       const exact = list[f0] && (frac < 0.02 || list[f0 + 1]);
-      const img = exact ? pick(id, f0)! : nearest(id, Math.round(pos));
-      const next = exact && frac >= 0.02 ? pick(id, f0 + 1) : null;
-      const key = `${cv?.clientWidth}x${cv?.clientHeight}:${id}:${f0}:${exact ? "" : "~"}:${next ? frac.toFixed(3) : ""}:${img instanceof ImageBitmap}`;
+      const img = exact ? list[f0]! : nearest(id, Math.round(pos));
+      const next = exact && frac >= 0.02 ? list[f0 + 1] : null;
+      const key = `${cv?.clientWidth}x${cv?.clientHeight}:${id}:${f0}:${exact ? "" : "~"}:${next ? frac.toFixed(3) : ""}`;
       if (cv && ctx && img && key !== drawn) {
         drawn = key;
         const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -388,8 +351,8 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         ctx.imageSmoothingQuality = "high";
         const { push, cy } = speedFx(id, v);
         // object-fit: cover
-        const iw = img instanceof ImageBitmap ? img.width : img.naturalWidth;
-        const ih = img instanceof ImageBitmap ? img.height : img.naturalHeight;
+        const iw = img.naturalWidth;
+        const ih = img.naturalHeight;
         const fit = Math.max(w / iw, h / ih);
         const dw = iw * fit;
         const dh = ih * fit;
@@ -398,7 +361,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         const x0 = (w - dw) / 2;
         const y0 = (h - dh) / 2;
         // the frame scaled around the focal point
-        const put = (im: HTMLImageElement | ImageBitmap) => ctx.drawImage(im, fx + (x0 - fx) * push, fy + (y0 - fy) * push, dw * push, dh * push);
+        const put = (im: HTMLImageElement) => ctx.drawImage(im, fx + (x0 - fx) * push, fy + (y0 - fy) * push, dw * push, dh * push);
         ctx.globalAlpha = 1;
         put(img);
         if (next) {
@@ -410,12 +373,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    return () => {
-      alive = false;
-      cancelAnimationFrame(raf);
-      for (const bm of bitmaps.values()) bm.close();
-      bitmaps.clear();
-    };
+    return () => cancelAnimationFrame(raf);
   }, [p, reduce]);
 
   return (
