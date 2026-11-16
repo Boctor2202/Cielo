@@ -32,9 +32,17 @@ interface Raw {
 
 export const planespottersEnabled = () => process.env.NEXT_PUBLIC_PLANESPOTTERS === "1";
 
-export async function photoForRegistration(registration: string): Promise<AircraftPhoto | null> {
-  const reg = registration.trim().toUpperCase();
-  const r = await fetch(`https://api.planespotters.net/pub/photos/reg/${encodeURIComponent(reg)}`, {
+/** By registration, then (if known) by Mode S hex: the same airframe photographed under an earlier registration. */
+export async function photoForAircraft(registration: string, hex?: string | null): Promise<AircraftPhoto | null> {
+  const byReg = await fetchPhoto(`reg/${encodeURIComponent(registration.trim().toUpperCase())}`);
+  if (byReg || !hex || !/^[0-9a-f]{6}$/i.test(hex)) return byReg;
+  return fetchPhoto(`hex/${hex.toUpperCase()}`);
+}
+
+export const photoForRegistration = (registration: string) => photoForAircraft(registration);
+
+async function fetchPhoto(path: string): Promise<AircraftPhoto | null> {
+  const r = await fetch(`https://api.planespotters.net/pub/photos/${path}`, {
     headers: { Accept: "application/json", "User-Agent": "Geardown/1.0 (+mailto:contact@geardown.app; https://geardown.app)" },
     next: { revalidate: 3600 },
   });

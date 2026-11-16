@@ -9,15 +9,21 @@ import { useFlags } from "@/lib/flags";
 const cache = new Map<string, Photo | null>();
 
 /** Photo of the exact aircraft (by registration), credited to its photographer with a link to Planespotters. */
-export function AircraftPhoto({ registration, className = "" }: { registration?: string; className?: string }) {
+export function AircraftPhoto({ registration, hex, showEmpty, className = "" }: { registration?: string; hex?: string | null; showEmpty?: boolean; className?: string }) {
   const t = useTranslations("app.photo");
-  const reg = registration?.trim().toUpperCase();
+  // wait until the registration stops changing (typed in a form)
+  const [reg, setReg] = useState(registration?.trim().toUpperCase());
+  useEffect(() => {
+    const id = setTimeout(() => setReg(registration?.trim().toUpperCase()), 600);
+    return () => clearTimeout(id);
+  }, [registration]);
   const [photo, setPhoto] = useState<Photo | null | undefined>(reg ? cache.get(reg) : null);
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_PLANESPOTTERS !== "1" || !reg || reg.length < 3) return setPhoto(null);
     if (cache.has(reg)) return setPhoto(cache.get(reg));
+    setPhoto(undefined); // never show the previous aircraft while the new one loads
     let alive = true;
-    fetch(`/api/aircraft-photo?reg=${encodeURIComponent(reg)}`)
+    fetch(`/api/aircraft-photo?reg=${encodeURIComponent(reg)}${hex ? `&hex=${hex}` : ""}`)
       .then((r) => (r.ok ? r.json() : { photo: null }))
       .then((d: { photo: Photo | null }) => {
         cache.set(reg, d.photo);
@@ -27,9 +33,12 @@ export function AircraftPhoto({ registration, className = "" }: { registration?:
     return () => {
       alive = false;
     };
-  }, [reg]);
+  }, [reg, hex]);
   const flags = useFlags();
-  if (!photo || !flags.aircraftPhotos) return null;
+  if (!flags.aircraftPhotos) return null;
+  if (photo === null && showEmpty && reg && reg.length >= 4 && cache.has(reg))
+    return <p className={`text-xs text-muted ${className}`}>{t("none", { reg })}</p>;
+  if (!photo) return null;
   return (
     <figure className={`overflow-hidden rounded-xl ${className}`}>
       <a href={photo.link} target="_blank" rel="noopener" title={t("open")}>

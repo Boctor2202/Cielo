@@ -1324,7 +1324,8 @@
     "photo": {
       "alt": "Photo de l'appareil {reg}",
       "credit": "Photo © {name} ·",
-      "open": "Voir la photo sur Planespotters.net"
+      "open": "Voir la photo sur Planespotters.net",
+      "none": "Pas encore de photo de {reg} sur Planespotters."
     },
     "flags": {
       "off": "Cette fonction est temporairement indisponible. Elle revient très vite."

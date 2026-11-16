@@ -1324,7 +1324,8 @@
     "photo": {
       "alt": "Photo of aircraft {reg}",
       "credit": "Photo © {name} ·",
-      "open": "View the photo on Planespotters.net"
+      "open": "View the photo on Planespotters.net",
+      "none": "No photo of {reg} on Planespotters yet."
     },
     "flags": {
       "off": "This feature is temporarily unavailable. It will be back soon."

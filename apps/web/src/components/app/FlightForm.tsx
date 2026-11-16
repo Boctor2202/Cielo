@@ -12,6 +12,7 @@ import { useDuration, useTable, useTypes } from "@/lib/hooks";
 import { findType, flightToInput, saveFlight, softDelete } from "@/lib/repo";
 import { db } from "@/lib/db";
 import { useAccess } from "@/lib/access";
+import { AircraftPhoto } from "./AircraftPhoto";
 import { AirportInput } from "./AirportInput";
 import { FlightAwareFill } from "./FlightAwareFill";
 import { Card, ClockInput, DurationInput, Field, Segmented, Toggle, useToast } from "./ui";
@@ -244,6 +245,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                   />
                 </Field>
               </div>
+              <AircraftPhoto registration={v.registration} hex={aircraft?.icaoHex} showEmpty className="mt-4 max-w-md" />
             </Card>
           </>
         )}
