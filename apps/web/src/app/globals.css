@@ -315,7 +315,7 @@ select.input {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: #c9d3de url("/immersive/film/c68a/takeoff-poster-1920.webp") center 56% / cover no-repeat;
+  background: #c9d3de url("/immersive/film/landing/poster-1920.webp") center 56% / cover no-repeat;
 }
 .app-room::after {
   content: "";

@@ -33,19 +33,18 @@ export function vec(keys: Key<[number, number, number]>[], p: number): [number, 
 }
 
 /**
- * The film, in scroll order. `from`/`to` are scroll progress; `start`/`end` the part of each clip played
- * (fractions of its duration). The clouds clip is cut before the jet comes out on top of the layer.
+ * The film, in scroll order. `from`/`to` are scroll progress. Landing at dusk: the descent over a sea of
+ * clouds into the layer, then breaking out on final with the runway ahead and the gear coming down.
  */
 export const SHOTS = {
-  takeoff: { from: 0, to: 0.38, start: 0, end: 1 },
-  gear: { from: 0.38, to: 0.5, start: 0, end: 1 },
-  clouds: { from: 0.5, to: 0.57, start: 0, end: 1 },
+  descent: { from: 0, to: 0.3 },
+  final: { from: 0.3, to: 0.57 },
 } as const;
 
 /** Scroll progress where the Earth takes over. */
 export const GLOBE_FROM = 0.59;
 
-export type Phase = "lineup" | "roll" | "rotate" | "gearUp" | "climb" | "cruise";
+export type Phase = "descent" | "approach" | "gearDown" | "logged";
 
 /** Shared, mutable readouts the DOM HUD reads every frame (no React re-render). */
 export interface Readouts {
@@ -60,62 +59,43 @@ export interface Readouts {
 }
 
 export const createReadouts = (): Readouts => ({
-  progress: 0, sunElevation: -7, utcMinutes: 312, nightMinutes: 0, chapter: 0, phase: "lineup", ias: 0, altitudeFt: 0,
+  progress: 0, sunElevation: 1, utcMinutes: START_UTC, nightMinutes: 0, chapter: 0, phase: "descent", ias: 280, altitudeFt: 14000,
 });
 
-/** Sunrise: the sun climbs through the EASA −6° threshold (end of night) during the takeoff roll. */
-export const SUN_ELEV: Key<number>[] = [[0, -7], [0.38, -5.4], [0.59, -2.5], [1, 1.5]];
+/** Dusk: the sun sinks through the EASA −6° threshold (start of night) on final approach. */
+export const SUN_ELEV: Key<number>[] = [[0, 1], [0.2, -3], [0.36, -6.5], [0.57, -9], [1, -12]];
 
-/** Story chapters as scroll-progress bounds: lined up, takeoff (night), your aircraft, routes (globe), ready. */
+/** Story chapters as scroll-progress bounds: descent, approach (night), your aircraft, routes (globe), ready. */
 export const CHAPTERS = [0, 0.2, 0.4, 0.6, 0.8, 1] as const;
 
-const START_UTC = 312; // 05:12Z
-const NIGHT_END = 0.22; // where SUN_ELEV crosses −6°
+const START_UTC = 1052; // 17:32Z
+const NIGHT_START = 0.323; // where SUN_ELEV crosses −6°
 
 /** Same mapping the scene uses, so the HUD runs even without WebGL. */
-export function readoutsAt(p: number, r: Readouts, film?: { rotate: number; liftoff: number }) {
+export function readoutsAt(p: number, r: Readouts) {
   const el = num(SUN_ELEV, p);
   r.progress = p;
   r.sunElevation = el;
   r.utcMinutes = START_UTC + p * 28;
-  r.nightMinutes = Math.min(p, NIGHT_END) * 28;
+  r.nightMinutes = Math.max(0, Math.min(p, SHOTS.final.to) - NIGHT_START) * 28;
   r.chapter = Math.max(0, CHAPTERS.findIndex((b) => p < b) - 1);
   if (p >= 1) r.chapter = CHAPTERS.length - 2;
 
-  // takeoff clip: lined up, roll (speed builds up with the scroll), rotation at VR, lift-off
-  const rot = film?.rotate ?? 0.55;
-  const lof = film?.liftoff ?? 0.64;
-  const k = clamp01(p / SHOTS.takeoff.to);
-  const VR = 128;
-  if (p < SHOTS.takeoff.to) {
-    if (k < 0.06) {
-      r.phase = "lineup";
-      r.ias = 0;
-    } else {
-      const roll = clamp01((k - 0.06) / (rot - 0.06));
-      r.ias = k < rot ? 30 + Math.pow(roll, 1.25) * (VR - 30) : VR + ((k - rot) / (1 - rot)) * 14;
-      if (k < 0.12) r.ias *= (k - 0.06) / 0.06;
-      r.phase = k < rot ? "roll" : "rotate";
-    }
-    r.altitudeFt = k < lof ? 0 : ((k - lof) / (1 - lof)) * 120;
-    return;
-  }
-  if (p < SHOTS.gear.to) {
-    const g = (p - SHOTS.gear.from) / (SHOTS.gear.to - SHOTS.gear.from);
-    r.phase = "gearUp";
-    r.ias = 142 + g * 18;
-    r.altitudeFt = 120 + g * 600;
+  if (p < SHOTS.descent.to) {
+    const k = p / SHOTS.descent.to;
+    r.phase = "descent";
+    r.ias = 280 - k * 60;
+    r.altitudeFt = 14000 - k * 9000;
     return;
   }
   if (p < GLOBE_FROM) {
-    const c = (p - SHOTS.gear.to) / (GLOBE_FROM - SHOTS.gear.to);
-    r.phase = "climb";
-    r.ias = 160 + c * 90;
-    r.altitudeFt = 720 + c * 7300;
+    const k = clamp01((p - SHOTS.final.from) / (SHOTS.final.to - SHOTS.final.from));
+    r.phase = k < 0.55 ? "approach" : "gearDown";
+    r.ias = 180 - k * 50;
+    r.altitudeFt = 3000 - k * 2500;
     return;
   }
-  const c = clamp01((p - GLOBE_FROM) / 0.18);
-  r.phase = c < 1 ? "climb" : "cruise";
-  r.ias = 250 + c * 30;
-  r.altitudeFt = 8000 + c * 37000;
+  r.phase = "logged";
+  r.ias = 0;
+  r.altitudeFt = 0;
 }

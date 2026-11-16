@@ -5,7 +5,7 @@ import { motion, useMotionValueEvent, useScroll, useSpring, useTransform, type M
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { DEFAULT_VISUAL, EARTH_CREDITS, FILM_CREDITS } from "@/lib/aircraft-visuals";
+import { EARTH_CREDITS, FILM_CREDITS } from "@/lib/aircraft-visuals";
 import { StoreBadges } from "../sections";
 import { createReadouts, GLOBE_FROM, readoutsAt, SHOTS, type Readouts } from "./timeline";
 import type { FlightScene } from "./scene";
@@ -21,8 +21,8 @@ const fmtDur = (m: number) => `${Math.floor(m / 60)}:${String(Math.round(m) % 60
 const fmtElev = (e: number) => `${e >= 0 ? "+" : "−"}${Math.abs(e).toFixed(1)}°`;
 
 /**
- * Immersive home, the same for every visitor. A sticky stage plays a film scrubbed by the scroll — a business jet lined up at the
- * runway threshold, the takeoff roll that speeds up as you scroll, rotation, gear up, into the clouds — then
+ * Immersive home, the same for every visitor. A sticky stage plays a film scrubbed by the scroll — a business jet descending
+ * over a sea of clouds at dusk, into the layer, breaking out on final with the runway ahead and the gear coming down — then
  * hands over to a photographic 3D Earth with the pilot's routes, which the visitor turns by click-and-drag.
  * The story is real DOM text on top (indexable, screen-reader friendly); with reduced motion the film is
  * replaced by still frames.
@@ -40,7 +40,7 @@ export function ImmersiveHome() {
     return () => mq.removeEventListener("change", sync);
   }, []);
   // the same film for every visitor
-  const film = DEFAULT_VISUAL.film!;
+  const film = FILM;
 
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -55,7 +55,7 @@ export function ImmersiveHome() {
   const p = reduce ? scrollYProgress : sprung;
 
   useMotionValueEvent(p, "change", (v) => {
-    readoutsAt(v, readouts.current, film);
+    readoutsAt(v, readouts.current);
     sceneRef.current?.setProgress((v - GLOBE_FROM) / (1 - GLOBE_FROM));
     const active = v > GLOBE_FROM + 0.02;
     setGlobeActive((a) => (a === active ? a : active));
@@ -69,7 +69,7 @@ export function ImmersiveHome() {
     let disposed = false;
     let inView = true;
     let scene: FlightScene | null = null;
-    readoutsAt(p.get(), readouts.current, film);
+    readoutsAt(p.get(), readouts.current);
     (async () => {
       const mod = await import("./scene");
       if (disposed || !mod.webglAvailable()) return;
@@ -123,7 +123,10 @@ export function ImmersiveHome() {
   };
 
   /* ---------- choreography ---------- */
-  const whiteout = useTransform(p, [SHOTS.clouds.from + 0.02, SHOTS.clouds.to - 0.01, GLOBE_FROM + 0.04, GLOBE_FROM + 0.1], [0, 0.92, 0.92, 0]);
+  // into the cloud layer at the end of the descent, out of it at the start of the final
+  const whiteout = useTransform(p, [SHOTS.descent.to - 0.03, SHOTS.descent.to, SHOTS.final.from + 0.025], [0, 0.85, 0]);
+  // the film fades to night before the Earth appears
+  const dusk = useTransform(p, [SHOTS.final.to - 0.03, GLOBE_FROM], [0, 1]);
   const filmOpacity = useTransform(p, [GLOBE_FROM, GLOBE_FROM + 0.02], [1, 0]);
   const globeOpacity = useTransform(p, [GLOBE_FROM - 0.01, GLOBE_FROM + 0.06], [0, 1]);
 
@@ -150,9 +153,9 @@ export function ImmersiveHome() {
         {/* Film */}
         <motion.div className="absolute inset-0" style={{ opacity: filmOpacity }} aria-hidden>
           <Film base={film.base} poster={film.poster} p={p} reduce={reduce} />
-          <motion.div className="absolute inset-0 bg-[#f4f1ea]" style={{ opacity: whiteout }} />
+          <motion.div className="absolute inset-0 bg-[#e9edf2]" style={{ opacity: whiteout }} />
+          <motion.div className="absolute inset-0 bg-[#02040b]" style={{ opacity: dusk }} />
         </motion.div>
-        <motion.div className="pointer-events-none absolute inset-0 bg-[#f4f1ea]" style={{ opacity: useTransform(p, [GLOBE_FROM - 0.004, GLOBE_FROM, GLOBE_FROM + 0.08], [0, 0.92, 0]) }} aria-hidden />
 
         {/* Scrims, vignette and grain keep the text readable and the image filmic */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_55%_45%,transparent_55%,rgba(2,4,11,.55))]" aria-hidden />
@@ -242,7 +245,8 @@ export function ImmersiveHome() {
 
 type ShotId = keyof typeof SHOTS;
 const SHOT_IDS = Object.keys(SHOTS) as ShotId[];
-const FRAME_COUNT: Record<ShotId, number> = { takeoff: 190, gear: 121, clouds: 40 };
+const FRAME_COUNT: Record<ShotId, number> = { descent: 193, final: 193 };
+const FILM = { base: "/immersive/film/landing", poster: "/immersive/film/landing/poster" };
 
 /**
  * The film is a sequence of still frames (24 per second of footage) drawn on a canvas: any scroll position
@@ -250,7 +254,7 @@ const FRAME_COUNT: Record<ShotId, number> = { takeoff: 190, gear: 121, clouds: 4
  * so the whole sequence is scrubbable within a second and sharpens as the rest arrives.
  */
 function Film({ base, poster, p, reduce }: { base: string; poster: string; p: MotionValue<number>; reduce: boolean }) {
-  const frames = useRef<Record<ShotId, (HTMLImageElement | null)[]>>({ takeoff: [], gear: [], clouds: [] });
+  const frames = useRef<Record<ShotId, (HTMLImageElement | null)[]>>({ descent: [], final: [] });
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -285,7 +289,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         }
         if (!alive) return;
         frames.current[id][i] = img;
-        if (id === "takeoff" && i === 0) setReady(true);
+        if (id === "descent" && i === 0) setReady(true);
       }
     };
     for (let w = 0; w < 6; w++) void worker();
@@ -294,7 +298,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
     };
   }, [base, reduce]);
 
-  // Draw loop. During the takeoff roll the image pushes in gently; no shake or zoom blur, so the frame stays sharp.
+  // Draw loop: a slow dolly-in on the descent; no shake or zoom blur, so the frame stays sharp.
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (reduce) return;
@@ -318,7 +322,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
       const target = p.get();
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
-      shown += (target - shown) * (1 - Math.exp(-dt / 0.09));
+      shown += (target - shown) * (1 - Math.exp(-dt / 0.05));
       if (Math.abs(target - shown) < 1e-5) shown = target;
       const v = shown;
       const id = SHOT_IDS.find((k) => v < SHOTS[k].to) ?? SHOT_IDS[SHOT_IDS.length - 1]!;
@@ -390,32 +394,22 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
   );
 }
 
-/**
- * Camera move per shot: `push` the dolly-in, `speed` its pace (kept for the HUD),
- * `cy` the point the image rushes away from (the end of the runway / the aircraft).
- */
-function speedFx(id: ShotId, v: number): { speed: number; push: number; cy: number } {
+/** Camera move per shot: `push` the dolly-in around the focal height `cy`. */
+function speedFx(id: ShotId, v: number): { push: number; cy: number } {
   const s = SHOTS[id];
   const k = Math.min(1, Math.max(0, (v - s.from) / (s.to - s.from)));
-  if (id === "takeoff") {
-    const roll = Math.min(1, Math.max(0, (k - 0.05) / 0.57));
-    // builds up with the roll, fades once the wheels leave the runway
-    const speed = k < 0.62 ? Math.pow(roll, 1.15) : Math.max(0, 1 - (k - 0.62) / 0.16);
-    const push = 1 + 0.14 * (roll * roll * (3 - 2 * roll));
-    return { speed, push, cy: 0.42 };
-  }
-  if (id === "gear") return { speed: 0, push: 1, cy: 0.4 };
-  return { speed: 0.35 + 0.4 * k, push: 1 + 0.08 * k, cy: 0.5 };
+  if (id === "descent") return { push: 1 + 0.05 * k, cy: 0.45 };
+  return { push: 1, cy: 0.5 };
 }
 
 /** Reduced motion: a few still frames that cross-fade instead of a moving film. */
 function StillFrames({ base, p }: { base: string; p: MotionValue<number> }) {
-  const b = useTransform(p, [SHOTS.takeoff.to - 0.08, SHOTS.takeoff.to], [0, 1]);
-  const c = useTransform(p, [SHOTS.gear.to - 0.04, SHOTS.gear.to], [0, 1]);
+  const b = useTransform(p, [SHOTS.descent.to - 0.04, SHOTS.descent.to], [0, 1]);
+  const c = useTransform(p, [SHOTS.final.to - 0.12, SHOTS.final.to - 0.06], [0, 1]);
   return (
     <>
-      <motion.img src={`${base}/still-rotate-1280.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: b }} />
-      <motion.img src={`${base}/still-climb-1280.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: c }} />
+      <motion.img src={`${base}/still-approach-1280.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: b }} />
+      <motion.img src={`${base}/still-gear-1280.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: c }} />
     </>
   );
 }
@@ -524,11 +518,11 @@ function NightHud({ readouts }: { readouts: React.RefObject<Readouts> }) {
       <div className="grid grid-cols-3 gap-3">
         <div>
           <p className="mono-label !text-[10px] !text-white/55">{t("sun")}</p>
-          <span ref={elev} className="num mt-1 block text-2xl font-semibold">−7.0°</span>
+          <span ref={elev} className="num mt-1 block text-2xl font-semibold">+1.0°</span>
         </div>
         <div>
           <p className="mono-label !text-[10px] !text-white/55">{t("utc")}</p>
-          <span ref={utc} className="num mt-1 block text-2xl font-semibold">05:12Z</span>
+          <span ref={utc} className="num mt-1 block text-2xl font-semibold">17:32Z</span>
         </div>
         <div>
           <p className="mono-label !text-[10px] !text-white/55">{t("night")}</p>
@@ -546,9 +540,9 @@ function NightHud({ readouts }: { readouts: React.RefObject<Readouts> }) {
           <span
             ref={badge}
             className="num rounded px-1.5 py-0.5 font-semibold data-[night=false]:bg-[#fbbf24]/20 data-[night=false]:text-[#fbbf24] data-[night=true]:bg-[#22c55e]/20 data-[night=true]:text-[#86efac]"
-            data-night="true"
+            data-night="false"
           >
-            {t("nightOn")}
+            {t("day")}
           </span>
         </div>
       </div>
@@ -563,20 +557,20 @@ function FlightStrip({ readouts }: { readouts: React.RefObject<Readouts> }) {
   const ias = useRef<HTMLSpanElement>(null);
   const alt = useRef<HTMLSpanElement>(null);
   const labels = useRef<Record<string, string>>({});
-  for (const k of ["lineup", "roll", "rotate", "gearUp", "climb", "cruise"]) labels.current[k] = t(k);
+  for (const k of ["descent", "approach", "gearDown", "logged"]) labels.current[k] = t(k);
   const write = useRef((r: Readouts) => {
     if (phase.current) {
       phase.current.textContent = labels.current[r.phase] ?? "";
       phase.current.dataset.phase = r.phase;
     }
-    if (ias.current) ias.current.textContent = r.phase === "cruise" ? "M.80" : `${Math.round(r.ias)} kt`;
-    if (alt.current) alt.current.textContent = r.altitudeFt >= 10000 ? `FL${Math.round(r.altitudeFt / 100)}` : `${Math.round(r.altitudeFt / 10) * 10} ft`;
+    if (ias.current) ias.current.textContent = r.phase === "logged" ? "—" : `${Math.round(r.ias)} kt`;
+    if (alt.current) alt.current.textContent = r.phase === "logged" ? "—" : r.altitudeFt >= 10000 ? `FL${Math.round(r.altitudeFt / 100)}` : `${Math.round(r.altitudeFt / 10) * 10} ft`;
   }).current;
   useLiveText(readouts, write);
   const item = "flex items-baseline gap-1.5";
   return (
     <div className="num pointer-events-none absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-4 whitespace-nowrap rounded-full border border-white/10 bg-[#02040b]/55 px-4 py-2 text-[11px] text-white/85 backdrop-blur-md sm:gap-6 sm:px-5 sm:text-xs" aria-hidden>
-      <span ref={phase} className="font-semibold text-[#86efac] data-[phase=gearUp]:text-[#fde68a]" />
+      <span ref={phase} className="font-semibold text-[#86efac] data-[phase=gearDown]:text-[#4ade80]" />
       <span className={item}><span className="text-white/45">IAS</span><span ref={ias}>0 kt</span></span>
       <span className={item}><span className="text-white/45">ALT</span><span ref={alt}>0 ft</span></span>
     </div>

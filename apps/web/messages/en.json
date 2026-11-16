@@ -1743,19 +1743,19 @@
     ]
   },
   "immersive": {
-    "canvasLabel": "Scroll-driven film: a business jet lined up at the runway threshold accelerates, takes off, retracts its gear and climbs through the clouds, then the Earth seen from space with flight routes, which you can turn.",
+    "canvasLabel": "Scroll-driven film: a business jet descends at dusk over a sea of clouds, goes through the layer, breaks out on final facing the runway and lowers its gear, then the Earth seen from space with flight routes, which you can turn.",
     "scroll": "Scroll",
     "chapters": [
-      "Line-up",
-      "Takeoff",
+      "Descent",
+      "Approach",
       "Your aircraft",
       "Routes",
       "Ready"
     ],
     "c1": {
       "label": "01 · Night time",
-      "title": "The sun passes −6°. Geardown logs it.",
-      "text": "EASA night ends at the beginning of morning civil twilight. Geardown follows the aircraft's position minute by minute and works out night time, night takeoffs and night landings, with nothing for you to type."
+      "title": "The sun drops below −6°. Geardown logs it.",
+      "text": "EASA night begins at the end of evening civil twilight. Geardown follows the aircraft's position minute by minute and works out night time, night takeoffs and night landings, with nothing for you to type."
     },
     "machine": {
       "label": "02 · Your aircraft",
@@ -1811,12 +1811,10 @@
     },
     "drag": "Click and drag to turn the Earth",
     "phase": {
-      "lineup": "LINED UP",
-      "roll": "TAKEOFF ROLL",
-      "rotate": "ROTATE",
-      "gearUp": "POSITIVE RATE · GEAR UP",
-      "climb": "CLIMB",
-      "cruise": "CRUISE"
+      "descent": "DESCENT",
+      "approach": "FINAL APPROACH",
+      "gearDown": "GEAR DOWN · 3 GREENS",
+      "logged": "FLIGHT LOGGED"
     }
   },
   "seo": {

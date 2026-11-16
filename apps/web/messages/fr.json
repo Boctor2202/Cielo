@@ -1743,19 +1743,19 @@
     ]
   },
   "immersive": {
-    "canvasLabel": "Film animé au défilement : un jet d'affaires aligné en bout de piste accélère, décolle, rentre son train et traverse les nuages, puis la Terre vue de l'espace avec des routes aériennes, que l'on peut faire tourner.",
+    "canvasLabel": "Film animé au défilement : un jet d'affaires descend au crépuscule au-dessus d'une mer de nuages, traverse la couche, sort en finale face à la piste et sort son train, puis la Terre vue de l'espace avec des routes aériennes, que l'on peut faire tourner.",
     "scroll": "Faites défiler",
     "chapters": [
-      "Alignement",
-      "Décollage",
+      "Descente",
+      "Approche",
       "Votre machine",
       "Routes",
       "Prêt"
     ],
     "c1": {
       "label": "01 · Temps de nuit",
-      "title": "Le soleil passe à −6°. Geardown le note.",
-      "text": "La nuit EASA s'arrête au début du crépuscule civil du matin. Geardown suit la position de l'avion minute par minute et calcule le temps de nuit, les décollages et les atterrissages de nuit, sans que vous ayez rien à saisir."
+      "title": "Le soleil passe sous −6°. Geardown le note.",
+      "text": "La nuit EASA commence à la fin du crépuscule civil du soir. Geardown suit la position de l'avion minute par minute et calcule le temps de nuit, les décollages et les atterrissages de nuit, sans que vous ayez rien à saisir."
     },
     "machine": {
       "label": "02 · Votre machine",
@@ -1811,12 +1811,10 @@
     },
     "drag": "Cliquez-glissez pour faire tourner la Terre",
     "phase": {
-      "lineup": "ALIGNÉ",
-      "roll": "ROULAGE DÉCOLLAGE",
-      "rotate": "ROTATION",
-      "gearUp": "VARIO POSITIF · TRAIN RENTRÉ",
-      "climb": "MONTÉE",
-      "cruise": "CROISIÈRE"
+      "descent": "DESCENTE",
+      "approach": "APPROCHE FINALE",
+      "gearDown": "TRAIN SORTI · 3 VERTS",
+      "logged": "VOL ENREGISTRÉ"
     }
   },
   "seo": {
