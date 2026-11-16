@@ -150,7 +150,7 @@
       },
       "premium": {
         "name": "Max",
-        "desc": "For airline and business-jet pilots: roster, FTL, layovers, radar and real tracks."
+        "desc": "For airline and business-jet pilots: roster, FTL, job offers, CV, layovers, radar and real tracks."
       }
     },
     "highlights": {
@@ -160,11 +160,11 @@
         "Official EASA, FAA, CASA PDF export, plus CSV / Excel",
         "Licences, medical and FCL.060 recency, with expiry reminders",
         "Statistics and a map of your routes",
-        "Pilot job offers ranked for your profile, and a pilot CV",
         "Web and mobile in sync, works offline"
       ],
       "premium": [
         "Everything in Basic",
+        "Pilot job offers ranked for your profile, and a pilot CV",
         "Airline roster import and ORO.FTL limits",
         "Logbook audit (17 checks) and digital signatures",
         "Layovers: the best places around the crew hotel",
@@ -358,7 +358,9 @@
       "cv": "Pilot CV",
       "profile": "Profile",
       "layovers": "Layovers",
-      "radar": "Radar"
+      "radar": "Radar",
+      "admin": "Admin",
+      "report": "Report a problem"
     },
     "dashboard": {
       "hello": "Hello {name}",
@@ -1309,12 +1311,122 @@
       "readOnlyTitle": "Subscription required",
       "readOnlyText": "Without an active subscription your logbook stays viewable and exportable, but logging is off. Basic €6.99/month, Max €9.99/month.",
       "maxTitle": "Max feature",
-      "maxText": "Roster, FTL, layovers, radar, real tracks, audit, signatures and scan are included in Max (€9.99/month)."
+      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, real tracks, audit, signatures and scan are included in Max (€9.99/month)."
     },
     "photo": {
       "alt": "Photo of aircraft {reg}",
       "credit": "Photo © {name} ·",
       "open": "View the photo on Planespotters.net"
+    },
+    "flags": {
+      "off": "This feature is temporarily unavailable. It will be back soon."
+    },
+    "report": {
+      "title": "Report a problem or suggest an idea",
+      "bug": "Problem",
+      "idea": "Idea",
+      "bugPlaceholder": "What happened? What did you expect? Steps to reproduce help a lot.",
+      "ideaPlaceholder": "What would you like Geardown to do?",
+      "context": "The page, device and app version are attached automatically. No logbook data is sent.",
+      "send": "Send",
+      "cancel": "Cancel",
+      "close": "Close",
+      "thanks": "Thank you! Your message has arrived.",
+      "error": "Sending failed. Please try again in a moment."
+    },
+    "admin": {
+      "title": "Admin",
+      "subtitle": "Subscribers, reports and platform settings.",
+      "denied": "This page is for Geardown administrators only.",
+      "tabs": {
+        "overview": "Overview",
+        "users": "Subscribers",
+        "reports": "Reports",
+        "platform": "Platform"
+      },
+      "overview": {
+        "error": "Could not load the figures.",
+        "mrr": "Monthly recurring revenue",
+        "mrrSub": "{basic} Basic · {max} Max",
+        "paying": "Paying subscribers",
+        "sources": "Web {stripe} · App Store {apple} · Google Play {google}",
+        "trials": "Trials in progress",
+        "comped": "{n} complimentary",
+        "pilots": "Accounts",
+        "signups": "+{d7} in 7 d · +{d30} in 30 d",
+        "active7": "Active (last 7 days)",
+        "flights": "Flights logged",
+        "openReports": "Reports to handle",
+        "canceled": "{n} cancellations in 30 d",
+        "signupsChart": "Sign-ups (last 30 days)"
+      },
+      "users": {
+        "search": "E-mail or name",
+        "searchBtn": "Search",
+        "error": "Could not load the accounts.",
+        "pilot": "Pilot",
+        "plan": "Plan",
+        "store": "Subscription",
+        "flights": "Flights",
+        "signedUp": "Signed up",
+        "lastActivity": "Last activity",
+        "until": "until {date}",
+        "comped": "complimentary",
+        "action": "Action…",
+        "grant": "Give {plan}",
+        "revoke": "Remove access",
+        "confirmGrant": "Give {plan} to {who}?",
+        "confirmRevoke": "Remove access for {who}? Their logbook becomes read-only.",
+        "none": "No accounts.",
+        "compNote": "Complimentary access is not tied to any payment. If the pilot then subscribes, the subscription takes over."
+      },
+      "reports": {
+        "open": "To handle",
+        "all": "All",
+        "allKinds": "All types",
+        "kind": {
+          "bug": "Problem",
+          "idea": "Idea",
+          "error": "Technical error"
+        },
+        "status": {
+          "new": "New",
+          "in_progress": "In progress",
+          "resolved": "Resolved",
+          "ignored": "Ignored"
+        },
+        "take": "Take it",
+        "resolve": "Resolved",
+        "ignore": "Ignore",
+        "anonymous": "anonymous",
+        "none": "Nothing to handle. 🎉",
+        "error": "Could not load the reports."
+      },
+      "platform": {
+        "error": "Could not load the settings.",
+        "features": "Features",
+        "featuresHelp": "Switch a feature off if something goes wrong (quota reached, service down): it disappears for every user within a minute, without redeploying.",
+        "flag": {
+          "radar": "Live radar",
+          "layovers": "Layovers",
+          "aircraftPhotos": "Aircraft photos (Planespotters)",
+          "flightTracks": "Real flight tracks",
+          "jobs": "Job offers"
+        },
+        "services": "Connected services",
+        "servicesHelp": "Keys are managed in Vercel → Settings → Environment Variables.",
+        "ok": "OK",
+        "missing": "not configured",
+        "service": {
+          "supabase": "Database (Supabase)",
+          "googleMaps": "Google Maps",
+          "googlePlaces": "Google Places (layovers)",
+          "planespotters": "Planespotters",
+          "adsblol": "adsb.lol radar",
+          "ticketmaster": "Shows (Ticketmaster)",
+          "flightaware": "Actual times (FlightAware)"
+        }
+      }
     }
   },
   "why": {

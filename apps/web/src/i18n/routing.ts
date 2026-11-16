@@ -36,6 +36,7 @@ export const routing = defineRouting({
     "/app/statistiques": { fr: "/app/statistiques", en: "/app/statistics" },
     "/app/carte": { fr: "/app/carte", en: "/app/map" },
     "/app/radar": "/app/radar",
+    "/app/admin": "/app/admin",
     "/app/emplois": { fr: "/app/emplois", en: "/app/jobs" },
     "/app/cv": "/app/cv",
     "/app/profil": { fr: "/app/profil", en: "/app/profile" },

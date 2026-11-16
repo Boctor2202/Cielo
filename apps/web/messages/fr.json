@@ -150,7 +150,7 @@
       },
       "premium": {
         "name": "Max",
-        "desc": "Pour les pilotes de ligne et d'affaires : roster, FTL, escales, radar et traces réelles."
+        "desc": "Pour les pilotes de ligne et d'affaires : roster, FTL, offres d'emploi, CV, escales, radar et traces réelles."
       }
     },
     "highlights": {
@@ -160,11 +160,11 @@
         "Export officiel PDF EASA, FAA, CASA, et CSV / Excel",
         "Licences, médical et expérience récente FCL.060, avec rappels d'échéance",
         "Statistiques et carte de vos routes",
-        "Offres d'emploi pilote classées selon votre profil, et CV pilote",
         "Web et mobile synchronisés, utilisable hors ligne"
       ],
       "premium": [
         "Tout Basic",
+        "Offres d'emploi pilote classées selon votre profil, et CV pilote",
         "Import du roster compagnie et limites FTL ORO.FTL",
         "Audit du carnet (17 contrôles) et signatures numériques",
         "Escales : les meilleures adresses autour de l'hôtel équipage",
@@ -358,7 +358,9 @@
       "cv": "CV pilote",
       "profile": "Profil",
       "layovers": "Escales",
-      "radar": "Radar"
+      "radar": "Radar",
+      "admin": "Admin",
+      "report": "Signaler un problème"
     },
     "dashboard": {
       "hello": "Bonjour {name}",
@@ -1309,12 +1311,122 @@
       "readOnlyTitle": "Abonnement nécessaire",
       "readOnlyText": "Sans abonnement actif, votre carnet reste consultable et exportable, mais la saisie est désactivée. Basic à 6,99 €/mois, Max à 9,99 €/mois.",
       "maxTitle": "Fonction réservée à Max",
-      "maxText": "Roster, FTL, escales, radar, traces réelles, audit, signatures et scan sont inclus dans Max (9,99 €/mois)."
+      "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces réelles, audit, signatures et scan sont inclus dans Max (9,99 €/mois)."
     },
     "photo": {
       "alt": "Photo de l'appareil {reg}",
       "credit": "Photo © {name} ·",
       "open": "Voir la photo sur Planespotters.net"
+    },
+    "flags": {
+      "off": "Cette fonction est temporairement indisponible. Elle revient très vite."
+    },
+    "report": {
+      "title": "Signaler un problème ou proposer une idée",
+      "bug": "Problème",
+      "idea": "Idée",
+      "bugPlaceholder": "Que s'est-il passé ? Qu'attendiez-vous ? Les étapes pour le reproduire aident beaucoup.",
+      "ideaPlaceholder": "Quelle fonction aimeriez-vous dans Geardown ?",
+      "context": "La page, l'appareil et la version de l'app sont joints automatiquement. Aucune donnée de votre carnet n'est envoyée.",
+      "send": "Envoyer",
+      "cancel": "Annuler",
+      "close": "Fermer",
+      "thanks": "Merci ! Votre message est bien arrivé.",
+      "error": "L'envoi a échoué. Réessayez dans un instant."
+    },
+    "admin": {
+      "title": "Admin",
+      "subtitle": "Abonnés, signalements et réglages de la plateforme.",
+      "denied": "Cette page est réservée aux administrateurs de Geardown.",
+      "tabs": {
+        "overview": "Vue d'ensemble",
+        "users": "Abonnés",
+        "reports": "Signalements",
+        "platform": "Plateforme"
+      },
+      "overview": {
+        "error": "Impossible de charger les chiffres.",
+        "mrr": "Revenu mensuel récurrent",
+        "mrrSub": "{basic} Basic · {max} Max",
+        "paying": "Abonnés payants",
+        "sources": "Web {stripe} · App Store {apple} · Google Play {google}",
+        "trials": "Essais en cours",
+        "comped": "{n} accès offerts",
+        "pilots": "Comptes",
+        "signups": "+{d7} en 7 j · +{d30} en 30 j",
+        "active7": "Actifs (7 derniers jours)",
+        "flights": "Vols enregistrés",
+        "openReports": "Signalements à traiter",
+        "canceled": "{n} résiliations en 30 j",
+        "signupsChart": "Inscriptions (30 derniers jours)"
+      },
+      "users": {
+        "search": "E-mail ou nom",
+        "searchBtn": "Rechercher",
+        "error": "Impossible de charger les comptes.",
+        "pilot": "Pilote",
+        "plan": "Offre",
+        "store": "Abonnement",
+        "flights": "Vols",
+        "signedUp": "Inscription",
+        "lastActivity": "Dernière activité",
+        "until": "jusqu'au {date}",
+        "comped": "offert",
+        "action": "Action…",
+        "grant": "Offrir {plan}",
+        "revoke": "Retirer l'accès",
+        "confirmGrant": "Offrir {plan} à {who} ?",
+        "confirmRevoke": "Retirer l'accès de {who} ? Son carnet passera en lecture seule.",
+        "none": "Aucun compte.",
+        "compNote": "Un accès offert n'est lié à aucun paiement. S'il souscrit ensuite un abonnement, c'est l'abonnement qui prend le relais."
+      },
+      "reports": {
+        "open": "À traiter",
+        "all": "Tous",
+        "allKinds": "Tous les types",
+        "kind": {
+          "bug": "Problème",
+          "idea": "Idée",
+          "error": "Erreur technique"
+        },
+        "status": {
+          "new": "Nouveau",
+          "in_progress": "En cours",
+          "resolved": "Résolu",
+          "ignored": "Ignoré"
+        },
+        "take": "Prendre en charge",
+        "resolve": "Résolu",
+        "ignore": "Ignorer",
+        "anonymous": "anonyme",
+        "none": "Rien à traiter. 🎉",
+        "error": "Impossible de charger les signalements."
+      },
+      "platform": {
+        "error": "Impossible de charger les réglages.",
+        "features": "Fonctions",
+        "featuresHelp": "Coupez une fonction en cas de souci (quota atteint, service en panne) : elle disparaît pour tous les utilisateurs en moins d'une minute, sans redéployer.",
+        "flag": {
+          "radar": "Radar en direct",
+          "layovers": "Escales",
+          "aircraftPhotos": "Photos d'avions (Planespotters)",
+          "flightTracks": "Traces réelles des vols",
+          "jobs": "Offres d'emploi"
+        },
+        "services": "Services connectés",
+        "servicesHelp": "Les clés se gèrent dans Vercel → Settings → Environment Variables.",
+        "ok": "OK",
+        "missing": "non configuré",
+        "service": {
+          "supabase": "Base de données (Supabase)",
+          "googleMaps": "Cartes Google",
+          "googlePlaces": "Lieux Google (escales)",
+          "planespotters": "Planespotters",
+          "adsblol": "Radar adsb.lol",
+          "ticketmaster": "Spectacles (Ticketmaster)",
+          "flightaware": "Horaires réels (FlightAware)"
+        }
+      }
     }
   },
   "why": {

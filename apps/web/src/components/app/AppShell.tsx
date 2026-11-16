@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  BadgeCheck, BarChart3, UserRound, Hotel, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Wifi, WifiOff, MoreHorizontal, Radar, Lock,
+  BadgeCheck, BarChart3, UserRound, Hotel, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Wifi, WifiOff, MoreHorizontal, Radar, Lock, ShieldCheck, Bug,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -12,28 +12,44 @@ import { CloudProvider, useCloud } from "@/lib/cloud";
 import { usePilot } from "@/lib/hooks";
 import { useTrackAutoFetch } from "@/lib/tracks";
 import { AccessBanner, useAccess, usePendingCheckout } from "@/lib/access";
+import { useFlags, type Flags } from "@/lib/flags";
+import { apiFetch, installErrorReporter } from "@/lib/report";
+import { ReportDialog } from "./ReportDialog";
 import type { MaxFeature } from "@cielo/core";
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
 import { LocaleSwitch } from "../LocaleSwitch";
 import { MobileTabBar } from "./MobileTabBar";
 
-const NAV: { href: AppPathname; key: string; icon: typeof Gauge; max?: MaxFeature }[] = [
+const NAV: { href: AppPathname; key: string; icon: typeof Gauge; max?: MaxFeature; flag?: keyof Flags; admin?: boolean }[] = [
   { href: "/app", key: "dashboard", icon: Gauge },
   { href: "/app/carnet", key: "logbook", icon: NotebookPen },
   { href: "/app/roster", key: "roster", icon: CalendarDays , max: "roster" },
-  { href: "/app/escales", key: "layovers", icon: Hotel , max: "layovers" },
+  { href: "/app/escales", key: "layovers", icon: Hotel, max: "layovers", flag: "layovers" },
   { href: "/app/ftl", key: "ftl", icon: Timer , max: "ftl" },
   { href: "/app/documents", key: "documents", icon: BadgeCheck },
   { href: "/app/statistiques", key: "stats", icon: BarChart3 },
   { href: "/app/carte", key: "map", icon: MapIcon },
-  { href: "/app/radar", key: "radar", icon: Radar , max: "radar" },
-  { href: "/app/emplois", key: "jobs", icon: Briefcase },
-  { href: "/app/cv", key: "cv", icon: FileUser },
+  { href: "/app/radar", key: "radar", icon: Radar, max: "radar", flag: "radar" },
+  { href: "/app/emplois", key: "jobs", icon: Briefcase, max: "jobs", flag: "jobs" },
+  { href: "/app/cv", key: "cv", icon: FileUser, max: "cv" },
   { href: "/app/appareils", key: "aircraft", icon: Plane },
   { href: "/app/profil", key: "profile", icon: UserRound },
   { href: "/app/parametres", key: "settings", icon: Settings },
+  { href: "/app/admin", key: "admin", icon: ShieldCheck, admin: true },
 ];
+
+/** True when the signed-in account is an admin (checked by the server). */
+function useIsAdmin(signedIn: boolean) {
+  const [admin, setAdmin] = useState(false);
+  useEffect(() => {
+    if (!signedIn) return setAdmin(false);
+    apiFetch("/api/admin/me")
+      .then((r) => setAdmin(r.ok))
+      .catch(() => setAdmin(false));
+  }, [signedIn]);
+  return admin;
+}
 
 function useOnline() {
   const [online, setOnline] = useState(true);
@@ -63,8 +79,13 @@ function Shell({ children }: { children: ReactNode }) {
   const t = useTranslations("app.nav");
   const pathname = usePathname();
   const access = useAccess();
+  const flags = useFlags();
+  const isAdmin = useIsAdmin(!!cloud.session);
+  const [report, setReport] = useState(false);
   usePendingCheckout();
-  useTrackAutoFetch(access.has("tracks") && access.canWrite);
+  useTrackAutoFetch(access.has("tracks") && access.canWrite && flags.flightTracks);
+  useEffect(installErrorReporter, []);
+  const nav = NAV.filter((i) => (!i.flag || flags[i.flag]) && (!i.admin || isAdmin));
   const pilot = usePilot();
   const online = useOnline();
   const [more, setMore] = useState(false);
@@ -88,7 +109,7 @@ function Shell({ children }: { children: ReactNode }) {
             </Link>
           </div>
           <nav className="mt-4 flex-1 space-y-0.5 overflow-y-auto px-3" aria-label="App">
-            {NAV.map(({ href, key, icon: Icon, max }) => (
+            {nav.map(({ href, key, icon: Icon, max }) => (
               <Link
                 key={href}
                 href={href}
@@ -102,6 +123,9 @@ function Shell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="p-3">
+            <button type="button" onClick={() => setReport(true)} className="mb-2 flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-[13px] text-muted hover:bg-bg/40 hover:text-text">
+              <Bug size={15} /> {t("report")}
+            </button>
             <div className="flex items-center justify-between gap-2 px-2">
               <Link href="/app/profil" className="min-w-0 rounded-md hover:text-accent">
                 <p className="truncate text-sm font-semibold">{pilot?.fullName || "—"}</p>
@@ -149,16 +173,20 @@ function Shell({ children }: { children: ReactNode }) {
         </div>
 
         {/* Mobile tab bar (liquid-glass pill) */}
-        <MobileTabBar moreOpen={more} onToggleMore={() => setMore(!more)} moreActive={NAV.slice(2).some(({ href }) => href !== "/app/roster" && href !== "/app/documents" && isActive(href))} />
+        <MobileTabBar moreOpen={more} onToggleMore={() => setMore(!more)} moreActive={nav.slice(2).some(({ href }) => href !== "/app/roster" && href !== "/app/documents" && isActive(href))} />
         {more && (
           <div className="fixed inset-x-0 bottom-[88px] z-40 mx-3 mb-[env(safe-area-inset-bottom)] grid grid-cols-3 gap-1 app-glass rounded-2xl p-2 lg:hidden" onClick={() => setMore(false)}>
-            {NAV.slice(2).filter(({ href }) => href !== "/app/roster" && href !== "/app/documents").map(({ href, key, icon: Icon }) => (
+            {nav.slice(2).filter(({ href }) => href !== "/app/roster" && href !== "/app/documents").map(({ href, key, icon: Icon }) => (
               <Link key={href} href={href} className={`flex flex-col items-center gap-1 rounded-xl px-2 py-3 text-xs font-medium ${isActive(href) ? "bg-accent/12 text-accent" : "text-muted"}`}>
                 <Icon size={20} /> {t(key)}
               </Link>
             ))}
+            <button type="button" onClick={() => setReport(true)} className="flex flex-col items-center gap-1 rounded-xl px-2 py-3 text-xs font-medium text-muted">
+              <Bug size={20} /> {t("report")}
+            </button>
           </div>
         )}
+        <ReportDialog open={report} onClose={() => setReport(false)} />
       </div>
     </AirportsProvider>
   );

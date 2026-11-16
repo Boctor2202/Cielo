@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { AircraftPhoto as Photo } from "@/lib/planespotters";
+import { useFlags } from "@/lib/flags";
 
 const cache = new Map<string, Photo | null>();
 
@@ -27,7 +28,8 @@ export function AircraftPhoto({ registration, className = "" }: { registration?:
       alive = false;
     };
   }, [reg]);
-  if (!photo) return null;
+  const flags = useFlags();
+  if (!photo || !flags.aircraftPhotos) return null;
   return (
     <figure className={`overflow-hidden rounded-xl ${className}`}>
       <a href={photo.link} target="_blank" rel="noopener" title={t("open")}>
