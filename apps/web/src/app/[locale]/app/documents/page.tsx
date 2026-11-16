@@ -6,7 +6,7 @@ import { useTypes } from "@/lib/hooks";
 import { AuthorityInput } from "@/components/app/AuthorityInput";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { alertsDueToday, computeRecency, DEFAULT_ALERT_DAYS, LICENSE_CATALOGUE, licenseStatus, type License, type LicenseKind } from "@cielo/core";
+import { alertsDueToday, computeRecency, DEFAULT_ALERT_DAYS, LICENSE_CATALOGUE, licenseStatus, LPE_LANGUAGES, lpeCode, lpeValidUntil, parseLpe, type License, type LicenseKind } from "@cielo/core";
 import { Badge, Card, Empty, Field, Modal, PageTitle, type Level } from "@/components/app/ui";
 import { useFlights, useFormatDate, useTable, useToday } from "@/lib/hooks";
 import { saveLicense, softDelete } from "@/lib/repo";
@@ -109,14 +109,22 @@ export default function DocumentsPage() {
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={t("kind")}>
-                <select className="input" value={draft.kind} onChange={(e) => setDraft({ ...draft, kind: e.target.value as LicenseKind })}>
+                <select className="input" value={draft.kind} onChange={(e) => {
+                  const kind = e.target.value as LicenseKind;
+                  // a language starts as "LPE English" rather than the previous category's title
+                  setDraft({ ...draft, kind, code: kind === "language" && !/^LPE/i.test(draft.code) ? "LPE English" : draft.code });
+                }}>
                   {KINDS.map((k) => <option key={k} value={k}>{t(`kinds.${k}`)}</option>)}
                 </select>
               </Field>
-              <Field label={t("code")}>
-                <input className="input" required list="lic-cat" value={draft.code} onChange={(e) => setDraft({ ...draft, code: e.target.value })} />
-                <datalist id="lic-cat">{LICENSE_CATALOGUE.filter((c) => c.kind === draft.kind).map((c) => <option key={c.code} value={c.code} />)}</datalist>
-              </Field>
+              {draft.kind === "language" ? (
+                <LpeFields draft={draft} setDraft={setDraft} />
+              ) : (
+                <Field label={t("code")}>
+                  <input className="input" required list="lic-cat" value={draft.code} onChange={(e) => setDraft({ ...draft, code: e.target.value })} />
+                  <datalist id="lic-cat">{LICENSE_CATALOGUE.filter((c) => c.kind === draft.kind).map((c) => <option key={c.code} value={c.code} />)}</datalist>
+                </Field>
+              )}
               {draft.kind === "rating" && (
                 <div className="sm:col-span-2">
                   <AircraftTypeInput
@@ -129,10 +137,21 @@ export default function DocumentsPage() {
                 </div>
               )}
               <AuthorityInput label={t("authority")} value={draft.authority ?? ""} onChange={(v) => setDraft({ ...draft, authority: v })} />
-              <Field label={t("number")}><input className="input num" value={draft.number ?? ""} onChange={(e) => setDraft({ ...draft, number: e.target.value })} /></Field>
-              <Field label={t("issuedOn")}><input type="date" className="input num" value={draft.issuedOn ?? ""} onChange={(e) => setDraft({ ...draft, issuedOn: e.target.value || null })} /></Field>
+              {draft.kind !== "language" && <Field label={t("number")}><input className="input num" value={draft.number ?? ""} onChange={(e) => setDraft({ ...draft, number: e.target.value })} /></Field>}
+              <Field label={draft.kind === "language" ? t("lpe.assessedOn") : t("issuedOn")}>
+                <input
+                  type="date"
+                  className="input num"
+                  value={draft.issuedOn ?? ""}
+                  onChange={(e) => {
+                    const issuedOn = e.target.value || null;
+                    const lvl = draft.kind === "language" ? parseLpe(draft.code).level : undefined;
+                    setDraft({ ...draft, issuedOn, ...(lvl ? { validUntil: lpeValidUntil(lvl, issuedOn) } : {}) });
+                  }}
+                />
+              </Field>
               <Field label={t("validUntil")}><input type="date" className="input num" value={draft.validUntil ?? ""} onChange={(e) => setDraft({ ...draft, validUntil: e.target.value || null })} /></Field>
-              <Field label={t("lastCheck")}><input type="date" className="input num" value={draft.lastCheckOn ?? ""} onChange={(e) => setDraft({ ...draft, lastCheckOn: e.target.value || null })} /></Field>
+              {draft.kind !== "language" && <Field label={t("lastCheck")}><input type="date" className="input num" value={draft.lastCheckOn ?? ""} onChange={(e) => setDraft({ ...draft, lastCheckOn: e.target.value || null })} /></Field>}
               <Field label={t("alertDays")}>
                 <input className="input num" value={draft.alertDays.join(", ")} onChange={(e) => setDraft({ ...draft, alertDays: e.target.value.split(/[,; ]+/).map(Number).filter((n) => Number.isFinite(n) && n >= 0) })} />
               </Field>
@@ -179,4 +198,33 @@ function ratedType(code: string, types: { icao: string; classOrTypeRating?: stri
   const r = m?.[1] ?? c;
   const same = types.filter((t) => t.classOrTypeRating?.toUpperCase() === r || t.icao === r);
   return (same.find((t) => t.icao === r) ?? same[0])?.icao ?? "";
+}
+
+/** Language proficiency: language and ICAO level instead of a free title; validity from FCL.055. */
+function LpeFields({ draft, setDraft }: { draft: Draft; setDraft: (d: Draft) => void }) {
+  const t = useTranslations("app.documents");
+  const { language, level } = parseLpe(draft.code);
+  const update = (lang: string, lvl?: number) => {
+    const code = lpeCode(lang || "English", lvl);
+    setDraft({ ...draft, code, validUntil: lvl ? lpeValidUntil(lvl, draft.issuedOn) : draft.validUntil });
+  };
+  return (
+    <>
+      <Field label={t("lpe.language")}>
+        <input className="input" list="lpe-lang" required value={language} onChange={(e) => update(e.target.value, level)} />
+        <datalist id="lpe-lang">{LPE_LANGUAGES.map((l) => <option key={l} value={l} />)}</datalist>
+      </Field>
+      <Field label={t("lpe.level")} className="sm:col-span-2">
+        <div className="flex flex-wrap gap-2">
+          {[4, 5, 6].map((n) => (
+            <button key={n} type="button" aria-pressed={level === n} onClick={() => update(language, n)}
+              className={`rounded-lg border px-3 py-2 text-left text-sm ${level === n ? "border-accent bg-accent/12 font-semibold" : "border-border"}`}>
+              <span className="num">{n}</span> · {t(`lpe.levels.${n}`)}
+              <span className="block text-xs text-muted">{t(`lpe.validity.${n}`)}</span>
+            </button>
+          ))}
+        </div>
+      </Field>
+    </>
+  );
 }

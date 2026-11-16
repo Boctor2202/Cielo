@@ -348,3 +348,15 @@ describe("runway use from traffic", () => {
     expect(runwayUseLabel(tr.summary("LFPG"))).toBe("↓26L ↑27L");
   });
 });
+
+describe("language proficiency", () => {
+  it("computes validity and reads the code", async () => {
+    const { lpeValidUntil, lpeCode, parseLpe } = await import("../src/licenses");
+    expect(lpeValidUntil(4, "2026-01-27")).toBe("2030-01-27");
+    expect(lpeValidUntil(5, "2026-01-27")).toBe("2032-01-27");
+    expect(lpeValidUntil(6, "2026-01-27")).toBeNull();
+    expect(lpeCode("English", 6)).toBe("LPE English 6");
+    expect(parseLpe("LPE English 6")).toEqual({ language: "English", level: 6 });
+    expect(parseLpe("LPE French")).toEqual({ language: "French", level: undefined });
+  });
+});

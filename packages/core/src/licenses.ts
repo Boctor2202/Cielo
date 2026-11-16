@@ -79,3 +79,26 @@ export const LICENSE_CATALOGUE: { kind: License["kind"]; code: string }[] = [
   { kind: "other", code: "Passport" },
   { kind: "other", code: "Crew ID / Badge" },
 ];
+
+/* ---------- Language proficiency (FCL.055) ---------- */
+
+/** Languages offered for an LPE; any other can be typed. Stored in English, as screening software reads it. */
+export const LPE_LANGUAGES = ["English", "French", "Spanish", "German", "Italian", "Portuguese", "Dutch", "Arabic", "Chinese", "Russian", "Japanese"] as const;
+
+/** Validity of a language proficiency endorsement (EASA FCL.055): level 4 four years, 5 six years, 6 no expiry. */
+export function lpeValidUntil(level: number, assessedOn: string | null | undefined): string | null {
+  if (!assessedOn || level >= 6) return null;
+  const years = level === 5 ? 6 : 4;
+  const d = new Date(`${assessedOn.slice(0, 10)}T12:00:00Z`);
+  d.setUTCFullYear(d.getUTCFullYear() + years);
+  return d.toISOString().slice(0, 10);
+}
+
+/** "LPE English 6" ⇄ { language: "English", level: 6 } */
+export function lpeCode(language: string, level?: number): string {
+  return `LPE ${language.trim()}${level ? ` ${level}` : ""}`.trim();
+}
+export function parseLpe(code: string): { language: string; level?: number } {
+  const m = code.trim().match(/^(?:LPE\s+)?(.*?)(?:\s+(?:level\s*|niveau\s*)?([4-6]))?$/i);
+  return { language: m?.[1]?.trim() ?? "", level: m?.[2] ? Number(m[2]) : undefined };
+}

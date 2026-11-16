@@ -946,7 +946,22 @@
       "notificationsInfo": "Geardown vous prévient sur cet appareil avant chaque échéance (notifications du navigateur ou du téléphone).",
       "recency": "Expérience récente",
       "aircraftType": "Type d'avion",
-      "aircraftTypeHint": "Cherchez par code OACI, constructeur ou modèle : le titre de la qualification se remplit seul."
+      "aircraftTypeHint": "Cherchez par code OACI, constructeur ou modèle : le titre de la qualification se remplit seul.",
+      "lpe": {
+        "language": "Langue",
+        "level": "Niveau OACI",
+        "assessedOn": "Date de l'évaluation",
+        "levels": {
+          "4": "Opérationnel",
+          "5": "Avancé",
+          "6": "Expert"
+        },
+        "validity": {
+          "4": "valable 4 ans",
+          "5": "valable 6 ans",
+          "6": "sans limite de validité"
+        }
+      }
     },
     "stats": {
       "title": "Statistiques",

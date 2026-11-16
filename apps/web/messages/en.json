@@ -946,7 +946,22 @@
       "notificationsInfo": "Geardown warns you on this device before each expiry (browser or phone notifications).",
       "recency": "Recent experience",
       "aircraftType": "Aircraft type",
-      "aircraftTypeHint": "Search by ICAO code, manufacturer or model: the rating title fills in by itself."
+      "aircraftTypeHint": "Search by ICAO code, manufacturer or model: the rating title fills in by itself.",
+      "lpe": {
+        "language": "Language",
+        "level": "ICAO level",
+        "assessedOn": "Assessment date",
+        "levels": {
+          "4": "Operational",
+          "5": "Extended",
+          "6": "Expert"
+        },
+        "validity": {
+          "4": "valid 4 years",
+          "5": "valid 6 years",
+          "6": "no expiry"
+        }
+      }
     },
     "stats": {
       "title": "Statistics",

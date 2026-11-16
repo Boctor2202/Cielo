@@ -3,7 +3,7 @@ import { AuthorityField } from "../../src/components/AuthorityField";
 import { AircraftTypeField, ratingTitle } from "../../src/components/AircraftTypeField";
 import { Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import { DEFAULT_ALERT_DAYS, LICENSE_CATALOGUE, licenseStatus, type License, type LicenseKind } from "@cielo/core";
+import { DEFAULT_ALERT_DAYS, LICENSE_CATALOGUE, licenseStatus, LPE_LANGUAGES, lpeCode, lpeValidUntil, parseLpe, type License, type LicenseKind } from "@cielo/core";
 import { Badge, Button, Card, Chip, Field, Row, Screen, Txt, statusColor } from "../../src/components/ui";
 import type { I18nKey } from "../../src/i18n";
 import { todayUtc, useApp } from "../../src/state";
@@ -95,26 +95,67 @@ function DocumentForm() {
           <Txt variant="label">{t("docs.kind")}</Txt>
           <Row style={{ flexWrap: "wrap" }}>
             {KINDS.map((k) => (
-              <Chip key={k} label={t(`docs.kind.${k}` as I18nKey)} selected={kind === k} onPress={() => setKind(k)} />
+              <Chip
+                key={k}
+                label={t(`docs.kind.${k}` as I18nKey)}
+                selected={kind === k}
+                onPress={() => {
+                  setKind(k);
+                  if (k === "language" && !/^LPE/i.test(code)) setCode("LPE English");
+                }}
+              />
             ))}
           </Row>
           {kind === "rating" ? <AircraftTypeField types={aircraftTypes} label={t("docs.aircraftType")} hint={t("docs.aircraftTypeHint")} onPick={(ty) => setCode(ratingTitle(ty))} /> : null}
-          <Field label={t("docs.code")} value={code} onChangeText={setCode} placeholder={t("docs.codePlaceholder")} error={error && !code.trim()} />
-          <Row style={{ flexWrap: "wrap" }}>
-            {suggestions.map((s) => (
-              <Chip key={s.code} label={s.code} selected={code === s.code} onPress={() => setCode(s.code)} />
-            ))}
-          </Row>
+          {kind === "language" ? (
+            (() => {
+              const { language, level } = parseLpe(code);
+              const update = (lang: string, lvl?: number) => {
+                setCode(lpeCode(lang || "English", lvl));
+                if (lvl) setValidUntil(lpeValidUntil(lvl, validDate(issuedOn ?? "") ? issuedOn : null) ?? "");
+              };
+              return (
+                <>
+                  <Field label={t("lpe.language")} value={language} onChangeText={(v) => update(v, level)} error={error && !language.trim()} />
+                  <Row style={{ flexWrap: "wrap" }}>
+                    {LPE_LANGUAGES.map((l) => (
+                      <Chip key={l} label={l} selected={language === l} onPress={() => update(l, level)} />
+                    ))}
+                  </Row>
+                  <Txt variant="label">{t("lpe.level")}</Txt>
+                  <Row style={{ flexWrap: "wrap" }}>
+                    {[4, 5, 6].map((n) => (
+                      <Chip key={n} label={`${n} · ${t(`lpe.l${n}` as I18nKey)}`} selected={level === n} onPress={() => update(language, n)} />
+                    ))}
+                  </Row>
+                  {level ? <Txt variant="small">{t(`lpe.v${level}` as I18nKey)}</Txt> : null}
+                </>
+              );
+            })()
+          ) : (
+            <>
+              <Field label={t("docs.code")} value={code} onChangeText={setCode} placeholder={t("docs.codePlaceholder")} error={error && !code.trim()} />
+              <Row style={{ flexWrap: "wrap" }}>
+                {suggestions.map((s) => (
+                  <Chip key={s.code} label={s.code} selected={code === s.code} onPress={() => setCode(s.code)} />
+                ))}
+              </Row>
+            </>
+          )}
         </Card>
         <Card>
           <AuthorityField label={t("docs.authority")} value={authority} onChange={setAuthority} />
-          <Field label={t("docs.number")} value={number} onChangeText={setNumber} monoValue autoCapitalize="characters" />
+          {kind !== "language" ? <Field label={t("docs.number")} value={number} onChangeText={setNumber} monoValue autoCapitalize="characters" /> : null}
           <Row>
             <Field
               style={{ flex: 1 }}
-              label={t("docs.issuedOn")}
+              label={kind === "language" ? t("lpe.assessedOn") : t("docs.issuedOn")}
               value={issuedOn ?? ""}
-              onChangeText={setIssuedOn}
+              onChangeText={(v) => {
+                setIssuedOn(v);
+                const lvl = kind === "language" ? parseLpe(code).level : undefined;
+                if (lvl && validDate(v) && v.length === 10) setValidUntil(lpeValidUntil(lvl, v) ?? "");
+              }}
               placeholder="YYYY-MM-DD"
               monoValue
               keyboardType="numbers-and-punctuation"
@@ -133,16 +174,18 @@ function DocumentForm() {
               error={!validDate(validUntil ?? "")}
             />
           </Row>
+          {kind !== "language" ? (
           <Field
-            label={t("docs.lastCheckOn")}
-            value={lastCheckOn ?? ""}
-            onChangeText={setLastCheckOn}
-            placeholder="YYYY-MM-DD"
-            monoValue
-            keyboardType="numbers-and-punctuation"
-            maxLength={10}
-            error={!validDate(lastCheckOn ?? "")}
-          />
+              label={t("docs.lastCheckOn")}
+              value={lastCheckOn ?? ""}
+              onChangeText={setLastCheckOn}
+              placeholder="YYYY-MM-DD"
+              monoValue
+              keyboardType="numbers-and-punctuation"
+              maxLength={10}
+              error={!validDate(lastCheckOn ?? "")}
+            />
+          ) : null}
           <Field label={t("docs.alertDays")} value={alertDays} onChangeText={setAlertDays} monoValue keyboardType="numbers-and-punctuation" />
           <Row>
             <Badge text={statusLabel(t, status)} color={statusColor(c, status.state)} />
