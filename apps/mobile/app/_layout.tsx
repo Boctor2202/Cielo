@@ -1,7 +1,8 @@
 import "../src/polyfills";
 import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from "expo-router";
+import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -27,6 +28,16 @@ function Navigator() {
   const c = useTheme();
   useEffect(() => {
     SplashScreen.hideAsync().catch(() => undefined);
+  }, []);
+  // a tap on an expiry reminder opens the document it is about (also when it launched the app)
+  useEffect(() => {
+    const open = (r: Notifications.NotificationResponse | null) => {
+      const id = (r?.notification.request.content.data as { licenseId?: string } | undefined)?.licenseId;
+      if (id) router.push({ pathname: "/document/[id]", params: { id } });
+    };
+    Notifications.getLastNotificationResponseAsync().then(open).catch(() => undefined);
+    const sub = Notifications.addNotificationResponseReceivedListener(open);
+    return () => sub.remove();
   }, []);
   const base = c.scheme === "dark" ? DarkTheme : DefaultTheme;
   const theme = {

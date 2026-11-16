@@ -66,6 +66,7 @@ export default function More() {
       <MenuGroup title={t("more.g.pilot")}>
         <MenuRow icon={<Ionicons name="person" size={17} color="#fff" />} color="#0A84FF" label={t("more.openProfile")} onPress={() => router.push("/profile")} />
         <MenuRow icon={<Ionicons name="ribbon" size={17} color="#fff" />} color="#FF9F0A" label={t("more.documents")} onPress={() => router.push("/documents")} />
+        <MenuRow icon={<Ionicons name="notifications" size={17} color="#fff" />} color="#FF3B30" label={t("more.reminders")} onPress={() => router.push("/reminders")} />
         <MenuRow icon={<Ionicons name="airplane" size={17} color="#fff" />} color="#5E5CE6" label={t("more.aircraft")} onPress={() => router.push("/aircraft")} />
         <MenuRow icon={<Ionicons name="document-text" size={17} color="#fff" />} color="#30B0C7" label={t("more.cv")} onPress={() => router.push("/cv")} />
         <MenuRow icon={<Ionicons name="briefcase" size={17} color="#fff" />} color="#AC8E68" label={t("more.jobs")} onPress={() => router.push("/jobs")} />

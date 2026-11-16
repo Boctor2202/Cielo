@@ -103,13 +103,17 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
       setStore(s);
       // Re-arm expiry reminders at launch (they may have been cleared by the OS or a reinstall).
       if (loaded.licenses.some((l) => l.validUntil)) {
-        void scheduleLicenseAlerts(loaded.licenses, translator(loaded.pilot.locale), loaded.pilot.locale).catch(() => undefined);
+        void scheduleLicenseAlerts(loaded.licenses, translator(loaded.pilot.locale), loaded.pilot.locale, false).catch(() => undefined);
       }
     })().catch((e: unknown) => setError(e instanceof Error ? e : new Error(String(e))));
   }, []);
 
   const reload = useCallback(async () => {
-    if (store) setData(await loadAll(store));
+    if (!store) return;
+    const next = await loadAll(store);
+    setData(next);
+    // documents may have arrived from the cloud: keep the reminders in step (no permission prompt here)
+    void scheduleLicenseAlerts(next.licenses, translator(next.pilot.locale), next.pilot.locale, false).catch(() => undefined);
   }, [store]);
 
   // Auth session (cloud mode only).

@@ -42,6 +42,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="ftl" options={{ href: null, headerTitle: t("ftl.title") }} />
       <Tabs.Screen name="stats" options={{ href: null, headerTitle: t("stats.title") }} />
       <Tabs.Screen name="reports" options={{ href: null, headerTitle: t("logReport.title") }} />
+      <Tabs.Screen name="reminders" options={{ href: null, headerTitle: t("rem.title") }} />
       <Tabs.Screen name="profile" options={{ href: null, headerTitle: t("profile.title") }} />
       <Tabs.Screen name="audit" options={{ href: null, headerTitle: t("audit.title") }} />
       <Tabs.Screen name="map" options={{ href: null, headerTitle: t("map.title") }} />
