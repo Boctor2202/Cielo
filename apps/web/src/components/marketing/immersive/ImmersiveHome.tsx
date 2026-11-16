@@ -48,6 +48,8 @@ export function ImmersiveHome() {
   const readouts = useRef<Readouts>(createReadouts());
   const [globeReady, setGlobeReady] = useState(false);
   const [globeActive, setGlobeActive] = useState(false);
+  const nearGlobe = useRef(false);
+  const syncScene = useRef<() => void>(() => {});
 
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
   // a little lag makes the scrub feel like a camera move, not a scrollbar
@@ -59,6 +61,12 @@ export function ImmersiveHome() {
     sceneRef.current?.setProgress((v - GLOBE_FROM) / (1 - GLOBE_FROM));
     const active = v > GLOBE_FROM + 0.02;
     setGlobeActive((a) => (a === active ? a : active));
+    // the WebGL Earth only renders once the film is about to hand over, so it never competes with the film
+    const near = v > GLOBE_FROM - 0.06;
+    if (near !== nearGlobe.current) {
+      nearGlobe.current = near;
+      syncScene.current();
+    }
   });
 
   // Globe (Three.js), loaded lazily and only rendered while on screen
@@ -81,15 +89,16 @@ export function ImmersiveHome() {
       scene.onReady = () => !disposed && setGlobeReady(true);
       scene.setProgress((p.get() - GLOBE_FROM) / (1 - GLOBE_FROM));
       sceneRef.current = scene;
-      if (inView && document.visibilityState === "visible") scene.start();
+      syncScene.current();
     })();
+    const sync = () => (inView && nearGlobe.current && document.visibilityState === "visible" ? scene?.start() : scene?.stop());
+    syncScene.current = sync;
     const io = new IntersectionObserver(([e]) => {
       inView = !!e?.isIntersecting;
-      if (inView && document.visibilityState === "visible") scene?.start();
-      else scene?.stop();
+      sync();
     });
     io.observe(section);
-    const vis = () => (document.visibilityState === "visible" && inView ? scene?.start() : scene?.stop());
+    const vis = sync;
     document.addEventListener("visibilitychange", vis);
     const ro = new ResizeObserver(() => scene?.resize());
     ro.observe(canvas.parentElement!);
@@ -126,9 +135,9 @@ export function ImmersiveHome() {
   // into the cloud layer at the end of the descent, out of it at the start of the final
   const whiteout = useTransform(p, [SHOTS.descent.to - 0.03, SHOTS.descent.to, SHOTS.final.from + 0.025], [0, 0.85, 0]);
   // the film fades to night before the Earth appears
-  const dusk = useTransform(p, [SHOTS.final.to - 0.03, GLOBE_FROM], [0, 1]);
-  const filmOpacity = useTransform(p, [GLOBE_FROM, GLOBE_FROM + 0.02], [1, 0]);
-  const globeOpacity = useTransform(p, [GLOBE_FROM - 0.01, GLOBE_FROM + 0.06], [0, 1]);
+  const dusk = useTransform(p, [SHOTS.final.to - 0.02, GLOBE_FROM + 0.02], [0, 0.55]);
+  const filmOpacity = useTransform(p, [GLOBE_FROM - 0.015, GLOBE_FROM + 0.03], [1, 0]);
+  const globeOpacity = useTransform(p, [GLOBE_FROM - 0.025, GLOBE_FROM + 0.02], [0, 1]);
 
   const chapters = t.raw("chapters") as string[];
 
@@ -313,29 +322,58 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
       }
       return null;
     };
-    // The film follows the scroll through a critically damped ease (no stepping on wheel notches), and
-    // the two frames around the exact position are cross-faded, so motion stays fluid between frames.
-    let shown = p.get();
-    let last = performance.now();
+    // Decoded frames: browsers drop the decoded pixels of off-screen images under memory pressure and decode
+    // them again on draw, which is what makes a scrubbed sequence stutter. A sliding window of ImageBitmaps
+    // around the current frame keeps the next frames ready in GPU-friendly form; the rest stay compressed.
+    const WINDOW = 18;
+    const bitmaps = new Map<string, ImageBitmap>();
+    const pending = new Set<string>();
+    let alive = true;
+    const prepare = (id: ShotId, center: number, dir: number) => {
+      const list = frames.current[id];
+      for (let d = 0; d <= WINDOW && pending.size < 4; d++) {
+        for (const f of dir >= 0 ? [center + d, center - d] : [center - d, center + d]) {
+          const img = list[f];
+          const key = `${id}/${f}`;
+          if (!img || bitmaps.has(key) || pending.has(key) || pending.size >= 4) continue;
+          pending.add(key);
+          createImageBitmap(img)
+            .then((bm) => {
+              pending.delete(key);
+              if (alive) bitmaps.set(key, bm);
+              else bm.close();
+            })
+            .catch(() => pending.delete(key));
+        }
+      }
+      for (const [key, bm] of bitmaps) {
+        const [kid, kf] = key.split("/");
+        if (kid !== id || Math.abs(Number(kf) - center) > WINDOW + 6) {
+          bm.close();
+          bitmaps.delete(key);
+        }
+      }
+    };
+    const pick = (id: ShotId, f: number): HTMLImageElement | ImageBitmap | undefined => bitmaps.get(`${id}/${f}`) ?? frames.current[id][f] ?? undefined;
+
+    // The two frames around the exact scroll position are cross-faded, so motion stays fluid between frames.
     let drawn = "";
-    const loop = (now: number) => {
-      const target = p.get();
-      const dt = Math.min(0.1, (now - last) / 1000);
-      last = now;
-      shown += (target - shown) * (1 - Math.exp(-dt / 0.05));
-      if (Math.abs(target - shown) < 1e-5) shown = target;
-      const v = shown;
+    let lastPos = 0;
+    const loop = () => {
+      const v = p.get();
       const id = SHOT_IDS.find((k) => v < SHOTS[k].to) ?? SHOT_IDS[SHOT_IDS.length - 1]!;
       const s = SHOTS[id];
       const k = Math.min(1, Math.max(0, (v - s.from) / (s.to - s.from)));
       const pos = k * (FRAME_COUNT[id] - 1);
       const f0 = Math.floor(pos);
       const frac = pos - f0;
+      prepare(id, f0, pos - lastPos);
+      lastPos = pos;
       const list = frames.current[id];
       const exact = list[f0] && (frac < 0.02 || list[f0 + 1]);
-      const img = exact ? list[f0]! : nearest(id, Math.round(pos));
-      const next = exact && frac >= 0.02 ? list[f0 + 1] : null;
-      const key = `${cv?.clientWidth}x${cv?.clientHeight}:${id}:${img?.src}:${next ? frac.toFixed(3) : ""}`;
+      const img = exact ? pick(id, f0)! : nearest(id, Math.round(pos));
+      const next = exact && frac >= 0.02 ? pick(id, f0 + 1) : null;
+      const key = `${cv?.clientWidth}x${cv?.clientHeight}:${id}:${f0}:${exact ? "" : "~"}:${next ? frac.toFixed(3) : ""}:${img instanceof ImageBitmap}`;
       if (cv && ctx && img && key !== drawn) {
         drawn = key;
         const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -350,15 +388,17 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         ctx.imageSmoothingQuality = "high";
         const { push, cy } = speedFx(id, v);
         // object-fit: cover
-        const fit = Math.max(w / img.naturalWidth, h / img.naturalHeight);
-        const dw = img.naturalWidth * fit;
-        const dh = img.naturalHeight * fit;
+        const iw = img instanceof ImageBitmap ? img.width : img.naturalWidth;
+        const ih = img instanceof ImageBitmap ? img.height : img.naturalHeight;
+        const fit = Math.max(w / iw, h / ih);
+        const dw = iw * fit;
+        const dh = ih * fit;
         const fx = w / 2;
         const fy = h * cy;
         const x0 = (w - dw) / 2;
         const y0 = (h - dh) / 2;
         // the frame scaled around the focal point
-        const put = (im: HTMLImageElement) => ctx.drawImage(im, fx + (x0 - fx) * push, fy + (y0 - fy) * push, dw * push, dh * push);
+        const put = (im: HTMLImageElement | ImageBitmap) => ctx.drawImage(im, fx + (x0 - fx) * push, fy + (y0 - fy) * push, dw * push, dh * push);
         ctx.globalAlpha = 1;
         put(img);
         if (next) {
@@ -370,7 +410,12 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      alive = false;
+      cancelAnimationFrame(raf);
+      for (const bm of bitmaps.values()) bm.close();
+      bitmaps.clear();
+    };
   }, [p, reduce]);
 
   return (

@@ -141,7 +141,7 @@ uniform vec3 uColor;
 varying float vT;
 void main() {
   if (vT > uDraw) discard;
-  float tail = smoothstep(0.0, 0.08, vT) * 0.55 + 0.25;
+  float tail = smoothstep(0.0, 0.08, vT) * 0.75 + 0.55;
   float comet = exp(-pow((vT - uHead) * 22.0, 2.0)) * 1.4;
   gl_FragColor = vec4(uColor * (tail + comet), (tail + comet) * 0.9);
 }`;
@@ -282,7 +282,7 @@ export class FlightScene {
       const curve = new THREE.CatmullRomCurve3(pts);
       const tubular = 160;
       const radial = 6;
-      const geo = new THREE.TubeGeometry(curve, tubular, R * (opts.mobile ? 0.0032 : 0.0024), radial, false);
+      const geo = new THREE.TubeGeometry(curve, tubular, R * (opts.mobile ? 0.0075 : 0.0058), radial, false);
       const ts = new Float32Array(geo.attributes.position!.count);
       for (let k = 0; k < ts.length; k++) ts[k] = Math.floor(k / (radial + 1)) / tubular;
       geo.setAttribute("aT", new THREE.BufferAttribute(ts, 1));
@@ -299,7 +299,7 @@ export class FlightScene {
     });
     const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
     glow.position.copy(home.clone().multiplyScalar(R * 1.012));
-    glow.scale.setScalar(R * 0.035);
+    glow.scale.setScalar(R * 0.045);
     this.globe.add(glow);
 
     this.scene.add(this.globe);
@@ -397,21 +397,23 @@ export class FlightScene {
     const p = this.progress;
     const t = this.time;
     const portrait = this.w / this.h < 0.8;
-    // approach: from deep space to a close orbit
-    const dist = (portrait ? 1.35 : 1) * (78 - 34 * smooth(0, 0.6, p));
-    this.camera.position.set(0, 4 * (1 - p), dist);
+    // just landed in Paris: the camera pulls back from low over Europe to a close orbit that fills the screen
+    const dist = (portrait ? 1.3 : 1) * (14.5 + 20.5 * smooth(0, 0.45, p));
+    this.camera.position.set(0, 1.2 * (1 - smooth(0, 0.45, p)), dist);
     this.camera.lookAt(0, 0, 0);
     this.stars.rotation.y = t * 0.003;
 
     // base orientation faces the home base, tilted so Europe and the North Atlantic show
-    const scrollYaw = -(p - 0.4) * 0.9;
+    // starts right above Paris (where the film landed), then turns a little west so the Atlantic routes show
+    const out = smooth(0, 0.45, p);
+    const scrollYaw = 0.3 * out - 0.25 * p;
     this.globe.rotation.order = "XYZ";
-    this.globe.rotation.x = HOME.lat * D2R * 0.72 + this.pitch;
-    this.globe.rotation.y = -Math.PI / 2 - HOME.lon * D2R + 0.25 + this.yaw + scrollYaw;
+    this.globe.rotation.x = HOME.lat * D2R * (1 - 0.28 * out) + this.pitch;
+    this.globe.rotation.y = -Math.PI / 2 - HOME.lon * D2R + this.yaw + scrollYaw;
     this.uniforms.uCloudShift.value = t * 0.0009;
     this.clouds.rotation.y = 0;
 
-    const draw = smooth(0.25, 0.85, p);
+    const draw = smooth(0.08, 0.7, p);
     for (const r of this.routes) {
       const local = clamp01((draw - r.delay) / 0.45);
       r.mat.uniforms.uDraw!.value = local * 1.001;
