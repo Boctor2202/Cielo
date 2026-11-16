@@ -141,9 +141,11 @@ uniform vec3 uColor;
 varying float vT;
 void main() {
   if (vT > uDraw) discard;
-  float tail = smoothstep(0.0, 0.08, vT) * 0.75 + 0.55;
-  float comet = exp(-pow((vT - uHead) * 22.0, 2.0)) * 1.4;
-  gl_FragColor = vec4(uColor * (tail + comet), (tail + comet) * 0.9);
+  // a fine, even line that fades in from the home base, with a short bright pulse travelling along it
+  float tail = smoothstep(0.0, 0.12, vT) * 0.55 + 0.2;
+  float comet = exp(-pow((vT - uHead) * 38.0, 2.0)) * 1.6;
+  vec3 col = mix(uColor, vec3(1.0), comet * 0.6);
+  gl_FragColor = vec4(col * (tail + comet), (tail + comet) * 0.85);
 }`;
 
 interface Route {
@@ -276,18 +278,18 @@ export class FlightScene {
       for (let k = 0; k <= steps; k++) {
         const t = k / steps;
         const v = home.clone().multiplyScalar(Math.sin((1 - t) * ang)).add(b.clone().multiplyScalar(Math.sin(t * ang))).divideScalar(Math.sin(ang));
-        v.multiplyScalar(R * (1.012 + Math.sin(Math.PI * t) * Math.min(0.2, 0.03 + ang * 0.22)));
+        v.multiplyScalar(R * (1.006 + Math.sin(Math.PI * t) * Math.min(0.11, 0.015 + ang * 0.12)));
         pts.push(v);
       }
       const curve = new THREE.CatmullRomCurve3(pts);
       const tubular = 160;
       const radial = 6;
-      const geo = new THREE.TubeGeometry(curve, tubular, R * (opts.mobile ? 0.0075 : 0.0058), radial, false);
+      const geo = new THREE.TubeGeometry(curve, tubular, R * (opts.mobile ? 0.0026 : 0.0019), radial, false);
       const ts = new Float32Array(geo.attributes.position!.count);
       for (let k = 0; k < ts.length; k++) ts[k] = Math.floor(k / (radial + 1)) / tubular;
       geo.setAttribute("aT", new THREE.BufferAttribute(ts, 1));
       const mat = new THREE.ShaderMaterial({
-        uniforms: { uDraw: { value: 0 }, uHead: { value: -1 }, uColor: { value: new THREE.Color(i % 3 === 2 ? 0xfde68a : 0x86efac) } },
+        uniforms: { uDraw: { value: 0 }, uHead: { value: -1 }, uColor: { value: new THREE.Color(i % 3 === 2 ? 0xf5d98b : 0x9be8c0) } },
         vertexShader: ROUTE_VERT,
         fragmentShader: ROUTE_FRAG,
         transparent: true,
@@ -299,7 +301,7 @@ export class FlightScene {
     });
     const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffffff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
     glow.position.copy(home.clone().multiplyScalar(R * 1.012));
-    glow.scale.setScalar(R * 0.045);
+    glow.scale.setScalar(R * 0.03);
     this.globe.add(glow);
 
     this.scene.add(this.globe);
