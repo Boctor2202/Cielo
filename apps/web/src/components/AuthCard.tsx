@@ -217,7 +217,7 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
               const emailInput = field(t("email"), <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input" autoComplete="email" />);
               const codeInput = field(
                 t("code"),
-                <input inputMode="numeric" autoComplete="one-time-code" required value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} className="input num text-center text-xl tracking-[0.4em]" placeholder="••••••" />,
+                <input inputMode="numeric" autoComplete="one-time-code" required value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} className="input num text-center text-xl tracking-[0.4em]" placeholder="••••••" />,
               );
               const feedback = (
                 <>

@@ -319,7 +319,7 @@
     "sendCode": "Recevoir un code",
     "code": "Code reçu par e-mail",
     "verify": "Valider",
-    "verifyIntro": "Saisissez le code reçu par e-mail pour confirmer votre adresse (ou touchez le bouton de l'e-mail).",
+    "verifyIntro": "Saisissez le code à 6 chiffres reçu par e-mail pour confirmer votre adresse.",
     "codeSent": "Code envoyé à {email}. Pensez à vérifier les indésirables.",
     "resend": "Renvoyer le code",
     "savePassword": "Enregistrer et me connecter",
