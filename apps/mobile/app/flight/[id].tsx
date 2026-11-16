@@ -17,6 +17,7 @@ import {
 } from "@cielo/core";
 import { AirportField } from "../../src/components/AirportField";
 import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPicker";
+import { AircraftPhoto } from "../../src/components/AircraftPhoto";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, ToggleRow, Txt } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
 import type { I18nKey } from "../../src/i18n";
@@ -362,6 +363,7 @@ export default function FlightForm() {
               </Txt>
             ) : null}
           </Pressable>
+          <AircraftPhoto registration={selectedAircraft?.registration} />
           <Txt variant="label">{t("flight.function")}</Txt>
           <Row style={{ flexWrap: "wrap" }}>
             {PILOT_FUNCTIONS.map((fn) => (

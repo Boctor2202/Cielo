@@ -284,6 +284,9 @@ const en = {
   "dash.signInTitle": "Find your flights from the website",
   "dash.signInText": "Sign in with the same e-mail as on the website: your whole logbook syncs to this phone.",
   "dash.signIn": "Sign in",
+  "photo.alt": "Photo of aircraft {reg}",
+  "photo.credit": "Photo © {name} ·",
+  "photo.open": "Open the photo on Planespotters.net",
 } as const;
 
 export type I18nKey = keyof typeof en;
@@ -572,6 +575,9 @@ const fr: Dict = {
   "dash.signInTitle": "Retrouvez vos vols du site",
   "dash.signInText": "Connectez-vous avec la même adresse e-mail que sur le site : tout votre carnet se synchronise sur ce téléphone.",
   "dash.signIn": "Se connecter",
+  "photo.alt": "Photo de l'appareil {reg}",
+  "photo.credit": "Photo © {name} ·",
+  "photo.open": "Ouvrir la photo sur Planespotters.net",
 };
 
 const DICTS: Record<Locale, Dict> = { en, fr };
