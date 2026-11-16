@@ -1,5 +1,6 @@
 import { extractAircraft, extractRequirements, extractSalary, detectPosition, finishSalary, isPilotJob } from "./extract";
 import { FETCHERS } from "./fetchers";
+import { ADZUNA_SOURCE, fetchAdzuna } from "./adzuna";
 import { authorityOf, countryFrom, regionOf } from "./regions";
 import { SOURCES } from "./sources";
 import type { Job, RawPosting, Salary, Source } from "./types";
@@ -41,7 +42,7 @@ export interface CollectResult {
 }
 
 /** Reads every source (a few at a time, politely) and returns the pilot jobs. */
-export async function collectJobs(sources: Source[] = SOURCES, concurrency = 4): Promise<CollectResult> {
+export async function collectJobs(sources: Source[] = SOURCES, concurrency = 4, opts: { adzuna?: { appId: string; appKey: string } } = {}): Promise<CollectResult> {
   const now = new Date().toISOString();
   const out: CollectResult = { jobs: [], sources: [] };
   const queue = [...sources];
@@ -58,6 +59,18 @@ export async function collectJobs(sources: Source[] = SOURCES, concurrency = 4):
       }
     }),
   );
+  // Adzuna (when its keys are set): offers from many countries; the employers read directly win on duplicates
+  if (opts.adzuna) {
+    const { raws, errors } = await fetchAdzuna(opts.adzuna.appId, opts.adzuna.appKey);
+    const direct = new Set(out.jobs.map((j) => `${j.company.toLowerCase()}|${j.title.toLowerCase()}`));
+    let n = 0;
+    for (const r of raws) {
+      if (direct.has(`${r.company.toLowerCase()}|${r.title.toLowerCase()}`)) continue;
+      out.jobs.push(toJob(r, { ...ADZUNA_SOURCE, company: r.company, segment: r.segment }, now));
+      n++;
+    }
+    out.sources.push({ company: "Adzuna", ok: raws.length > 0 || errors.length === 0, pilotJobs: n, error: errors.length ? errors.slice(0, 3).join("; ") : undefined });
+  }
   out.jobs.sort((a, b) => (b.postedAt ?? "").localeCompare(a.postedAt ?? ""));
   return out;
 }

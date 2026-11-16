@@ -7,10 +7,13 @@ import { collectJobs } from "@cielo/jobs";
  */
 export const dynamic = "force-static";
 export const revalidate = 21600;
+export const maxDuration = 120;
 
 export async function GET() {
   try {
-    const { jobs, sources } = await collectJobs();
+    const appId = process.env.ADZUNA_APP_ID;
+    const appKey = process.env.ADZUNA_APP_KEY;
+    const { jobs, sources } = await collectJobs(undefined, 4, appId && appKey ? { adzuna: { appId, appKey } } : {});
     return Response.json({ updatedAt: new Date().toISOString(), jobs, sources: sources.map(({ company, ok, pilotJobs }) => ({ company, ok, pilotJobs })) });
   } catch {
     return Response.json({ updatedAt: new Date().toISOString(), jobs: [], sources: [] });

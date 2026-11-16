@@ -108,6 +108,11 @@ function Jobs() {
               {t("jobs.gaps")} : {match.gaps.map((g) => `${t(`jobs.req.${g.code}` as I18nKey)} ${g.required}${typeof g.have === "number" ? ` (${g.have})` : ""}`).join(" · ")}
             </Txt>
           ) : null}
+          {job.source === "adzuna" ? (
+            <Pressable onPress={() => void WebBrowser.openBrowserAsync("https://www.adzuna.com")}>
+              <Txt variant="small" style={{ textDecorationLine: "underline" }}>Jobs by Adzuna</Txt>
+            </Pressable>
+          ) : null}
           <Row style={{ justifyContent: "space-between" }}>
             <Txt variant="small" mono>{salary(job)}</Txt>
             <Pressable onPress={() => void WebBrowser.openBrowserAsync(job.url)}>

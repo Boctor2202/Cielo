@@ -163,6 +163,9 @@ export default function JobsPage() {
       {feed && (
         <p className="mt-6 text-xs text-muted">
           {t("updated", { date: fd(feed.updatedAt, { dateStyle: "medium", timeStyle: "short" }), count: followed })} · {t("sourceNote")}
+          {feed.jobs.some((j) => j.source === "adzuna") && (
+            <> · {t("adzunaNote")} <a href="https://www.adzuna.com" target="_blank" rel="noopener" className="underline">Jobs by Adzuna</a></>
+          )}
         </p>
       )}
     </>
@@ -258,9 +261,15 @@ function JobCard({ job, match, showMatch, profileHours }: { job: Job; match: Mat
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           {showMatch && match.confidence < 0.5 ? <p className="text-xs text-muted">{t("lowConfidence")}</p> : <span />}
-          <a href={job.url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
-            {t("apply")} <ExternalLink size={14} aria-hidden />
-          </a>
+          <span className="flex items-center gap-3">
+            {/* Adzuna's API terms: offers it provides are credited, with a link to Adzuna */}
+            {job.source === "adzuna" && (
+              <a href="https://www.adzuna.com" target="_blank" rel="noopener" className="text-xs text-muted underline">Jobs by Adzuna</a>
+            )}
+            <a href={job.url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+              {t("apply")} <ExternalLink size={14} aria-hidden />
+            </a>
+          </span>
         </div>
       </div>
     </li>

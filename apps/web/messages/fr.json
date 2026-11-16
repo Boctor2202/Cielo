@@ -1188,7 +1188,8 @@
         "noRights": "Droit de travailler requis : {region}",
         "licenceNeeded": "Licence {authority} requise",
         "visa": "Visa parrainé"
-      }
+      },
+      "adzunaNote": "D'autres offres viennent d'Adzuna :"
     },
     "cv": {
       "title": "CV pilote",

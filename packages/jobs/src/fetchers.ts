@@ -115,4 +115,5 @@ const smartrecruiters: Fetcher = async (s) => {
   }));
 };
 
-export const FETCHERS: Record<Source["ats"], Fetcher> = { greenhouse, lever, recruitee, teamtailor, personio, ashby, workable, smartrecruiters };
+// Adzuna is not a per-employer feed: it is read once for all countries (see adzuna.ts)
+export const FETCHERS: Record<Source["ats"], Fetcher> = { greenhouse, lever, recruitee, teamtailor, personio, ashby, workable, smartrecruiters, adzuna: async () => [] };

@@ -5,7 +5,7 @@
 
 import type { Authority, RegionId } from "./regions";
 
-export type Ats = "greenhouse" | "lever" | "personio" | "recruitee" | "teamtailor" | "workable" | "ashby" | "smartrecruiters";
+export type Ats = "greenhouse" | "lever" | "personio" | "recruitee" | "teamtailor" | "workable" | "ashby" | "smartrecruiters" | "adzuna";
 
 export interface Source {
   /** Employer name as displayed */

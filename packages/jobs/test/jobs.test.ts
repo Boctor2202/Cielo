@@ -119,3 +119,13 @@ describe("regions", () => {
     expect(matchJob(toJob({ id: "d", company: "T", title: ad.title, url: "u", text: ad.text }, src("US")), { ...withUs, workRegions: [...withUs.workRegions] }).canWork).toBe(true);
   });
 });
+
+describe("adzuna", () => {
+  it("guesses the segment of an offer", async () => {
+    const { segmentOf } = await import("../src/adzuna");
+    expect(segmentOf("Citation XLS Captain, Part 135 charter")).toBe("business");
+    expect(segmentOf("HEMS helicopter pilot")).toBe("helicopter");
+    expect(segmentOf("A320 First Officer")).toBe("airline");
+    expect(segmentOf("B747 Captain, cargo")).toBe("cargo");
+  });
+});

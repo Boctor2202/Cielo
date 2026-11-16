@@ -1188,7 +1188,8 @@
         "noRights": "Right to work needed: {region}",
         "licenceNeeded": "{authority} licence needed",
         "visa": "Visa sponsored"
-      }
+      },
+      "adzunaNote": "More offers come from Adzuna:"
     },
     "cv": {
       "title": "Pilot CV",
