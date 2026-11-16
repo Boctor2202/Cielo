@@ -1462,7 +1462,8 @@ const styles = `
   position: relative;
   isolation: isolate;
   min-height: 100svh;
-  overflow: hidden;
+  /* clip, not hidden: hidden would make this a scroll container and stop the menu from floating */
+  overflow: clip;
   padding: 38px 28px 32px;
   background: var(--gw-background);
   color: var(--gw-ink);
@@ -2069,11 +2070,19 @@ const styles = `
   background: var(--gw-accent);
   border-radius: 50%;
 }
+/* floats at the bottom of the window while the page scrolls, centred on the content column */
 .gw-desktop-dock {
-  position: absolute;
+  position: sticky;
   bottom: 19px;
-  left: 50%;
-  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+  pointer-events: none;
+}
+.gw-desktop-dock > nav {
+  pointer-events: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
 }
 .gw-dock {
   display: flex;
@@ -2574,6 +2583,9 @@ const styles = `
   .gw-mobile-nav {
     display: block;
     margin-bottom: 20px;
+    position: sticky;
+    top: 8px;
+    z-index: 30;
   }
   .gw-mobile-nav .gw-dock {
     width: 100%;
