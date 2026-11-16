@@ -13,6 +13,7 @@ import GlassWorkspace, {
 } from "@/components/ui/adjustable-glass-dashboard";
 import { Link } from "@/i18n/navigation";
 import { useDuration, useFormatDate, useTypes } from "@/lib/hooks";
+import { LogbookReport } from "./LogbookReport";
 
 const GLASS_KEY = "geardown-glass";
 const TOTAL_MILESTONES = [100, 200, 500, 1000, 1500, 3000, 5000, 10000, 15000, 20000];
@@ -206,6 +207,7 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
           <Plus size={14} aria-hidden="true" /> {g.newFlight}
         </Link>
       }
+      reportsContent={<LogbookReport flights={flights} today={today} />}
       cashFlowPeriods={data.periods}
       initialPeriodId="year"
       footerNote={g.footerNote}

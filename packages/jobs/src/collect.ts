@@ -71,6 +71,9 @@ export async function collectJobs(sources: Source[] = SOURCES, concurrency = 4, 
     }
     out.sources.push({ company: "Adzuna", ok: raws.length > 0 || errors.length === 0, pilotJobs: n, error: errors.length ? errors.slice(0, 3).join("; ") : undefined });
   }
+  // an offer published for several bases comes back several times with the same id: keep one
+  const ids = new Set<string>();
+  out.jobs = out.jobs.filter((j) => !ids.has(j.id) && !!ids.add(j.id));
   out.jobs.sort((a, b) => (b.postedAt ?? "").localeCompare(a.postedAt ?? ""));
   return out;
 }

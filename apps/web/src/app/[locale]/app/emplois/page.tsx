@@ -154,8 +154,8 @@ export default function JobsPage() {
         <Card><Empty icon={<Briefcase size={36} />} text={t("empty")} /></Card>
       ) : (
         <ul className="space-y-3">
-          {rows.map(({ job, match }) => (
-            <JobCard key={job.id} job={job} match={match} showMatch={hasLogbook} profileHours={{ totalHours: profile.totalMin, picHours: profile.picMin, multiPilotHours: profile.multiPilotMin, jetHours: profile.jetMin, turbineHours: profile.turbineMin }} />
+          {rows.map(({ job, match }, i) => (
+            <JobCard key={`${job.id}-${i}`} job={job} match={match} showMatch={hasLogbook} profileHours={{ totalHours: profile.totalMin, picHours: profile.picMin, multiPilotHours: profile.multiPilotMin, jetHours: profile.jetMin, turbineHours: profile.turbineMin }} />
           ))}
         </ul>
       )}

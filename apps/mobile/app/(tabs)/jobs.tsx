@@ -86,8 +86,8 @@ function Jobs() {
       {feed === undefined ? <ActivityIndicator color={c.accent} /> : null}
       {feed === null ? <Txt color={c.warning}>{t("jobs.error")}</Txt> : null}
       {feed && rows.length === 0 ? <Txt variant="muted">{t("jobs.empty")}</Txt> : null}
-      {rows.slice(0, 80).map(({ job, match }) => (
-        <Card key={job.id} onPress={() => void WebBrowser.openBrowserAsync(job.url)}>
+      {rows.slice(0, 80).map(({ job, match }, i) => (
+        <Card key={`${job.id}-${i}`} onPress={() => void WebBrowser.openBrowserAsync(job.url)}>
           <Row style={{ alignItems: "flex-start" }}>
             <View style={{ flex: 1, gap: 2 }}>
               <Txt variant="small" style={{ fontWeight: "700" }}>{job.company}</Txt>

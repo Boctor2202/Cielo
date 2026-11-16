@@ -1593,6 +1593,64 @@
       "runwayCalm": "calm or variable wind: preferential runway",
       "components": "headwind {head} kt · crosswind {cross} kt",
       "runwayNote": "Estimated from the METAR wind, not the runway announced on the ATIS."
+    },
+    "logReport": {
+      "preset": {
+        "month": "This month",
+        "m3": "3 months",
+        "year": "This year",
+        "lastYear": "Last year",
+        "m12": "12 months",
+        "all": "All",
+        "custom": "Dates…"
+      },
+      "from": "From",
+      "to": "To",
+      "any": "all",
+      "f": {
+        "type": "Type",
+        "registration": "Registration",
+        "function": "Function",
+        "airport": "Airport",
+        "condition": "Conditions"
+      },
+      "cond": {
+        "all": "All flights",
+        "night": "With night",
+        "ifr": "With IFR",
+        "pic": "As PIC",
+        "multiPilot": "Multi-pilot"
+      },
+      "includeFstd": "Include simulator sessions",
+      "reset": "Clear filters",
+      "groupBy": "Group by",
+      "group": {
+        "month": "Month",
+        "year": "Year",
+        "type": "Type",
+        "registration": "Registration",
+        "function": "Function",
+        "route": "Route",
+        "airport": "Airport"
+      },
+      "col": {
+        "flights": "Flights",
+        "total": "Total time",
+        "pic": "PIC",
+        "copilot": "Co-pilot",
+        "dual": "Dual",
+        "instructor": "Instructor",
+        "multiPilot": "Multi-pilot",
+        "night": "Night",
+        "ifr": "IFR",
+        "fstd": "Simulator",
+        "landings": "Landings"
+      },
+      "total": "Total",
+      "exportReport": "Export the report (CSV)",
+      "exportFlights": "Export the {n} flights (CSV)",
+      "empty": "No flight matches these filters.",
+      "airportNote": "A flight counts for both its departure and its arrival airport: the rows add up to more than the total."
     }
   },
   "why": {

@@ -1593,6 +1593,64 @@
       "runwayCalm": "vent calme ou variable : piste préférentielle",
       "components": "vent de face {head} kt · travers {cross} kt",
       "runwayNote": "Estimation à partir du vent du METAR, pas la piste annoncée par l'ATIS."
+    },
+    "logReport": {
+      "preset": {
+        "month": "Ce mois",
+        "m3": "3 mois",
+        "year": "Cette année",
+        "lastYear": "Année dernière",
+        "m12": "12 mois",
+        "all": "Tout",
+        "custom": "Dates…"
+      },
+      "from": "Du",
+      "to": "Au",
+      "any": "tous",
+      "f": {
+        "type": "Type",
+        "registration": "Immatriculation",
+        "function": "Fonction",
+        "airport": "Aéroport",
+        "condition": "Conditions"
+      },
+      "cond": {
+        "all": "Tous les vols",
+        "night": "Avec de la nuit",
+        "ifr": "Avec de l'IFR",
+        "pic": "En CDB",
+        "multiPilot": "En multipilote"
+      },
+      "includeFstd": "Inclure les séances simulateur",
+      "reset": "Effacer les filtres",
+      "groupBy": "Regrouper par",
+      "group": {
+        "month": "Mois",
+        "year": "Année",
+        "type": "Type",
+        "registration": "Immatriculation",
+        "function": "Fonction",
+        "route": "Route",
+        "airport": "Aéroport"
+      },
+      "col": {
+        "flights": "Vols",
+        "total": "Temps total",
+        "pic": "CDB",
+        "copilot": "Copilote",
+        "dual": "Double commande",
+        "instructor": "Instructeur",
+        "multiPilot": "Multipilote",
+        "night": "Nuit",
+        "ifr": "IFR",
+        "fstd": "Simulateur",
+        "landings": "Atterrissages"
+      },
+      "total": "Total",
+      "exportReport": "Exporter le rapport (CSV)",
+      "exportFlights": "Exporter les {n} vols (CSV)",
+      "empty": "Aucun vol ne correspond à ces filtres.",
+      "airportNote": "Un vol compte pour son aéroport de départ et pour son aéroport d'arrivée : le total des lignes dépasse le total général."
     }
   },
   "why": {

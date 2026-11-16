@@ -116,6 +116,8 @@ export interface GlassWorkspaceProps {
   breakdown?: { label: string; value: number }[];
   /** Icons of the three report cards (in, out, net). */
   reportIcons?: [LucideIcon, LucideIcon, LucideIcon];
+  /** Replaces the whole Reports view (it then brings its own export). */
+  reportsContent?: ReactNode;
 }
 
 export const defaultLabels = {
@@ -276,6 +278,7 @@ export default function GlassWorkspace({
   headingAction,
   breakdown,
   reportIcons,
+  reportsContent,
 }: GlassWorkspaceProps) {
   const L = { ...defaultLabels, ...labels };
   const tabLabel: Record<View, string> = {
@@ -839,7 +842,7 @@ export default function GlassWorkspace({
                 </h1>
               </div>
               <div className="gw-heading-action">
-                {view === "activity" || view === "reports" ? (
+                {view === "activity" || (view === "reports" && !reportsContent) ? (
                   <button
                     type="button"
                     className="gw-button"
@@ -1019,7 +1022,8 @@ export default function GlassWorkspace({
                   )}
                 </>
               )}
-              {view === "reports" && (
+              {view === "reports" && reportsContent}
+              {view === "reports" && !reportsContent && (
                 <>
                   <div className="gw-report-stats gw-reveal">
                     {[
