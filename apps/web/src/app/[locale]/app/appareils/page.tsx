@@ -4,6 +4,7 @@ import { Plane, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { AircraftCategory, EngineType, OperationMode } from "@cielo/core";
+import { AircraftPhoto } from "@/components/app/AircraftPhoto";
 import { Card, Empty, Field, Modal, PageTitle, Segmented, Toggle } from "@/components/app/ui";
 import { useDuration, useFlights, useTable, useTypes } from "@/lib/hooks";
 import { findType, saveAircraft, saveCustomType, softDelete } from "@/lib/repo";
@@ -53,6 +54,7 @@ export default function AircraftPage() {
             const s = stats.get(a.registration);
             return (
               <div key={a.id} className="card p-5">
+                <AircraftPhoto registration={a.registration} className="mb-4" />
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="num text-xl font-semibold">{a.registration}</p>

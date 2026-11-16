@@ -1310,6 +1310,11 @@
       "readOnlyText": "Sans abonnement actif, votre carnet reste consultable et exportable, mais la saisie est désactivée. Basic à 6,99 €/mois, Max à 9,99 €/mois.",
       "maxTitle": "Fonction réservée à Max",
       "maxText": "Roster, FTL, escales, radar, traces réelles, audit, signatures et scan sont inclus dans Max (9,99 €/mois)."
+    },
+    "photo": {
+      "alt": "Photo de l'appareil {reg}",
+      "credit": "Photo © {name} ·",
+      "open": "Voir la photo sur Planespotters.net"
     }
   },
   "why": {
