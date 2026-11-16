@@ -1,0 +1,32 @@
+# Checks every push and pull request: TypeScript types of every package and app, and all unit tests.
+# Vercel builds and deploys separately; a red check here means: do not merge / fix before release.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Types
+        run: pnpm -r --if-present typecheck
+      - name: Tests
+        run: pnpm -r --if-present test
