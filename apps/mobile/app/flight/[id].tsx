@@ -20,7 +20,7 @@ import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPick
 import { AircraftPhoto } from "../../src/components/AircraftPhoto";
 import { FlightTrackCard } from "../../src/components/FlightTrack";
 import { FlightSignature } from "../../src/components/FlightSignature";
-import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, ToggleRow, Txt } from "../../src/components/ui";
+import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, ToggleRow, Txt, tap } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
 import type { I18nKey } from "../../src/i18n";
 import { todayUtc, useApp } from "../../src/state";
@@ -248,13 +248,21 @@ function FlightForm() {
         value={form[k]}
         monoValue
         placeholder="--:--"
-        keyboardType="numbers-and-punctuation"
+        keyboardType="number-pad"
         maxLength={5}
-        onChangeText={(s) => set(k, s)}
-        onBlur={() => set(k, normClock(form[k]))}
+        // digits only on the keypad: "0830" becomes "08:30" as it is typed
+        onChangeText={(s) => {
+          const d = s.replace(/\D/g, "").slice(0, 4);
+          set(k, d.length > 2 ? `${d.slice(0, 2)}:${d.slice(2)}` : d);
+        }}
+        onBlur={() => {
+          // three digits ("830") mean 08:30
+          const d = form[k].replace(/\D/g, "");
+          set(k, normClock(d.length === 3 ? `0${d[0]}:${d.slice(1)}` : form[k]));
+        }}
         error={!!form[k] && !parseClock(form[k])}
       />
-      <Pressable onPress={() => set(k, nowClock())} hitSlop={6}>
+      <Pressable onPress={() => (tap(), set(k, nowClock()))} hitSlop={6}>
         <Txt variant="small" color={c.accent}>
           {t("common.now")}
         </Txt>

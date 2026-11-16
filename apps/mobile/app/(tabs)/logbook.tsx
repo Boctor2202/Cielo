@@ -3,7 +3,7 @@ import { Alert, Pressable, SectionList, StyleSheet, TextInput, View } from "reac
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { formatClock, formatDuration, sumFlights, type Flight } from "@cielo/core";
-import { EmptyState, Fab, Row, Txt } from "../../src/components/ui";
+import { EmptyState, Fab, Row, Txt, tap } from "../../src/components/ui";
 import { formatDate, formatMonth } from "../../src/i18n";
 import { useApp } from "../../src/state";
 import { font, glass, space, useTheme } from "../../src/theme";
@@ -53,7 +53,7 @@ export default function Logbook() {
       <SectionList
         sections={sections}
         keyExtractor={(f) => f.id}
-        stickySectionHeadersEnabled
+        stickySectionHeadersEnabled={false}
         contentContainerStyle={{ paddingBottom: 140, paddingTop: space.sm, flexGrow: 1 }}
         ListHeaderComponent={
           flights.length ? (
@@ -82,8 +82,8 @@ export default function Logbook() {
         }
         ListEmptyComponent={q.trim() ? <EmptyState title={t("log.noMatch")} /> : <EmptyState title={t("log.empty")} hint={t("log.emptyHint")} />}
         renderSectionHeader={({ section }) => (
-          <Row style={{ justifyContent: "space-between", marginHorizontal: space.md, marginTop: space.md, paddingHorizontal: space.lg, paddingVertical: 10, borderRadius: 14, backgroundColor: glass(c).strong }}>
-            <Txt variant="h2" style={{ fontSize: 15 }}>
+          <Row style={{ justifyContent: "space-between", marginHorizontal: space.md + 4, marginTop: space.lg, paddingHorizontal: 4, paddingVertical: 6 }}>
+            <Txt variant="h2" style={{ fontSize: 20, fontWeight: "700", textTransform: "capitalize" }}>
               {section.title}
             </Txt>
             <Txt mono variant="small">
@@ -94,48 +94,71 @@ export default function Logbook() {
             </Txt>
           </Row>
         )}
-        renderItem={({ item: f }) => (
-          <Pressable
-            onPress={() => router.push({ pathname: "/flight/[id]", params: { id: f.id } })}
-            onLongPress={() => confirmDelete(f)}
-            delayLongPress={350}
-            style={({ pressed }) => ({
-              marginHorizontal: space.md,
-              paddingHorizontal: space.lg,
-              paddingVertical: space.md,
-              borderBottomWidth: StyleSheet.hairlineWidth,
-              borderBottomColor: glass(c).edge,
-              backgroundColor: pressed ? glass(c).pane : glass(c).strong,
-            })}
-          >
-            <Row style={{ justifyContent: "space-between" }}>
-              <Row gap={space.md} style={{ flex: 1 }}>
-                <Txt mono variant="small" style={{ width: 58 }}>
-                  {formatDate(f.date, locale).slice(0, 6)}
-                </Txt>
-                <View style={{ flex: 1 }}>
-                  <Txt mono style={{ fontWeight: "600", fontSize: 15.5 }}>
-                    {f.isFstd ? `${t("log.fstd")} ${f.fstdType ?? ""}` : `${f.depIcao} → ${f.arrIcao}`}
-                  </Txt>
-                  <Txt variant="small" numberOfLines={1}>
-                    {[f.registration, f.aircraftTypeIcao, f.function, f.flightNumber].filter(Boolean).join(" · ")}
-                    {!f.isFstd && f.outUtc ? `  ${formatClock(f.outUtc)}–${formatClock(f.inUtc)}Z` : ""}
+        renderItem={({ item: f, index, section }) => {
+          const first = index === 0;
+          const last = index === section.data.length - 1;
+          const d = new Date(`${f.date}T12:00:00Z`);
+          return (
+            <Pressable
+              onPress={() => {
+                tap();
+                router.push({ pathname: "/flight/[id]", params: { id: f.id } });
+              }}
+              onLongPress={() => {
+                tap("medium");
+                confirmDelete(f);
+              }}
+              delayLongPress={350}
+              style={({ pressed }) => ({
+                marginHorizontal: space.md,
+                marginTop: first ? space.sm : 0,
+                paddingHorizontal: space.md,
+                paddingVertical: 12,
+                borderTopLeftRadius: first ? 16 : 0,
+                borderTopRightRadius: first ? 16 : 0,
+                borderBottomLeftRadius: last ? 16 : 0,
+                borderBottomRightRadius: last ? 16 : 0,
+                borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth,
+                borderBottomColor: glass(c).edge,
+                backgroundColor: pressed ? glass(c).pane : glass(c).strong,
+                transform: [{ scale: pressed ? 0.99 : 1 }],
+              })}
+            >
+              <Row gap={14}>
+                {/* date block: day of month, short weekday */}
+                <View style={{ width: 44, alignItems: "center", paddingVertical: 4, borderRadius: 10, backgroundColor: glass(c).input }}>
+                  <Txt style={{ fontSize: 20, fontWeight: "700", lineHeight: 23 }}>{d.getUTCDate()}</Txt>
+                  <Txt variant="small" style={{ fontSize: 11, textTransform: "uppercase" }}>
+                    {d.toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { weekday: "short", timeZone: "UTC" }).replace(".", "")}
                   </Txt>
                 </View>
-              </Row>
-              <View style={{ alignItems: "flex-end" }}>
-                <Txt mono style={{ fontWeight: "600" }}>
-                  {fmt(f.isFstd ? f.fstdMin : f.totalMin)}
-                </Txt>
-                {f.nightMin > 0 ? (
-                  <Txt mono variant="small" color={c.accent}>
-                    ☾ {fmt(f.nightMin)}
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Txt style={{ fontSize: 17, fontWeight: "600", letterSpacing: 0.3 }} numberOfLines={1}>
+                    {f.isFstd ? `${t("log.fstd")} ${f.fstdType ?? ""}` : `${f.depIcao}  →  ${f.arrIcao}`}
                   </Txt>
-                ) : null}
-              </View>
-            </Row>
-          </Pressable>
-        )}
+                  <Txt variant="small" numberOfLines={1}>
+                    {!f.isFstd && f.outUtc ? `${formatClock(f.outUtc)} – ${formatClock(f.inUtc)} UTC · ` : ""}
+                    {[f.registration, f.aircraftTypeIcao, f.function, f.flightNumber].filter(Boolean).join(" · ")}
+                  </Txt>
+                </View>
+                <View style={{ alignItems: "flex-end", gap: 4 }}>
+                  <View style={{ paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, backgroundColor: c.scheme === "dark" ? "rgba(34,197,94,0.16)" : "rgba(21,128,61,0.10)" }}>
+                    <Txt mono style={{ fontWeight: "700", fontSize: 15 }} color={c.accent}>
+                      {fmt(f.isFstd ? f.fstdMin : f.totalMin)}
+                    </Txt>
+                  </View>
+                  {f.nightMin > 0 ? (
+                    <Txt mono variant="small" style={{ fontSize: 12 }}>
+                      ☾ {fmt(f.nightMin)}
+                    </Txt>
+                  ) : f.signatureId ? (
+                    <Txt variant="small" style={{ fontSize: 12 }} color={c.success}>✓ {t("log.signed")}</Txt>
+                  ) : null}
+                </View>
+              </Row>
+            </Pressable>
+          );
+        }}
       />
       <Fab label={t("flight.new")} onPress={() => router.push(access.canWrite ? "/flight/new" : "/subscription")} />
     </View>

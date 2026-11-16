@@ -23,7 +23,7 @@ import { space, useTheme } from "../../src/theme";
 const FTL_KEYS = ["duty7d", "duty14d", "duty28d", "flight28d", "flightYear", "flight12m"] as const;
 
 export default function Dashboard() {
-  const { t, locale, flights, balances, licenses, pilot, session, access } = useApp();
+  const { t, locale, flights, balances, licenses, pilot, session, access, rosterEvents } = useApp();
   const c = useTheme();
   const today = todayUtc();
   const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
@@ -43,6 +43,22 @@ export default function Dashboard() {
         .slice(0, 4),
     [licenses, today],
   );
+
+  // what comes next on the roster, and the flight logged last
+  const nextDuty = useMemo(() => {
+    const now = new Date().toISOString();
+    return rosterEvents
+      .filter((e) => !e.deletedAt && e.startUtc > now && ["FLIGHT", "DEADHEAD", "STANDBY", "SIM", "GROUND"].includes(e.kind))
+      .sort((a, b) => a.startUtc.localeCompare(b.startUtc))[0];
+  }, [rosterEvents]);
+  const lastFlight = useMemo(
+    () => flights.filter((f) => !f.deletedAt && !f.isFstd).sort((a, b) => (b.outUtc ?? b.date).localeCompare(a.outUtc ?? a.date))[0],
+    [flights],
+  );
+  const inWords = (iso: string) => {
+    const h = Math.round((Date.parse(iso) - Date.now()) / 3_600_000);
+    return h < 24 ? t("dash.inHours", { n: Math.max(0, h) }) : t("dash.inDays", { n: Math.round(h / 24) });
+  };
 
   const period = (label: string, p: Totals) => (
     <Stat label={label} value={fmt(p.totalMin)} sub={t("dash.flights", { n: p.flights })} />
@@ -97,6 +113,37 @@ export default function Dashboard() {
             {periods.all.landingsDay + periods.all.landingsNight}
           </Txt>
         </Card>
+
+        {nextDuty ? (
+          <Card onPress={() => router.push("/roster")}>
+            <Row style={{ justifyContent: "space-between" }}>
+              <Txt variant="label">{t("dash.nextDuty")}</Txt>
+              <Txt variant="small" color={c.accent} style={{ fontWeight: "600" }}>{inWords(nextDuty.reportUtc ?? nextDuty.startUtc)}</Txt>
+            </Row>
+            <Txt style={{ fontSize: 22, fontWeight: "700", letterSpacing: 0.3 }}>
+              {nextDuty.depIcao && nextDuty.arrIcao ? `${nextDuty.depIcao}  →  ${nextDuty.arrIcao}` : nextDuty.title || t(`roster.kind.${nextDuty.kind}` as I18nKey)}
+            </Txt>
+            <Txt variant="small" mono>
+              {formatDate(nextDuty.startUtc.slice(0, 10), locale)} · {nextDuty.startUtc.slice(11, 16)} UTC
+              {nextDuty.reportUtc ? ` · ${t("dash.report")} ${nextDuty.reportUtc.slice(11, 16)}` : ""}
+              {nextDuty.flightNumber ? ` · ${nextDuty.flightNumber}` : ""}
+            </Txt>
+          </Card>
+        ) : null}
+
+        {lastFlight ? (
+          <Card onPress={() => router.push({ pathname: "/flight/[id]", params: { id: lastFlight.id } })}>
+            <Txt variant="label">{t("dash.lastFlightTitle")}</Txt>
+            <Row style={{ justifyContent: "space-between" }}>
+              <Txt style={{ fontSize: 20, fontWeight: "700", letterSpacing: 0.3 }}>{lastFlight.depIcao}  →  {lastFlight.arrIcao}</Txt>
+              <Txt mono style={{ fontSize: 18, fontWeight: "600" }} color={c.accent}>{fmt(lastFlight.totalMin)}</Txt>
+            </Row>
+            <Txt variant="small">
+              {formatDate(lastFlight.date, locale)}
+              {[lastFlight.registration, lastFlight.aircraftTypeIcao].filter(Boolean).length ? ` · ${[lastFlight.registration, lastFlight.aircraftTypeIcao].filter(Boolean).join(" · ")}` : ""}
+            </Txt>
+          </Card>
+        ) : null}
 
         <Card>
           <Row gap={space.md}>
