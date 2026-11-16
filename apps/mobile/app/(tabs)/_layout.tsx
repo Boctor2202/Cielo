@@ -39,6 +39,9 @@ export default function TabsLayout() {
       <Tabs.Screen name="more" options={{ title: t("tabs.more"), headerTitle: t("more.title"), tabBarIcon: icon("ellipsis-horizontal-circle-outline") }} />
       <Tabs.Screen name="roster" options={{ href: null, headerTitle: t("roster.title") }} />
       <Tabs.Screen name="documents" options={{ href: null, headerTitle: t("docs.title") }} />
+      <Tabs.Screen name="ftl" options={{ href: null, headerTitle: t("ftl.title") }} />
+      <Tabs.Screen name="stats" options={{ href: null, headerTitle: t("stats.title") }} />
+      <Tabs.Screen name="profile" options={{ href: null, headerTitle: t("profile.title") }} />
     </Tabs>
   );
 }

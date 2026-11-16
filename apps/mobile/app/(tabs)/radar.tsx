@@ -4,6 +4,8 @@ import MapView, { Marker, Polyline, type Region } from "react-native-maps";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Glass, Row, Txt } from "../../src/components/ui";
 import { api, ApiError, type LiveAircraft, type Track } from "../../src/api";
+import { airports } from "../../src/airports";
+import type { Airport } from "@cielo/core";
 import { useApp } from "../../src/state";
 import { Requires } from "../../src/components/Access";
 import { font, useTheme } from "../../src/theme";
@@ -42,6 +44,24 @@ function RadarScreen() {
   const [notFound, setNotFound] = useState("");
   const selHex = useRef<string | null>(null);
   selHex.current = sel?.hex ?? null;
+  const [showAirports, setShowAirports] = useState(true);
+  const [fields, setFields] = useState<Airport[]>([]);
+  /** Airports in view: large ones when zoomed out, medium, then every aerodrome closer in. */
+  const placeAirports = useCallback((r: Region) => {
+    const span = Math.max(r.latitudeDelta, r.longitudeDelta);
+    const min = span > 14 ? 4 : span > 3 ? 3 : span > 0.9 ? 2 : 1;
+    if (min > 3) return setFields([]);
+    const [s, n] = [r.latitude - r.latitudeDelta / 2, r.latitude + r.latitudeDelta / 2];
+    const [w, e] = [r.longitude - r.longitudeDelta / 2, r.longitude + r.longitudeDelta / 2];
+    const out: Airport[] = [];
+    for (const a of airports().list) {
+      if ((a.size ?? 1) < min || a.lat < s || a.lat > n || a.lon < w || a.lon > e) continue;
+      out.push(a);
+      if (out.length >= 150) break;
+    }
+    setFields(out);
+  }, []);
+  useEffect(() => placeAirports(region.current), [placeAirports]);
 
   const myRegs = [...new Set(flights.filter((f) => !f.isFstd && f.registration).map((f) => f.registration!.toUpperCase()))].slice(0, 5);
 
@@ -98,10 +118,21 @@ function RadarScreen() {
         userInterfaceStyle={c.scheme}
         onRegionChangeComplete={(r) => {
           region.current = r;
+          placeAirports(r);
           void refresh();
         }}
         onPress={() => setSel(null)}
       >
+        {showAirports
+          ? fields.map((a) => (
+              <Marker key={`apt-${a.icao}`} coordinate={{ latitude: a.lat, longitude: a.lon }} anchor={{ x: 0.5, y: 0.25 }} tracksViewChanges={false} title={a.icao} description={a.name} zIndex={0}>
+                <View style={{ alignItems: "center" }}>
+                  <View style={{ width: a.size === 3 ? 10 : 8, height: a.size === 3 ? 10 : 8, borderRadius: 5, borderWidth: 1.6, borderColor: c.text, backgroundColor: c.scheme === "dark" ? "#0a1626" : "#ffffff" }} />
+                  <Txt style={{ fontSize: 10, fontWeight: "600", textShadowColor: c.scheme === "dark" ? "#0a1626" : "#ffffff", textShadowRadius: 3 }}>{a.icao}</Txt>
+                </View>
+              </Marker>
+            ))
+          : null}
         {ac.map((a) => (
           <Marker
             key={a.hex}
@@ -137,6 +168,13 @@ function RadarScreen() {
             />
           </Row>
         </Glass>
+        <Row style={{ flexWrap: "wrap", marginTop: 8 }} gap={6}>
+          <Pressable onPress={() => setShowAirports((v) => !v)} accessibilityState={{ selected: showAirports }}>
+            <Glass strong radius={999}>
+              <Txt style={{ paddingHorizontal: 10, paddingVertical: 5, fontSize: 12, fontWeight: "600" }} color={showAirports ? c.accent : c.muted}>{t("radar.airports")}</Txt>
+            </Glass>
+          </Pressable>
+        </Row>
         {myRegs.length ? (
           <Row style={{ flexWrap: "wrap", marginTop: 8 }} gap={6}>
             {myRegs.map((r) => (

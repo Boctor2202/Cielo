@@ -102,6 +102,8 @@ export interface Airport {
   lon: number;
   elevationFt?: number;
   timezone?: string;
+  /** 3 large airport, 2 medium, 1 small aerodrome (reference data only) */
+  size?: number;
   ownerPilotId?: UUID | null;
 }
 

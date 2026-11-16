@@ -16,27 +16,7 @@ export default function More() {
   const { t, pilot, flights, balances, store, session } = app;
   const c = useTheme();
 
-  const [fullName, setFullName] = useState(pilot.fullName);
-  const [licenceNumber, setLicenceNumber] = useState(pilot.licenceNumber ?? "");
-  const [homeBase, setHomeBase] = useState(pilot.homeBaseIcao ?? "");
   const [busy, setBusy] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    setFullName(pilot.fullName);
-    setLicenceNumber(pilot.licenceNumber ?? "");
-    setHomeBase(pilot.homeBaseIcao ?? "");
-  }, [pilot.id, pilot.fullName, pilot.licenceNumber, pilot.homeBaseIcao]);
-
-  const saveProfile = async () => {
-    await app.savePilot({
-      fullName: fullName.trim(),
-      licenceNumber: licenceNumber.trim() || undefined,
-      homeBaseIcao: homeBase.trim().toUpperCase() || undefined,
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key);
@@ -84,19 +64,15 @@ export default function More() {
     <Screen>
       <Card>
         <Txt variant="h2">{t("more.shortcuts")}</Txt>
+        <Button kind="secondary" title={t("more.openProfile")} onPress={() => router.push("/profile")} />
+        <Button kind="secondary" title={t("more.stats")} onPress={() => router.push("/stats")} />
+        <Button kind="secondary" title={t("more.ftl")} onPress={() => router.push("/ftl")} />
         <Button kind="secondary" title={t("more.roster")} onPress={() => router.push("/roster")} />
         <Button kind="secondary" title={t("more.documents")} onPress={() => router.push("/documents")} />
         <Button kind="secondary" title={t("more.import")} loading={busy === "import"} onPress={importCsv} />
         <Txt variant="small">{t("more.importHint")}</Txt>
       </Card>
 
-      <Card>
-        <Txt variant="h2">{t("more.profile")}</Txt>
-        <Field label={t("more.fullName")} value={fullName} onChangeText={setFullName} autoCapitalize="words" />
-        <Field label={t("more.licenceNumber")} value={licenceNumber} onChangeText={setLicenceNumber} monoValue autoCapitalize="characters" />
-        <Field label={t("more.homeBase")} value={homeBase} onChangeText={setHomeBase} monoValue autoCapitalize="characters" maxLength={4} />
-        <Button title={saved ? t("more.saved") : t("common.save")} onPress={saveProfile} />
-      </Card>
 
       <Card>
         <Segmented<RegulatoryFramework>

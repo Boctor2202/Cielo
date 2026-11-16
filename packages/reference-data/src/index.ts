@@ -186,7 +186,7 @@ export interface AirportFile {
 }
 
 export function expandAirports(file: AirportFile): Airport[] {
-  return file.rows.map(([icao, iata, name, city, country, lat, lon, elevationFt, timezone]) => ({
+  return file.rows.map(([icao, iata, name, city, country, lat, lon, elevationFt, timezone, size]) => ({
     id: icao,
     icao,
     iata: iata || undefined,
@@ -197,6 +197,7 @@ export function expandAirports(file: AirportFile): Airport[] {
     lon,
     elevationFt: elevationFt ?? undefined,
     timezone: timezone || undefined,
+    size,
   }));
 }
 
