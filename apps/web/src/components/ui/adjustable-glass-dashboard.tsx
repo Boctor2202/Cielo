@@ -902,7 +902,7 @@ export default function GlassWorkspace({
                   <div className="gw-overview-grid">
                     <section className="gw-panel gw-balance gw-reveal">
                       <div className="gw-panel-title">
-                        <span>{L.availableBalance}</span>
+                        <h2>{L.availableBalance}</h2>
                         <Wallet size={17} aria-hidden="true" />
                       </div>
                       <strong className="gw-balance-value">
@@ -1083,7 +1083,7 @@ export default function GlassWorkspace({
                     ].map((s) => (
                       <section className="gw-panel" key={s.label}>
                         <div className="gw-panel-title">
-                          <span>{s.label}</span>
+                          <h2>{s.label}</h2>
                           <s.icon size={17} aria-hidden="true" />
                         </div>
                         <strong><CountUp value={s.value} format={format} /></strong>
@@ -1800,10 +1800,6 @@ const styles = `
 }
 .gw-panel-title > svg {
   opacity: 0.65;
-}
-.gw-balance .gw-panel-title > span {
-  font-weight: 700;
-  color: var(--gw-ink);
 }
 .gw-overview-grid {
   display: grid;
