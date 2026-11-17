@@ -4,6 +4,7 @@ import { Stack, router, useLocalSearchParams } from "expo-router";
 import type { AircraftType, OperationMode } from "@cielo/core";
 import { Button, Card, Field, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
 import { AircraftTypeField } from "../../src/components/AircraftTypeField";
+import { CustomTypeForm, customTypeSeed } from "../../src/components/CustomTypeForm";
 import { AircraftPhoto } from "../../src/components/AircraftPhoto";
 import { useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
@@ -22,6 +23,12 @@ export default function AircraftEdit() {
   const [hp, setHp] = useState(!!existing?.highPerformance);
   const [tw, setTw] = useState(!!existing?.tailwheel);
   const [error, setError] = useState(false);
+  /** set while the "create a type" form is open, with the values seeded from the search */
+  const [creating, setCreating] = useState<{ icao?: string; model?: string } | null>(null);
+  const pickType = (x: AircraftType) => {
+    setType(x);
+    if (x.multiPilot) setOp("multi_pilot");
+  };
 
   const save = async () => {
     if (!reg.trim() || !type) return setError(true);
@@ -61,12 +68,30 @@ export default function AircraftEdit() {
               </View>
               <Button kind="ghost" small title={t("common.edit")} onPress={() => setType(undefined)} />
             </Row>
+          ) : creating ? (
+            <Txt variant="small">{t("acft.creatingType")}</Txt>
           ) : (
-            <AircraftTypeField types={aircraftTypes} label={t("acft.type")} hint={error ? t("acft.typeRequired") : undefined} onPick={(x) => (setType(x), x.multiPilot && setOp("multi_pilot"))} />
+            <AircraftTypeField
+              types={aircraftTypes}
+              label={t("acft.type")}
+              hint={error ? t("acft.typeRequired") : undefined}
+              onPick={pickType}
+              onCreate={(q) => setCreating(customTypeSeed(q))}
+            />
           )}
           <Field label={t("acft.variant")} value={variant} onChangeText={setVariant} />
           <Field label={t("acft.operator")} value={operator} onChangeText={setOperator} />
         </Card>
+        {creating && !type ? (
+          <CustomTypeForm
+            initial={creating}
+            onCancel={() => setCreating(null)}
+            onCreated={(x) => {
+              setCreating(null);
+              pickType(x);
+            }}
+          />
+        ) : null}
         <Card>
           <Segmented<OperationMode>
             label={t("acft.defaultOperation")}

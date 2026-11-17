@@ -4,7 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { Aircraft, AircraftType, OperationMode } from "@cielo/core";
 import { useApp } from "../state";
 import { space, useTheme } from "../theme";
-import { Button, Card, Chip, Field, Row, Segmented, Txt } from "./ui";
+import { CustomTypeForm, customTypeSeed } from "./CustomTypeForm";
+import { Button, Card, Chip, Field, Row, Segmented, Txt, tap } from "./ui";
 
 export function aircraftLabel(a: Aircraft | undefined, types: AircraftType[]): string {
   if (!a) return "";
@@ -12,7 +13,7 @@ export function aircraftLabel(a: Aircraft | undefined, types: AircraftType[]): s
   return `${a.registration}${type ? ` · ${type.icao}` : ""}`;
 }
 
-/** Modal listing the pilot's aircraft, with a quick-add form (type from the reference AIRCRAFT_TYPES). */
+/** Modal listing the pilot's aircraft, with a quick-add form (reference or custom type, which can be created here). */
 export function AircraftPicker({
   visible,
   onClose,
@@ -29,6 +30,11 @@ export function AircraftPicker({
   const [type, setType] = useState<AircraftType | null>(null);
   const [op, setOp] = useState<OperationMode>("single_pilot");
   const [err, setErr] = useState(false);
+  const [creating, setCreating] = useState<{ icao?: string; model?: string } | null>(null);
+  const pickType = (x: AircraftType) => {
+    setType(x);
+    setOp(x.multiPilot ? "multi_pilot" : "single_pilot");
+  };
 
   const typeMatches = useMemo(() => {
     const q = typeQuery.trim().toUpperCase();
@@ -81,55 +87,70 @@ export function AircraftPicker({
             );
           }}
           ListFooterComponent={
-            <Card style={{ marginTop: space.lg }}>
-              <Txt variant="h2">{t("aircraft.quickAdd")}</Txt>
-              <Field
-                label={t("aircraft.registration")}
-                value={reg}
-                onChangeText={setReg}
-                autoCapitalize="characters"
-                autoCorrect={false}
-                monoValue
-                placeholder="F-GABC"
-                error={err && !reg.trim()}
-              />
-              <Field
-                label={t("aircraft.type")}
-                value={type ? `${type.icao} — ${type.manufacturer} ${type.model}` : typeQuery}
-                onChangeText={(s) => {
-                  setType(null);
-                  setTypeQuery(s);
-                }}
-                placeholder={t("aircraft.searchType")}
-                autoCorrect={false}
-                error={err && !type}
-              />
-              {!type && typeMatches.length > 0 ? (
-                <Row style={{ flexWrap: "wrap" }}>
-                  {typeMatches.map((x) => (
-                    <Chip
-                      key={x.id}
-                      label={`${x.icao} · ${x.model}`}
-                      onPress={() => {
-                        setType(x);
-                        setOp(x.multiPilot ? "multi_pilot" : "single_pilot");
-                      }}
-                    />
-                  ))}
-                </Row>
+            <>
+              <Card style={{ marginTop: space.lg }}>
+                <Txt variant="h2">{t("aircraft.quickAdd")}</Txt>
+                <Field
+                  label={t("aircraft.registration")}
+                  value={reg}
+                  onChangeText={setReg}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  monoValue
+                  placeholder="F-GABC"
+                  error={err && !reg.trim()}
+                />
+                <Field
+                  label={t("aircraft.type")}
+                  value={type ? `${type.icao} — ${type.manufacturer} ${type.model}` : typeQuery}
+                  onChangeText={(s) => {
+                    setType(null);
+                    setTypeQuery(s);
+                  }}
+                  placeholder={t("aircraft.searchType")}
+                  autoCorrect={false}
+                  error={err && !type}
+                />
+                {!type && typeMatches.length > 0 ? (
+                  <Row style={{ flexWrap: "wrap" }}>
+                    {typeMatches.map((x) => (
+                      <Chip key={x.id} label={`${x.icao} · ${x.model}`} onPress={() => pickType(x)} />
+                    ))}
+                  </Row>
+                ) : null}
+                {!type && !creating ? (
+                  <Pressable accessibilityRole="button" onPress={() => (tap(), setCreating(customTypeSeed(typeQuery)))} hitSlop={6}>
+                    <Txt variant="small" color={c.accent}>
+                      {t("acft.createType")}
+                    </Txt>
+                  </Pressable>
+                ) : null}
+                <Segmented
+                  label={t("aircraft.operation")}
+                  value={op}
+                  onChange={setOp}
+                  options={[
+                    { value: "single_pilot", label: t("aircraft.single") },
+                    { value: "multi_pilot", label: t("aircraft.multi") },
+                  ]}
+                />
+                {err ? <Txt color={c.warning}>{t("aircraft.missing")}</Txt> : null}
+                <Button title={t("common.add")} onPress={add} />
+              </Card>
+              {creating && !type ? (
+                <View style={{ marginTop: space.sm }}>
+                  <CustomTypeForm
+                    initial={creating}
+                    onCancel={() => setCreating(null)}
+                    onCreated={(x) => {
+                      setCreating(null);
+                      setTypeQuery("");
+                      pickType(x);
+                    }}
+                  />
+                </View>
               ) : null}
-              <Segmented
-                label={t("aircraft.operation")}
-                value={op}
-                onChange={setOp}
-                options={[
-                  { value: "single_pilot", label: t("aircraft.single") },
-                  { value: "multi_pilot", label: t("aircraft.multi") },
-                ]}
-              />
-              {err ? <Txt color={c.warning}>{t("aircraft.missing")}</Txt> : null}
-              <Button title={t("common.add")} onPress={add} />
-            </Card>
+            </>
           }
         />
       </SafeAreaView>

@@ -23,6 +23,7 @@ import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPick
 import { AircraftPhoto } from "../../src/components/AircraftPhoto";
 import { FlightTrackCard } from "../../src/components/FlightTrack";
 import { FlightSignature } from "../../src/components/FlightSignature";
+import { DurationField } from "../../src/components/DurationField";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, ToggleRow, Txt, tap } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
 import type { I18nKey } from "../../src/i18n";
@@ -53,6 +54,10 @@ interface FormState {
   autoLandings: boolean;
   autoNight: boolean;
   nightManual: string;
+  /** h:mm overrides; "" = automatic (IFR: whole block time; IMC / XC: none) */
+  ifrManual: string;
+  actualImc: string;
+  xc: string;
   takeoffsDay: number;
   takeoffsNight: number;
   landingsDay: number;
@@ -89,6 +94,7 @@ function FlightForm() {
   const [picker, setPicker] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [advanced, setAdvanced] = useState(false);
 
   function initialState(f: Flight | undefined, ev: typeof rosterEvent): FormState {
     if (f) {
@@ -111,6 +117,10 @@ function FlightForm() {
         autoLandings: false,
         autoNight: f.nightCalc !== "manual",
         nightManual: f.nightCalc === "manual" ? formatDuration(f.nightMin) : "",
+        // same rule as the web (flightToInput): an IFR time that differs from block time was entered by hand
+        ifrManual: f.ifrMin > 0 && f.ifrMin !== f.totalMin ? formatDuration(f.ifrMin) : "",
+        actualImc: f.actualImcMin ? formatDuration(f.actualImcMin) : "",
+        xc: f.xcMin ? formatDuration(f.xcMin) : "",
         takeoffsDay: f.takeoffsDay,
         takeoffsNight: f.takeoffsNight,
         landingsDay: f.landingsDay,
@@ -146,6 +156,9 @@ function FlightForm() {
       autoLandings: true,
       autoNight: true,
       nightManual: "",
+      ifrManual: "",
+      actualImc: "",
+      xc: "",
       takeoffsDay: 0,
       takeoffsNight: 0,
       landingsDay: 0,
@@ -187,6 +200,10 @@ function FlightForm() {
       picName: form.picName || undefined,
       ifr: form.ifr,
       nightOverrideMin: form.autoNight ? undefined : (parseDuration(form.nightManual) ?? 0),
+      // the override only applies to an IFR flight (the web disables it otherwise)
+      ifrOverrideMin: form.ifr ? (parseDuration(form.ifrManual) ?? undefined) : undefined,
+      actualImcMin: parseDuration(form.actualImc) ?? undefined,
+      xcMin: parseDuration(form.xc) ?? undefined,
       takeoffsDay: form.takeoffsDay,
       takeoffsNight: form.takeoffsNight,
       landingsDay: form.landingsDay,
@@ -209,6 +226,14 @@ function FlightForm() {
   );
   const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
   const locked = !!existing?.locked;
+  // what the collapsed "advanced times" header shows: only the values the pilot entered
+  const advancedSummary = [
+    input.ifrOverrideMin !== undefined ? `${t("flight.ifrTime")} ${formatDuration(input.ifrOverrideMin)}` : "",
+    input.actualImcMin ? `IMC ${formatDuration(input.actualImcMin)}` : "",
+    input.xcMin ? `XC ${formatDuration(input.xcMin)}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   const save = async () => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(form.date) || Number.isNaN(Date.parse(form.date))) return setError(t("flight.invalidDate"));
@@ -233,8 +258,9 @@ function FlightForm() {
         ...times,
         function: input.function,
         picName: input.picName ?? (input.function === "PIC" ? "SELF" : undefined),
-        actualImcMin: existing?.actualImcMin ?? 0,
-        xcMin: existing?.xcMin ?? 0,
+        // capped at block time, as the web's buildFlight does (FSTD: block time is 0)
+        actualImcMin: Math.min(input.actualImcMin ?? 0, times.totalMin),
+        xcMin: Math.min(input.xcMin ?? 0, times.totalMin),
         pilotFlying: input.pilotFlying,
         approaches: input.approaches ?? [],
         isFstd: input.isFstd,
@@ -453,6 +479,46 @@ function FlightForm() {
             </Row>
           ) : null}
         </Card>
+
+        {!form.isFstd ? (
+          <Card>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: advanced }}
+              onPress={() => (tap(), setAdvanced((x) => !x))}
+              hitSlop={6}
+            >
+              <Row style={{ justifyContent: "space-between" }}>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Txt variant="label">{t("flight.advanced")}</Txt>
+                  {!advanced ? (
+                    <Txt variant="small" mono={!!advancedSummary}>
+                      {advancedSummary || t("flight.advancedAuto")}
+                    </Txt>
+                  ) : null}
+                </View>
+                <Txt color={c.accent}>{advanced ? "▴" : "▾"}</Txt>
+              </Row>
+            </Pressable>
+            {advanced ? (
+              <>
+                <Txt variant="small">{t("flight.advancedHint")}</Txt>
+                {form.ifr ? (
+                  <DurationField
+                    label={t("flight.ifrOverride")}
+                    hint={t("flight.ifrOverrideHint", { time: fmt(derived.totalMin) })}
+                    value={form.ifrManual}
+                    onChange={(s) => set("ifrManual", s)}
+                  />
+                ) : (
+                  <Txt variant="small">{t("flight.ifrOverrideOff")}</Txt>
+                )}
+                <DurationField label={t("flight.actualImc")} hint={t("flight.cappedHint")} value={form.actualImc} onChange={(s) => set("actualImc", s)} />
+                <DurationField label={t("flight.xc")} hint={t("flight.cappedHint")} value={form.xc} onChange={(s) => set("xc", s)} />
+              </>
+            ) : null}
+          </Card>
+        ) : null}
 
         <Card>
           <Txt variant="label">{t("flight.approaches")}</Txt>
