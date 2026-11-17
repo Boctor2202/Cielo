@@ -64,26 +64,26 @@ export default function More() {
   return (
     <Screen>
       <MenuGroup title={t("more.g.pilot")}>
-        <MenuRow icon={<Ionicons name="person" size={17} color="#fff" />} color="#0A84FF" label={t("more.openProfile")} onPress={() => router.push("/profile")} />
-        <MenuRow icon={<Ionicons name="ribbon" size={17} color="#fff" />} color="#FF9F0A" label={t("more.documents")} onPress={() => router.push("/documents")} />
-        <MenuRow icon={<Ionicons name="notifications" size={17} color="#fff" />} color="#FF3B30" label={t("more.reminders")} onPress={() => router.push("/reminders")} />
-        <MenuRow icon={<Ionicons name="airplane" size={17} color="#fff" />} color="#5E5CE6" label={t("more.aircraft")} onPress={() => router.push("/aircraft")} />
-        <MenuRow icon={<Ionicons name="document-text" size={17} color="#fff" />} color="#30B0C7" label={t("more.cv")} onPress={() => router.push("/cv")} />
-        <MenuRow icon={<Ionicons name="briefcase" size={17} color="#fff" />} color="#AC8E68" label={t("more.jobs")} onPress={() => router.push("/jobs")} />
+        <MenuRow icon={<Ionicons name="person" size={17} color="#fff" />} color="#0A84FF" label={t("more.openProfile")} onPress={() => router.navigate("/profile")} />
+        <MenuRow icon={<Ionicons name="ribbon" size={17} color="#fff" />} color="#FF9F0A" label={t("more.documents")} onPress={() => router.navigate("/documents")} />
+        <MenuRow icon={<Ionicons name="notifications" size={17} color="#fff" />} color="#FF3B30" label={t("more.reminders")} onPress={() => router.navigate("/reminders")} />
+        <MenuRow icon={<Ionicons name="airplane" size={17} color="#fff" />} color="#5E5CE6" label={t("more.aircraft")} onPress={() => router.navigate("/aircraft")} />
+        <MenuRow icon={<Ionicons name="document-text" size={17} color="#fff" />} color="#30B0C7" label={t("more.cv")} onPress={() => router.navigate("/cv")} />
+        <MenuRow icon={<Ionicons name="briefcase" size={17} color="#fff" />} color="#AC8E68" label={t("more.jobs")} onPress={() => router.navigate("/jobs")} />
       </MenuGroup>
 
       <MenuGroup title={t("more.g.flying")}>
-        <MenuRow icon={<Ionicons name="timer" size={17} color="#fff" />} color="#FF453A" label={t("more.ftl")} onPress={() => router.push("/ftl")} />
-        <MenuRow icon={<Ionicons name="calendar" size={17} color="#fff" />} color="#FF375F" label={t("more.roster")} onPress={() => router.push("/roster")} />
-        <MenuRow icon={<Ionicons name="bar-chart" size={17} color="#fff" />} color="#32D74B" label={t("more.stats")} onPress={() => router.push("/stats")} />
-        <MenuRow icon={<Ionicons name="funnel" size={17} color="#fff" />} color="#0A84FF" label={t("more.reports")} onPress={() => router.push("/reports")} />
-        <MenuRow icon={<Ionicons name="map" size={17} color="#fff" />} color="#64D2FF" label={t("more.map")} onPress={() => router.push("/map")} />
+        <MenuRow icon={<Ionicons name="timer" size={17} color="#fff" />} color="#FF453A" label={t("more.ftl")} onPress={() => router.navigate("/ftl")} />
+        <MenuRow icon={<Ionicons name="calendar" size={17} color="#fff" />} color="#FF375F" label={t("more.roster")} onPress={() => router.navigate("/roster")} />
+        <MenuRow icon={<Ionicons name="bar-chart" size={17} color="#fff" />} color="#32D74B" label={t("more.stats")} onPress={() => router.navigate("/stats")} />
+        <MenuRow icon={<Ionicons name="funnel" size={17} color="#fff" />} color="#0A84FF" label={t("more.reports")} onPress={() => router.navigate("/reports")} />
+        <MenuRow icon={<Ionicons name="map" size={17} color="#fff" />} color="#64D2FF" label={t("more.map")} onPress={() => router.navigate("/map")} />
       </MenuGroup>
 
       <MenuGroup title={t("more.g.logbook")}>
-        <MenuRow icon={<Ionicons name="checkmark-done" size={17} color="#fff" />} color="#34C759" label={t("more.audit")} onPress={() => router.push("/audit")} />
+        <MenuRow icon={<Ionicons name="checkmark-done" size={17} color="#fff" />} color="#34C759" label={t("more.audit")} onPress={() => router.navigate("/audit")} />
         <MenuRow icon={<Ionicons name="download" size={17} color="#fff" />} color="#8E8E93" label={t("more.import")} loading={busy === "import"} onPress={importCsv} />
-        <MenuRow icon={<Ionicons name="albums" size={17} color="#fff" />} color="#BF5AF2" label={t("more.opening")} onPress={() => router.push("/opening")} />
+        <MenuRow icon={<Ionicons name="albums" size={17} color="#fff" />} color="#BF5AF2" label={t("more.opening")} onPress={() => router.navigate("/opening")} />
       </MenuGroup>
       <Txt variant="small" style={{ marginTop: -8, marginHorizontal: 14 }}>{t("more.importHint")}</Txt>
 

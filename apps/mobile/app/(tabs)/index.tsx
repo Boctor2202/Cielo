@@ -116,7 +116,7 @@ export default function Dashboard() {
         </Card>
 
         {nextDuty ? (
-          <Card onPress={() => router.push("/roster")}>
+          <Card onPress={() => router.navigate("/roster")}>
             <Row style={{ justifyContent: "space-between" }}>
               <Txt variant="label">{t("dash.nextDuty")}</Txt>
               <Txt variant="small" color={c.accent} style={{ fontWeight: "600" }}>{inWords(nextDuty.reportUtc ?? nextDuty.startUtc)}</Txt>
@@ -170,7 +170,7 @@ export default function Dashboard() {
           )}
         </Card>
 
-        <Card onPress={() => router.push("/documents")}>
+        <Card onPress={() => router.navigate("/documents")}>
           <Txt variant="h2">{t("dash.expiries")}</Txt>
           {expiries.length === 0 ? <Txt variant="muted">{t("dash.noDocuments")}</Txt> : null}
           {expiries.map(({ l, s }) => (
