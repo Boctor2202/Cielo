@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { atsReport, buildCvDocument, buildCvPdf, CV_THEMES, cvToText, flightExperience, toJsonResume, type CvData, type CvExperience, type CvFonts, type CvProfile, type CvTheme } from "@cielo/cv";
 import { countryName } from "@cielo/core";
+import { buildProfile, detectAircraft, matchJob, type Job } from "@cielo/jobs";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
 import { DateField } from "../../src/components/DateField";
 import { Requires } from "../../src/components/Access";
-import { API_URL } from "../../src/api";
+import { api, API_URL } from "../../src/api";
 import { shareFile } from "../../src/exporters";
 import { todayUtc, useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
@@ -109,6 +111,8 @@ function Cv() {
         <Button title={t("cv.share")} loading={busy} onPress={() => void share()} />
         <Txt variant="small">{t("cv.shareHint")}</Txt>
       </Card>
+
+      <TargetJob target={profile.target} onChange={(v) => set("target", v)} />
 
       <Card>
         <Row style={{ justifyContent: "space-between" }}>
@@ -233,5 +237,89 @@ function Cv() {
       </Card>
       <Txt variant="small">{t("cv.note")}</Txt>
     </Screen>
+  );
+}
+
+/** Keywords an AI screener will look for in an offer: licence, aircraft names, hour categories (same rule as the web). */
+function keywordsFor(job: Job): string[] {
+  const k = new Set<string>();
+  if (job.requirements.licence) k.add(job.requirements.licence === "FATPL" ? "ATPL" : job.requirements.licence);
+  if (job.requirements.authority) k.add(job.requirements.authority);
+  const name = job.title.replace(/\(.*?\)|first officer|captain|commandant|copilot|co-pilot|\bm\/[fw]\/d\b|[-–|/]/gi, " ").replace(/\s+/g, " ").trim();
+  if (name.length > 2) k.add(name);
+  if (job.requirements.jetHours) k.add("Jet");
+  if (job.requirements.multiPilotHours) k.add("Multi-pilot");
+  if (job.requirements.picHours) k.add("PIC");
+  return [...k];
+}
+
+type Target = CvProfile["target"];
+
+/**
+ * The offer the CV is tailored to, picked from the same job feed as the Jobs tab (best matches first): its
+ * types go first in the CV, its keywords join the CV's, and the check verifies they appear. Saved with the draft.
+ */
+function TargetJob({ target, onChange }: { target: Target; onChange: (v: Target) => void }) {
+  const { t, flights, balances, licenses, aircraftTypes, pilot } = useApp();
+  const c = useTheme();
+  const [feed, setFeed] = useState<Job[] | null | undefined>(undefined);
+  const [q, setQ] = useState("");
+  useEffect(() => {
+    api<{ jobs: Job[] }>("/api/jobs")
+      .then((d) => setFeed(d.jobs ?? []))
+      .catch(() => setFeed(null));
+  }, []);
+
+  const ranked = useMemo(() => {
+    const engine = new Map(aircraftTypes.map((x) => [x.icao, x.engineType]));
+    const me = buildProfile(flights, balances, licenses, (i) => engine.get(i), (code) => detectAircraft(code), { framework: pilot.regulatoryFramework });
+    const list = (feed ?? []).map((job) => ({ job, score: me.totalMin > 0 ? matchJob(job, me).score : 0 }));
+    return list.sort((a, b) => b.score - a.score || (b.job.postedAt ?? "").localeCompare(a.job.postedAt ?? "")).map((r) => r.job);
+  }, [feed, flights, balances, licenses, aircraftTypes, pilot.regulatoryFramework]);
+
+  const shown = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    const list = s ? ranked.filter((j) => [j.company, j.title, j.location ?? "", ...j.aircraft].some((x) => x.toLowerCase().includes(s))) : ranked;
+    return list.slice(0, 6);
+  }, [ranked, q]);
+
+  const pick = (job: Job) => {
+    onChange({ title: job.title, company: job.company, aircraft: job.aircraft.slice(0, 3), keywords: keywordsFor(job) });
+    setQ("");
+  };
+  const isTarget = (j: Job) => !!target && target.title === j.title && target.company === j.company;
+
+  return (
+    <Card>
+      <Txt variant="h2">{t("cv.target")}</Txt>
+      <Txt variant="small">{t("cv.targetHelp")}</Txt>
+      <Row style={{ flexWrap: "wrap" }} gap={6}>
+        <Chip label={t("cv.targetNone")} selected={!target} onPress={() => onChange(undefined)} />
+        {target ? <Chip label={[target.company, target.title].filter(Boolean).join(" — ")} selected onPress={() => undefined} /> : null}
+      </Row>
+      {target?.aircraft?.length || target?.keywords?.length ? (
+        <Txt variant="small" mono>{[...(target.aircraft ?? []), ...(target.keywords ?? [])].join(" · ")}</Txt>
+      ) : null}
+      {feed === undefined ? <ActivityIndicator color={c.accent} /> : null}
+      {feed === null ? <Txt variant="small" color={c.warning}>{t("jobs.error")}</Txt> : null}
+      {feed?.length ? (
+        <>
+          <Field placeholder={t("cv.targetSearch")} value={q} onChangeText={setQ} autoCorrect={false} />
+          {shown.length === 0 ? <Txt variant="muted">{t("jobs.empty")}</Txt> : null}
+          {shown.map((j) => (
+            <Pressable key={j.id} accessibilityRole="button" onPress={() => pick(j)} style={({ pressed }) => ({ paddingVertical: 6, opacity: pressed ? 0.6 : 1 })}>
+              <Row style={{ alignItems: "flex-start" }}>
+                <View style={{ flex: 1 }}>
+                  <Txt variant="small" style={{ fontWeight: "700" }}>{j.company}</Txt>
+                  <Txt numberOfLines={2}>{j.title}</Txt>
+                  {j.aircraft.length || j.location ? <Txt variant="small" numberOfLines={1}>{[j.aircraft.join(", "), j.location].filter(Boolean).join(" · ")}</Txt> : null}
+                </View>
+                {isTarget(j) ? <Ionicons name="checkmark-circle" size={20} color={c.accent} /> : null}
+              </Row>
+            </Pressable>
+          ))}
+        </>
+      ) : null}
+    </Card>
   );
 }
