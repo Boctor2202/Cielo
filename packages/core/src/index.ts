@@ -21,3 +21,4 @@ export * from "./authorities";
 export * from "./countries";
 export * from "./options";
 export * from "./currency";
+export * from "./leon";

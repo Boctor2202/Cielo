@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { accessFor } from "@cielo/core";
+import { accessFor, parseLeonRoster, type PdfTextItem } from "@cielo/core";
+import { getDocumentProxy } from "unpdf";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { rateLimited } from "@/lib/places";
 
@@ -11,7 +12,23 @@ export const maxDuration = 300;
  * AIMS, Netline, CAE…, every layout differs) and returns its duties as structured events. Times are returned
  * as printed with the basis the document states (UTC or local); the app converts local times with the
  * airports' time zones. Roster subscribers (Max plan) only; the file is not stored.
+ * Known layouts (Leon) are read from the PDF's text without any AI; other layouts go to Claude.
  */
+
+/** Positioned text of every page (empty for a scanned PDF). */
+async function pdfText(bytes: Uint8Array): Promise<PdfTextItem[][]> {
+  const pdf = await getDocumentProxy(bytes);
+  const pages: PdfTextItem[][] = [];
+  for (let p = 1; p <= Math.min(pdf.numPages, 20); p++) {
+    const tc = await (await pdf.getPage(p)).getTextContent();
+    pages.push(
+      (tc.items as { str?: string; transform?: number[] }[])
+        .filter((i) => i.str?.trim() && i.transform)
+        .map((i) => ({ x: i.transform![4]!, y: i.transform![5]!, s: i.str! })),
+    );
+  }
+  return pages;
+}
 
 const KINDS = ["FLIGHT", "DEADHEAD", "STANDBY", "SIM", "GROUND", "OFF", "REST", "LEAVE", "OTHER"];
 const hhmm = { type: ["string", "null"], pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" };
@@ -75,7 +92,7 @@ export async function POST(req: Request) {
   const user = await userFrom(req).catch(() => null);
   if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
   const db = adminDb();
-  if (!db || !process.env.ANTHROPIC_API_KEY) return Response.json({ error: "not_configured" }, { status: 503 });
+  if (!db) return Response.json({ error: "not_configured" }, { status: 503 });
   const { data: p } = await db.from("pilots").select("created_at, subscription_tier, subscription_expires_at").eq("id", user.id).maybeSingle();
   const access = accessFor(
     p ? { createdAt: p.created_at, subscriptionTier: p.subscription_tier, subscriptionExpiresAt: p.subscription_expires_at } : undefined,
@@ -89,6 +106,16 @@ export async function POST(req: Request) {
   if (!pdf || pdf.length > 4_000_000 || !/^[A-Za-z0-9+/=]+$/.test(pdf)) return Response.json({ error: "bad_request" }, { status: 400 });
   const today = typeof b?.today === "string" && /^\d{4}-\d{2}-\d{2}$/.test(b.today) ? b.today : new Date().toISOString().slice(0, 10);
 
+  // 1. layouts we know: read the text directly (free, exact, no AI)
+  try {
+    const leon = parseLeonRoster(await pdfText(Uint8Array.from(Buffer.from(pdf, "base64"))));
+    if (leon && leon.events.length) return Response.json({ ...leon, reader: "leon" }, { headers: { "Cache-Control": "no-store" } });
+  } catch {
+    // not a readable text PDF: fall through to the AI reader
+  }
+
+  // 2. any other layout: Claude reads the document
+  if (!process.env.ANTHROPIC_API_KEY) return Response.json({ error: "unsupported" }, { status: 422 });
   const client = new Anthropic();
   try {
     const stream = client.beta.messages.stream({

@@ -41,7 +41,7 @@ function RosterScreen() {
       );
     } catch (e) {
       const code = e instanceof RosterPdfError ? e.message : null;
-      const known = ["signin", "plan", "too_big", "not_configured", "rate_limited", "unreadable", "too_long"];
+      const known = ["signin", "plan", "too_big", "not_configured", "rate_limited", "unreadable", "too_long", "unsupported"];
       Alert.alert(t("roster.importFailed"), code ? t(`roster.pdfErr.${known.includes(code) ? code : "other"}` as I18nKey) : e instanceof Error ? e.message : String(e));
     } finally {
       setImporting(false);
