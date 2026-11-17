@@ -37,6 +37,8 @@ export const SOURCES: Source[] = [
   { company: "Beond", ats: "workable", token: "beond", country: "MV", segment: "airline" },
   { company: "Air New Zealand", ats: "smartrecruiters", token: "AirNewZealand", country: "NZ", segment: "airline" },
   { company: "Airlink", ats: "workable", token: "airlink", country: "ZA", segment: "regional" },
+  // aviation recruitment agency (Dublin) hiring pilots for partner airlines; offers published on its Workable board
+  { company: "Nobox (aviation recruitment)", ats: "workable", token: "nobox-hr-outsourcing-solutions", country: "IE", segment: "airline" },
   { company: "FlySafair", ats: "workable", token: "flysafair", country: "ZA", segment: "airline" },
   // SAP SuccessFactors career sites
   { company: "NetJets", ats: "successfactors", token: "netjets.jobs.hr.cloud.sap", country: "US", segment: "business" },
