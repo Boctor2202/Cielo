@@ -103,11 +103,12 @@ export function GoogleRoutesMap({ apiKey, lang, dark, lines, points, onError }: 
           }
           const n = Number(f.getProperty("n")) || 1;
           // inline SVG dot: nothing to download, sized by the number of visits
-          const r = Math.round(Math.min(9, 4 + Math.log2(n)));
-          const d = r * 2 + 4;
-          const fill = dark ? "#e8eef5" : "#0e2a47";
+          // small, fine dots (the routes are the subject); busy airports only slightly larger
+          const r = Math.round((Math.min(5.5, 2.5 + Math.log2(n) * 0.6)) * 2) / 2;
+          const d = Math.ceil(r * 2 + 3);
+          const fill = dark ? "#4ade80" : "#15803d";
           const ring = dark ? "#0a1626" : "#ffffff";
-          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d}" height="${d}"><circle cx="${d / 2}" cy="${d / 2}" r="${r}" fill="${fill}" stroke="${ring}" stroke-width="2"/></svg>`;
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d}" height="${d}"><circle cx="${d / 2}" cy="${d / 2}" r="${r}" fill="${fill}" fill-opacity="0.9" stroke="${ring}" stroke-width="1.5"/></svg>`;
           return {
             icon: { url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`, anchor: new google.maps.Point(d / 2, d / 2) },
             title: `${f.getProperty("icao")} · ${n}`,
@@ -116,7 +117,18 @@ export function GoogleRoutesMap({ apiKey, lang, dark, lines, points, onError }: 
         const info = new google.maps.InfoWindow();
         m.data.addListener("click", (e) => {
           if (e.feature.getGeometry().getType() !== "Point") return;
-          info.setContent(`<strong>${String(e.feature.getProperty("icao"))}</strong><br/>${String(e.feature.getProperty("n"))} ✈`);
+          // explicit colours: the bubble is always white, whatever the page theme
+          const esc = (v: unknown) => String(v ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!);
+          const p = (k: string) => e.feature.getProperty(k);
+          const place = [p("name"), p("city")].filter(Boolean).map(esc).join(" · ");
+          const n = Number(p("n")) || 0;
+          info.setContent(
+            `<div style="color:#0a1626;font:500 13px/1.35 Manrope,system-ui,sans-serif;padding:2px 2px 0;min-width:140px">` +
+              `<div style="font:700 15px/1.2 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.02em">${esc(p("icao"))}</div>` +
+              (place ? `<div style="color:#4a5d73;margin-top:2px">${place}</div>` : "") +
+              `<div style="margin-top:6px;color:#15803d;font-weight:700">${n} ${lang.startsWith("fr") ? (n > 1 ? "passages" : "passage") : n > 1 ? "visits" : "visit"}</div>` +
+              `</div>`,
+          );
           info.setPosition(e.latLng);
           info.open({ map: m });
         });

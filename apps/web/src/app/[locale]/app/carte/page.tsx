@@ -63,7 +63,7 @@ export default function MapPage() {
     });
     const points = [...used.entries()].flatMap(([icao, n]) => {
       const A = airports.get(icao);
-      return A ? [{ type: "Feature" as const, properties: { icao, n }, geometry: { type: "Point" as const, coordinates: [A.lon, A.lat] } }] : [];
+      return A ? [{ type: "Feature" as const, properties: { icao, n, name: A.name, city: A.city ?? "" }, geometry: { type: "Point" as const, coordinates: [A.lon, A.lat] } }] : [];
     });
     return { lines: { type: "FeatureCollection" as const, features: lines }, points: { type: "FeatureCollection" as const, features: points } };
   }, [flights, airports, year]);
