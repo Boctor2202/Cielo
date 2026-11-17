@@ -1753,11 +1753,11 @@
     "canvasLabel": "Film animé au défilement : un jet d'affaires descend au crépuscule au-dessus d'une mer de nuages, traverse la couche, sort en finale face à la piste et sort son train, puis la Terre vue de l'espace avec des routes aériennes, que l'on peut faire tourner.",
     "scroll": "Faites défiler",
     "chapters": [
-      "Descente",
-      "Approche",
-      "Votre machine",
-      "Routes",
-      "Prêt"
+      "Accueil",
+      "Temps de nuit",
+      "Votre carnet",
+      "Vos routes",
+      "Conformité"
     ],
     "c1": {
       "label": "01 · Temps de nuit",
@@ -1765,9 +1765,9 @@
       "text": "La nuit EASA commence à la fin du crépuscule civil du soir. Geardown suit la position de l'avion minute par minute et calcule le temps de nuit, les décollages et les atterrissages de nuit, sans que vous ayez rien à saisir."
     },
     "machine": {
-      "label": "02 · Votre machine",
-      "title": "Votre {name}. Vos colonnes, sans y penser.",
-      "titleGeneric": "Votre avion. Vos colonnes, sans y penser.",
+      "label": "02 · Votre carnet",
+      "title": "Votre {name}. Les bonnes colonnes, sans y penser.",
+      "titleGeneric": "Les bonnes colonnes, sans y penser.",
       "text": "Geardown connaît votre type : chaque vol alimente les bonnes colonnes de votre carnet, EASA, FAA ou CASA, les totaux par type et votre expérience récente.",
       "icao": "Type OACI",
       "rating": "Qualification",

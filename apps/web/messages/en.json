@@ -1753,11 +1753,11 @@
     "canvasLabel": "Scroll-driven film: a business jet descends at dusk over a sea of clouds, goes through the layer, breaks out on final facing the runway and lowers its gear, then the Earth seen from space with flight routes, which you can turn.",
     "scroll": "Scroll",
     "chapters": [
-      "Descent",
-      "Approach",
-      "Your aircraft",
-      "Routes",
-      "Ready"
+      "Welcome",
+      "Night time",
+      "Your logbook",
+      "Your routes",
+      "Compliance"
     ],
     "c1": {
       "label": "01 · Night time",
@@ -1765,9 +1765,9 @@
       "text": "EASA night begins at the end of evening civil twilight. Geardown follows the aircraft's position minute by minute and works out night time, night takeoffs and night landings, with nothing for you to type."
     },
     "machine": {
-      "label": "02 · Your aircraft",
+      "label": "02 · Your logbook",
       "title": "Your {name}. The right columns, automatically.",
-      "titleGeneric": "Your aircraft. The right columns, automatically.",
+      "titleGeneric": "The right columns, automatically.",
       "text": "Geardown knows your type: every flight feeds the right columns of your logbook, EASA, FAA or CASA, the totals by type and your recent experience.",
       "icao": "ICAO type",
       "rating": "Rating",
