@@ -64,6 +64,7 @@ function Navigator() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="flight/[id]" options={{ contentStyle: { backgroundColor: c.bg }, title: t("flight.new"), presentation: "modal" }} />
         <Stack.Screen name="document/[id]" options={{ contentStyle: { backgroundColor: c.bg }, title: t("docs.new"), presentation: "modal" }} />
+        <Stack.Screen name="roster/[id]" options={{ contentStyle: { backgroundColor: c.bg }, title: t("roster.addEvent"), presentation: "modal" }} />
         <Stack.Screen name="aircraft/[id]" options={{ contentStyle: { backgroundColor: c.bg }, title: t("acft.add"), presentation: "modal" }} />
         <Stack.Screen name="layover/[id]" options={{ contentStyle: { backgroundColor: c.bg }, title: t("lay.title") }} />
         <Stack.Screen name="auth" options={{ contentStyle: { backgroundColor: c.bg }, title: t("auth.title"), presentation: "modal" }} />
