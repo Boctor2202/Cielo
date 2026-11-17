@@ -1,4 +1,5 @@
-import { useColorScheme, type TextStyle } from "react-native";
+import { type TextStyle } from "react-native";
+import { useScheme } from "./appearance";
 
 export interface Palette {
   scheme: "light" | "dark";
@@ -85,5 +86,5 @@ export function glass(c: Palette) {
 }
 
 export function useTheme(): Palette {
-  return useColorScheme() === "dark" ? DARK : LIGHT;
+  return useScheme() === "dark" ? DARK : LIGHT;
 }
