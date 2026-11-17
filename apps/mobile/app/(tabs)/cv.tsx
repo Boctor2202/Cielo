@@ -9,6 +9,8 @@ import { DateField } from "../../src/components/DateField";
 import { Requires } from "../../src/components/Access";
 import { api, API_URL } from "../../src/api";
 import { shareFile } from "../../src/exporters";
+import { setLetterJob } from "../../src/letterJob";
+import { router } from "expo-router";
 import { todayUtc, useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
 
@@ -145,6 +147,14 @@ function Cv() {
         </Row>
         <Button title={t("cv.share")} loading={busy} onPress={() => void share()} />
         <Button kind="secondary" title={t("cv.pack")} loading={busy} onPress={() => void sharePack()} />
+        <Button
+          kind="secondary"
+          title={t("letter.title")}
+          onPress={() => {
+            setLetterJob(null);
+            router.push("/letter");
+          }}
+        />
         <Txt variant="small">{t("cv.packHint")}</Txt>
         <Txt variant="small">{t("cv.shareHint")}</Txt>
       </Card>

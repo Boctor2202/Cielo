@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { router } from "expo-router";
+import { setLetterJob } from "../../src/letterJob";
 import { buildProfile, detectAircraft, matchJob, type Job, type Position } from "@cielo/jobs";
 import { Card, Chip, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
 import { Requires } from "../../src/components/Access";
@@ -113,6 +115,17 @@ function Jobs() {
               <Txt variant="small" style={{ textDecorationLine: "underline" }}>Jobs by Adzuna</Txt>
             </Pressable>
           ) : null}
+          <Pressable
+            onPress={() => {
+              setLetterJob(job);
+              router.push("/letter");
+            }}
+          >
+            <Row gap={4}>
+              <Ionicons name="create-outline" size={14} color={c.accent} />
+              <Txt variant="small" color={c.accent} style={{ fontWeight: "600" }}>{t("letter.forThis")}</Txt>
+            </Row>
+          </Pressable>
           <Row style={{ justifyContent: "space-between" }}>
             <Txt variant="small" mono>{salary(job)}</Txt>
             <Pressable onPress={() => void WebBrowser.openBrowserAsync(job.url)}>

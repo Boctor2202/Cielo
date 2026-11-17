@@ -5,3 +5,4 @@ export * from "./pdf";
 export * from "./ats";
 export * from "./jsonresume";
 export * from "./pack";
+export * from "./letter";
