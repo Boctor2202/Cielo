@@ -11,6 +11,7 @@ import { pickAndImportCsv } from "../../src/importer";
 import { sendReport } from "../../src/api";
 import { useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
+import { loadThemePref, setThemePref, type ThemePref } from "../../src/appearance";
 
 export default function More() {
   const app = useApp();
@@ -18,6 +19,7 @@ export default function More() {
   const c = useTheme();
 
   const [busy, setBusy] = useState<string | null>(null);
+  const [theme, setTheme] = useState<ThemePref>(loadThemePref);
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key);
@@ -116,6 +118,19 @@ export default function More() {
             <Chip key={f} label={f} selected={pilot.defaultFunction === f} onPress={() => void app.savePilot({ defaultFunction: f })} />
           ))}
         </Row>
+        <Segmented<ThemePref>
+          label={t("more.theme")}
+          value={theme}
+          onChange={(v) => {
+            setTheme(v);
+            setThemePref(v);
+          }}
+          options={[
+            { value: "dark", label: t("more.theme.dark") },
+            { value: "light", label: t("more.theme.light") },
+            { value: "system", label: t("more.theme.system") },
+          ]}
+        />
         <Segmented<TimeDisplay>
           label={t("more.timeDisplay")}
           value={pilot.timeDisplay}

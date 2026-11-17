@@ -7,11 +7,14 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppProvider, useApp, useBootError } from "../src/state";
+import { applyThemePref, loadThemePref } from "../src/appearance";
 import { useTheme } from "../src/theme";
 import { Backdrop, Txt } from "../src/components/ui";
 import { glass } from "../src/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
+// dark by default; applied before the first render so the app never flashes light
+applyThemePref(loadThemePref());
 
 function Boot() {
   const c = useTheme();

@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseSync, type SupabaseSync, type SyncResult } from "@cielo/sync";
 import { localStore } from "./db";
-import { adoptPilotId, dedupeFlights } from "./repo";
+import { adoptPilotId, dedupeAircraft, dedupeFlights } from "./repo";
 import { supabase } from "./supabase";
 
 interface CloudState {
@@ -62,8 +62,8 @@ export function CloudProvider({ children }: { children: ReactNode }) {
           // first sync after this browser's logbook joined the account: drop flights it already had
           if (!cleaned && r.ok) {
             cleaned = true;
-            void dedupeFlights().then((n) => {
-              if (n) void engine.current?.syncNow();
+            void Promise.all([dedupeFlights(), dedupeAircraft()]).then(([n, m]) => {
+              if (n || m) void engine.current?.syncNow();
             });
           }
         },

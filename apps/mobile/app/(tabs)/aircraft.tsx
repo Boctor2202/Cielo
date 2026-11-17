@@ -23,8 +23,14 @@ export default function AircraftList() {
       if (!e.last || f.date > e.last) e.last = f.date;
       byReg.set(k, e);
     }
-    return aircraft
+    // one row per registration (dashes and case ignored), even if copies came in with an old import
+    const norm = (r: string) => r.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const seen = new Set<string>();
+    const unique = aircraft
       .filter((a) => !a.deletedAt)
+      .sort((x, y) => x.createdAt.localeCompare(y.createdAt))
+      .filter((a) => (seen.has(norm(a.registration)) ? false : (seen.add(norm(a.registration)), true)));
+    return unique
       .map((a) => ({ a, type: aircraftTypes.find((x) => x.id === a.aircraftTypeId), s: byReg.get(a.registration.toUpperCase()) }))
       .sort((x, y) => (y.s?.last ?? "").localeCompare(x.s?.last ?? "") || x.a.registration.localeCompare(y.a.registration));
   }, [aircraft, aircraftTypes, flights]);

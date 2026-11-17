@@ -92,6 +92,32 @@ export async function dedupeFlights(): Promise<number> {
   return extra.length;
 }
 
+/**
+ * Aircraft copies: a logbook imported again in another browser, then joined to the account, brings its own
+ * aircraft records. Keeps the oldest record per registration (dashes and case ignored), points the flights
+ * at it and soft-deletes the others.
+ */
+export async function dedupeAircraft(): Promise<number> {
+  const norm = (r: string) => r.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const all = (await db().t("aircraft").toArray()).filter((a) => !a.deletedAt).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const keep = new Map<string, Aircraft>();
+  const moved = new Map<string, string>();
+  for (const a of all) {
+    const k = norm(a.registration);
+    const first = keep.get(k);
+    if (first) moved.set(a.id, first.id);
+    else keep.set(k, a);
+  }
+  if (!moved.size) return 0;
+  const t = now();
+  for (const f of await db().t("flights").toArray()) {
+    const to = f.aircraftId ? moved.get(f.aircraftId) : undefined;
+    if (to) await db().t("flights").put({ ...f, aircraftId: to, updatedAt: t });
+  }
+  for (const a of all) if (moved.has(a.id)) await db().t("aircraft").put({ ...a, deletedAt: t, updatedAt: t });
+  return moved.size;
+}
+
 /* ---------- Aircraft & types ---------- */
 
 export async function allTypes(): Promise<AircraftType[]> {
