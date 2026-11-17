@@ -69,9 +69,10 @@ export default function JobsPage() {
   type Row = (typeof all)[number];
   const byPosition = (r: Row, p: Position | "ALL" = position) => p === "ALL" || r.job.position === p;
   const byType = (r: Row, on = onTypeOnly) => !on || r.match.onType;
-  // "my regions": where the pilot may work AND with a licence valid there (an FAA job is not for an EASA pilot)
+  // "my regions": the regions the pilot ticked. An offer that needs another licence (an FAA job for an EASA pilot)
+  // stays listed, with its badge and a capped match, so the count on each region chip is what the list shows.
   const byRegion = (r: Row, g: RegionId | "MINE" | "ALL" = region) =>
-    g === "ALL" || (g === "MINE" ? !myRegions.length || (r.match.canWork && r.match.licenceValid) || r.job.region === "OTHER" : r.job.region === g);
+    g === "ALL" || (g === "MINE" ? !myRegions.length || r.match.canWork || r.job.region === "OTHER" : r.job.region === g);
 
   const rows = useMemo(() => {
     const list = all.filter((r) => byPosition(r) && byType(r) && byRegion(r));
