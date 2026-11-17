@@ -1698,7 +1698,8 @@
       "runway": "Piste favorable au vent",
       "runwayCalm": "vent calme ou variable : piste préférentielle",
       "components": "vent de face {head} kt · travers {cross} kt",
-      "runwayNote": "Estimation à partir du vent du METAR, pas la piste annoncée par l'ATIS."
+      "runwayNote": "Estimation à partir du vent du METAR, pas la piste annoncée par l'ATIS.",
+      "refresh": "Actualiser"
     },
     "logReport": {
       "preset": {

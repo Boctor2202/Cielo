@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { ageMin, ceilingFt, tafLines, visibilityText, windText, type FlightCategory, type Metar, type RunwayEstimate, type Taf } from "@cielo/core";
 import { api } from "../api";
 import { useApp } from "../state";
@@ -19,10 +20,10 @@ export function fetchRunways(ids: string[]): Promise<Record<string, RunwayEstima
     .catch(() => ({}));
 }
 
-function fetchWeather(icao: string) {
+function fetchWeather(icao: string, fresh = false) {
   const hit = cache.get(icao);
-  if (hit && Date.now() - hit.at < 5 * 60_000) return hit.p;
-  const p = api<Wx>(`/api/weather?ids=${icao}`).catch(() => null);
+  if (!fresh && hit && Date.now() - hit.at < 5 * 60_000) return hit.p;
+  const p = api<Wx>(`/api/weather?ids=${icao}${fresh ? `&fresh=1&t=${Date.now()}` : ""}`).catch(() => null);
   cache.set(icao, { at: Date.now(), p });
   return p;
 }
@@ -32,17 +33,36 @@ export function AirportWeather({ icao, compact }: { icao: string; compact?: bool
   const { t } = useApp();
   const c = useTheme();
   const [wx, setWx] = useState<{ metar?: Metar; taf?: Taf; runway?: RunwayEstimate } | null | undefined>(undefined);
+  const [tick, setTick] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   useEffect(() => {
     let alive = true;
-    setWx(undefined);
-    fetchWeather(icao).then((d) => alive && setWx(d ? { metar: d.metars[icao], taf: d.tafs[icao], runway: d.runways?.[icao] } : null));
+    if (tick) setRefreshing(true);
+    else setWx(undefined);
+    fetchWeather(icao, tick > 0).then((d) => {
+      if (!alive) return;
+      setWx(d ? { metar: d.metars[icao], taf: d.tafs[icao], runway: d.runways?.[icao] } : null);
+      setRefreshing(false);
+    });
     return () => {
       alive = false;
     };
-  }, [icao]);
+  }, [icao, tick]);
+  const refresh = (
+    <Pressable onPress={() => setTick((x) => x + 1)} disabled={refreshing} hitSlop={10} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+      {refreshing ? <ActivityIndicator size="small" color={c.muted} /> : <Ionicons name="refresh" size={15} color={c.muted} />}
+      <Txt variant="small" color={c.muted}>{t("wx.refresh")}</Txt>
+    </Pressable>
+  );
 
   if (wx === undefined) return <ActivityIndicator color={c.accent} />;
-  if (!wx || (!wx.metar && !wx.taf)) return <Txt variant="muted">{t("wx.none", { icao })}</Txt>;
+  if (!wx || (!wx.metar && !wx.taf))
+    return (
+      <Row style={{ justifyContent: "space-between" }}>
+        <Txt variant="muted">{t("wx.none", { icao })}</Txt>
+        {refresh}
+      </Row>
+    );
   const m = wx.metar;
   const age = ageMin(m?.obsTime);
   const ceil = m ? ceilingFt(m.clouds) : null;
@@ -85,7 +105,10 @@ export function AirportWeather({ icao, compact }: { icao: string; compact?: bool
             </View>
           ) : null}
           <View style={box}>
-            <Txt variant="label">METAR{age != null ? ` · ${t("wx.ago", { min: age })}` : ""}</Txt>
+            <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+              <Txt variant="label">METAR{age != null ? ` · ${t("wx.ago", { min: age })}` : ""}</Txt>
+              {refresh}
+            </Row>
             <Txt style={[mono, { fontSize: 13 }]} color={age != null && age > 90 ? c.warning : c.text}>{m.raw}</Txt>
           </View>
         </>

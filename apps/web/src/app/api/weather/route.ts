@@ -12,8 +12,8 @@ const RUNWAYS = (runwayFile as unknown as { airports: Record<string, [string, nu
 const AWC = "https://aviationweather.gov/api/data";
 const UA = "Geardown/1.0 (+https://geardown.app)";
 
-async function awc(kind: "metar" | "taf", ids: string[]): Promise<Record<string, unknown>[]> {
-  const r = await fetch(`${AWC}/${kind}?ids=${ids.join(",")}&format=json`, { headers: { "User-Agent": UA, Accept: "application/json" }, next: { revalidate: 300 } });
+async function awc(kind: "metar" | "taf", ids: string[], fresh = false): Promise<Record<string, unknown>[]> {
+  const r = await fetch(`${AWC}/${kind}?ids=${ids.join(",")}&format=json`, { headers: { "User-Agent": UA, Accept: "application/json" }, ...(fresh ? { cache: "no-store" as const } : { next: { revalidate: 300 } }) });
   if (r.status === 204) return [];
   if (!r.ok) throw new Error(`awc ${r.status}`);
   const d = (await r.json()) as unknown;
@@ -28,7 +28,9 @@ export async function GET(req: Request) {
   if (rateLimited(`wx:${ip}`, 60)) return Response.json({ error: "rate_limited" }, { status: 429 });
   try {
     const withTaf = u.searchParams.get("taf") !== "0";
-    const [m, t] = await Promise.all([awc("metar", ids), withTaf ? awc("taf", ids) : Promise.resolve([])]);
+    // ?fresh=1: the pilot asked for a refresh, the 5-minute cache is skipped
+    const fresh = u.searchParams.get("fresh") === "1";
+    const [m, t] = await Promise.all([awc("metar", ids, fresh), withTaf ? awc("taf", ids, fresh) : Promise.resolve([])]);
     const metars: Record<string, Metar> = {};
     for (const o of m) {
       const x = parseAwcMetar(o);
@@ -46,7 +48,7 @@ export async function GET(req: Request) {
       const r = favouredRunway(x, ends);
       if (r) runways[icao] = r;
     }
-    return Response.json({ metars, tafs, runways, source: "aviationweather.gov" }, { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } });
+    return Response.json({ metars, tafs, runways, source: "aviationweather.gov" }, { headers: { "Cache-Control": fresh ? "no-store" : "public, s-maxage=300, stale-while-revalidate=600" } });
   } catch {
     return Response.json({ error: "upstream" }, { status: 502 });
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { CloudSun, Loader2 } from "lucide-react";
+import { CloudSun, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ageMin, ceilingFt, tafLines, visibilityText, windText, type FlightCategory, type Metar, type RunwayEstimate, type Taf } from "@cielo/core";
@@ -13,11 +13,11 @@ type Wx = { metars: Record<string, Metar>; tafs: Record<string, Taf>; runways?: 
 const cache = new Map<string, { at: number; p: Promise<Wx | null> }>();
 
 /** METAR + TAF for a few aerodromes, shared between components and kept 5 minutes. */
-export function fetchWeather(ids: string[], opts: { taf?: boolean } = {}): Promise<Wx | null> {
+export function fetchWeather(ids: string[], opts: { taf?: boolean; fresh?: boolean } = {}): Promise<Wx | null> {
   const key = [...ids].sort().join(",") + (opts.taf === false ? "|m" : "");
   const hit = cache.get(key);
-  if (hit && Date.now() - hit.at < 5 * 60_000) return hit.p;
-  const p = fetch(`/api/weather?ids=${encodeURIComponent([...ids].sort().join(","))}${opts.taf === false ? "&taf=0" : ""}`)
+  if (!opts.fresh && hit && Date.now() - hit.at < 5 * 60_000) return hit.p;
+  const p = fetch(`/api/weather?ids=${encodeURIComponent([...ids].sort().join(","))}${opts.taf === false ? "&taf=0" : ""}${opts.fresh ? "&fresh=1" : ""}`, opts.fresh ? { cache: "no-store" } : undefined)
     .then((r) => (r.ok ? (r.json() as Promise<Wx>) : null))
     .catch(() => null);
   cache.set(key, { at: Date.now(), p });
@@ -26,24 +26,37 @@ export function fetchWeather(ids: string[], opts: { taf?: boolean } = {}): Promi
 
 export function useWeather(icao: string | undefined) {
   const [wx, setWx] = useState<{ metar?: Metar; taf?: Taf; runway?: RunwayEstimate } | null | undefined>(undefined);
+  const [refreshing, setRefreshing] = useState(false);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     if (!icao || icao.length < 3) return setWx(null);
     let alive = true;
-    setWx(undefined);
-    fetchWeather([icao]).then((d) => alive && setWx(d ? { metar: d.metars[icao], taf: d.tafs[icao], runway: d.runways?.[icao] } : null));
+    const fresh = tick > 0;
+    if (fresh) setRefreshing(true);
+    else setWx(undefined);
+    fetchWeather([icao], { fresh }).then((d) => {
+      if (!alive) return;
+      setWx(d ? { metar: d.metars[icao], taf: d.tafs[icao], runway: d.runways?.[icao] } : null);
+      setRefreshing(false);
+    });
     return () => {
       alive = false;
     };
-  }, [icao]);
-  return wx;
+  }, [icao, tick]);
+  return { wx, refreshing, refresh: () => setTick((x) => x + 1) };
 }
 
 /** Decoded METAR line + raw METAR and TAF. Used in a card (layover) or bare (radar panel). */
 export function WeatherBody({ icao, compact }: { icao: string; compact?: boolean }) {
   const t = useTranslations("app.weather");
-  const wx = useWeather(icao);
+  const { wx, refreshing, refresh } = useWeather(icao);
+  const button = (
+    <button type="button" onClick={refresh} disabled={refreshing} className="inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-ink disabled:opacity-60" title={t("refresh")}>
+      <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} /> {t("refresh")}
+    </button>
+  );
   if (wx === undefined) return <p className="flex items-center gap-2 text-sm text-muted"><Loader2 size={14} className="animate-spin" /> {t("loading")}</p>;
-  if (!wx || (!wx.metar && !wx.taf)) return <p className="text-sm text-muted">{t("none", { icao })}</p>;
+  if (!wx || (!wx.metar && !wx.taf)) return <div className="flex items-center justify-between gap-2 text-sm text-muted"><p>{t("none", { icao })}</p>{button}</div>;
   const m = wx.metar;
   const age = ageMin(m?.obsTime);
   const ceil = m ? ceilingFt(m.clouds) : null;
@@ -74,14 +87,20 @@ export function WeatherBody({ icao, compact }: { icao: string; compact?: boolean
             </p>
           )}
           <div>
-            <p className="label-caps mb-1">METAR{age != null ? ` · ${t("ago", { min: age })}` : ""}</p>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <p className="label-caps">METAR{age != null ? ` · ${t("ago", { min: age })}` : ""}</p>
+              {button}
+            </div>
             <p className={`num rounded-lg bg-surface-2 px-3 py-2 text-[13px] ${age != null && age > 90 ? "text-[var(--warning)]" : ""}`}>{m.raw}</p>
           </div>
         </>
       )}
       {wx.taf && (
         <div>
-          <p className="label-caps mb-1">TAF</p>
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <p className="label-caps">TAF</p>
+            {!m ? button : null}
+          </div>
           <div className="num space-y-0.5 rounded-lg bg-surface-2 px-3 py-2 text-[13px]">
             {tafLines(wx.taf.raw).map((l, i) => <p key={i} className={i ? "pl-4" : ""}>{l}</p>)}
           </div>

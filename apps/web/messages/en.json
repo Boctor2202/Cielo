@@ -1698,7 +1698,8 @@
       "runway": "Runway favoured by the wind",
       "runwayCalm": "calm or variable wind: preferential runway",
       "components": "headwind {head} kt · crosswind {cross} kt",
-      "runwayNote": "Estimated from the METAR wind, not the runway announced on the ATIS."
+      "runwayNote": "Estimated from the METAR wind, not the runway announced on the ATIS.",
+      "refresh": "Refresh"
     },
     "logReport": {
       "preset": {
