@@ -23,6 +23,7 @@ import { deviceLocale, translator, type TFunction } from "./i18n";
 import { getSession, onAuthChange, signOut as authSignOut, supabase } from "./auth";
 import { startSync, type SyncHandle } from "./sync";
 import { cancelAllLicenseAlerts, scheduleLicenseAlerts } from "./notifications";
+import { setSyncStatus } from "./syncStatus";
 import { identify } from "./purchases";
 
 export interface AppData {
@@ -159,6 +160,7 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
       const next = await loadAll(store);
       setData(next);
       if (table === "licenses") void scheduleLicenseAlerts(next.licenses, t, locale).catch(() => undefined);
+      void syncRef.current?.refresh().catch(() => undefined);
       void syncRef.current?.syncNow().catch(() => undefined);
       return rec;
     };
@@ -190,6 +192,7 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
         syncRef.current?.stop();
         syncRef.current = null;
         await authSignOut();
+        setSyncStatus({ mode: "local", pending: 0, pendingFlightIds: new Set() });
         setSession(null);
       },
     };

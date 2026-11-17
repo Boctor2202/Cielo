@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import { Tabs } from "expo-router/js-tabs";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useApp } from "../../src/state";
+import { SyncBadge } from "../../src/components/SyncBadge";
 import { font, glass, useTheme } from "../../src/theme";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -45,8 +46,8 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: "transparent" },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: t("tabs.dashboard"), headerTitle: t("dash.title"), tabBarIcon: icon("speedometer-outline") }} />
-      <Tabs.Screen name="logbook" options={{ title: t("tabs.logbook"), headerTitle: t("log.title"), tabBarIcon: icon("book-outline") }} />
+      <Tabs.Screen name="index" options={{ title: t("tabs.dashboard"), headerTitle: t("dash.title"), tabBarIcon: icon("speedometer-outline"), headerRight: () => <SyncBadge /> }} />
+      <Tabs.Screen name="logbook" options={{ title: t("tabs.logbook"), headerTitle: t("log.title"), tabBarIcon: icon("book-outline"), headerRight: () => <SyncBadge /> }} />
       <Tabs.Screen name="layovers" options={{ title: t("tabs.layovers"), headerTitle: t("lay.title"), tabBarIcon: icon("bed-outline") }} />
       <Tabs.Screen name="radar" options={{ title: t("tabs.radar"), headerTitle: t("radar.title"), tabBarIcon: icon("radio-outline") }} />
       <Tabs.Screen name="more" options={{ title: t("tabs.more"), headerTitle: t("more.title"), tabBarIcon: icon("ellipsis-horizontal-circle-outline") }} />

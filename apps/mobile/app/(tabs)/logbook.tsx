@@ -6,6 +6,7 @@ import { formatClock, formatDuration, sumFlights, type Flight } from "@cielo/cor
 import { EmptyState, Fab, Row, Txt, tap } from "../../src/components/ui";
 import { formatDate, formatMonth } from "../../src/i18n";
 import { useApp } from "../../src/state";
+import { useSyncStatus } from "../../src/syncStatus";
 import { font, glass, space, useTheme } from "../../src/theme";
 
 interface Section {
@@ -16,7 +17,10 @@ interface Section {
 }
 
 export default function Logbook() {
-  const { access, t, locale, flights, pilot, remove } = useApp();
+  const { access, t, locale, flights, pilot, remove, session } = useApp();
+  const sync = useSyncStatus();
+  // flights changed on this phone and not yet on the server (none to show when not signed in)
+  const pendingIds = session ? sync.pendingFlightIds : new Set<string>();
   const c = useTheme();
   const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
 
@@ -140,6 +144,12 @@ export default function Logbook() {
                     {!f.isFstd && f.outUtc ? `${formatClock(f.outUtc)} – ${formatClock(f.inUtc)} UTC · ` : ""}
                     {[f.registration, f.aircraftTypeIcao, f.function, f.flightNumber].filter(Boolean).join(" · ")}
                   </Txt>
+                  {pendingIds.has(f.id) ? (
+                    <Row gap={4} style={{ alignItems: "center" }}>
+                      <Ionicons name="cloud-upload-outline" size={12} color={c.scheme === "dark" ? "#FBBF24" : "#B45309"} />
+                      <Txt variant="small" style={{ fontSize: 11 }} color={c.scheme === "dark" ? "#FBBF24" : "#B45309"}>{t("sync.flightPending")}</Txt>
+                    </Row>
+                  ) : null}
                 </View>
                 <View style={{ alignItems: "flex-end", gap: 4 }}>
                   <View style={{ paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, backgroundColor: c.scheme === "dark" ? "rgba(34,197,94,0.16)" : "rgba(21,128,61,0.10)" }}>
