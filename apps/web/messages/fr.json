@@ -1145,7 +1145,14 @@
       "demoPlan": "Démo ({days} j restants)",
       "until": "jusqu'au {date}",
       "signedOut": "Vous n'êtes pas connecté sur ce navigateur. Connectez-vous pour retrouver votre abonnement et votre carnet.",
-      "storageSignedOut": "Non connecté : les données saisies ici restent dans ce navigateur jusqu'à votre connexion."
+      "storageSignedOut": "Non connecté : les données saisies ici restent dans ce navigateur jusqu'à votre connexion.",
+      "authority": "Autorité principale",
+      "regions": {
+        "europe": "Europe",
+        "americas": "Amériques",
+        "mena": "Moyen-Orient et Afrique",
+        "apac": "Asie-Pacifique"
+      }
     },
     "functions": {
       "PIC": "Commandant de bord (PIC)",

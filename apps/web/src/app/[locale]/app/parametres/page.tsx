@@ -4,7 +4,7 @@ import { Download, LogOut, RefreshCw, Trash2, Upload } from "lucide-react";
 import { AirportInput } from "@/components/app/AirportInput";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { PILOT_FUNCTIONS, type Pilot } from "@cielo/core";
+import { REGULATORS, regulatorById, PILOT_FUNCTIONS, type Pilot } from "@cielo/core";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Card, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { usePilot } from "@/lib/hooks";
@@ -79,9 +79,23 @@ export default function SettingsPage() {
 
         <Card title={t("preferences")}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t("framework")}>
-              <select className="input" value={v.regulatoryFramework} onChange={(e) => patch({ regulatoryFramework: e.target.value as Pilot["regulatoryFramework"] })}>
-                {(["EASA", "FAA", "CASA"] as const).map((f) => <option key={f} value={f}>{tfw(f)}</option>)}
+            <Field label={t("authority")} hint={regulatorById(v.authority)?.basis ?? tfw(v.regulatoryFramework)}>
+              {/* the authority sets the rule family (logbook layout, recency rules) the app applies */}
+              <select
+                className="input"
+                value={v.authority ?? v.regulatoryFramework}
+                onChange={(e) => {
+                  const r = regulatorById(e.target.value);
+                  if (r) void patch({ authority: r.id, regulatoryFramework: r.framework });
+                }}
+              >
+                {(["europe", "americas", "mena", "apac"] as const).map((g) => (
+                  <optgroup key={g} label={t(`regions.${g}`)}>
+                    {REGULATORS.filter((r) => r.region === g).map((r) => (
+                      <option key={r.id} value={r.id}>{`${r.short} · ${r.name}`}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </Field>
             <Field label={t("defaultFunction")}>

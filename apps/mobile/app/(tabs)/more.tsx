@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, Platform } from "react-native";
 import { router } from "expo-router";
 import Constants from "expo-constants";
-import { PILOT_FUNCTIONS, type IfrDefault, type Locale, type PilotFunction, type RegulatoryFramework, type TimeDisplay } from "@cielo/core";
+import { PILOT_FUNCTIONS, REGULATORS, regulatorById, type IfrDefault, type Locale, type PilotFunction, type TimeDisplay } from "@cielo/core";
 import { Button, Card, Chip, Field, MenuGroup, MenuRow, Row, Screen, Segmented, Txt } from "../../src/components/ui";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf } from "../../src/exporters";
@@ -93,16 +93,24 @@ export default function More() {
 
 
       <Card>
-        <Segmented<RegulatoryFramework>
-          label={t("more.framework")}
-          value={pilot.regulatoryFramework}
-          onChange={(v) => void app.savePilot({ regulatoryFramework: v })}
-          options={[
-            { value: "EASA", label: "EASA" },
-            { value: "FAA", label: "FAA" },
-            { value: "CASA", label: "CASA" },
-          ]}
-        />
+        <Txt variant="label">{t("more.authority")}</Txt>
+        {/* the authority sets the rule family (logbook layout, recency rules) the app applies */}
+        <Row style={{ flexWrap: "wrap" }}>
+          {REGULATORS.map((r) => (
+            <Chip
+              key={r.id}
+              label={r.id === "ANAC_BR" ? "ANAC Brasil" : r.id === "ANAC_AR" ? "ANAC Argentina" : r.short}
+              selected={(pilot.authority ?? pilot.regulatoryFramework) === r.id}
+              onPress={() => void app.savePilot({ authority: r.id, regulatoryFramework: r.framework })}
+            />
+          ))}
+        </Row>
+        <Txt variant="small">
+          {(() => {
+            const r = regulatorById(pilot.authority ?? pilot.regulatoryFramework);
+            return r ? `${r.name} · ${r.basis}` : "";
+          })()}
+        </Txt>
         <Segmented<"always" | "alternate" | "never">
           label={t("more.defaultPf")}
           value={pilot.defaultPilotFlying ?? "alternate"}

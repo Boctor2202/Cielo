@@ -1145,7 +1145,14 @@
       "demoPlan": "Demo ({days} days left)",
       "until": "until {date}",
       "signedOut": "You are not signed in on this browser. Sign in to get your subscription and your logbook back.",
-      "storageSignedOut": "Not signed in: what you enter here stays in this browser until you sign in."
+      "storageSignedOut": "Not signed in: what you enter here stays in this browser until you sign in.",
+      "authority": "Main licensing authority",
+      "regions": {
+        "europe": "Europe",
+        "americas": "Americas",
+        "mena": "Middle East and Africa",
+        "apac": "Asia-Pacific"
+      }
     },
     "functions": {
       "PIC": "Pilot in command (PIC)",
