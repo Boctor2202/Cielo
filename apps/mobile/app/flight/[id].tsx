@@ -23,7 +23,7 @@ import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPick
 import { AircraftPhoto } from "../../src/components/AircraftPhoto";
 import { FlightTrackCard } from "../../src/components/FlightTrack";
 import { FlightSignature } from "../../src/components/FlightSignature";
-import { DurationField } from "../../src/components/DurationField";
+import { DurationField, normDuration } from "../../src/components/DurationField";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, ToggleRow, Txt, tap } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
 import type { I18nKey } from "../../src/i18n";
@@ -199,11 +199,11 @@ function FlightForm() {
       function: form.function,
       picName: form.picName || undefined,
       ifr: form.ifr,
-      nightOverrideMin: form.autoNight ? undefined : (parseDuration(form.nightManual) ?? 0),
+      nightOverrideMin: form.autoNight ? undefined : (parseDuration(normDuration(form.nightManual)) ?? 0),
       // the override only applies to an IFR flight (the web disables it otherwise)
-      ifrOverrideMin: form.ifr ? (parseDuration(form.ifrManual) ?? undefined) : undefined,
-      actualImcMin: parseDuration(form.actualImc) ?? undefined,
-      xcMin: parseDuration(form.xc) ?? undefined,
+      ifrOverrideMin: form.ifr ? (parseDuration(normDuration(form.ifrManual)) ?? undefined) : undefined,
+      actualImcMin: parseDuration(normDuration(form.actualImc)) ?? undefined,
+      xcMin: parseDuration(normDuration(form.xc)) ?? undefined,
       takeoffsDay: form.takeoffsDay,
       takeoffsNight: form.takeoffsNight,
       landingsDay: form.landingsDay,
@@ -214,7 +214,7 @@ function FlightForm() {
       isFstd: form.isFstd,
       fstdType: form.fstdType || undefined,
       fstdQualification: form.fstdQualification || undefined,
-      fstdMin: parseDuration(form.fstdMin) ?? 0,
+      fstdMin: parseDuration(normDuration(form.fstdMin)) ?? 0,
       remarks: form.remarks || undefined,
     }),
     [form, selectedAircraft, selectedType],
@@ -375,14 +375,7 @@ function FlightForm() {
           <Card>
             <Field label={t("flight.fstdType")} value={form.fstdType} autoCapitalize="characters" onChangeText={(s) => set("fstdType", s)} />
             <Field label={t("flight.fstdQualification")} value={form.fstdQualification} onChangeText={(s) => set("fstdQualification", s)} />
-            <Field
-              label={t("flight.fstdMin")}
-              value={form.fstdMin}
-              monoValue
-              placeholder="h:mm"
-              keyboardType="numbers-and-punctuation"
-              onChangeText={(s) => set("fstdMin", s)}
-            />
+            <DurationField label={t("flight.fstdMin")} value={form.fstdMin} onChange={(s) => set("fstdMin", s)} />
           </Card>
         ) : null}
 
@@ -460,14 +453,7 @@ function FlightForm() {
         <Card>
           <ToggleRow label={t("flight.autoNight")} value={form.autoNight} onChange={(v) => set("autoNight", v)} />
           {!form.autoNight ? (
-            <Field
-              label={t("flight.nightManual")}
-              value={form.nightManual}
-              monoValue
-              placeholder="h:mm"
-              keyboardType="numbers-and-punctuation"
-              onChangeText={(s) => set("nightManual", s)}
-            />
+            <DurationField label={t("flight.nightManual")} value={form.nightManual} onChange={(s) => set("nightManual", s)} />
           ) : null}
           <ToggleRow label={t("flight.autoLandings")} value={form.autoLandings} onChange={(v) => set("autoLandings", v)} />
           {!form.autoLandings ? (

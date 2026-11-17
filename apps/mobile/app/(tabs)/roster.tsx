@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Alert, Pressable, SectionList, View } from "react-native";
 import { router } from "expo-router";
 import { formatClock, formatDuration, minutesBetween } from "@cielo/core";
-import { Button, EmptyState, Fab, Glass, Row, Txt } from "../../src/components/ui";
+import { Button, EmptyState, Fab, Glass, Row, Segmented, Txt } from "../../src/components/ui";
 import { type I18nKey } from "../../src/i18n";
 import { useApp } from "../../src/state";
 import { pickAndImportRoster } from "../../src/rosterImport";
@@ -21,6 +21,8 @@ function RosterScreen() {
   const { t, locale, rosterEvents, access, store, pilot, reload } = useApp();
   const c = useTheme();
   const [importing, setImporting] = useState(false);
+  // upcoming duties by default; "past" shows the last 90 days, newest first, so earlier events can be corrected
+  const [when, setWhen] = useState<"next" | "past">("next");
 
   // read-only without a live subscription: the roster stays visible, adding / importing opens the plans
   const addEvent = () => (access.canWrite ? router.push({ pathname: "/roster/[id]", params: { id: "new" } }) : router.push("/subscription"));
@@ -45,13 +47,18 @@ function RosterScreen() {
   };
   const days = useMemo(() => {
     const now = new Date().toISOString();
+    const from = new Date(Date.now() - 90 * 86_400_000).toISOString();
     const by = new Map<string, typeof rosterEvents>();
-    for (const e of rosterEvents.filter((x) => !x.deletedAt && x.endUtc >= now).sort((x, y) => x.startUtc.localeCompare(y.startUtc))) {
+    const list =
+      when === "next"
+        ? rosterEvents.filter((x) => !x.deletedAt && x.endUtc >= now).sort((x, y) => x.startUtc.localeCompare(y.startUtc))
+        : rosterEvents.filter((x) => !x.deletedAt && x.endUtc < now && x.startUtc >= from).sort((x, y) => y.startUtc.localeCompare(x.startUtc));
+    for (const e of list) {
       const k = e.startUtc.slice(0, 10);
       by.set(k, [...(by.get(k) ?? []), e]);
     }
     return [...by.entries()].map(([day, data]) => ({ day, data }));
-  }, [rosterEvents]);
+  }, [rosterEvents, when]);
   const today = new Date().toISOString().slice(0, 10);
   const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
   const dayTitle = (d: string) =>
@@ -68,11 +75,19 @@ function RosterScreen() {
         contentContainerStyle={{ padding: space.lg, paddingBottom: 140, flexGrow: 1 }}
         ListHeaderComponent={
           <View style={{ gap: 4 }}>
+            <Segmented<"next" | "past">
+              value={when}
+              onChange={setWhen}
+              options={[
+                { value: "next", label: t("roster.upcoming") },
+                { value: "past", label: t("roster.past") },
+              ]}
+            />
             <Button kind="secondary" small title={t("roster.import")} loading={importing} onPress={() => void importRoster()} />
             <Txt variant="small" style={{ textAlign: "center" }}>{t("roster.importHint")}</Txt>
           </View>
         }
-        ListEmptyComponent={<EmptyState title={t("roster.empty")} hint={t("roster.emptyHintMobile")} />}
+        ListEmptyComponent={when === "next" ? <EmptyState title={t("roster.empty")} hint={t("roster.emptyHintMobile")} /> : <EmptyState title={t("roster.pastEmpty")} />}
         renderSectionHeader={({ section }) => (
           <Txt style={{ fontSize: 20, fontWeight: "700", marginTop: space.lg, marginBottom: space.sm, textTransform: "capitalize" }}>{dayTitle(section.day)}</Txt>
         )}
