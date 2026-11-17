@@ -9,7 +9,7 @@ import {
 import { Link } from "@/i18n/navigation";
 import { Card, Field, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { useAirports } from "@/lib/airports";
-import { buildFlight, flightKey } from "@/lib/repo";
+import { logImported, buildFlight, flightKey } from "@/lib/repo";
 import { db } from "@/lib/db";
 import { parseOcrText } from "@/lib/ocr";
 import { DropZone } from "@/components/app/DropZone";
@@ -111,6 +111,7 @@ function FileImport() {
       }
     }
     await db().t("flights").bulkPut(built);
+    await logImported(built);
     setBusy(false);
     toast(t("done", { count: built.length }) + (skipped ? ` · ${t("skipped", { count: skipped })}` : ""));
     setRows(null);
@@ -223,6 +224,7 @@ function ScanImport() {
     const built = [];
     for (const r of ok) built.push(await buildFlight(r.input!, airports, { source: "scan", explicit: r.explicit }));
     await db().t("flights").bulkPut(built);
+    await logImported(built);
     toast(t("done", { count: built.length }));
     setParsed(null);
   }

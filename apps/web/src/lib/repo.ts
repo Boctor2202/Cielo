@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  canonicalFlightContent, deriveFlightTimes, newId, stamp, SYNC_TABLES, type Aircraft, type AircraftType, type Flight,
+  canonicalFlightContent, deriveFlightTimes, flightRevision, newId, stamp, SYNC_TABLES, type Aircraft, type AircraftType, type Flight,
   type FlightFormInput, type Layover, type License, type Locale, type OpeningBalance, type Pilot, type RosterEvent,
-  type Signature, type TableMap, type TableName,
+  type Signature, type TableMap, type TableName, type FlightRevision,
 } from "@cielo/core";
 import { AIRCRAFT_TYPES, type AirportIndex } from "@cielo/reference-data";
 import { db, localStore } from "./db";
@@ -88,7 +88,7 @@ export async function dedupeFlights(): Promise<number> {
     else seen.set(k, f);
   }
   const t = now();
-  for (const f of extra) await db().t("flights").put({ ...f, deletedAt: t, updatedAt: t });
+  for (const f of extra) await putFlight({ ...f, deletedAt: t, updatedAt: t });
   return extra.length;
 }
 
@@ -112,7 +112,7 @@ export async function dedupeAircraft(): Promise<number> {
   const t = now();
   for (const f of await db().t("flights").toArray()) {
     const to = f.aircraftId ? moved.get(f.aircraftId) : undefined;
-    if (to) await db().t("flights").put({ ...f, aircraftId: to, updatedAt: t });
+    if (to) await putFlight({ ...f, aircraftId: to, updatedAt: t });
   }
   for (const a of all) if (moved.has(a.id)) await db().t("aircraft").put({ ...a, deletedAt: t, updatedAt: t });
   return moved.size;
@@ -301,10 +301,28 @@ export async function buildFlight(
   return flight;
 }
 
+/** Imported flights: one "created by import" entry each in the audit trail. */
+export async function logImported(flights: Flight[]) {
+  await db().t("flight_revisions").bulkPut(flights.map((f) => stamp({ ...flightRevision(undefined, f, "import")! } as FlightRevision)));
+}
+
+/** Records a change of a flight in its audit trail (nothing when the content did not change). */
+async function logRevision(prev: Flight | undefined, next: Flight) {
+  const r = flightRevision(prev, next, "web");
+  if (r) await db().t("flight_revisions").put(stamp(r as FlightRevision));
+}
+
+/** Writes a flight and records the change. */
+async function putFlight(next: Flight) {
+  const prev = await db().t("flights").get(next.id);
+  await db().t("flights").put(next);
+  await logRevision(prev, next);
+}
+
 export async function saveFlight(input: FlightFormInput, airports: AirportIndex, opts: Parameters<typeof buildFlight>[2] = {}) {
   guard();
   const f = await buildFlight(input, airports, opts);
-  await db().t("flights").put(f);
+  await putFlight(f);
   if (f.rosterEventId) {
     const ev = await db().t("roster_events").get(f.rosterEventId);
     if (ev) await db().t("roster_events").put({ ...ev, flightId: f.id, updatedAt: now() });
@@ -315,13 +333,19 @@ export async function saveFlight(input: FlightFormInput, airports: AirportIndex,
 export async function softDelete<T extends TableName>(table: T, id: string) {
   guard();
   const rec = await db().t(table).get(id);
-  if (rec) await db().t(table).put({ ...rec, deletedAt: now(), updatedAt: now() } as TableMap[T]);
+  if (!rec) return;
+  const next = { ...rec, deletedAt: now(), updatedAt: now() } as TableMap[T];
+  await db().t(table).put(next);
+  if (table === "flights") await logRevision(rec as Flight, next as Flight);
 }
 
 export async function restore<T extends TableName>(table: T, id: string) {
   guard();
   const rec = await db().t(table).get(id);
-  if (rec) await db().t(table).put({ ...rec, deletedAt: null, updatedAt: now() } as TableMap[T]);
+  if (!rec) return;
+  const next = { ...rec, deletedAt: null, updatedAt: now() } as TableMap[T];
+  await db().t(table).put(next);
+  if (table === "flights") await logRevision(rec as Flight, next as Flight);
 }
 
 /** Converts a stored flight back into form values. */
@@ -378,7 +402,7 @@ export async function signFlight(flightId: string, s: Pick<Signature, "signerNam
   const pilot = await ensurePilot();
   const sig: Signature = stamp({ ...s, pilotId: pilot.id, flightId, signedAt: now(), contentHash: await sha256(canonicalFlightContent(f)) } as Signature);
   await db().t("signatures").put(sig);
-  await db().t("flights").put({ ...f, signatureId: sig.id, locked: true, updatedAt: now() });
+  await putFlight({ ...f, signatureId: sig.id, locked: true, updatedAt: now() });
 }
 
 export async function verifySignature(f: Flight): Promise<{ sig?: Signature; valid: boolean }> {
@@ -391,7 +415,7 @@ export async function verifySignature(f: Flight): Promise<{ sig?: Signature; val
 export async function removeSignature(f: Flight) {
   guard();
   if (f.signatureId) await softDelete("signatures", f.signatureId);
-  await db().t("flights").put({ ...f, signatureId: null, locked: false, updatedAt: now() });
+  await putFlight({ ...f, signatureId: null, locked: false, updatedAt: now() });
 }
 
 /* ---------- Generic helpers ---------- */
@@ -402,6 +426,7 @@ export async function put<T extends TableName>(table: T, rec: Omit<TableMap[T], 
   const existing = rec.id ? await db().t(table).get(rec.id) : undefined;
   const row = stamp({ ...(existing ?? {}), ...rec, pilotId: pilot.id } as unknown as TableMap[T]);
   await db().t(table).put(row);
+  if (table === "flights") await logRevision(existing as Flight | undefined, row as Flight);
   return row;
 }
 

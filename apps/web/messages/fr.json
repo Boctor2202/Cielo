@@ -1819,6 +1819,28 @@
       "sheetCountries": "Par pays",
       "sheetStays": "Escales",
       "totalCol": "Total"
+    },
+    "history": {
+      "title": "Historique des modifications ({n})",
+      "action": {
+        "create": "Créé",
+        "update": "Modifié",
+        "delete": "Supprimé",
+        "restore": "Restauré",
+        "sign": "Signé",
+        "unsign": "Signature retirée"
+      },
+      "source": {
+        "ios": "app iPhone",
+        "android": "app Android",
+        "web": "site web",
+        "import": "import",
+        "server": "Geardown (signature)"
+      },
+      "undo": "Annuler cette modification",
+      "undoConfirm": "Remettre les valeurs d'avant cette modification ?",
+      "more": "Voir {n} de plus",
+      "less": "Voir moins"
     }
   },
   "why": {

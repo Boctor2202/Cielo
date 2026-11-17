@@ -23,6 +23,7 @@ import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPick
 import { AircraftPhoto } from "../../src/components/AircraftPhoto";
 import { FlightTrackCard } from "../../src/components/FlightTrack";
 import { FlightSignature } from "../../src/components/FlightSignature";
+import { FlightHistory } from "../../src/components/FlightHistory";
 import { DurationField, normDuration } from "../../src/components/DurationField";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, ToggleRow, Txt, tap } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
@@ -553,6 +554,7 @@ function FlightForm() {
 
         {existing && !existing.isFstd ? <FlightTrackCard flightId={existing.id} /> : null}
         {existing ? <FlightSignature flight={existing} /> : null}
+        {existing ? <FlightHistory flight={existing} /> : null}
 
         {error ? <Txt color={c.warning}>{error}</Txt> : null}
         <Button title={t("common.save")} onPress={save} disabled={locked} loading={saving} />

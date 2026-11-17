@@ -212,6 +212,8 @@ export async function POST(req: Request) {
           .single();
         if (error || !sig) continue;
         await db.from("flights").update({ signature_id: sig.id, locked: true, updated_at: now }).eq("id", r.flight_id);
+        // the flight's audit trail: signed on Geardown's side
+        await db.from("flight_revisions").insert({ pilot_id: r.requester_id, flight_id: r.flight_id, at: now, action: "sign", source: "server", changes: [{ field: "signatureId", from: null, to: sig.id }], updated_at: now });
         await db.from("signature_requests").update({ status: "signed", signature_id: sig.id, responded_at: now, updated_at: now }).eq("id", r.id);
         result.signed++;
       }

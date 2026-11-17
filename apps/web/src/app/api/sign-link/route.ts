@@ -160,6 +160,8 @@ export async function POST(req: Request) {
         .single();
       if (!sig) continue;
       await db.from("flights").update({ signature_id: sig.id, locked: true, updated_at: now }).eq("id", f.id);
+      // the flight's audit trail: signed on Geardown's side
+      await db.from("flight_revisions").insert({ pilot_id: l.requester_id, flight_id: f.id, at: now, action: "sign", source: "server", changes: [{ field: "signatureId", from: null, to: sig.id }], updated_at: now });
       signed++;
     }
     await db.from("signature_links").update({ signed_count: signed }).eq("id", l.id);

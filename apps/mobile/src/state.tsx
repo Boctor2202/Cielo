@@ -1,8 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
+import { Platform } from "react-native";
 import {
   accessFor,
+  flightRevision,
   stamp,
+  type FlightRevision,
   type Access,
   type Aircraft,
   type AircraftType,
@@ -159,7 +162,13 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
       // read-only without a live subscription (the pilot's own settings stay editable)
       if (!access.canWrite && table !== "pilots") throw new ReadOnlyError();
       const rec = stamp(row as Partial<SyncedRecord>) as unknown as TableMap[typeof table];
+      // the flight's audit trail: what changed, field by field (read before the write)
+      const prevFlight = table === "flights" ? await store.get("flights", (rec as { id: string }).id) : undefined;
       await store.bulkPut(table, [rec]);
+      if (table === "flights") {
+        const r = flightRevision(prevFlight, rec as unknown as Flight, Platform.OS === "android" ? "android" : "ios");
+        if (r) await store.bulkPut("flight_revisions", [stamp(r as Partial<SyncedRecord>) as unknown as FlightRevision]);
+      }
       const next = await loadAll(store);
       setData(next);
       if (table === "licenses") void scheduleLicenseAlerts(next.licenses, t, locale).catch(() => undefined);

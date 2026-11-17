@@ -19,6 +19,7 @@ import { AirportInput } from "./AirportInput";
 import { FlightAwareFill } from "./FlightAwareFill";
 import { Card, ClockInput, DurationInput, Field, Segmented, Toggle, useToast } from "./ui";
 import { SignatureModal, SignatureStatus } from "./Signature";
+import { FlightHistory } from "./FlightHistory";
 
 
 function blank(pilot: Pilot | undefined): FlightFormInput {
@@ -384,6 +385,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
             >
               <Trash2 size={14} /> {tc("delete")}
             </button>
+            <FlightHistory flight={flight} />
           </div>
         )}
       </aside>

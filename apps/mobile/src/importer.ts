@@ -13,6 +13,10 @@ import {
   type AircraftType,
   type Flight,
   type Pilot,
+  flightRevision,
+  stamp,
+  type FlightRevision,
+  type SyncedRecord,
 } from "@cielo/core";
 import { lookupAirport, toIcao } from "./airports";
 import type { SqliteStore } from "./db/sqliteStore";
@@ -121,6 +125,10 @@ export async function pickAndImportCsv(store: SqliteStore, pilot: Pilot, types: 
     seen.add(key(f));
     out.push(f);
   }
-  if (out.length) await store.bulkPut("flights", out);
+  if (out.length) {
+    await store.bulkPut("flights", out);
+    // one "created by import" entry each in the audit trail
+    await store.bulkPut("flight_revisions", out.map((f) => stamp({ ...flightRevision(undefined, f, "import")! } as Partial<SyncedRecord>) as unknown as FlightRevision));
+  }
   return { imported: out.length, skipped, duplicates };
 }

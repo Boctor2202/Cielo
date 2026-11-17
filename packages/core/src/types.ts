@@ -287,6 +287,20 @@ export interface RosterEvent extends SyncedRecord {
   externalUid?: string;
 }
 
+export type RevisionAction = "create" | "update" | "delete" | "restore" | "sign" | "unsign";
+
+/** One change to a flight, kept for the logbook's audit trail (field by field, old and new value). */
+export interface FlightRevision extends SyncedRecord {
+  pilotId: UUID;
+  flightId: UUID;
+  /** when the change was made */
+  at: ISODateTime;
+  action: RevisionAction;
+  /** where it was made: the app, the website, an import, or the server (a signature by another pilot or by link) */
+  source: "ios" | "android" | "web" | "import" | "server";
+  changes: { field: string; from: unknown; to: unknown }[];
+}
+
 /** A point of a recorded track: [unix seconds, lat, lon, barometric altitude ft (null on the ground), ground speed kt]. */
 export type TrackPoint = [number, number, number, number | null, number | null];
 
