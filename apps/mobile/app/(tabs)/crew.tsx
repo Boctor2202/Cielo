@@ -1,12 +1,12 @@
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Share, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { formatDuration } from "@cielo/core";
 import { Badge, Button, Card, EmptyState, Field, Row, Screen, Txt, tap } from "../../src/components/ui";
 import { Requires } from "../../src/components/Access";
 import { SignaturePad, signatureSvg } from "../../src/components/SignaturePad";
-import { crewAction, loadCrew, type Captain, type CrewData, type ToSign } from "../../src/crew";
+import { createSignLink, crewAction, loadCrew, type Captain, type CrewData, type ToSign } from "../../src/crew";
 import { formatDate } from "../../src/i18n";
 import { useApp } from "../../src/state";
 import { space, useTheme } from "../../src/theme";
@@ -134,8 +134,23 @@ function Crew() {
 type Act = (key: string, body: Record<string, unknown>, done?: (r: { status?: string }) => void) => Promise<void>;
 
 function CaptainCard({ x, busy, act }: { x: Captain; busy: string | null; act: Act }) {
-  const { t, locale } = useApp();
+  const { t, locale, flights, session } = useApp();
   const c = useTheme();
+  const [linkBusy, setLinkBusy] = useState(false);
+  // unsigned flights of the last 90 days with this captain, for a signing link (signer without Geardown)
+  const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10);
+  const recent = flights.filter((f) => !f.deletedAt && !f.signatureId && f.date >= since && (f.picName ?? "").trim().toLowerCase() === x.name.trim().toLowerCase());
+  const sendLink = async () => {
+    setLinkBusy(true);
+    try {
+      const r = await createSignLink(session?.access_token, { flightIds: recent.map((f) => f.id), signerName: x.name, signerRole: "captain", locale });
+      await Share.share({ message: t("crew.linkMessage", { n: r.flights, url: r.url }) });
+    } catch (e) {
+      Alert.alert(t("common.error"), e instanceof Error && e.message === "plan" ? t("crew.err.plan") : t("sig.linkErr"));
+    } finally {
+      setLinkBusy(false);
+    }
+  };
   const [form, setForm] = useState(false);
   const [email, setEmail] = useState("");
   const [licence, setLicence] = useState("");
@@ -188,6 +203,7 @@ function CaptainCard({ x, busy, act }: { x: Captain; busy: string | null; act: A
           ) : (
             <Button kind="ghost" title={t("crew.linkById")} onPress={() => setForm(true)} />
           )}
+          {recent.length ? <Button kind="ghost" title={t("crew.sendLinkN", { n: recent.length })} loading={linkBusy} onPress={() => void sendLink()} /> : null}
         </>
       )}
     </Card>

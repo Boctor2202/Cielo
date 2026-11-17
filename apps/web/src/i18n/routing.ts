@@ -18,6 +18,7 @@ export const routing = defineRouting({
     "/legal/confidentialite": { fr: "/legal/confidentialite", en: "/legal/privacy" },
     "/legal/cgu": { fr: "/legal/cgu", en: "/legal/terms" },
     "/legal/cookies": "/legal/cookies",
+    "/signer/[token]": { fr: "/signer/[token]", en: "/sign/[token]" },
     "/app": "/app",
     "/app/carnet": { fr: "/app/carnet", en: "/app/logbook" },
     "/app/carnet/nouveau": { fr: "/app/carnet/nouveau", en: "/app/logbook/new" },

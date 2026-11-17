@@ -656,7 +656,17 @@
       "valid": "Signature valide",
       "invalid": "Le vol a été modifié après signature",
       "signedBy": "Signé par {name} ({role}) le {date}",
-      "remove": "Retirer la signature"
+      "remove": "Retirer la signature",
+      "sendLink": "Ou envoyer un lien de signature",
+      "sendLinkHint": "Pour un commandant de bord, instructeur ou examinateur qui n'est pas sur Geardown : il ouvre le lien, vérifie le vol et signe dans son navigateur. Valable 14 jours, utilisable une fois.",
+      "email": "Son e-mail (facultatif)",
+      "createLink": "Créer le lien",
+      "linkReady": "Lien prêt",
+      "linkMailed": "Envoyé par e-mail à {email}.",
+      "copy": "Copier",
+      "copied": "Copié",
+      "linkErr": "Le lien n'a pas pu être créé. Attendez que le vol soit synchronisé, puis réessayez.",
+      "linkPlan": "Les liens de signature font partie de l'offre Max."
     },
     "import": {
       "title": "Importer des vols",
@@ -813,7 +823,19 @@
       "subtitle": "Votre planning, vos escales et la création rapide des vols effectués.",
       "import": "Importer un planning",
       "importHelp": "Roster PDF (Leon, AIMS, Netline…), fichier iCal (.ics) exporté de votre outil de planning, ou CSV (date, départ, arrivée, heures).",
-      "pdf": { "reading": "Lecture du PDF…", "nothingNew": "Rien de nouveau dans ce roster : tous les services sont déjà dans votre calendrier.", "err": { "signin": "Connectez-vous pour importer un roster PDF.", "plan": "L'import de roster PDF fait partie de l'offre Max.", "unsupported": "Cette mise en page de PDF n'a pas pu être lue. Exportez-le en iCal (.ics) ou CSV si votre outil le permet.", "not_configured": "La lecture de PDF n'est pas disponible pour le moment.", "too_big": "Le PDF est trop lourd (3 Mo max).", "rate_limited": "Trop d'imports d'affilée : réessayez dans une minute.", "upstream": "Le PDF n'a pas pu être lu. Réessayez." } },
+      "pdf": {
+        "reading": "Lecture du PDF…",
+        "nothingNew": "Rien de nouveau dans ce roster : tous les services sont déjà dans votre calendrier.",
+        "err": {
+          "signin": "Connectez-vous pour importer un roster PDF.",
+          "plan": "L'import de roster PDF fait partie de l'offre Max.",
+          "unsupported": "Cette mise en page de PDF n'a pas pu être lue. Exportez-le en iCal (.ics) ou CSV si votre outil le permet.",
+          "not_configured": "La lecture de PDF n'est pas disponible pour le moment.",
+          "too_big": "Le PDF est trop lourd (3 Mo max).",
+          "rate_limited": "Trop d'imports d'affilée : réessayez dans une minute.",
+          "upstream": "Le PDF n'a pas pu être lu. Réessayez."
+        }
+      },
       "addEvent": "Ajouter un événement",
       "today": "Aujourd'hui",
       "month": "Mois",
@@ -1925,6 +1947,58 @@
     "contact": {
       "title": "Contact",
       "description": "Une question sur Geardown, le carnet de vol électronique ? Écrivez-nous, réponse sous 48 h."
+    }
+  },
+  "signLink": {
+    "loading": "Chargement…",
+    "footer": "Geardown — carnet de vol des pilotes. Votre nom, votre numéro de licence, votre signature, l'heure et votre adresse IP sont enregistrés avec la signature. Rien d'autre n'est conservé sur vous.",
+    "invalidTitle": "Lien non valide",
+    "invalidBody": "Ce lien de signature n'existe pas ou a été mal copié. Demandez au pilote de vous le renvoyer.",
+    "refusedTitle": "Signature refusée",
+    "refusedBody": "{pilot} verra que vous avez refusé.",
+    "doneTitle": "{n, plural, one {# vol signé} other {# vols signés}}",
+    "doneBody": "Merci. Le carnet de {pilot} porte maintenant votre signature ; les vols sont verrouillés.",
+    "doneChanged": "{n, plural, one {# vol a été modifié} other {# vols ont été modifiés}} par {pilot} après l'envoi du lien et n'{n, plural, one {a} other {ont}} pas été signé{n, plural, one {} other {s}} : il vous enverra un nouveau lien.",
+    "status": {
+      "signed": "Déjà signé",
+      "refused": "Déjà refusé",
+      "revoked": "Lien annulé",
+      "expired": "Lien expiré"
+    },
+    "closedBody": "Ce lien ne peut plus être utilisé. Demandez-en un nouveau à {pilot} si besoin.",
+    "title": "{pilot} vous demande de signer {n, plural, one {# vol} other {# vols}}",
+    "intro": "{pilot} vous a indiqué comme {role} sur ces vols de son carnet Geardown. Vérifiez-les, puis signez une fois pour tous, ou refusez. Aucun compte n'est nécessaire. Lien valable jusqu'au {date}.",
+    "roles": {
+      "instructor": "instructeur",
+      "captain": "commandant de bord",
+      "examiner": "examinateur",
+      "other": "signataire"
+    },
+    "col": {
+      "date": "Date",
+      "route": "Trajet",
+      "times": "Bloc",
+      "aircraft": "Avion",
+      "function": "Fonction",
+      "total": "Total",
+      "sum": "Total"
+    },
+    "signTitle": "Signer",
+    "name": "Votre nom",
+    "licence": "Votre numéro de licence",
+    "draw": "Signez dans le cadre",
+    "clear": "Effacer",
+    "attest": "Je certifie que {n, plural, one {le vol ci-dessus est exact} other {les # vols ci-dessus sont exacts}} et que j'étais à bord comme indiqué.",
+    "refuse": "Refuser",
+    "refuseConfirm": "Refuser de signer ces vols ?",
+    "sign": "Signer {n, plural, one {le vol} other {les # vols}}",
+    "err": {
+      "expired": "Ce lien a expiré.",
+      "signed": "Ces vols ont déjà été signés.",
+      "refused": "Vous avez déjà refusé.",
+      "revoked": "Le pilote a annulé ce lien.",
+      "rate_limited": "Trop d'essais : patientez une minute.",
+      "generic": "Une erreur est survenue. Réessayez."
     }
   }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, ScrollView, View } from "react-native";
+import { Alert, Modal, ScrollView, Share, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { canonicalFlightContent, type Flight, type Signature } from "@cielo/core";
@@ -8,13 +8,15 @@ import { useApp } from "../state";
 import { useTheme } from "../theme";
 import { Button, Card, Chip, Field, Row, Txt } from "./ui";
 import { SignatureImage, SignaturePad, signatureSvg } from "./SignaturePad";
+import { createSignLink } from "../crew";
 
 const ROLES = ["instructor", "captain", "examiner", "other"] as const;
 const hash = (f: Flight) => Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, canonicalFlightContent(f));
 
 /** Signature of a logged flight: who signed, and whether the flight is unchanged since (SHA-256 of its content). */
 export function FlightSignature({ flight }: { flight: Flight }) {
-  const { t, locale, store, pilot, put, remove, access } = useApp();
+  const { t, locale, store, pilot, put, remove, access, session } = useApp();
+  const [linkBusy, setLinkBusy] = useState(false);
   const c = useTheme();
   const [sig, setSig] = useState<{ s: Signature; valid: boolean } | null | undefined>(undefined);
   const [open, setOpen] = useState(false);
@@ -58,6 +60,20 @@ export function FlightSignature({ flight }: { flight: Flight }) {
       setPaths([]);
     } finally {
       setSaving(false);
+    }
+  };
+  // a link for a signer without Geardown: opened in their browser (the flight must be synced first)
+  const sendLink = async () => {
+    setLinkBusy(true);
+    try {
+      const r = await createSignLink(session?.access_token, { flightIds: [flight.id], signerName: name.trim(), signerRole: role, locale });
+      setOpen(false);
+      await Share.share({ message: t("crew.linkMessage", { n: r.flights, url: r.url }) });
+    } catch (e) {
+      const code = e instanceof Error ? e.message : "";
+      Alert.alert(t("common.error"), code === "plan" ? t("crew.err.plan") : code === "signin" ? t("crew.signin") : t("sig.linkErr"));
+    } finally {
+      setLinkBusy(false);
     }
   };
   const unsign = async () => {
@@ -113,6 +129,14 @@ export function FlightSignature({ flight }: { flight: Flight }) {
             <Txt variant="small">{t("sig.lock")}</Txt>
           </Row>
           <Button title={t("sig.save")} disabled={!name.trim() || paths.length === 0} loading={saving} onPress={() => void sign()} />
+          <Txt variant="small" style={{ marginTop: 8 }}>{t("sig.linkHint")}</Txt>
+          <Button
+            kind="secondary"
+            title={t("sig.sendLink")}
+            disabled={!name.trim()}
+            loading={linkBusy}
+            onPress={() => void sendLink()}
+          />
         </ScrollView>
       </Modal>
     </Card>

@@ -2,7 +2,8 @@
 
 import { ShieldAlert, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { supabase } from "@/lib/supabase";
 import type { Flight, Signature } from "@cielo/core";
 import { removeSignature, signFlight, verifySignature } from "@/lib/repo";
 import { useFormatDate } from "@/lib/hooks";
@@ -137,7 +138,68 @@ export function SignatureModal({ open, onClose, flight }: { open: boolean; onClo
             {t("confirm")}
           </button>
         </div>
+        <SendLink flightId={flight.id} signerName={name} role={role} />
       </div>
     </Modal>
+  );
+}
+
+/** A signing link for someone without a Geardown account (see /api/sign-link). */
+function SendLink({ flightId, signerName, role }: { flightId: string; signerName: string; role: Signature["signerRole"] }) {
+  const t = useTranslations("app.signature");
+  const locale = useLocale();
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<{ url: string; mailed: boolean } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const create = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      const token = (await supabase()?.auth.getSession())?.data.session?.access_token;
+      const r = await fetch("/api/sign-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token ?? ""}` },
+        body: JSON.stringify({ action: "create", flightIds: [flightId], signerName: signerName.trim(), signerRole: role, email: email.trim() || undefined, locale }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error ?? "error");
+      setRes({ url: d.url, mailed: !!d.mailed });
+    } catch (e) {
+      setErr((e as Error).message === "plan" ? t("linkPlan") : t("linkErr"));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="space-y-3 border-t border-border pt-4">
+      <p className="text-sm font-semibold">{t("sendLink")}</p>
+      <p className="text-xs text-muted">{t("sendLinkHint")}</p>
+      {res ? (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-success">{t("linkReady")}</p>
+          {res.mailed ? <p className="text-xs text-muted">{t("linkMailed", { email })}</p> : null}
+          <div className="flex gap-2">
+            <input className="input num flex-1 text-xs" readOnly value={res.url} onFocus={(e) => e.target.select()} />
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => void navigator.clipboard.writeText(res.url).then(() => (setCopied(true), setTimeout(() => setCopied(false), 2000)))}
+            >
+              {copied ? t("copied") : t("copy")}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          <input className="input min-w-0 flex-1" type="email" placeholder={t("email")} value={email} onChange={(e) => setEmail(e.target.value)} />
+          <button type="button" className="btn btn-secondary" disabled={busy || !signerName.trim()} onClick={() => void create()}>
+            {t("createLink")}
+          </button>
+        </div>
+      )}
+      {err ? <p className="text-xs text-warning">{err}</p> : null}
+    </div>
   );
 }

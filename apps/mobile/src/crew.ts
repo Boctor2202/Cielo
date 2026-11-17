@@ -89,3 +89,17 @@ export async function loadCrew(token?: string): Promise<CrewData> {
 export const crewAction = <T = { ok?: boolean; status?: string; signed?: number; changed?: number; gone?: number; created?: number }>(token: string | undefined, body: Record<string, unknown>) =>
   call<T>(token, { body });
 
+
+/** Creates a signing link for someone without a Geardown account (see /api/sign-link). */
+export async function createSignLink(token: string | undefined, o: { flightIds: string[]; signerName: string; signerRole: string; locale: string; email?: string }): Promise<{ url: string; flights: number; mailed: boolean }> {
+  if (!token) throw new ApiError("signin", 401);
+  const r = await fetch(`${API_URL}/api/sign-link`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ action: "create", ...o, locale: o.locale === "en" ? "en" : "fr" }),
+  });
+  const d = (await r.json().catch(() => ({}))) as { url?: string; flights?: number; mailed?: boolean; error?: string };
+  if (!r.ok || !d.url) throw new ApiError(d.error ?? "upstream", r.status);
+  return { url: d.url, flights: d.flights ?? 0, mailed: !!d.mailed };
+}
+

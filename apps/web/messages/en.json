@@ -656,7 +656,17 @@
       "valid": "Valid signature",
       "invalid": "The flight was changed after signing",
       "signedBy": "Signed by {name} ({role}) on {date}",
-      "remove": "Remove signature"
+      "remove": "Remove signature",
+      "sendLink": "Or send a signing link",
+      "sendLinkHint": "For a captain, instructor or examiner who is not on Geardown: they open the link, check the flight and sign in their browser. Valid 14 days, works once.",
+      "email": "Their e-mail (optional)",
+      "createLink": "Create the link",
+      "linkReady": "Link ready",
+      "linkMailed": "Sent by e-mail to {email}.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "linkErr": "The link could not be created. Wait for the flight to sync, then try again.",
+      "linkPlan": "Signing links are part of the Max plan."
     },
     "import": {
       "title": "Import flights",
@@ -813,7 +823,19 @@
       "subtitle": "Your schedule, your layovers and quick logging of completed flights.",
       "import": "Import a schedule",
       "importHelp": "PDF roster (Leon, AIMS, Netline…), iCal (.ics) file exported from your crew planning tool, or CSV (date, departure, arrival, times).",
-      "pdf": { "reading": "Reading the PDF…", "nothingNew": "Nothing new in this roster: every duty is already in your calendar.", "err": { "signin": "Sign in to import a PDF roster.", "plan": "PDF roster import is part of the Max plan.", "unsupported": "This PDF layout could not be read. Export it as iCal (.ics) or CSV if your tool offers it.", "not_configured": "PDF reading is not available right now.", "too_big": "The PDF is too large (3 MB max).", "rate_limited": "Too many imports in a row: try again in a minute.", "upstream": "The PDF could not be read. Try again." } },
+      "pdf": {
+        "reading": "Reading the PDF…",
+        "nothingNew": "Nothing new in this roster: every duty is already in your calendar.",
+        "err": {
+          "signin": "Sign in to import a PDF roster.",
+          "plan": "PDF roster import is part of the Max plan.",
+          "unsupported": "This PDF layout could not be read. Export it as iCal (.ics) or CSV if your tool offers it.",
+          "not_configured": "PDF reading is not available right now.",
+          "too_big": "The PDF is too large (3 MB max).",
+          "rate_limited": "Too many imports in a row: try again in a minute.",
+          "upstream": "The PDF could not be read. Try again."
+        }
+      },
       "addEvent": "Add event",
       "today": "Today",
       "month": "Month",
@@ -1925,6 +1947,58 @@
     "contact": {
       "title": "Contact",
       "description": "A question about Geardown, the electronic pilot logbook? Write to us, we reply within 48 hours."
+    }
+  },
+  "signLink": {
+    "loading": "Loading…",
+    "footer": "Geardown — pilot logbook. Your name, licence number, signature, the time and your IP address are recorded with the signature. Nothing else is kept about you.",
+    "invalidTitle": "Link not valid",
+    "invalidBody": "This signature link does not exist or was mistyped. Ask the pilot to send it again.",
+    "refusedTitle": "Signature declined",
+    "refusedBody": "{pilot} will see that you declined.",
+    "doneTitle": "{n, plural, one {# flight signed} other {# flights signed}}",
+    "doneBody": "Thank you. {pilot}'s logbook now carries your signature; the flights are locked.",
+    "doneChanged": "{n, plural, one {# flight was} other {# flights were}} changed by {pilot} after the link was sent and not signed: they will send you a new link.",
+    "status": {
+      "signed": "Already signed",
+      "refused": "Already declined",
+      "revoked": "Link cancelled",
+      "expired": "Link expired"
+    },
+    "closedBody": "This link can no longer be used. Ask {pilot} for a new one if needed.",
+    "title": "{pilot} asks you to sign {n, plural, one {# flight} other {# flights}}",
+    "intro": "{pilot} named you as {role} on these flights of their Geardown logbook. Check them, then sign once for all of them, or decline. No account needed. Link valid until {date}.",
+    "roles": {
+      "instructor": "instructor",
+      "captain": "captain",
+      "examiner": "examiner",
+      "other": "signatory"
+    },
+    "col": {
+      "date": "Date",
+      "route": "Route",
+      "times": "Block",
+      "aircraft": "Aircraft",
+      "function": "Function",
+      "total": "Total",
+      "sum": "Total"
+    },
+    "signTitle": "Sign",
+    "name": "Your name",
+    "licence": "Your licence number",
+    "draw": "Sign inside the box",
+    "clear": "Clear",
+    "attest": "I certify that the {n, plural, one {flight above is} other {# flights above are}} correct and that I was on board as stated.",
+    "refuse": "Decline",
+    "refuseConfirm": "Decline to sign these flights?",
+    "sign": "Sign {n, plural, one {the flight} other {the # flights}}",
+    "err": {
+      "expired": "This link has expired.",
+      "signed": "These flights have already been signed.",
+      "refused": "You already declined.",
+      "revoked": "The pilot cancelled this link.",
+      "rate_limited": "Too many attempts: wait a minute.",
+      "generic": "Something went wrong. Try again."
     }
   }
 }
