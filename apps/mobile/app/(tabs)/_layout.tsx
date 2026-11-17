@@ -23,7 +23,9 @@ export default function TabsLayout() {
       <Ionicons name="chevron-back" size={26} color={c.accent} />
     </Pressable>
   );
-  const sub = (title: string) => ({ href: null, headerTitle: title, headerLeft: back });
+  // Not `href: null`: in this expo-router version a hidden tab is treated like a protected screen and any
+  // navigation to it is redirected to the first tab. Hiding only the tab button keeps the screen reachable.
+  const sub = (title: string) => ({ headerTitle: title, headerLeft: back, tabBarItemStyle: { display: "none" as const }, tabBarButton: () => null });
   const bar = () => <BlurView tint={g.tint} intensity={g.intensity + 20} style={[StyleSheet.absoluteFill, { backgroundColor: g.pane }]} />;
   return (
     <Tabs
