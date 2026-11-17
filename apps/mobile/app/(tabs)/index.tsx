@@ -18,7 +18,7 @@ import { formatDate, type I18nKey } from "../../src/i18n";
 import { isCloudEnabled } from "../../src/auth";
 import { AccessBanner } from "../../src/components/Access";
 import { todayUtc, useApp } from "../../src/state";
-import { ftlSettingsFor } from "../../src/ftlSettings";
+import { useFtlSettings } from "../../src/ftlSettings";
 import { space, useTheme } from "../../src/theme";
 
 const FTL_KEYS = ["duty7d", "duty14d", "duty28d", "flight28d", "flightYear", "flight12m"] as const;
@@ -31,10 +31,8 @@ export default function Dashboard() {
 
   const periods = useMemo(() => dashboardPeriods(flights, balances, today), [flights, balances, today]);
   const recency = useMemo(() => computeRecency(flights, today), [flights, today]);
-  const ftl = useMemo(() => {
-    const settings = ftlSettingsFor(pilot);
-    return analyseFtl(buildDutyPeriods(flights, settings), new Date().toISOString(), settings);
-  }, [flights, pilot]);
+  const { settings: ftlSettings } = useFtlSettings();
+  const ftl = useMemo(() => analyseFtl(buildDutyPeriods(flights, ftlSettings), new Date().toISOString(), ftlSettings), [flights, ftlSettings]);
   const expiries = useMemo(
     () =>
       licenses

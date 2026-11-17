@@ -3,11 +3,13 @@ import { AirportWeather } from "../../src/components/Weather";
 import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, View } from "react-native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import type { Layover } from "@cielo/core";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, Txt } from "../../src/components/ui";
+import { DateField, isValidDate } from "../../src/components/DateField";
 import { lookupAirport } from "../../src/airports";
 import { api, ApiError, fmtDistance, PLACE_CATEGORIES, type HotelHit, type LiveEvent, type Place, type PlaceCategory } from "../../src/api";
 import { formatDate, type I18nKey } from "../../src/i18n";
-import { useApp } from "../../src/state";
+import { ReadOnlyError, useApp } from "../../src/state";
 import { Requires } from "../../src/components/Access";
 import { useTheme } from "../../src/theme";
 
@@ -83,7 +85,8 @@ function LayoverScreen() {
   if (!l) return <Screen backdrop><Txt variant="muted">…</Txt></Screen>;
 
   const pickHotel = async (h: HotelHit) => {
-    await put("layovers", { ...l, hotelName: h.name, hotelPlaceId: h.id, address: h.address, phone: h.phone });
+    // the hotel's own address and phone, unless the search has none (then what the pilot typed stays), as on the web
+    await put("layovers", { ...l, hotelName: h.name, hotelPlaceId: h.id, address: h.address ?? l.address, phone: h.phone ?? l.phone });
     setSearching(false);
     setHits({ state: "idle", data: [] });
   };
@@ -114,9 +117,9 @@ function LayoverScreen() {
             <Txt variant="h2">{t("lay.hotel")}</Txt>
             <Button small kind="ghost" title={l.hotelName ? t("lay.change") : t("lay.searchHotel")} onPress={() => setSearching(!searching)} />
           </Row>
-          {l.hotelName ? (
+          {l.hotelName || l.address || l.phone ? (
             <View style={{ gap: 2 }}>
-              <Txt style={{ fontWeight: "600" }}>{l.hotelName}</Txt>
+              {l.hotelName ? <Txt style={{ fontWeight: "600" }}>{l.hotelName}</Txt> : null}
               {l.address ? <Txt variant="small">{l.address}</Txt> : null}
               {l.phone ? (
                 <Pressable onPress={() => void Linking.openURL(`tel:${l.phone!.replace(/\s/g, "")}`)}>
@@ -142,6 +145,8 @@ function LayoverScreen() {
             </View>
           ) : null}
         </Card>
+
+        <LayoverDetails l={l} />
 
         <Segmented<"places" | "events">
           value={tab}
@@ -212,6 +217,143 @@ function LayoverScreen() {
         />
       </Screen>
     </>
+  );
+}
+
+type Contact = Layover["contacts"][number];
+const day = (iso?: string | null) => iso?.slice(0, 10) ?? "";
+/** Back to a stored instant: an unchanged day keeps its time (roster imports), a new day is noon UTC as on the web. */
+const toIso = (d: string, prev?: string | null) => (!d ? null : prev && prev.slice(0, 10) === d ? prev : `${d}T12:00:00.000Z`);
+const dial = (phone: string) => void Linking.openURL(`tel:${phone.replace(/\s/g, "")}`);
+
+/** Dates, phone, address, notes and contacts: shown here, edited in place, saved together (same fields as the web). */
+function LayoverDetails({ l }: { l: Layover }) {
+  const { t, put, locale } = useApp();
+  const c = useTheme();
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [arr, setArr] = useState("");
+  const [dep, setDep] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [notes, setNotes] = useState("");
+  const [contacts, setContacts] = useState<Contact[]>([]);
+
+  const start = () => {
+    setArr(day(l.arrivalUtc));
+    setDep(day(l.departureUtc));
+    setPhone(l.phone ?? "");
+    setAddress(l.address ?? "");
+    setNotes(l.notes ?? "");
+    setContacts(l.contacts.map((x) => ({ ...x })));
+    setEditing(true);
+  };
+  // a hotel picked while the form is open brings its address and phone into it
+  useEffect(() => {
+    if (!editing) return;
+    if (l.address) setAddress(l.address);
+    if (l.phone) setPhone(l.phone);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [l.hotelPlaceId]);
+
+  const badDate = (!!arr && !isValidDate(arr)) || (!!dep && !isValidDate(dep));
+  const depBeforeArr = !!arr && !!dep && !badDate && dep < arr;
+  const updContact = (i: number, patch: Partial<Contact>) => setContacts(contacts.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const clean = (s: string) => s.trim() || undefined;
+      await put("layovers", {
+        ...l,
+        arrivalUtc: toIso(arr, l.arrivalUtc),
+        departureUtc: toIso(dep, l.departureUtc),
+        phone: clean(phone),
+        address: clean(address),
+        notes: clean(notes),
+        // a blank row is dropped; one with only a phone number is kept
+        contacts: contacts
+          .map((x) => ({ name: x.name.trim(), role: clean(x.role ?? ""), phone: clean(x.phone ?? "") }))
+          .filter((x) => x.name || x.phone),
+      });
+      setEditing(false);
+    } catch (e) {
+      Alert.alert(t("common.error"), e instanceof ReadOnlyError ? t("access.readOnlyBanner") : e instanceof Error ? e.message : String(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    const empty = !l.arrivalUtc && !l.departureUtc && !l.notes && l.contacts.length === 0;
+    return (
+      <Card>
+        <Row style={{ justifyContent: "space-between" }}>
+          <Txt variant="h2">{t("lay.details")}</Txt>
+          <Button small kind="ghost" title={t("common.edit")} onPress={start} />
+        </Row>
+        {empty ? <Txt variant="muted">{t("lay.detailsEmpty")}</Txt> : null}
+        {l.arrivalUtc || l.departureUtc ? (
+          <Txt mono variant="small">
+            {l.arrivalUtc ? formatDate(l.arrivalUtc, locale) : "…"} → {l.departureUtc ? formatDate(l.departureUtc, locale) : "…"}
+          </Txt>
+        ) : null}
+        {l.notes ? <Txt>{l.notes}</Txt> : null}
+        {l.contacts.length ? (
+          <View style={{ gap: 6 }}>
+            <Txt variant="label">{t("lay.contacts")}</Txt>
+            {l.contacts.map((x, i) => (
+              <Row key={i} style={{ justifyContent: "space-between" }}>
+                <View style={{ flex: 1 }}>
+                  <Txt style={{ fontWeight: "600" }}>{x.name || "—"}</Txt>
+                  {x.role ? <Txt variant="small">{x.role}</Txt> : null}
+                </View>
+                {x.phone ? (
+                  <Pressable onPress={() => dial(x.phone!)} hitSlop={8}>
+                    <Txt variant="small" mono color={c.accent}>{x.phone}</Txt>
+                  </Pressable>
+                ) : null}
+              </Row>
+            ))}
+          </View>
+        ) : null}
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <Txt variant="h2">{t("lay.details")}</Txt>
+      <Row style={{ alignItems: "flex-start" }}>
+        <DateField style={{ flex: 1 }} label={t("lay.arrivalDate")} value={arr} onChange={setArr} />
+        <DateField style={{ flex: 1 }} label={t("lay.departureDate")} value={dep} onChange={setDep} hint={depBeforeArr ? t("lay.departureBeforeArrival") : undefined} />
+      </Row>
+      <Field label={t("lay.phone")} value={phone} onChangeText={setPhone} keyboardType="phone-pad" monoValue />
+      <Field label={t("lay.address")} value={address} onChangeText={setAddress} />
+      <Field label={t("lay.notes")} value={notes} onChangeText={setNotes} multiline placeholder={t("lay.notesPh")} />
+
+      <Txt variant="label">{t("lay.contacts")}</Txt>
+      {contacts.map((x, i) => (
+        <View key={i} style={{ gap: 6, borderTopWidth: i ? 1 : 0, borderColor: c.border, paddingTop: i ? 10 : 0 }}>
+          <Row>
+            <Field style={{ flex: 1 }} placeholder={t("lay.contactName")} value={x.name} onChangeText={(v) => updContact(i, { name: v })} autoCapitalize="words" />
+            <Pressable accessibilityRole="button" accessibilityLabel={t("lay.removeContact")} hitSlop={8} onPress={() => setContacts(contacts.filter((_, j) => j !== i))}>
+              <Ionicons name="close-circle-outline" size={22} color={c.muted} />
+            </Pressable>
+          </Row>
+          <Row>
+            <Field style={{ flex: 1 }} placeholder={t("lay.contactRole")} value={x.role ?? ""} onChangeText={(v) => updContact(i, { role: v })} />
+            <Field style={{ flex: 1 }} placeholder={t("lay.phone")} value={x.phone ?? ""} onChangeText={(v) => updContact(i, { phone: v })} keyboardType="phone-pad" monoValue />
+          </Row>
+        </View>
+      ))}
+      <Button kind="secondary" small title={t("lay.addContact")} onPress={() => setContacts([...contacts, { name: "" }])} />
+
+      <Row gap={12}>
+        <Button style={{ flex: 1 }} kind="secondary" title={t("common.cancel")} onPress={() => setEditing(false)} />
+        <Button style={{ flex: 1 }} title={t("common.save")} loading={saving} disabled={badDate || depBeforeArr} onPress={() => void save()} />
+      </Row>
+    </Card>
   );
 }
 
