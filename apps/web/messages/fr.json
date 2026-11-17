@@ -1291,12 +1291,19 @@
         "help": "Licence(s) : {authorities}. Seules les offres des régions cochées sont affichées, plus celles dont l'employeur parraine le visa ; aucune région cochée : toutes les offres. Une offre qui demande une autre licence reste affichée, avec un badge.",
         "noRights": "Droit de travailler requis : {region}",
         "licenceNeeded": "Licence {authority} requise",
-        "visa": "Visa parrainé"
+        "visa": "Visa parrainé",
+        "rightsLine": "Votre droit de travailler : {regions} · licence(s) {authorities}.",
+        "edit": "Modifier",
+        "done": "Terminé",
+        "help2": "Sert uniquement au calcul de votre % : une offre où vous ne pouvez pas travailler, ou qui demande une autre licence, garde son badge et un score plus bas."
       },
       "adzunaNote": "D'autres offres viennent d'Adzuna :",
       "count": {
         "shown": "{n, plural, one {offre active affichée} other {offres actives affichées}}",
         "total": "sur {n} offres actives"
+      },
+      "regionFilter": {
+        "title": "Régions affichées"
       }
     },
     "cv": {

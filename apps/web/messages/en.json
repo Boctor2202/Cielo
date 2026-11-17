@@ -1291,12 +1291,19 @@
         "help": "Licence(s): {authorities}. Only the offers of the ticked regions are shown, plus those whose employer sponsors the visa; none ticked shows them all. An offer needing another licence stays, with a badge.",
         "noRights": "Right to work needed: {region}",
         "licenceNeeded": "{authority} licence needed",
-        "visa": "Visa sponsored"
+        "visa": "Visa sponsored",
+        "rightsLine": "Your right to work: {regions} · licence(s) {authorities}.",
+        "edit": "Change",
+        "done": "Done",
+        "help2": "Used only for your match %: an offer where you may not work, or needing another licence, keeps its badge and a lower score."
       },
       "adzunaNote": "More offers come from Adzuna:",
       "count": {
         "shown": "{n, plural, one {active offer shown} other {active offers shown}}",
         "total": "out of {n} active offers"
+      },
+      "regionFilter": {
+        "title": "Regions shown"
       }
     },
     "cv": {

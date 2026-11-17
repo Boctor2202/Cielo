@@ -34,24 +34,26 @@ export default function JobsPage() {
   const pilot = usePilot();
   // Where the pilot may work (citizenship, visas): saved on this device, defaults from the licence regime
   const [workRegions, setWorkRegions] = useState<RegionId[] | null>(null);
-  // "all regions": shows every offer; the ticked regions stay the pilot's work rights (they weigh on the match)
-  const [allRegions, setAllRegions] = useState(false);
+  // Which regions the list shows (a pure filter, saved on this device): none chosen = every region.
+  // Independent of the work rights above, which only weigh on the match.
+  const [regionFilter, setRegionFilter] = useState<RegionId[]>([]);
+  const [editRights, setEditRights] = useState(false);
   useEffect(() => {
     try {
       const v = localStorage.getItem("cielo-work-regions");
       if (v) setWorkRegions(JSON.parse(v));
-      setAllRegions(localStorage.getItem("cielo-jobs-all-regions") === "1");
+      const f = localStorage.getItem("cielo-jobs-regions");
+      if (f) setRegionFilter(JSON.parse(f));
     } catch {}
   }, []);
-  const showAll = (on: boolean) => {
-    setAllRegions(on);
+  const saveFilter = (r: RegionId[]) => {
+    setRegionFilter(r);
     try {
-      localStorage.setItem("cielo-jobs-all-regions", on ? "1" : "0");
+      localStorage.setItem("cielo-jobs-regions", JSON.stringify(r));
     } catch {}
   };
   const saveWork = (r: RegionId[]) => {
     setWorkRegions(r);
-    showAll(false);
     try {
       localStorage.setItem("cielo-work-regions", JSON.stringify(r));
     } catch {}
@@ -78,9 +80,7 @@ export default function JobsPage() {
   type Row = (typeof all)[number];
   const byPosition = (r: Row, p: Position | "ALL" = position) => p === "ALL" || r.job.position === p;
   const byType = (r: Row, on = onTypeOnly) => !on || r.match.onType;
-  // one place filters by region: the regions the pilot ticked (where they may work). None ticked: every offer.
-  // Offers elsewhere whose employer sponsors the visa are kept; one needing another licence keeps its badge.
-  const byRegion = (r: Row) => allRegions || !myRegions.length || r.match.canWork;
+  const byRegion = (r: Row) => !regionFilter.length || regionFilter.includes(r.job.region);
 
   const rows = useMemo(() => {
     const list = all.filter((r) => byPosition(r) && byType(r) && byRegion(r));
@@ -95,7 +95,7 @@ export default function JobsPage() {
     );
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [all, position, onTypeOnly, sort, myRegions, allRegions]);
+  }, [all, position, onTypeOnly, sort, regionFilter]);
   const counts = useMemo(() => {
     const pos = new Map<string, number>();
     const reg = new Map<string, number>();
@@ -113,7 +113,7 @@ export default function JobsPage() {
     }
     return { pos, reg, typeN };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [all, position, onTypeOnly, myRegions, allRegions]);
+  }, [all, position, onTypeOnly, regionFilter]);
 
   const positions = useMemo(() => [...new Set((feed?.jobs ?? []).map((j) => j.position))] as Position[], [feed]);
   const followed = feed?.sources.filter((s) => s.ok).length ?? 0;
@@ -147,31 +147,57 @@ export default function JobsPage() {
       </div>
 
       <div className="mb-5 rounded-xl border border-border bg-surface p-4">
-        <p className="text-sm font-semibold">{t("work.title")}</p>
-        <p className="mt-0.5 text-xs text-muted">{t("work.help", { authorities: profile?.authorities.join(", ") || "—" })}</p>
-        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t("work.title")}>
+        <p className="text-sm font-semibold">{t("regionFilter.title")}</p>
+        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t("regionFilter.title")}>
           <button
             type="button"
-            aria-pressed={allRegions}
-            onClick={() => showAll(!allRegions)}
-            className={`min-h-9 cursor-pointer rounded-full border px-3 text-[13px] font-medium transition-colors ${allRegions ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:border-accent/50 hover:text-text"}`}
+            aria-pressed={!regionFilter.length}
+            onClick={() => saveFilter([])}
+            className={`min-h-9 cursor-pointer rounded-full border px-3 text-[13px] font-medium transition-colors ${!regionFilter.length ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:border-accent/50 hover:text-text"}`}
           >
-            {allRegions ? "✓ " : ""}{t("filter.allRegions")} <span className="num opacity-70">{counts.reg.get("ALL") ?? 0}</span>
+            {!regionFilter.length ? "✓ " : ""}{t("filter.allRegions")} <span className="num opacity-70">{counts.reg.get("ALL") ?? 0}</span>
           </button>
-          {REGIONS.filter((r) => r !== "OTHER").map((r) => {
-            const on = !allRegions && myRegions.includes(r);
+          {REGIONS.filter((r) => r !== "OTHER" || counts.reg.get(r)).map((r) => {
+            const on = regionFilter.includes(r);
             return (
               <button
                 key={r}
                 type="button"
                 aria-pressed={on}
-                onClick={() => saveWork(allRegions ? (myRegions.includes(r) ? myRegions : [...myRegions, r]) : on ? myRegions.filter((x) => x !== r) : [...myRegions, r])}
+                onClick={() => saveFilter(on ? regionFilter.filter((x) => x !== r) : [...regionFilter, r])}
                 className={`min-h-9 cursor-pointer rounded-full border px-3 text-[13px] font-medium transition-colors ${on ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:border-accent/50 hover:text-text"}`}
               >
                 {on ? "✓ " : ""}{t(`regions.${r}`)} <span className="num opacity-70">{counts.reg.get(r) ?? 0}</span>
               </button>
             );
           })}
+        </div>
+        <div className="mt-4 border-t border-border pt-3 text-xs text-muted">
+          <p>
+            {t("work.rightsLine", { regions: myRegions.map((r) => t(`regions.${r}`)).join(", ") || "—", authorities: profile?.authorities.join(", ") || "—" })}{" "}
+            <button type="button" className="font-semibold text-accent underline" onClick={() => setEditRights((x) => !x)}>
+              {editRights ? t("work.done") : t("work.edit")}
+            </button>
+          </p>
+          {editRights ? (
+            <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={t("work.title")}>
+              {REGIONS.filter((r) => r !== "OTHER").map((r) => {
+                const on = myRegions.includes(r);
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => saveWork(on ? myRegions.filter((x) => x !== r) : [...myRegions, r])}
+                    className={`min-h-8 cursor-pointer rounded-full border px-2.5 text-xs font-medium ${on ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:text-text"}`}
+                  >
+                    {on ? "✓ " : ""}{t(`regions.${r}`)}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+          <p className="mt-1">{t("work.help2")}</p>
         </div>
       </div>
 
