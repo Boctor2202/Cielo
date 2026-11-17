@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { View } from "react-native";
-import { router } from "expo-router";
+import { router, useIsFocused } from "expo-router";
 import {
   FTL_LIMITS,
   analyseFtl,
@@ -19,12 +19,17 @@ import { isCloudEnabled } from "../../src/auth";
 import { AccessBanner } from "../../src/components/Access";
 import { todayUtc, useApp } from "../../src/state";
 import { useFtlSettings } from "../../src/ftlSettings";
+import { loadDismissed, pendingDrafts } from "../../src/flightDrafts";
 import { space, useTheme } from "../../src/theme";
 
 const FTL_KEYS = ["duty7d", "duty14d", "duty28d", "flight28d", "flightYear", "flight12m"] as const;
 
 export default function Dashboard() {
   const { t, locale, flights, balances, licenses, pilot, session, access, rosterEvents } = useApp();
+  // roster flights that ended and are not logged yet
+  // recomputed when coming back to the dashboard (a draft may have been ignored meanwhile)
+  const focused = useIsFocused();
+  const drafts = useMemo(() => (focused ? pendingDrafts(rosterEvents, flights, loadDismissed()) : []), [rosterEvents, flights, focused]);
   const c = useTheme();
   const today = todayUtc();
   const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
@@ -88,6 +93,21 @@ export default function Dashboard() {
         </View>
 
         <AccessBanner />
+
+        {drafts.length ? (
+          <Card onPress={() => router.navigate("/drafts")}>
+            <Row style={{ alignItems: "center" }}>
+              <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: c.accent, alignItems: "center", justifyContent: "center" }}>
+                <Txt style={{ fontWeight: "800" }} color={c.onAccent}>{String(drafts.length)}</Txt>
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Txt style={{ fontWeight: "700" }}>{t("drafts.cardTitle", { n: drafts.length })}</Txt>
+                <Txt variant="small">{t("drafts.cardHint")}</Txt>
+              </View>
+              <Txt color={c.muted} style={{ fontSize: 20 }}>›</Txt>
+            </Row>
+          </Card>
+        ) : null}
 
         {isCloudEnabled && !session ? (
           <Card>
