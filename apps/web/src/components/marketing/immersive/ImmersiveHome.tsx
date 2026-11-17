@@ -592,7 +592,8 @@ function ProgressRail({ readouts, labels }: { readouts: React.RefObject<Readouts
   const fill = useRef<HTMLSpanElement>(null);
   const write = useRef((r: Readouts) => {
     if (fill.current) fill.current.style.transform = `scaleY(${r.progress})`;
-    items.current.forEach((el, i) => el && (el.dataset.active = String(i === r.chapter)));
+    // the welcome screen is chapter 0 and has no entry in the rail
+    items.current.forEach((el, i) => el && (el.dataset.active = String(i === r.chapter - 1)));
   }).current;
   useLiveText(readouts, write);
   return (
