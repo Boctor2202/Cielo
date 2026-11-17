@@ -1,5 +1,6 @@
 "use client";
 
+import { Roll } from "@/components/ui/Roll";
 import { Download, FileSpreadsheet, RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -179,7 +180,7 @@ export function LogbookReport({ flights, today }: { flights: Flight[]; today: st
         ].map(([k, v]) => (
           <section key={k} className="gw-panel gw-reveal !p-4">
             <p className="text-xs text-muted">{k}</p>
-            <p className="num mt-1 text-xl font-semibold">{v}</p>
+            <p className="num mt-1 text-xl font-semibold"><Roll>{v}</Roll></p>
           </section>
         ))}
       </div>

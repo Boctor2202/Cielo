@@ -17,6 +17,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+import { Roll } from "./Roll";
 import { BlurView } from "expo-blur";
 import { font, glass, mono, radius, space, useTheme, type Palette } from "../theme";
 
@@ -397,9 +398,7 @@ export function Stat({ label, value, sub, color }: { label: string; value: strin
       <Txt variant="label" numberOfLines={1}>
         {label}
       </Txt>
-      <Txt mono style={{ fontSize: 24, ...font.regular, letterSpacing: -0.8 }} color={color}>
-        {value}
-      </Txt>
+      <Roll text={value} size={24} color={color} style={{ ...font.regular, letterSpacing: -0.8 }} />
       {sub ? <Txt variant="small">{sub}</Txt> : null}
     </View>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { Roll } from "@/components/ui/Roll";
 import { X } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -66,7 +67,7 @@ export function Readout({ label, value, sub, level = "info" }: { label: string; 
         <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${LEVEL_BG[level]}`} />
         {label}
       </p>
-      <p className="num mt-3 text-[28px] font-normal leading-none tracking-[-0.03em] sm:text-[34px]">{value}</p>
+      <p className="num mt-3 text-[28px] font-normal leading-none tracking-[-0.03em] sm:text-[34px]"><Roll>{value}</Roll></p>
       {sub && <p className="mt-2 text-xs text-muted">{sub}</p>}
     </div>
   );

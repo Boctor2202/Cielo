@@ -1,5 +1,6 @@
 "use client";
 
+import { Roll } from "@/components/ui/Roll";
 import { ChevronDown, ChevronRight, Download, FileSpreadsheet } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -74,7 +75,7 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
       </div>
       {!homeBase && <p className="mb-2 text-sm text-[var(--caution)]">{t("noBase")}</p>}
       <p className="text-sm text-muted">{t("how", { base: homeBase ?? "—" })}</p>
-      <p className="num mt-3 text-2xl font-semibold">{t("totalLine", { n: r.total, c: r.countries.length })}</p>
+      <p className="num mt-3 text-2xl font-semibold"><Roll>{t("totalLine", { n: r.total, c: r.countries.length })}</Roll></p>
       {r.countries.length === 0 ? (
         <p className="mt-3 text-sm text-muted">{t("empty")}</p>
       ) : (
@@ -104,7 +105,7 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
                         {cname(x.country)}
                       </span>
                     </td>
-                    <td className="num text-right font-semibold">{x.nights}</td>
+                    <td className="num text-right font-semibold"><Roll>{x.nights}</Roll></td>
                     <td className="num text-right">{x.stays}</td>
                     <td className="num pl-4 text-xs text-muted">{x.airports.join(", ")}</td>
                   </tr>

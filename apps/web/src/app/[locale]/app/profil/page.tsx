@@ -1,5 +1,6 @@
 "use client";
 
+import { Roll } from "@/components/ui/Roll";
 import { BadgeCheck, Camera, Check, Pencil, Plane, Trash2, X } from "lucide-react";
 import { CountryInput } from "@/components/app/CountryInput";
 import { AirportInput } from "@/components/app/AirportInput";
@@ -197,7 +198,7 @@ export default function ProfilePage() {
           {stats.map((s) => (
             <div key={s.k} className="min-w-0">
               <dt className="mono-label !text-[10px]">{s.k}</dt>
-              <dd className="num mt-1 text-2xl font-semibold">{s.raw ? s.v : dur(s.v)}</dd>
+              <dd className="num mt-1 text-2xl font-semibold"><Roll>{s.raw ? String(s.v) : dur(s.v)}</Roll></dd>
             </div>
           ))}
         </dl>

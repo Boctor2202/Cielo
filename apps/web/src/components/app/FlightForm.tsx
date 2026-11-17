@@ -1,5 +1,6 @@
 "use client";
 
+import { Roll } from "@/components/ui/Roll";
 import { Copy, CornerUpLeft, Lock, PenLine, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -325,7 +326,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
         <div className="card overflow-hidden">
           <div className="border-b border-border bg-brand px-5 py-3 text-white">
             <p className="label-caps !text-white/60">{t("computed")}</p>
-            <p className="num mt-1 text-3xl font-semibold">{v.isFstd ? dur(v.fstdMin ?? 0) : dur(preview?.totalMin ?? 0)}</p>
+            <p className="num mt-1 text-3xl font-semibold"><Roll>{v.isFstd ? dur(v.fstdMin ?? 0) : dur(preview?.totalMin ?? 0)}</Roll></p>
             <p className="text-xs text-white/60">{v.isFstd ? "FSTD" : t("block")}</p>
           </div>
           {!v.isFstd && preview && (

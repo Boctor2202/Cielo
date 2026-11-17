@@ -1,5 +1,6 @@
 "use client";
 
+import { Roll } from "@/components/ui/Roll";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 /** Single-series bar chart (minutes on the y axis, shown as hours). No legend: the card title names the series. */
@@ -14,7 +15,7 @@ export function HoursBars({ data, format, height = 220, horizontal = false }: { 
         return (
           <div className="rounded-lg border border-border bg-bg px-3 py-2 text-xs shadow-lg">
             <p className="text-muted">{p.label}</p>
-            <p className="num mt-0.5 text-sm font-semibold text-text">{format(p.minutes)}</p>
+            <p className="num mt-0.5 text-sm font-semibold text-text"><Roll>{format(p.minutes)}</Roll></p>
           </div>
         );
       }}
@@ -62,7 +63,7 @@ export function SplitBar({ a, b, format }: { a: { label: string; value: number }
           <span key={x.label} className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-sm" style={{ background: x.c }} />
             <span className="text-muted">{x.label}</span>
-            <span className="num font-semibold">{format(x.value)}</span>
+            <span className="num font-semibold"><Roll>{format(x.value)}</Roll></span>
             <span className="num text-xs text-muted">{Math.round(x.p)} %</span>
           </span>
         ))}

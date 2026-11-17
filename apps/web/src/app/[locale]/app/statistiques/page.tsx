@@ -1,5 +1,6 @@
 "use client";
 
+import { Roll } from "@/components/ui/Roll";
 import { useCallback, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { distanceNm, groupTotals, sumFlights } from "@cielo/core";
@@ -109,7 +110,7 @@ export default function StatsPage() {
             {s.regs.map((r) => (
               <li key={r.key} className="flex items-center justify-between px-5 py-2.5">
                 <span className="num font-semibold">{r.key}</span>
-                <span className="num">{d(r.minutes)} <span className="text-muted">· {r.flights}</span></span>
+                <span className="num"><Roll>{d(r.minutes)}</Roll> <span className="text-muted">· {r.flights}</span></span>
               </li>
             ))}
           </ul>

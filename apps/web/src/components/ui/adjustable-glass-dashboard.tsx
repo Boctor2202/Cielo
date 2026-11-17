@@ -1,5 +1,6 @@
 "use client";
 
+import { Roll } from "./Roll";
 import {
   useEffect,
   useId,
@@ -37,35 +38,9 @@ import {
 } from "lucide-react";
 
 
-/** A number that counts up from 0 when it first shows (and eases to a new value), unless motion is reduced. */
+/** A figure whose digits roll into place (odometer). */
 function CountUp({ value, format }: { value: number; format: (v: number) => string }) {
-  const [shown, setShown] = useState(value);
-  const from = useRef(0);
-  useEffect(() => {
-    if (!Number.isFinite(value) || (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)) {
-      setShown(value);
-      from.current = value;
-      return;
-    }
-    const start = from.current;
-    const t0 = performance.now();
-    const dur = 1100;
-    let raf = 0;
-    const step = (now: number) => {
-      const k = Math.min(1, (now - t0) / dur);
-      const e = 1 - Math.pow(1 - k, 3);
-      const v = start + (value - start) * e;
-      setShown(k < 1 ? v : value);
-      if (k < 1) raf = requestAnimationFrame(step);
-      else from.current = value;
-    };
-    raf = requestAnimationFrame(step);
-    return () => {
-      cancelAnimationFrame(raf);
-      from.current = value;
-    };
-  }, [value]);
-  return <>{format(shown)}</>;
+  return <Roll>{format(Number.isFinite(value) ? value : 0)}</Roll>;
 }
 
 gsap.registerPlugin(useGSAP);

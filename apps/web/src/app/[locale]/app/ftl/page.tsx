@@ -1,5 +1,6 @@
 "use client";
 
+import { Roll } from "@/components/ui/Roll";
 import { AlertOctagon, Info } from "lucide-react";
 import { AirportInput } from "@/components/app/AirportInput";
 import { useEffect, useMemo, useState } from "react";
@@ -90,7 +91,7 @@ export default function FtlPage() {
           return (
             <div key={k} className="card p-4">
               <p className="label-caps">{t(k)}</p>
-              <p className="num mt-1.5 text-2xl font-semibold">{f(v)} <span className="text-base text-muted">/ {max / 60} h</span></p>
+              <p className="num mt-1.5 text-2xl font-semibold"><Roll>{f(v)}</Roll> <span className="text-base text-muted">/ {max / 60} h</span></p>
               <div className="mt-3"><Meter value={v} max={max} level={lvl === "ok" ? "ok" : lvl === "warning" ? "caution" : "warning"} /></div>
             </div>
           );

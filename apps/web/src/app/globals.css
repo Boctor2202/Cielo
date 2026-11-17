@@ -428,3 +428,11 @@ select.input {
 @media (prefers-reduced-motion: reduce) {
   .animate-\[unroll_220ms_ease-out\] { animation: none; }
 }
+
+/* Roll: odometer figures (components/ui/Roll.tsx). !important: card styles that target every span must not reach them */
+.roll, .roll span { font-size: inherit !important; font-weight: inherit !important; color: inherit !important; margin: 0 !important; padding: 0 !important; gap: 0 !important; background: none !important; border: 0 !important; letter-spacing: inherit !important; }
+.roll { display: inline-flex !important; align-items: flex-end !important; flex-direction: row !important; font-variant-numeric: tabular-nums; white-space: nowrap; vertical-align: baseline; }
+.roll .roll-sep { display: inline-block !important; height: 1.15em !important; line-height: 1.15em !important; }
+.roll .roll-digit { display: inline-block !important; height: 1.15em !important; line-height: 1.15em !important; overflow: hidden !important; }
+.roll .roll-col { display: flex !important; flex-direction: column !important; transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform; }
+.roll .roll-col > span { display: block !important; height: 1.15em !important; line-height: 1.15em !important; text-align: center; }

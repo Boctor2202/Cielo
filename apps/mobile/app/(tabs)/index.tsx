@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { Roll } from "../../src/components/Roll";
 import { View } from "react-native";
 import { router, useIsFocused } from "expo-router";
 import {
@@ -122,9 +123,7 @@ export default function Dashboard() {
 
         <Card>
           <Txt variant="label">{t("dash.totalHours")}</Txt>
-          <Txt mono style={{ fontSize: 56, fontWeight: "200", letterSpacing: -1.5 }}>
-            {fmt(periods.all.totalMin)}
-          </Txt>
+          <Roll text={fmt(periods.all.totalMin)} size={56} style={{ fontWeight: "200", letterSpacing: -1.5 }} />
           <Row gap={space.lg}>
             <Stat label={t("dash.pic")} value={fmt(periods.all.picMin)} />
             <Stat label={t("dash.night")} value={fmt(periods.all.nightMin)} />
