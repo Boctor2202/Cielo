@@ -5,7 +5,7 @@ import { formatClock, formatDuration, minutesBetween } from "@cielo/core";
 import { Button, EmptyState, Fab, Glass, Row, Segmented, Txt } from "../../src/components/ui";
 import { type I18nKey } from "../../src/i18n";
 import { useApp } from "../../src/state";
-import { pickAndImportRoster } from "../../src/rosterImport";
+import { RosterPdfError, pickAndImportRoster } from "../../src/rosterImport";
 import { Requires } from "../../src/components/Access";
 import { space, useTheme } from "../../src/theme";
 
@@ -18,7 +18,7 @@ export default function Roster() {
 }
 
 function RosterScreen() {
-  const { t, locale, rosterEvents, access, store, pilot, reload } = useApp();
+  const { t, locale, rosterEvents, access, store, pilot, reload, session } = useApp();
   const c = useTheme();
   const [importing, setImporting] = useState(false);
   // upcoming duties by default; "past" shows the last 90 days, newest first, so earlier events can be corrected
@@ -32,7 +32,7 @@ function RosterScreen() {
     try {
       // all events, past ones included, so a re-import recognises what is already there
       const all = await store.all("roster_events");
-      const r = await pickAndImportRoster(store, pilot, all);
+      const r = await pickAndImportRoster(store, pilot, all, session?.access_token);
       if (!r) return;
       await reload();
       Alert.alert(
@@ -40,7 +40,9 @@ function RosterScreen() {
         r.imported || r.updated || r.duplicates ? t("roster.importDone", { n: r.imported, u: r.updated, d: r.duplicates, s: r.skipped }) : t("roster.importEmpty"),
       );
     } catch (e) {
-      Alert.alert(t("roster.importFailed"), e instanceof Error ? e.message : String(e));
+      const code = e instanceof RosterPdfError ? e.message : null;
+      const known = ["signin", "plan", "too_big", "not_configured", "rate_limited", "unreadable", "too_long"];
+      Alert.alert(t("roster.importFailed"), code ? t(`roster.pdfErr.${known.includes(code) ? code : "other"}` as I18nKey) : e instanceof Error ? e.message : String(e));
     } finally {
       setImporting(false);
     }
