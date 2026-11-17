@@ -108,8 +108,8 @@ function Ftl() {
         />
         <Txt variant="small">{t(`ftl.regimeHint.${pilot.ftlRegime ?? "oro"}` as I18nKey)}</Txt>
         <Row style={{ alignItems: "flex-start" }}>
-          <MinutesField style={{ flex: 1 }} label={t("ftl.reportBefore")} value={settings.reportBeforeMin} max={180} onChange={(v) => void saveFtlPrefs(app.store, { reportBeforeMin: v })} />
-          <MinutesField style={{ flex: 1 }} label={t("ftl.releaseAfter")} value={settings.releaseAfterMin} max={120} onChange={(v) => void saveFtlPrefs(app.store, { releaseAfterMin: v })} />
+          <MinutesField style={{ flex: 1 }} label={t("ftl.reportBefore")} value={settings.reportBeforeMin} max={180} onChange={(v) => void saveFtlPrefs(app, { reportBeforeMin: v })} />
+          <MinutesField style={{ flex: 1 }} label={t("ftl.releaseAfter")} value={settings.releaseAfterMin} max={120} onChange={(v) => void saveFtlPrefs(app, { releaseAfterMin: v })} />
         </Row>
         <AirportField
           label={t("more.homeBase")}
@@ -117,10 +117,10 @@ function Ftl() {
           onChange={(icao) => {
             void app.savePilot({ homeBaseIcao: icao || undefined });
             // as on the web, a new base brings its time zone: the reference time follows it again
-            if (icao && lookupAirport(icao)?.timezone && prefs.homeTimezone) void saveFtlPrefs(app.store, { homeTimezone: undefined });
+            if (icao && lookupAirport(icao)?.timezone && prefs.homeTimezone) void saveFtlPrefs(app, { homeTimezone: undefined });
           }}
         />
-        <TimeZonePicker value={settings.homeTimezone} chosen={prefs.homeTimezone} auto={autoTimezone(pilot)} onChange={(tz) => void saveFtlPrefs(app.store, { homeTimezone: tz })} />
+        <TimeZonePicker value={settings.homeTimezone} chosen={prefs.homeTimezone} auto={autoTimezone(pilot)} onChange={(tz) => void saveFtlPrefs(app, { homeTimezone: tz })} />
         <Txt variant="small">{t("ftl.assumptions", { report: settings.reportBeforeMin, release: settings.releaseAfterMin, tz: settings.homeTimezone })}</Txt>
         <Txt variant="small">{t("ftl.settingsLocal")}</Txt>
       </Card>

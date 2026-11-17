@@ -6,10 +6,10 @@ import { useApp } from "./state";
 import type { SqliteStore } from "./db/sqliteStore";
 
 /**
- * The FTL estimate settings the pilot can change: kept on this device under the same "ftlSettings" meta key
- * and JSON shape as the web app (which also keeps them per device). The rules (ftlRegime) and the home base
- * live on the pilot record and sync. A stored homeTimezone is the pilot's explicit choice; without one, the
- * reference time follows the home base airport, then the device.
+ * The FTL estimate settings the pilot can change live on the pilot record (ftlReportMin, ftlReleaseMin,
+ * ftlTimezone) and sync with the web. Values a device saved before that, under the "ftlSettings" meta key,
+ * are still read as a fallback until the pilot changes them. A chosen time zone is the pilot's explicit
+ * choice; without one, the reference time follows the home base airport, then the device.
  */
 export type FtlPrefs = Partial<Pick<FtlSettings, "reportBeforeMin" | "releaseAfterMin" | "homeTimezone">>;
 const KEY = "ftlSettings";
@@ -52,12 +52,27 @@ async function load(store: SqliteStore, owner: string) {
   emit();
 }
 
-/** Saves a change (undefined clears it back to the default) and refreshes every screen using the settings. */
-export async function saveFtlPrefs(store: SqliteStore, patch: FtlPrefs): Promise<void> {
-  prefs = { ...prefs, ...patch };
+/** The pilot's synced choices, then what this device saved before they synced. */
+export function effectivePrefs(pilot: Pilot, local: FtlPrefs = prefs): FtlPrefs {
+  return {
+    reportBeforeMin: pilot.ftlReportMin ?? local.reportBeforeMin,
+    releaseAfterMin: pilot.ftlReleaseMin ?? local.releaseAfterMin,
+    homeTimezone: pilot.ftlTimezone && isTimeZone(pilot.ftlTimezone) ? pilot.ftlTimezone : local.homeTimezone,
+  };
+}
+
+/** Saves a change on the pilot record (synced; undefined clears it back to the default). */
+export async function saveFtlPrefs(app: { store: SqliteStore; savePilot(patch: Partial<Pilot>): Promise<void> }, patch: FtlPrefs): Promise<void> {
+  // the device copy is cleared for the changed keys so it can no longer shadow the synced value
+  const left = Object.fromEntries(Object.entries(prefs).filter(([k, v]) => v !== undefined && !(k in patch)));
+  prefs = left;
   emit();
-  const out = Object.fromEntries(Object.entries(prefs).filter(([, v]) => v !== undefined));
-  await store.setMeta(KEY, JSON.stringify(out));
+  await app.store.setMeta(KEY, JSON.stringify(left));
+  const p: Partial<Pilot> = {};
+  if ("reportBeforeMin" in patch) p.ftlReportMin = patch.reportBeforeMin;
+  if ("releaseAfterMin" in patch) p.ftlReleaseMin = patch.releaseAfterMin;
+  if ("homeTimezone" in patch) p.ftlTimezone = patch.homeTimezone;
+  await app.savePilot(p);
 }
 
 /** Reference time when the pilot has not chosen one: home base airport, else this device. */
@@ -73,7 +88,8 @@ export function autoTimezone(pilot: Pilot): string {
 }
 
 /** FTL settings for the computation: the pilot's rules and base, this device's report/release times and zone. */
-export function ftlSettingsFor(pilot: Pilot, p: FtlPrefs = prefs): FtlSettings {
+export function ftlSettingsFor(pilot: Pilot, local: FtlPrefs = prefs): FtlSettings {
+  const p = effectivePrefs(pilot, local);
   return {
     ...DEFAULT_FTL_SETTINGS,
     reportBeforeMin: p.reportBeforeMin ?? DEFAULT_FTL_SETTINGS.reportBeforeMin,
@@ -89,8 +105,9 @@ export function useFtlSettings(): { settings: FtlSettings; prefs: FtlPrefs } {
   const { store, pilot } = useApp();
   // reloaded when the local pilot changes (sign-in, or a wipe of the phone's data)
   useEffect(() => void load(store, pilot.id), [store, pilot.id]);
-  const p = useSyncExternalStore(subscribe, () => prefs);
-  const settings = useMemo(() => ftlSettingsFor(pilot, p), [pilot, p]);
+  const local = useSyncExternalStore(subscribe, () => prefs);
+  const settings = useMemo(() => ftlSettingsFor(pilot, local), [pilot, local]);
+  const p = useMemo(() => effectivePrefs(pilot, local), [pilot, local]);
   return { settings, prefs: p };
 }
 

@@ -23,18 +23,36 @@ export default function FtlPage() {
   const [settings, setSettings] = useState<FtlSettings>(DEFAULT_FTL_SETTINGS);
   const [includeRoster, setIncludeRoster] = useState(true);
 
+  // report/release times and the chosen zone live on the pilot (synced with the phone); what this browser
+  // saved before that is only a fallback
   useEffect(() => {
-    localStore.getMeta("ftlSettings").then((s) => s && setSettings({ ...DEFAULT_FTL_SETTINGS, ...JSON.parse(s) }));
-  }, []);
+    localStore.getMeta("ftlSettings").then((s) => {
+      const local: Partial<FtlSettings> = s ? JSON.parse(s) : {};
+      setSettings((cur) => ({
+        ...DEFAULT_FTL_SETTINGS,
+        ...cur,
+        ...local,
+        ...(pilot?.ftlReportMin != null ? { reportBeforeMin: pilot.ftlReportMin } : {}),
+        ...(pilot?.ftlReleaseMin != null ? { releaseAfterMin: pilot.ftlReleaseMin } : {}),
+        ...(pilot?.ftlTimezone ? { homeTimezone: pilot.ftlTimezone } : {}),
+      }));
+    });
+  }, [pilot?.ftlReportMin, pilot?.ftlReleaseMin, pilot?.ftlTimezone]);
   useEffect(() => {
     if (pilot?.homeBaseIcao && !settings.homeBaseIcao) {
       const tz = airports?.get(pilot.homeBaseIcao)?.timezone;
       setSettings((s) => ({ ...s, homeBaseIcao: pilot.homeBaseIcao, homeTimezone: tz ?? s.homeTimezone }));
     }
   }, [pilot, airports, settings.homeBaseIcao]);
-  const update = (s: FtlSettings) => {
+  const update = (s: FtlSettings, tzChosen = false) => {
     setSettings(s);
     localStore.setMeta("ftlSettings", JSON.stringify(s));
+    void updatePilot({
+      ftlReportMin: s.reportBeforeMin,
+      ftlReleaseMin: s.releaseAfterMin,
+      // a zone typed by the pilot is kept; one that follows the home base stays automatic
+      ...(tzChosen ? { ftlTimezone: s.homeTimezone || undefined } : {}),
+    });
   };
 
   // the scheme is a pilot setting (synced with the phone); the rest of the settings stay on this device
@@ -137,9 +155,14 @@ export default function FtlPage() {
             <AirportInput
               label={t("homeBase")}
               value={settings.homeBaseIcao ?? ""}
-              onChange={(icao) => update({ ...settings, homeBaseIcao: icao || undefined, homeTimezone: airports?.get(icao)?.timezone ?? settings.homeTimezone })}
+              onChange={(icao) => {
+                const tz = airports?.get(icao)?.timezone;
+                update({ ...settings, homeBaseIcao: icao || undefined, homeTimezone: tz ?? settings.homeTimezone });
+                // a new base brings its own zone: back to automatic
+                if (tz && pilot?.ftlTimezone) void updatePilot({ ftlTimezone: undefined });
+              }}
             />
-            <Field label={t("timezone")}><input className="input num" value={settings.homeTimezone} onChange={(e) => update({ ...settings, homeTimezone: e.target.value })} /></Field>
+            <Field label={t("timezone")}><input className="input num" value={settings.homeTimezone} onChange={(e) => update({ ...settings, homeTimezone: e.target.value }, true)} /></Field>
             <Toggle checked={includeRoster} onChange={setIncludeRoster} label={t("includeRoster")} />
           </div>
         </Card>

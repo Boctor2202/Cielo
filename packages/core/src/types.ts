@@ -37,6 +37,12 @@ export interface Pilot extends SyncedRecord {
   homeBaseIcao?: string;
   /** flight time limitation scheme: EASA ORO.FTL, EU-OPS Subpart Q (business aviation, air taxi) or none */
   ftlRegime?: FtlRegime;
+  /** FTL estimate: minutes between report and first off-block (unset: default) */
+  ftlReportMin?: number;
+  /** FTL estimate: minutes between last on-block and end of duty (unset: default) */
+  ftlReleaseMin?: number;
+  /** FTL reference IANA time zone chosen by the pilot (unset: the home base airport's zone) */
+  ftlTimezone?: string;
   licenceNumber?: string;
   defaultFunction: PilotFunction;
   defaultIfr: IfrDefault;
