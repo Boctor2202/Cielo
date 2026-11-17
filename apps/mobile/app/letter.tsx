@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Share, View } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import { countryName } from "@cielo/core";
 import { flightExperience, letterPilot, type CvData, type CvProfile } from "@cielo/cv";
@@ -23,6 +24,7 @@ export default function Letter() {
   const [locale, setLocale] = useState<"fr" | "en">(uiLocale === "fr" ? "fr" : "en");
   const [adText, setAdText] = useState("");
   const [notes, setNotes] = useState("");
+  const [copied, setCopied] = useState(false);
   const [letter, setLetter] = useState("");
   const [busy, setBusy] = useState(false);
   const [cv, setCv] = useState<CvProfile | null>(null);
@@ -104,7 +106,16 @@ export default function Letter() {
           <Txt variant="h2">{t("letter.result")}</Txt>
           <Field value={letter} onChangeText={setLetter} multiline style={{ minHeight: 320 }} />
           <Txt variant="small" color={c.caution}>{t("letter.check")}</Txt>
-          {/* the share sheet also offers "Copy" */}
+          <Button
+            title={copied ? t("common.copied") : t("common.copy")}
+            onPress={() =>
+              void Clipboard.setStringAsync(letter).then(() => {
+                tap("success");
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              })
+            }
+          />
           <Button kind="secondary" title={t("letter.share")} onPress={() => void Share.share({ message: letter })} />
           {job ? <Button kind="ghost" title={t("letter.openOffer")} onPress={() => router.back()} /> : null}
         </Card>

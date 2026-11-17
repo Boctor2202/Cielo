@@ -3,7 +3,8 @@ import { Alert, Platform } from "react-native";
 import { router } from "expo-router";
 import Constants from "expo-constants";
 import { PILOT_FUNCTIONS, REGULATORS, regulatorById, type IfrDefault, type Locale, type PilotFunction, type TimeDisplay } from "@cielo/core";
-import { Button, Card, Chip, Field, MenuGroup, MenuRow, Row, Screen, Segmented, Txt } from "../../src/components/ui";
+import { Button, Card, Chip, Field, MenuGroup, MenuRow, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
+import { liveActivityEnabled, setLiveActivityEnabled } from "../../src/widgets/sync";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf, exportLogbookXlsx } from "../../src/exporters";
 import { isCloudEnabled } from "../../src/auth";
@@ -20,6 +21,7 @@ export default function More() {
 
   const [busy, setBusy] = useState<string | null>(null);
   const [theme, setTheme] = useState<ThemePref>(loadThemePref);
+  const [live, setLive] = useState(liveActivityEnabled);
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key);
@@ -152,6 +154,17 @@ export default function More() {
             { value: "system", label: t("more.theme.system") },
           ]}
         />
+        {Platform.OS === "ios" ? (
+          <ToggleRow
+            label={t("more.liveActivity")}
+            hint={t("more.liveActivityHint")}
+            value={live}
+            onChange={(v) => {
+              setLive(v);
+              setLiveActivityEnabled(v);
+            }}
+          />
+        ) : null}
         <Segmented<TimeDisplay>
           label={t("more.timeDisplay")}
           value={pilot.timeDisplay}

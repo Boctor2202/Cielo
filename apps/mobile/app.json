@@ -93,6 +93,28 @@
         {
           "locationWhenInUsePermission": "Geardown uses your position to centre the radar on the traffic around you."
         }
+      ],
+      "@react-native-community/datetimepicker",
+      [
+        "expo-widgets",
+        {
+          "widgets": [
+            {
+              "name": "GeardownSummary",
+              "displayName": "Geardown",
+              "description": "Hours of the last 90 days, next duty and next deadline.",
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium",
+                  "accessoryRectangular",
+                  "accessoryInline"
+                ],
+                "initialLayout": "./src/widgets/Summary.tsx"
+              }
+            }
+          ]
+        }
       ]
     ],
     "experiments": {

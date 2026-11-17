@@ -9,6 +9,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppProvider, useApp, useBootError } from "../src/state";
 import { applyThemePref, loadThemePref } from "../src/appearance";
 import { useTheme } from "../src/theme";
+import { WidgetSync } from "../src/widgets/sync";
 import { Backdrop, Txt } from "../src/components/ui";
 import { glass } from "../src/theme";
 
@@ -52,6 +53,7 @@ function Navigator() {
     <ThemeProvider value={theme}>
       <StatusBar style={c.scheme === "dark" ? "light" : "dark"} />
       <Backdrop />
+      <WidgetSync />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: glass(c).strong },

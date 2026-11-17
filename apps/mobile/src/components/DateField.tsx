@@ -1,8 +1,10 @@
-import React from "react";
-import { ScrollView, View, type StyleProp, type ViewStyle } from "react-native";
-import { Chip, Field } from "./ui";
+import React, { useState } from "react";
+import { Modal, Platform, Pressable, ScrollView, View, type StyleProp, type ViewStyle } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Button, Chip, Field } from "./ui";
 import { useApp } from "../state";
-import { space } from "../theme";
+import { glass, space, useTheme } from "../theme";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const isoDay = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -45,7 +47,11 @@ export function DateField({
   hint?: string;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { t } = useApp();
+  const { t, locale } = useApp();
+  const c = useTheme();
+  // the iOS calendar, next to the typed field (typing stays the fastest way for a pilot who knows the date)
+  const [picking, setPicking] = useState<Date | null>(null);
+  const openPicker = () => setPicking(isValidDate(value) ? new Date(`${value}T12:00:00`) : new Date());
   const bad = value ? !isValidDate(value, month) : !!required;
   const shift = (days: number, years = 0) => {
     const d = new Date();
@@ -62,7 +68,9 @@ export function DateField({
   };
   return (
     <View style={[{ gap: space.xs }, style]}>
+      <View style={{ flexDirection: "row", alignItems: "flex-end", gap: space.xs }}>
       <Field
+        style={{ flex: 1 }}
         label={label}
         value={value}
         onChangeText={(s) => onChange(formatDateDigits(s, month))}
@@ -73,6 +81,54 @@ export function DateField({
         error={bad}
         hint={hint}
       />
+      {!month ? (
+        <Pressable
+          onPress={openPicker}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t("date.pick")}
+          style={{ height: 46, width: 46, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: glass(c).strong, marginBottom: hint ? 20 : 0 }}
+        >
+          <Ionicons name="calendar-outline" size={20} color={c.accent} />
+        </Pressable>
+      ) : null}
+      </View>
+      {picking && Platform.OS === "android" ? (
+        <DateTimePicker
+          value={picking}
+          mode="date"
+          onChange={(e, d) => {
+            setPicking(null);
+            if (e.type === "set" && d) onChange(isoDay(d));
+          }}
+        />
+      ) : null}
+      {Platform.OS === "ios" ? (
+        <Modal visible={!!picking} transparent animationType="fade" onRequestClose={() => setPicking(null)}>
+          <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", padding: space.lg }} onPress={() => setPicking(null)}>
+            <Pressable style={{ backgroundColor: c.bg, borderRadius: 18, padding: space.md, gap: space.sm }} onPress={() => undefined}>
+              {picking ? (
+                <DateTimePicker
+                  value={picking}
+                  mode="date"
+                  display="inline"
+                  locale={locale}
+                  themeVariant={c.scheme === "dark" ? "dark" : "light"}
+                  accentColor={c.accent}
+                  onChange={(_, d) => d && setPicking(d)}
+                />
+              ) : null}
+              <Button
+                title={t("common.ok")}
+                onPress={() => {
+                  if (picking) onChange(isoDay(picking));
+                  setPicking(null);
+                }}
+              />
+            </Pressable>
+          </Pressable>
+        </Modal>
+      ) : null}
       {quick?.length ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
           {quick.map((q) => (
