@@ -6,14 +6,16 @@ import { useTypes } from "@/lib/hooks";
 import { AuthorityInput } from "@/components/app/AuthorityInput";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { alertsDueToday, computeRecency, DEFAULT_ALERT_DAYS, LICENSE_CATALOGUE, licenseStatus, LPE_LANGUAGES, DOCUMENT_FORMS, MEDICAL_CLASSES, MEDICAL_LIMITATIONS, AGE_BANDS, medicalValidUntil, type AgeBand, type MedicalClass, lpeCode, lpeValidUntil, parseLpe, type License, type LicenseKind } from "@cielo/core";
+import { DOCUMENT_KINDS, alertsDueToday, computeRecency, DEFAULT_ALERT_DAYS, LICENSE_CATALOGUE, licenseStatus, LPE_LANGUAGES, DOCUMENT_FORMS, MEDICAL_CLASSES, MEDICAL_LIMITATIONS, AGE_BANDS, medicalValidUntil, type AgeBand, type MedicalClass, lpeCode, lpeValidUntil, parseLpe, type License, type LicenseKind } from "@cielo/core";
 import { Badge, Card, Empty, Field, Modal, PageTitle, type Level } from "@/components/app/ui";
 import { useFlights, useFormatDate, useTable, useToday } from "@/lib/hooks";
 import { saveLicense, softDelete } from "@/lib/repo";
 import { localStore } from "@/lib/db";
 
 type Draft = Omit<License, "id" | "createdAt" | "updatedAt" | "pilotId"> & { id?: string };
-const KINDS: LicenseKind[] = ["licence", "medical", "rating", "endorsement", "language", "other"];
+// display groups: the older single "rating" category is shown with the type ratings
+const KINDS: LicenseKind[] = ["licence", "type_rating", "rating", "class_rating", "skill_rating", "medical", "language", "radio", "insurance", "endorsement", "other"];
+const FORM_KINDS: LicenseKind[] = [...DOCUMENT_KINDS];
 const blank = (): Draft => ({ kind: "licence", code: "", alertDays: [...DEFAULT_ALERT_DAYS] });
 
 export default function DocumentsPage() {
@@ -121,7 +123,7 @@ export default function DocumentsPage() {
                   setDraft({ ...draft, kind, code, issuedOn: null, validUntil: null, lastCheckOn: null, notes });
                   setShowExpiry(false);
                 }}>
-                  {KINDS.map((k) => <option key={k} value={k}>{t(`kinds.${k}`)}</option>)}
+                  {(draft.kind === "rating" ? [...FORM_KINDS, "rating" as LicenseKind] : FORM_KINDS).map((k) => <option key={k} value={k}>{t(`kinds.${k}`)}</option>)}
                 </select>
               </Field>
               {draft.kind === "language" ? (
@@ -134,7 +136,7 @@ export default function DocumentsPage() {
                   <datalist id="lic-cat">{LICENSE_CATALOGUE.filter((c) => c.kind === draft.kind).map((c) => <option key={c.code} value={c.code} />)}</datalist>
                 </Field>
               )}
-              {draft.kind === "rating" && (
+              {(draft.kind === "rating" || draft.kind === "type_rating") && (
                 <div className="sm:col-span-2">
                   <AircraftTypeInput
                     types={types ?? []}

@@ -979,7 +979,12 @@
         "rating": "Rating",
         "endorsement": "Endorsement",
         "language": "Language proficiency",
-        "other": "Other"
+        "other": "Other",
+        "class_rating": "Class rating",
+        "type_rating": "Type rating",
+        "skill_rating": "Additional rating (IR, FI, night…)",
+        "radio": "Radio licence",
+        "insurance": "Insurance"
       },
       "code": "Title",
       "authority": "Authority",

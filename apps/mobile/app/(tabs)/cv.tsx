@@ -16,6 +16,9 @@ import { useTheme } from "../../src/theme";
 
 const EMPTY: CvProfile = { fullName: "", experience: [], education: [], languages: [], skills: [] };
 
+/** order of the documents in the application pack (insurance stays out) */
+const PACK_ORDER: string[] = ["licence", "type_rating", "rating", "class_rating", "skill_rating", "medical", "language", "radio", "endorsement", "other"];
+
 let fonts: Promise<CvFonts | undefined> | null = null;
 /** The CV font (Inter), downloaded once from the website; without it the PDF uses Helvetica. */
 const loadFonts = () =>
@@ -116,8 +119,8 @@ function Cv() {
         cvPdf,
         hours: data.hours,
         documents: licenses
-          .filter((l) => !l.deletedAt)
-          .sort((a, b) => ["licence", "medical", "rating", "endorsement", "language", "other"].indexOf(a.kind) - ["licence", "medical", "rating", "endorsement", "language", "other"].indexOf(b.kind))
+          .filter((l) => !l.deletedAt && l.kind !== "insurance")
+          .sort((a, b) => PACK_ORDER.indexOf(a.kind) - PACK_ORDER.indexOf(b.kind))
           .map((l) => ({ kind: l.kind, code: l.code, authority: l.authority, number: l.number, validUntil: l.validUntil, issuedOn: l.issuedOn, attachmentDataUrl: l.attachmentDataUrl })),
         pilotName: profile.fullName || pilot.fullName,
         licenceNumber: pilot.licenceNumber || undefined,

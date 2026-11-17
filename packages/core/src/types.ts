@@ -43,6 +43,8 @@ export interface Pilot extends SyncedRecord {
   ftlReleaseMin?: number;
   /** FTL reference IANA time zone chosen by the pilot (unset: the home base airport's zone) */
   ftlTimezone?: string;
+  /** main licensing authority (REGULATORS id: EASA, UKCAA, FAA, TCCA, GCAA…); regulatoryFramework follows it */
+  authority?: string;
   /** goals set by the pilot (unset: the automatic milestones) */
   goals?: PilotGoal[];
   licenceNumber?: string;
@@ -224,7 +226,19 @@ export interface OpeningBalance extends SyncedRecord {
   fstdMin: number;
 }
 
-export type LicenseKind = "licence" | "medical" | "rating" | "endorsement" | "language" | "other";
+export type LicenseKind =
+  | "licence"
+  | "medical"
+  /** legacy: ratings recorded before class / type / additional ratings were told apart (shown as type ratings) */
+  | "rating"
+  | "class_rating"
+  | "type_rating"
+  | "skill_rating"
+  | "endorsement"
+  | "language"
+  | "radio"
+  | "insurance"
+  | "other";
 
 export interface License extends SyncedRecord {
   pilotId: UUID;

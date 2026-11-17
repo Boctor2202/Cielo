@@ -111,7 +111,7 @@ function hourLines(h: FlightExperience, t: (typeof L)["en"], locale: "en" | "fr"
 }
 
 function licenceLine(l: CvLicence, t: (typeof L)["en"], locale: "en" | "fr"): Line {
-  const name = l.kind === "licence" || l.kind === "rating" ? expandLicence(l.code) : l.code;
+  const name = l.kind === "licence" || /rating$/.test(l.kind) ? expandLicence(l.code) : l.code;
   const meta = [l.authority, l.number, l.validUntil ? `${t.validUntil} ${day(l.validUntil, locale)}` : l.kind === "medical" ? "" : t.noExpiry].filter(Boolean).join(" · ");
   return { kind: "item", title: name, meta };
 }
@@ -155,8 +155,8 @@ export function buildCvDocument(cv: CvData): CvDocument {
     });
   }
 
-  const order = ["licence", "rating", "medical", "endorsement", "language", "other"];
-  const lic = [...cv.licences].filter((l) => l.kind !== "language" && !/passport|passeport|badge/i.test(l.code)).sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));
+  const order = ["licence", "type_rating", "rating", "class_rating", "skill_rating", "medical", "endorsement", "language", "radio", "other", "insurance"];
+  const lic = [...cv.licences].filter((l) => l.kind !== "language" && l.kind !== "insurance" && !/passport|passeport|badge/i.test(l.code)).sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));
   if (lic.length) sections.push({ id: "licences", heading: t.licences, lines: lic.map((l) => licenceLine(l, t, locale)) });
 
   if (p.experience.length) {

@@ -979,7 +979,12 @@
         "rating": "Qualification",
         "endorsement": "Mention",
         "language": "Compétence linguistique",
-        "other": "Autre"
+        "other": "Autre",
+        "class_rating": "Qualification de classe",
+        "type_rating": "Qualification de type",
+        "skill_rating": "Qualification additionnelle (IR, FI, nuit…)",
+        "radio": "Licence radio",
+        "insurance": "Assurance"
       },
       "code": "Intitulé",
       "authority": "Autorité",

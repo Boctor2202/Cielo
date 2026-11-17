@@ -11,7 +11,7 @@ import { todayUtc, useApp } from "../../src/state";
 import { space, useTheme } from "../../src/theme";
 
 const ORDER = { expired: 0, expiring: 1, valid: 2, no_expiry: 3 } as const;
-const ICON = { licence: ["card", "#0A84FF"], medical: ["medkit", "#FF453A"], rating: ["airplane", "#5E5CE6"], endorsement: ["ribbon", "#FF9F0A"], language: ["chatbubbles", "#30B0C7"], other: ["document-text", "#8E8E93"] } as const;
+const ICON = { licence: ["card", "#0A84FF"], medical: ["medkit", "#FF453A"], rating: ["airplane", "#5E5CE6"], class_rating: ["airplane-outline", "#5E5CE6"], type_rating: ["airplane", "#5E5CE6"], skill_rating: ["star", "#BF5AF2"], radio: ["radio", "#64D2FF"], insurance: ["shield-checkmark", "#34C759"], endorsement: ["ribbon", "#FF9F0A"], language: ["chatbubbles", "#30B0C7"], other: ["document-text", "#8E8E93"] } as const;
 
 export default function Documents() {
   const { access, t, locale, licenses } = useApp();

@@ -11,6 +11,9 @@ import { localStore } from "@/lib/db";
 import { downloadBlob } from "@/lib/download";
 import { useFlights, usePilot, useTable, useToday, useTypes } from "@/lib/hooks";
 
+/** order of the documents in the application pack (insurance stays out) */
+const PACK_ORDER: string[] = ["licence", "type_rating", "rating", "class_rating", "skill_rating", "medical", "language", "radio", "endorsement", "other"];
+
 const EMPTY: CvProfile = { fullName: "", experience: [], education: [], languages: [], skills: [] };
 
 /** Keywords an AI screener will look for in an offer: licence, aircraft names, hour categories. */
@@ -94,12 +97,12 @@ export default function CvPage() {
   const downloadPack = async () => {
     const fonts = await loadFonts();
     const cvPdf = await buildCvPdf(doc, { jsonResume: toJsonResume(data), lang: locale, author: profile.fullName, theme: profile.theme, fonts, photo: photoUrl ? await squareJpeg(photoUrl) : undefined });
-    const order = ["licence", "medical", "rating", "endorsement", "language", "other"];
+    const order = PACK_ORDER;
     const bytes = await buildApplicationPack({
       cvPdf,
       hours: data.hours,
       documents: (licenses ?? [])
-        .filter((l) => !l.deletedAt)
+        .filter((l) => !l.deletedAt && l.kind !== "insurance")
         .sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind))
         .map((l) => ({ kind: l.kind, code: l.code, authority: l.authority, number: l.number, validUntil: l.validUntil, issuedOn: l.issuedOn, attachmentDataUrl: l.attachmentDataUrl })),
       pilotName: profile.fullName || pilot?.fullName || "",

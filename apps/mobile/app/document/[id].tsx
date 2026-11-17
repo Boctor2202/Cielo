@@ -7,6 +7,7 @@ import {
 import { Alert, KeyboardAvoidingView, Platform, View } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import {
+  DOCUMENT_KINDS,
   DEFAULT_ALERT_DAYS,
   LICENSE_CATALOGUE,
   licenseStatus,
@@ -44,14 +45,7 @@ import { Paywall } from "../../src/components/Access";
 import { ensureNotificationPermission } from "../../src/notifications";
 import { DateField } from "../../src/components/DateField";
 
-const KINDS: LicenseKind[] = [
-  "licence",
-  "medical",
-  "rating",
-  "endorsement",
-  "language",
-  "other",
-];
+const KINDS: LicenseKind[] = [...DOCUMENT_KINDS];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export default function DocumentFormRoute() {
@@ -170,7 +164,7 @@ function DocumentForm() {
         <Card>
           <Txt variant="label">{t("docs.kind")}</Txt>
           <Row style={{ flexWrap: "wrap" }}>
-            {KINDS.map((k) => (
+            {(kind === "rating" ? [...KINDS, "rating" as LicenseKind] : KINDS).map((k) => (
               <Chip
                 key={k}
                 label={t(`docs.kind.${k}` as I18nKey)}
@@ -195,7 +189,7 @@ function DocumentForm() {
               />
             ))}
           </Row>
-          {kind === "rating" ? (
+          {kind === "rating" || kind === "type_rating" ? (
             <AircraftTypeField
               types={aircraftTypes}
               label={t("docs.aircraftType")}

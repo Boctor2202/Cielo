@@ -158,7 +158,7 @@ export function buildProfile(
       const lvl: LicenceLevel | undefined = /ATPL/.test(c) ? (/FROZEN/.test(c) ? "FATPL" : "ATPL") : /MPL/.test(c) ? "MPL" : /CPL/.test(c) ? "CPL" : /PPL|LAPL/.test(c) ? "PPL" : undefined;
       if (lvl && (!p.licence || RANK[lvl] > RANK[p.licence])) p.licence = lvl;
     }
-    if (l.kind === "rating") for (const i of icaoFromRating(c)) if (!p.ratedTypes.includes(i)) p.ratedTypes.push(i);
+    if (l.kind === "rating" || l.kind === "class_rating" || l.kind === "type_rating" || l.kind === "skill_rating") for (const i of icaoFromRating(c)) if (!p.ratedTypes.includes(i)) p.ratedTypes.push(i);
     if ((!l.validUntil || l.validUntil >= new Date().toISOString().slice(0, 10)) && /\b(FI|CRI|IRI|TRI|SFI|MCCI|STI|FIC|INSTRUCT\w*)\b/.test(c)) p.instructor = true;
     if ((!l.validUntil || l.validUntil >= new Date().toISOString().slice(0, 10)) && /\b(FE|TRE|CRE|IRE|SFE|FIE|EXAMIN\w*)\b/.test(c)) p.examiner = true;
     if (l.kind === "language" && /ENGLISH|ANGLAIS/.test(c)) {
