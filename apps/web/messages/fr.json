@@ -1356,7 +1356,9 @@
         "Chinois",
         "Russe",
         "Japonais"
-      ]
+      ],
+      "pack": "Dossier de candidature",
+      "packHint": "CV, relevé d'heures du carnet, licences et copies des documents, en un seul PDF."
     },
     "profile": {
       "eyebrow": "Profil pilote",

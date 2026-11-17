@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { atsReport, buildCvDocument, buildCvPdf, CV_THEMES, cvToText, flightExperience, toJsonResume, type CvData, type CvExperience, type CvFonts, type CvProfile, type CvTheme } from "@cielo/cv";
+import { atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, CV_THEMES, cvToText, flightExperience, toJsonResume, type CvData, type CvExperience, type CvFonts, type CvProfile, type CvTheme } from "@cielo/cv";
 import { countryName } from "@cielo/core";
 import { buildProfile, detectAircraft, matchJob, type Job } from "@cielo/jobs";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
@@ -98,6 +98,41 @@ function Cv() {
     }
   };
 
+  /** CV + flight-hours statement + licences + scans, in one PDF for a recruiter. */
+  const sharePack = async () => {
+    setBusy(true);
+    try {
+      const opts = { jsonResume: toJsonResume(data), lang: locale, author: profile.fullName, theme: profile.theme, photo: profile.photo ? photoBytes(pilot.photoDataUrl) : undefined };
+      let fonts: Awaited<ReturnType<typeof loadFonts>> | undefined;
+      try {
+        fonts = await loadFonts();
+      } catch {
+        fonts = undefined;
+      }
+      const cvPdf = await buildCvPdf(doc, { ...opts, fonts });
+      const bytes = await buildApplicationPack({
+        cvPdf,
+        hours: data.hours,
+        documents: licenses
+          .filter((l) => !l.deletedAt)
+          .sort((a, b) => ["licence", "medical", "rating", "endorsement", "language", "other"].indexOf(a.kind) - ["licence", "medical", "rating", "endorsement", "language", "other"].indexOf(b.kind))
+          .map((l) => ({ kind: l.kind, code: l.code, authority: l.authority, number: l.number, validUntil: l.validUntil, issuedOn: l.issuedOn, attachmentDataUrl: l.attachmentDataUrl })),
+        pilotName: profile.fullName || pilot.fullName,
+        licenceNumber: pilot.licenceNumber || undefined,
+        locale,
+        theme: profile.theme,
+        fonts,
+        today: todayUtc(),
+      });
+      const slug = (profile.fullName || "pilot").toLowerCase().normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "");
+      await shareFile(`${locale === "fr" ? "dossier-candidature" : "application-pack"}-${slug}.pdf`, bytes, "application/pdf", "com.adobe.pdf");
+    } catch (e) {
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const updExp = (i: number, patch: Partial<CvExperience>) => set("experience", profile.experience.map((e, j) => (j === i ? { ...e, ...patch } : e)));
   const scoreColor = report.score >= 85 ? c.success : report.score >= 65 ? c.accent : c.caution;
   const issues = report.checks.filter((x) => x.status !== "ok");
@@ -109,6 +144,8 @@ function Cv() {
           <Segmented<"en" | "fr"> value={locale} onChange={setLocale} options={[{ value: "en", label: "English" }, { value: "fr", label: "Français" }]} />
         </Row>
         <Button title={t("cv.share")} loading={busy} onPress={() => void share()} />
+        <Button kind="secondary" title={t("cv.pack")} loading={busy} onPress={() => void sharePack()} />
+        <Txt variant="small">{t("cv.packHint")}</Txt>
         <Txt variant="small">{t("cv.shareHint")}</Txt>
       </Card>
 

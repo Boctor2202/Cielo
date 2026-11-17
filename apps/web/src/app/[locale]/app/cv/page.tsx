@@ -4,7 +4,7 @@ import { AlertTriangle, Check, Copy, FileDown, FileJson, Plus, Trash2, X } from 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { countryName } from "@cielo/core";
-import { atsReport, buildCvDocument, buildCvPdf, cvToText, CV_THEMES, flightExperience, toJsonResume, type CvData, type CvDocument, type CvProfile, type CvTheme } from "@cielo/cv";
+import { atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, cvToText, CV_THEMES, flightExperience, toJsonResume, type CvData, type CvDocument, type CvProfile, type CvTheme } from "@cielo/cv";
 import type { Job } from "@cielo/jobs";
 import { Card, Field, PageTitle, Segmented, useToast, type Level } from "@/components/app/ui";
 import { localStore } from "@/lib/db";
@@ -84,11 +84,36 @@ export default function CvPage() {
   };
 
   const photoUrl = profile.photo ? pilot?.photoDataUrl : undefined;
-  const download = async () => {
+  const loadFonts = async () => {
     const font = async (w: number) => new Uint8Array(await (await fetch(`/fonts/cv/Inter-${w}.ttf`)).arrayBuffer());
-    const fonts = await Promise.all([font(400), font(600), font(700)])
+    return Promise.all([font(400), font(600), font(700)])
       .then(([regular, semibold, bold]) => ({ regular, semibold, bold }))
       .catch(() => undefined);
+  };
+  /** CV + flight-hours statement + licences + scans, in one PDF for a recruiter. */
+  const downloadPack = async () => {
+    const fonts = await loadFonts();
+    const cvPdf = await buildCvPdf(doc, { jsonResume: toJsonResume(data), lang: locale, author: profile.fullName, theme: profile.theme, fonts, photo: photoUrl ? await squareJpeg(photoUrl) : undefined });
+    const order = ["licence", "medical", "rating", "endorsement", "language", "other"];
+    const bytes = await buildApplicationPack({
+      cvPdf,
+      hours: data.hours,
+      documents: (licenses ?? [])
+        .filter((l) => !l.deletedAt)
+        .sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind))
+        .map((l) => ({ kind: l.kind, code: l.code, authority: l.authority, number: l.number, validUntil: l.validUntil, issuedOn: l.issuedOn, attachmentDataUrl: l.attachmentDataUrl })),
+      pilotName: profile.fullName || pilot?.fullName || "",
+      licenceNumber: pilot?.licenceNumber || undefined,
+      locale,
+      theme: profile.theme,
+      fonts,
+      today,
+    });
+    const slug = (profile.fullName || "pilot").toLowerCase().normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "");
+    downloadBlob(bytes as BlobPart, `${locale === "fr" ? "dossier-candidature" : "application-pack"}-${slug}.pdf`, "application/pdf");
+  };
+  const download = async () => {
+    const fonts = await loadFonts();
     const bytes = await buildCvPdf(doc, {
       jsonResume: toJsonResume(data),
       lang: locale,
@@ -114,6 +139,9 @@ export default function CvPage() {
             </button>
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => downloadBlob(JSON.stringify(toJsonResume(data), null, 2), "resume.json", "application/json")}>
               <FileJson size={15} aria-hidden /> JSON
+            </button>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={downloadPack} title={t("packHint")}>
+              <FileDown size={15} aria-hidden /> {t("pack")}
             </button>
             <button type="button" className="btn btn-primary btn-sm" onClick={download}>
               <FileDown size={15} aria-hidden /> {t("download")}

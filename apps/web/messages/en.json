@@ -1356,7 +1356,9 @@
         "Chinese",
         "Russian",
         "Japanese"
-      ]
+      ],
+      "pack": "Application pack",
+      "packHint": "CV, flight-hours statement from the logbook, licences and document scans, in one PDF."
     },
     "profile": {
       "eyebrow": "Pilot profile",
