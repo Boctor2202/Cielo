@@ -343,7 +343,8 @@ export default function GlassWorkspace({
   const spent = transactions
     .filter((t) => t.amount < 0)
     .reduce((sum, t) => sum - t.amount, 0);
-  const totalSaved = goals.reduce((sum, g) => sum + Math.max(0, g.saved), 0);
+  // the goals mix hours and landings: summing them means nothing. The headline is the total time (balance).
+  const totalSaved = balance;
   const visibleTransactions = transactions.filter((t) =>
     `${t.name} ${t.category}`.toLowerCase().includes(filter.toLowerCase()),
   );
