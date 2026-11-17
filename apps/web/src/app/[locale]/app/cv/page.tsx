@@ -86,7 +86,7 @@ export default function CvPage() {
     set("target", job ? { title: job.title, company: job.company, aircraft: job.aircraft.slice(0, 3), keywords: keywordsFor(job) } : undefined);
   };
 
-  const photoUrl = profile.photo ? pilot?.photoDataUrl : undefined;
+  const photoUrl = profile.photo !== false ? pilot?.photoDataUrl : undefined;
   const loadFonts = async () => {
     const font = async (w: number) => new Uint8Array(await (await fetch(`/fonts/cv/Inter-${w}.ttf`)).arrayBuffer());
     return Promise.all([font(400), font(600), font(700)])
@@ -184,7 +184,7 @@ export default function CvPage() {
                 </div>
               </Field>
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={!!profile.photo} disabled={!pilot?.photoDataUrl} onChange={(e) => set("photo", e.target.checked)} />
+                <input type="checkbox" checked={profile.photo !== false && !!pilot?.photoDataUrl} disabled={!pilot?.photoDataUrl} onChange={(e) => set("photo", e.target.checked)} />
                 {t("design.photo")}
               </label>
               {!pilot?.photoDataUrl && <p className="text-xs text-muted">{t("design.noPhoto")}</p>}

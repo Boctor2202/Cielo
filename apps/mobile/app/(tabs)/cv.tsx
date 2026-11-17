@@ -86,7 +86,7 @@ function Cv() {
   const share = async () => {
     setBusy(true);
     try {
-      const opts = { jsonResume: toJsonResume(data), lang: locale, author: profile.fullName, theme: profile.theme, photo: profile.photo ? photoBytes(pilot.photoDataUrl) : undefined };
+      const opts = { jsonResume: toJsonResume(data), lang: locale, author: profile.fullName, theme: profile.theme, photo: profile.photo !== false ? photoBytes(pilot.photoDataUrl) : undefined };
       let bytes: Uint8Array;
       try {
         bytes = await buildCvPdf(doc, { ...opts, fonts: await loadFonts() });
@@ -107,7 +107,7 @@ function Cv() {
   const sharePack = async () => {
     setBusy(true);
     try {
-      const opts = { jsonResume: toJsonResume(data), lang: locale, author: profile.fullName, theme: profile.theme, photo: profile.photo ? photoBytes(pilot.photoDataUrl) : undefined };
+      const opts = { jsonResume: toJsonResume(data), lang: locale, author: profile.fullName, theme: profile.theme, photo: profile.photo !== false ? photoBytes(pilot.photoDataUrl) : undefined };
       let fonts: Awaited<ReturnType<typeof loadFonts>> | undefined;
       try {
         fonts = await loadFonts();
@@ -187,7 +187,7 @@ function Cv() {
             </Pressable>
           ))}
         </Row>
-        <ToggleRow label={t("cv.photo")} value={!!profile.photo && !!photoBytes(pilot.photoDataUrl)} onChange={(v) => set("photo", v)} hint={photoBytes(pilot.photoDataUrl) ? undefined : t("cv.noPhoto")} />
+        <ToggleRow label={t("cv.photo")} value={profile.photo !== false && !!photoBytes(pilot.photoDataUrl)} onChange={(v) => set("photo", v)} hint={photoBytes(pilot.photoDataUrl) ? undefined : t("cv.noPhoto")} />
       </Card>
 
       <Card>

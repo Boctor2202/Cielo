@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, TextInput, View } from "react-native";
 import MapView, { Marker, Polyline, type Region } from "react-native-maps";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Glass, Row, Txt } from "../../src/components/ui";
@@ -60,14 +60,36 @@ function RadarScreen() {
   const base = pilot.homeBaseIcao ? lookupAirport(pilot.homeBaseIcao) : undefined;
   const region = useRef<Region>({ latitude: base?.lat ?? 48.7, longitude: base?.lon ?? 2.4, latitudeDelta: 2, longitudeDelta: 2 });
   const [located, setLocated] = useState(false);
+  // the map ignores moves made before it is ready: the position waits for it
+  const ready = useRef(false);
+  const pending = useRef<Region | null>(null);
+  const moveTo = (r: Region) => {
+    if (ready.current && map.current) map.current.animateToRegion(r, 600);
+    else pending.current = r;
+  };
   const locate = useCallback(async () => {
-    const perm = await Location.requestForegroundPermissionsAsync();
-    if (!perm.granted) return;
-    const last = await Location.getLastKnownPositionAsync();
-    const p = last ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
-    setLocated(true);
-    map.current?.animateToRegion({ latitude: p.coords.latitude, longitude: p.coords.longitude, latitudeDelta: 1.6, longitudeDelta: 1.6 }, 600);
-  }, []);
+    try {
+      const perm = await Location.requestForegroundPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(t("radar.locDenied"), t("radar.locDeniedBody"), [
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("radar.openSettings"), onPress: () => void Linking.openSettings() },
+        ]);
+        return;
+      }
+      const at = (p: Location.LocationObject) => {
+        setLocated(true);
+        moveTo({ latitude: p.coords.latitude, longitude: p.coords.longitude, latitudeDelta: 1.6, longitudeDelta: 1.6 });
+      };
+      // a recent cached fix shows at once (never one from another trip), then the live one
+      const last = await Location.getLastKnownPositionAsync({ maxAge: 10 * 60_000 });
+      if (last) at(last);
+      at(await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
+    } catch {
+      /* no fix: stays on the home base */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
   useEffect(() => {
     void locate();
   }, [locate]);
@@ -192,6 +214,11 @@ function RadarScreen() {
         ref={map}
         style={StyleSheet.absoluteFill}
         initialRegion={region.current}
+        onMapReady={() => {
+          ready.current = true;
+          if (pending.current) map.current?.animateToRegion(pending.current, 600);
+          pending.current = null;
+        }}
         userInterfaceStyle={c.scheme}
         showsUserLocation={located}
         onRegionChangeComplete={(r) => {
