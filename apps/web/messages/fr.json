@@ -1288,7 +1288,7 @@
       },
       "work": {
         "title": "Où pouvez-vous travailler ?",
-        "help": "Selon votre nationalité et vos visas. Licence(s) : {authorities}. Les offres hors de ces régions sont plafonnées, sauf si l'employeur parraine le visa.",
+        "help": "Licence(s) : {authorities}. Seules les offres des régions cochées sont affichées, plus celles dont l'employeur parraine le visa ; aucune région cochée : toutes les offres. Une offre qui demande une autre licence reste affichée, avec un badge.",
         "noRights": "Droit de travailler requis : {region}",
         "licenceNeeded": "Licence {authority} requise",
         "visa": "Visa parrainé"

@@ -1288,7 +1288,7 @@
       },
       "work": {
         "title": "Where can you work?",
-        "help": "Based on your nationality and visas. Licence(s): {authorities}. Offers outside these regions are capped unless the employer sponsors the visa.",
+        "help": "Licence(s): {authorities}. Only the offers of the ticked regions are shown, plus those whose employer sponsors the visa; none ticked shows them all. An offer needing another licence stays, with a badge.",
         "noRights": "Right to work needed: {region}",
         "licenceNeeded": "{authority} licence needed",
         "visa": "Visa sponsored"

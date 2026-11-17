@@ -34,7 +34,6 @@ export default function JobsPage() {
   const pilot = usePilot();
   // Where the pilot may work (citizenship, visas): saved on this device, defaults from the licence regime
   const [workRegions, setWorkRegions] = useState<RegionId[] | null>(null);
-  const [region, setRegion] = useState<RegionId | "MINE" | "ALL">("MINE");
   useEffect(() => {
     try {
       const v = localStorage.getItem("cielo-work-regions");
@@ -69,10 +68,9 @@ export default function JobsPage() {
   type Row = (typeof all)[number];
   const byPosition = (r: Row, p: Position | "ALL" = position) => p === "ALL" || r.job.position === p;
   const byType = (r: Row, on = onTypeOnly) => !on || r.match.onType;
-  // "my regions": the regions the pilot ticked. An offer that needs another licence (an FAA job for an EASA pilot)
-  // stays listed, with its badge and a capped match, so the count on each region chip is what the list shows.
-  const byRegion = (r: Row, g: RegionId | "MINE" | "ALL" = region) =>
-    g === "ALL" || (g === "MINE" ? !myRegions.length || r.match.canWork || r.job.region === "OTHER" : r.job.region === g);
+  // one place filters by region: the regions the pilot ticked (where they may work). None ticked: every offer.
+  // Offers elsewhere whose employer sponsors the visa are kept; one needing another licence keeps its badge.
+  const byRegion = (r: Row) => !myRegions.length || r.match.canWork;
 
   const rows = useMemo(() => {
     const list = all.filter((r) => byPosition(r) && byType(r) && byRegion(r));
@@ -87,7 +85,7 @@ export default function JobsPage() {
     );
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [all, position, onTypeOnly, sort, region, myRegions]);
+  }, [all, position, onTypeOnly, sort, myRegions]);
   const counts = useMemo(() => {
     const pos = new Map<string, number>();
     const reg = new Map<string, number>();
@@ -100,18 +98,12 @@ export default function JobsPage() {
       if (byPosition(r) && byType(r)) {
         reg.set(r.job.region, (reg.get(r.job.region) ?? 0) + 1);
         reg.set("ALL", (reg.get("ALL") ?? 0) + 1);
-        if (byRegion(r, "MINE")) reg.set("MINE", (reg.get("MINE") ?? 0) + 1);
       }
       if (byPosition(r) && byRegion(r) && r.match.onType) typeN++;
     }
     return { pos, reg, typeN };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [all, position, onTypeOnly, region, myRegions]);
-  const regionCounts = useMemo(() => {
-    const m = new Map<RegionId, number>();
-    for (const j of feed?.jobs ?? []) m.set(j.region, (m.get(j.region) ?? 0) + 1);
-    return m;
-  }, [feed]);
+  }, [all, position, onTypeOnly, myRegions]);
 
   const positions = useMemo(() => [...new Set((feed?.jobs ?? []).map((j) => j.position))] as Position[], [feed]);
   const followed = feed?.sources.filter((s) => s.ok).length ?? 0;
@@ -140,13 +132,6 @@ export default function JobsPage() {
               <option key={p} value={p}>{t(`positions.${p}`)} ({counts.pos.get(p) ?? 0})</option>
             ))}
           </select>
-          <select className="input !w-auto" value={region} onChange={(e) => setRegion(e.target.value as RegionId | "MINE" | "ALL")} aria-label={t("filter.region")}>
-            <option value="MINE">{t("filter.myRegions")} ({counts.reg.get("MINE") ?? 0})</option>
-            <option value="ALL">{t("filter.allRegions")} ({counts.reg.get("ALL") ?? 0})</option>
-            {REGIONS.filter((r) => regionCounts.get(r)).map((r) => (
-              <option key={r} value={r}>{t(`regions.${r}`)} ({counts.reg.get(r) ?? 0})</option>
-            ))}
-          </select>
           {hasLogbook && <Toggle checked={onTypeOnly} onChange={setOnTypeOnly} label={`${t("filter.onType")} (${counts.typeN})`} />}
         </div>
       </div>
@@ -155,6 +140,14 @@ export default function JobsPage() {
         <p className="text-sm font-semibold">{t("work.title")}</p>
         <p className="mt-0.5 text-xs text-muted">{t("work.help", { authorities: profile?.authorities.join(", ") || "—" })}</p>
         <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t("work.title")}>
+          <button
+            type="button"
+            aria-pressed={!myRegions.length}
+            onClick={() => saveWork([])}
+            className={`min-h-9 cursor-pointer rounded-full border px-3 text-[13px] font-medium transition-colors ${!myRegions.length ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:border-accent/50 hover:text-text"}`}
+          >
+            {!myRegions.length ? "✓ " : ""}{t("filter.allRegions")} <span className="num opacity-70">{counts.reg.get("ALL") ?? 0}</span>
+          </button>
           {REGIONS.filter((r) => r !== "OTHER").map((r) => {
             const on = myRegions.includes(r);
             return (
@@ -165,7 +158,7 @@ export default function JobsPage() {
                 onClick={() => saveWork(on ? myRegions.filter((x) => x !== r) : [...myRegions, r])}
                 className={`min-h-9 cursor-pointer rounded-full border px-3 text-[13px] font-medium transition-colors ${on ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:border-accent/50 hover:text-text"}`}
               >
-                {on ? "✓ " : ""}{t(`regions.${r}`)} <span className="num opacity-70">{regionCounts.get(r) ?? 0}</span>
+                {on ? "✓ " : ""}{t(`regions.${r}`)} <span className="num opacity-70">{counts.reg.get(r) ?? 0}</span>
               </button>
             );
           })}
