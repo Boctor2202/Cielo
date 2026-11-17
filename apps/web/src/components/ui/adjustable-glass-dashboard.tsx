@@ -36,6 +36,38 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+
+/** A number that counts up from 0 when it first shows (and eases to a new value), unless motion is reduced. */
+function CountUp({ value, format }: { value: number; format: (v: number) => string }) {
+  const [shown, setShown] = useState(value);
+  const from = useRef(0);
+  useEffect(() => {
+    if (!Number.isFinite(value) || (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)) {
+      setShown(value);
+      from.current = value;
+      return;
+    }
+    const start = from.current;
+    const t0 = performance.now();
+    const dur = 1100;
+    let raf = 0;
+    const step = (now: number) => {
+      const k = Math.min(1, (now - t0) / dur);
+      const e = 1 - Math.pow(1 - k, 3);
+      const v = start + (value - start) * e;
+      setShown(k < 1 ? v : value);
+      if (k < 1) raf = requestAnimationFrame(step);
+      else from.current = value;
+    };
+    raf = requestAnimationFrame(step);
+    return () => {
+      cancelAnimationFrame(raf);
+      from.current = value;
+    };
+  }, [value]);
+  return <>{format(shown)}</>;
+}
+
 gsap.registerPlugin(useGSAP);
 
 export type GlassSettings = {
@@ -874,7 +906,7 @@ export default function GlassWorkspace({
                         <Wallet size={17} aria-hidden="true" />
                       </div>
                       <strong className="gw-balance-value">
-                        {format(balance)}
+                        <CountUp value={balance} format={format} />
                       </strong>
                       {balanceChange &&
                         Number.isFinite(balanceChange.percent) && (
@@ -928,14 +960,14 @@ export default function GlassWorkspace({
                             <i />
                             {L.moneyIn}
                           </span>
-                          <strong>{format(income)}</strong>
+                          <strong><CountUp value={income} format={format} /></strong>
                         </div>
                         <div>
                           <span>
                             <i />
                             {L.moneyOut}
                           </span>
-                          <strong>{format(expenses)}</strong>
+                          <strong><CountUp value={expenses} format={format} /></strong>
                         </div>
                       </div>
                       {chart}
@@ -1005,7 +1037,7 @@ export default function GlassWorkspace({
                     </span>
                     <div>
                       <p>{L.totalSaved}</p>
-                      <strong>{format(totalSaved)}</strong>
+                      <strong><CountUp value={totalSaved} format={format} /></strong>
                     </div>
                     <span>
                       {fill(L.goalsCount, { count: goals.length })}
@@ -1054,7 +1086,7 @@ export default function GlassWorkspace({
                           <span>{s.label}</span>
                           <s.icon size={17} aria-hidden="true" />
                         </div>
-                        <strong>{format(s.value)}</strong>
+                        <strong><CountUp value={s.value} format={format} /></strong>
                         <span>{selectedPeriod?.label ?? L.noPeriodData}</span>
                       </section>
                     ))}
@@ -1110,7 +1142,7 @@ export default function GlassWorkspace({
                                   override={categoryIcon}
                                 />
                                 <span>{category}</span>
-                                <strong>{format(value)}</strong>
+                                <strong><CountUp value={value} format={format} /></strong>
                               </div>
                               <span className="gw-category-track">
                                 <i
@@ -1769,6 +1801,10 @@ const styles = `
 .gw-panel-title > svg {
   opacity: 0.65;
 }
+.gw-balance .gw-panel-title > span {
+  font-weight: 700;
+  color: var(--gw-ink);
+}
 .gw-overview-grid {
   display: grid;
   grid-template-columns: 0.82fr 1.5fr;
@@ -1781,7 +1817,7 @@ const styles = `
 }
 .gw-balance-value {
   font-size: clamp(29px, 3.15vw, 43px);
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1.25;
   white-space: nowrap;
@@ -2212,7 +2248,7 @@ const styles = `
 .gw-savings-intro strong {
   font-size: 40px;
   letter-spacing: -0.04em;
-  font-weight: 500;
+  font-weight: 700;
 }
 .gw-savings-intro > span:last-child {
   margin-left: auto;
