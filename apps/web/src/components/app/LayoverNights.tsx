@@ -3,10 +3,20 @@
 import { ChevronDown, ChevronRight, Download, FileSpreadsheet } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import * as FLAGS from "country-flag-icons/string/3x2";
 import { countryName, layoverStays, nightsByCountry, type Flight } from "@cielo/core";
 import { Card } from "./ui";
 import { downloadBlob } from "@/lib/download";
 import { useFormatDate } from "@/lib/hooks";
+
+/** A round flag: the 3:2 flag cropped to a circle (cover), as SVG, so it renders the same everywhere. */
+function Flag({ code }: { code: string }) {
+  const svg = (FLAGS as Record<string, string>)[code];
+  if (!svg) return <span className="inline-block h-5 w-5 rounded-full bg-surface-2" aria-hidden />;
+  const src = `data:image/svg+xml;utf8,${encodeURIComponent(svg.replace("<svg ", '<svg preserveAspectRatio="xMidYMid slice" '))}`;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={src} alt="" width={20} height={20} className="h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-black/10" />;
+}
 
 /** Nights on layover per country and year, from the logbook (for the "frais réels" of the tax return). */
 export function LayoverNights({ flights, homeBase, countryOf }: { flights: Flight[]; homeBase?: string; countryOf: (icao: string) => string | undefined }) {
@@ -88,8 +98,9 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
                     aria-expanded={isOpen}
                   >
                     <td className="font-medium">
-                      <span className="inline-flex items-center gap-1">
+                      <span className="inline-flex items-center gap-2">
                         {isOpen ? <ChevronDown size={14} aria-hidden /> : <ChevronRight size={14} aria-hidden />}
+                        <Flag code={x.country} />
                         {cname(x.country)}
                       </span>
                     </td>
@@ -100,6 +111,7 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
                   {isOpen && (
                     <tr className="bg-surface-2/60">
                       <td colSpan={4} className="px-3 py-2">
+                        <div className="animate-[unroll_220ms_ease-out] origin-top overflow-hidden">
                         <table className="w-full text-xs">
                           <thead>
                             <tr className="text-left text-muted [&>th]:py-1 [&>th]:font-medium">
@@ -122,6 +134,7 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
                               ))}
                           </tbody>
                         </table>
+                        </div>
                       </td>
                     </tr>
                   )}

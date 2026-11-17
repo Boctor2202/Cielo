@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { Alert, LayoutAnimation, Platform, Pressable, UIManager, View } from "react-native";
+import { SvgXml } from "react-native-svg";
+import * as FLAGS from "country-flag-icons/string/3x2";
 import { countryName, layoverStays, nightsByCountry } from "@cielo/core";
 import { buildXlsx } from "@cielo/export";
 import { Button, Card, EmptyState, Row, Screen, Segmented, Stat, Txt } from "../../src/components/ui";
@@ -8,6 +10,18 @@ import { shareFile } from "../../src/exporters";
 import { formatDate } from "../../src/i18n";
 import { useApp } from "../../src/state";
 import { space, useTheme } from "../../src/theme";
+
+if (Platform.OS === "android") UIManager.setLayoutAnimationEnabledExperimental?.(true);
+
+/** A round flag: the 3:2 flag cropped to a circle. */
+function Flag({ code, size = 26 }: { code: string; size?: number }) {
+  const svg = (FLAGS as Record<string, string>)[code];
+  return (
+    <View style={{ width: size, height: size, borderRadius: size / 2, overflow: "hidden", backgroundColor: "rgba(127,127,127,0.25)" }}>
+      {svg ? <SvgXml xml={svg.replace("<svg ", '<svg preserveAspectRatio="xMidYMid slice" ')} width={size} height={size} /> : null}
+    </View>
+  );
+}
 
 /**
  * Nights spent on layover per country and year, from the logbook: what a pilot needs for the "frais réels"
@@ -65,9 +79,19 @@ export default function Nights() {
       </Card>
       {r.countries.length === 0 ? <EmptyState title={t("nights.empty")} /> : null}
       {r.countries.map((x) => (
-        <Card key={x.country} onPress={() => setOpen(open === x.country ? null : x.country)}>
-          <Row style={{ justifyContent: "space-between", alignItems: "baseline" }}>
-            <Txt style={{ fontWeight: "700", flex: 1 }}>{cname(x.country)}</Txt>
+        <Card
+          key={x.country}
+          onPress={() => {
+            // the stays unroll under the country
+            LayoutAnimation.configureNext(LayoutAnimation.create(220, "easeInEaseOut", "opacity"));
+            setOpen(open === x.country ? null : x.country);
+          }}
+        >
+          <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+            <Row style={{ flex: 1, alignItems: "center" }} gap={10}>
+              <Flag code={x.country} />
+              <Txt style={{ fontWeight: "700", flex: 1 }}>{cname(x.country)}</Txt>
+            </Row>
             <Txt mono style={{ fontWeight: "700", fontSize: 18 }} color={c.accent}>
               {t("nights.n", { n: x.nights })}
             </Txt>
