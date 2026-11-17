@@ -98,10 +98,42 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
       const l = realFlights.filter((f) => f.date.startsWith(key) && f.date >= start && f.date <= today);
       year.push({ label: fmt(`${key}-01`, { month: "short" }), income: sum(l, "totalMin"), expenses: sum(l, "nightMin") });
     }
+    // 90 days in weekly steps
+    const d90 = Array.from({ length: 13 }, (_, i) => {
+      const from = addDays(today, -90 + i * 7);
+      const to = i === 12 ? today : addDays(from, 6);
+      const l = inRange(from, to);
+      return { label: fmt(from, { day: "numeric", month: "short" }), income: sum(l, "totalMin"), expenses: sum(l, "nightMin") };
+    });
+    // the current calendar year, month by month up to now
+    const ytd = Array.from({ length: Number(today.slice(5, 7)) }, (_, i) => {
+      const key = `${today.slice(0, 4)}-${String(i + 1).padStart(2, "0")}`;
+      const l = realFlights.filter((f) => f.date.startsWith(key) && f.date <= today);
+      return { label: fmt(`${key}-01`, { month: "short" }), income: sum(l, "totalMin"), expenses: sum(l, "nightMin") };
+    });
+    // the whole logbook: by year (by month when it covers less than three years)
+    const firstDate = realFlights.reduce((m, f) => (f.date < m ? f.date : m), today);
+    const byMonth = Number(today.slice(0, 4)) - Number(firstDate.slice(0, 4)) < 2;
+    const all: { label: string; income: number; expenses: number }[] = [];
+    if (byMonth) {
+      for (let d = new Date(`${firstDate.slice(0, 7)}-01T12:00:00Z`); d.toISOString().slice(0, 7) <= today.slice(0, 7); d.setUTCMonth(d.getUTCMonth() + 1)) {
+        const key = d.toISOString().slice(0, 7);
+        const l = realFlights.filter((f) => f.date.startsWith(key) && f.date <= today);
+        all.push({ label: fmt(`${key}-01`, { month: "short", year: "2-digit" }), income: sum(l, "totalMin"), expenses: sum(l, "nightMin") });
+      }
+    } else {
+      for (let y = Number(firstDate.slice(0, 4)); y <= Number(today.slice(0, 4)); y++) {
+        const l = realFlights.filter((f) => f.date.startsWith(String(y)) && f.date <= today);
+        all.push({ label: String(y), income: sum(l, "totalMin"), expenses: sum(l, "nightMin") });
+      }
+    }
     const periods: WorkspaceCashFlowPeriod[] = [
       { id: "week", label: g.periodWeek ?? "7 d", points: week, description: g.chartNote },
       { id: "month", label: g.periodMonth ?? "30 d", points: month, description: g.chartNote },
+      { id: "d90", label: g.period90 ?? "90 d", points: d90, description: g.chartNote },
+      { id: "ytd", label: today.slice(0, 4), points: ytd, description: g.chartNote },
       { id: "year", label: g.periodYear ?? "12 m", points: year, description: g.chartNote },
+      { id: "all", label: g.periodAll ?? "All", points: all, description: g.chartNote },
     ];
 
     const sorted = [...live].sort((a, b) => (a.date === b.date ? (b.outUtc ?? "").localeCompare(a.outUtc ?? "") : a.date < b.date ? 1 : -1));

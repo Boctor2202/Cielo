@@ -499,6 +499,8 @@
         "periodWeek": "7 jours",
         "periodMonth": "30 jours",
         "periodYear": "12 mois",
+        "period90": "90 jours",
+        "periodAll": "Tout",
         "chartNote": "Heures bloc des vols réels (hors simulateur) ; 12 mois = les 365 derniers jours, comme dans le carnet.",
         "simulator": "Simulateur",
         "goalTotal": "Cap des {h} h",

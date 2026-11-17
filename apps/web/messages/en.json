@@ -499,6 +499,8 @@
         "periodWeek": "7 days",
         "periodMonth": "30 days",
         "periodYear": "12 months",
+        "period90": "90 days",
+        "periodAll": "All",
         "chartNote": "Block hours of real flights (simulator excluded); 12 months = the last 365 days, as in the logbook.",
         "simulator": "Simulator",
         "goalTotal": "{h} h milestone",

@@ -1874,6 +1874,8 @@ const styles = `
 }
 .gw-segment {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 3px;
   background: var(--gw-segment);
   border-radius: 8px;
@@ -1883,6 +1885,7 @@ const styles = `
 .gw-segment button {
   padding: 4px 8px;
   border-radius: 6px;
+  white-space: nowrap;
 }
 .gw-segment button[aria-pressed="true"] {
   background: var(--gw-segment-active);
