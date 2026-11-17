@@ -66,7 +66,10 @@ Rules:
 - Times as HH:MM, 24-hour, exactly as printed (do not convert time zones). Set timeBasis to "UTC" when the document says times are UTC/Z/GMT, else "local".
 - A leg arriving after midnight has endDayOffset 1.
 - The report / check-in time belongs to the first leg of the duty.
-- Ignore totals, legends, page headers and footers.`;
+- Ignore totals, legends, page headers and footers.
+
+Layout notes for common software:
+- Leon ("Printed by Leon", columns Day / Aircraft Type / Check In / Description / Check Out / Function / Crew / Block / Home Base): a leg line reads "<check-in> A… <dep time><DEP> <ARR> <arr time> [<check-out>] <function> <crew> <block>", with the departure time glued to the departure code (e.g. "14:07LFBZ" means off-block 14:07 at LFBZ). The aircraft type and registration ("C68A 9H-J4K") are printed once per day for the legs of that day. A Check In time printed on a leg line is the report time of that duty. A day-long code such as "ON", "OFF", "SBY", "RES" printed as two lines ("ON 23:00 LFPB" then "ON LFPB 22:59") is ONE event running from the first time (on the previous UTC day when it is late evening) to the second: give date = the day of the first time, start = first time, end = second time, endDayOffset = 1. Map "ON" (on call, available) and "SBY"/"RES" to STANDBY, "OFF" to OFF, "SIM" to SIM, "DH"/"POS" legs to DEADHEAD. The page states "All times in UTC" when times are UTC.`;
 
 export async function POST(req: Request) {
   const user = await userFrom(req).catch(() => null);
