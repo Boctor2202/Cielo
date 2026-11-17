@@ -1293,7 +1293,11 @@
         "licenceNeeded": "{authority} licence needed",
         "visa": "Visa sponsored"
       },
-      "adzunaNote": "More offers come from Adzuna:"
+      "adzunaNote": "More offers come from Adzuna:",
+      "count": {
+        "shown": "{n, plural, one {active offer shown} other {active offers shown}}",
+        "total": "out of {n} active offers"
+      }
     },
     "cv": {
       "title": "Pilot CV",

@@ -2,6 +2,7 @@
 
 import { Briefcase, Check, ExternalLink, Lock, MapPin, Plane, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Roll } from "@/components/ui/Roll";
 import { useLocale, useTranslations } from "next-intl";
 import { buildProfile, defaultWorkRegions, detectAircraft, matchJob, REGIONS, authorityFromText, type GapCode, type Job, type Match, type Position, type RegionId } from "@cielo/jobs";
 
@@ -63,14 +64,17 @@ export default function JobsPage() {
   const myRegions = profile?.workRegions ?? [];
   const hasLogbook = !!profile && profile.totalMin > 0;
 
+  // every offer with its match, then each filter as a test: the counts of one filter apply the others
+  const all = useMemo(() => (feed && profile ? feed.jobs.map((job) => ({ job, match: matchJob(job, profile) })) : []), [feed, profile]);
+  type Row = (typeof all)[number];
+  const byPosition = (r: Row, p: Position | "ALL" = position) => p === "ALL" || r.job.position === p;
+  const byType = (r: Row, on = onTypeOnly) => !on || r.match.onType;
+  // "my regions": where the pilot may work AND with a licence valid there (an FAA job is not for an EASA pilot)
+  const byRegion = (r: Row, g: RegionId | "MINE" | "ALL" = region) =>
+    g === "ALL" || (g === "MINE" ? !myRegions.length || (r.match.canWork && r.match.licenceValid) || r.job.region === "OTHER" : r.job.region === g);
+
   const rows = useMemo(() => {
-    if (!feed || !profile) return [];
-    let list = feed.jobs.map((job) => ({ job, match: matchJob(job, profile) }));
-    if (position !== "ALL") list = list.filter((r) => r.job.position === position);
-    if (onTypeOnly) list = list.filter((r) => r.match.onType);
-    // "my regions": where the pilot may work AND with a licence valid there (an FAA job is not for an EASA pilot)
-    if (region === "MINE" && myRegions.length) list = list.filter((r) => (r.match.canWork && r.match.licenceValid) || r.job.region === "OTHER");
-    else if (region !== "ALL" && region !== "MINE") list = list.filter((r) => r.job.region === region);
+    const list = all.filter((r) => byPosition(r) && byType(r) && byRegion(r));
     // offers without a published requirement go last when sorting by experience
     const exp = (j: Job) => j.requirements.totalHours ?? Number.POSITIVE_INFINITY;
     const sal = (j: Job) => j.salary?.annualEur ?? -1;
@@ -81,7 +85,27 @@ export default function JobsPage() {
       : (b.job.postedAt ?? "").localeCompare(a.job.postedAt ?? ""),
     );
     return list;
-  }, [feed, profile, position, onTypeOnly, sort, region, myRegions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [all, position, onTypeOnly, sort, region, myRegions]);
+  const counts = useMemo(() => {
+    const pos = new Map<string, number>();
+    const reg = new Map<string, number>();
+    let typeN = 0;
+    for (const r of all) {
+      if (byType(r) && byRegion(r)) {
+        pos.set(r.job.position, (pos.get(r.job.position) ?? 0) + 1);
+        pos.set("ALL", (pos.get("ALL") ?? 0) + 1);
+      }
+      if (byPosition(r) && byType(r)) {
+        reg.set(r.job.region, (reg.get(r.job.region) ?? 0) + 1);
+        reg.set("ALL", (reg.get("ALL") ?? 0) + 1);
+        if (byRegion(r, "MINE")) reg.set("MINE", (reg.get("MINE") ?? 0) + 1);
+      }
+      if (byPosition(r) && byRegion(r) && r.match.onType) typeN++;
+    }
+    return { pos, reg, typeN };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [all, position, onTypeOnly, region, myRegions]);
   const regionCounts = useMemo(() => {
     const m = new Map<RegionId, number>();
     for (const j of feed?.jobs ?? []) m.set(j.region, (m.get(j.region) ?? 0) + 1);
@@ -110,19 +134,19 @@ export default function JobsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <select className="input !w-auto" value={position} onChange={(e) => setPosition(e.target.value as Position | "ALL")} aria-label={t("filter.position")}>
-            <option value="ALL">{t("filter.position")} · {t("filter.all")}</option>
+            <option value="ALL">{t("filter.position")} · {t("filter.all")} ({counts.pos.get("ALL") ?? 0})</option>
             {positions.map((p) => (
-              <option key={p} value={p}>{t(`positions.${p}`)}</option>
+              <option key={p} value={p}>{t(`positions.${p}`)} ({counts.pos.get(p) ?? 0})</option>
             ))}
           </select>
           <select className="input !w-auto" value={region} onChange={(e) => setRegion(e.target.value as RegionId | "MINE" | "ALL")} aria-label={t("filter.region")}>
-            <option value="MINE">{t("filter.myRegions")}</option>
-            <option value="ALL">{t("filter.allRegions")}</option>
+            <option value="MINE">{t("filter.myRegions")} ({counts.reg.get("MINE") ?? 0})</option>
+            <option value="ALL">{t("filter.allRegions")} ({counts.reg.get("ALL") ?? 0})</option>
             {REGIONS.filter((r) => regionCounts.get(r)).map((r) => (
-              <option key={r} value={r}>{t(`regions.${r}`)} ({regionCounts.get(r)})</option>
+              <option key={r} value={r}>{t(`regions.${r}`)} ({counts.reg.get(r) ?? 0})</option>
             ))}
           </select>
-          {hasLogbook && <Toggle checked={onTypeOnly} onChange={setOnTypeOnly} label={t("filter.onType")} />}
+          {hasLogbook && <Toggle checked={onTypeOnly} onChange={setOnTypeOnly} label={`${t("filter.onType")} (${counts.typeN})`} />}
         </div>
       </div>
 
@@ -140,13 +164,20 @@ export default function JobsPage() {
                 onClick={() => saveWork(on ? myRegions.filter((x) => x !== r) : [...myRegions, r])}
                 className={`min-h-9 cursor-pointer rounded-full border px-3 text-[13px] font-medium transition-colors ${on ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:border-accent/50 hover:text-text"}`}
               >
-                {on ? "✓ " : ""}{t(`regions.${r}`)}
+                {on ? "✓ " : ""}{t(`regions.${r}`)} <span className="num opacity-70">{regionCounts.get(r) ?? 0}</span>
               </button>
             );
           })}
         </div>
       </div>
 
+      {feed && profile ? (
+        <p className="mb-3 flex flex-wrap items-baseline gap-x-2 text-sm text-muted">
+          <span className="num text-2xl font-semibold text-text"><Roll>{String(rows.length)}</Roll></span>
+          <span>{t("count.shown", { n: rows.length })}</span>
+          {rows.length !== feed.jobs.length ? <span>· {t("count.total", { n: feed.jobs.length })}</span> : null}
+        </p>
+      ) : null}
       {error ? (
         <Card><Empty icon={<Briefcase size={36} />} text={t("error")} /></Card>
       ) : !feed || !profile ? (

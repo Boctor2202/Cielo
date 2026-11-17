@@ -1293,7 +1293,11 @@
         "licenceNeeded": "Licence {authority} requise",
         "visa": "Visa parrainé"
       },
-      "adzunaNote": "D'autres offres viennent d'Adzuna :"
+      "adzunaNote": "D'autres offres viennent d'Adzuna :",
+      "count": {
+        "shown": "{n, plural, one {offre active affichée} other {offres actives affichées}}",
+        "total": "sur {n} offres actives"
+      }
     },
     "cv": {
       "title": "CV pilote",
