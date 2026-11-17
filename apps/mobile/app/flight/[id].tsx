@@ -457,12 +457,16 @@ function FlightForm() {
           ) : null}
           <ToggleRow label={t("flight.autoLandings")} value={form.autoLandings} onChange={(v) => set("autoLandings", v)} />
           {!form.autoLandings ? (
-            <Row gap={space.xs}>
-              <Stepper label={t("flight.takeoffsDay")} value={form.takeoffsDay} onChange={(v) => set("takeoffsDay", v)} />
-              <Stepper label={t("flight.takeoffsNight")} value={form.takeoffsNight} onChange={(v) => set("takeoffsNight", v)} />
-              <Stepper label={t("flight.landingsDay")} value={form.landingsDay} onChange={(v) => set("landingsDay", v)} />
-              <Stepper label={t("flight.landingsNight")} value={form.landingsNight} onChange={(v) => set("landingsNight", v)} />
-            </Row>
+            <View style={{ gap: space.md }}>
+              <Row gap={space.md}>
+                <Stepper label={t("flight.takeoffsDay")} value={form.takeoffsDay} onChange={(v) => set("takeoffsDay", v)} />
+                <Stepper label={t("flight.takeoffsNight")} value={form.takeoffsNight} onChange={(v) => set("takeoffsNight", v)} />
+              </Row>
+              <Row gap={space.md}>
+                <Stepper label={t("flight.landingsDay")} value={form.landingsDay} onChange={(v) => set("landingsDay", v)} />
+                <Stepper label={t("flight.landingsNight")} value={form.landingsNight} onChange={(v) => set("landingsNight", v)} />
+              </Row>
+            </View>
           ) : null}
         </Card>
 
