@@ -39,7 +39,7 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
       [t("airportsCol"), t("country"), t("fromCol"), t("toCol"), t("nightsCol")].join(";"),
       ...r.stays.map((s) => [s.airport, cname(s.country), s.from, s.to, s.nights].join(";")),
     ];
-    downloadBlob("﻿" + lines.join("\r\n"), `geardown-nuitees-escale-${year}.csv`, "text/csv;charset=utf-8");
+    downloadBlob("﻿" + lines.join("\r\n"), `geardown-${locale.startsWith("fr") ? "nuitees-escale" : "layover-nights"}-${year}.csv`, "text/csv;charset=utf-8");
   };
 
   const exportXlsx = async () => {
@@ -48,7 +48,7 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
       { name: t("sheetCountries"), header: true, widths: [28, 10, 10, 40], rows: [[t("country"), t("nightsCol"), t("staysCol"), t("airportsCol")], ...r.countries.map((x) => [cname(x.country), x.nights, x.stays, x.airports.join(", ")]), [t("totalCol"), r.total, r.stays.length, ""]] },
       { name: t("sheetStays"), header: true, widths: [12, 28, 14, 14, 8], rows: [[t("airportsCol"), t("country"), t("fromCol"), t("toCol"), t("nightsCol")], ...r.stays.map((s) => [s.airport, cname(s.country), s.from, s.to, s.nights])] },
     ]);
-    downloadBlob(bytes as BlobPart, `geardown-nuitees-escale-${year}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    downloadBlob(bytes as BlobPart, `geardown-${locale.startsWith("fr") ? "nuitees-escale" : "layover-nights"}-${year}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   };
 
   return (

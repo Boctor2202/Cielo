@@ -1771,7 +1771,7 @@
       "noBase": "Set your home base in your profile: nights at base must not be counted.",
       "totalLine": "{n} nights away · {c} countries",
       "empty": "No layover night this year.",
-      "note": "For your tax return (frais réels): apply the official per-country rates with your accountant. Positioning not logged is not counted.",
+      "note": "For your tax return (actual expenses): apply the official per-country rates with your accountant. Positioning not logged is not counted.",
       "unknown": "Unknown country",
       "country": "Country",
       "nightsCol": "Nights",

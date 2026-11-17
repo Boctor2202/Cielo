@@ -293,7 +293,7 @@ const en = {
   "nights.n": "{n} nights",
   "nights.detail": "{stays} stays · {airports}",
   "nights.export": "Share as CSV",
-  "nights.note": "For your tax return (frais réels): apply the official per-country rates with your accountant. Positioning not logged is not counted.",
+  "nights.note": "For your tax return (actual expenses): apply the official per-country rates with your accountant. Positioning not logged is not counted.",
   "nights.unknown": "Unknown country",
   "nights.country": "Country",
   "nights.nightsCol": "Nights",

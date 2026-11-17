@@ -48,7 +48,7 @@ export default function Nights() {
       ...r.stays.map((s) => [s.airport, cname(s.country), s.from, s.to, s.nights].join(";")),
     ];
     try {
-      await shareFile(`geardown-nuitees-escale-${year}.csv`, "﻿" + lines.join("\r\n"), "text/csv", "public.comma-separated-values-text");
+      await shareFile(`geardown-${locale.startsWith("fr") ? "nuitees-escale" : "layover-nights"}-${year}.csv`, "﻿" + lines.join("\r\n"), "text/csv", "public.comma-separated-values-text");
     } catch (e) {
       Alert.alert(t("common.error"), e instanceof Error ? e.message : String(e));
     }
@@ -60,7 +60,7 @@ export default function Nights() {
       { name: t("nights.sheetStays"), header: true, widths: [12, 28, 14, 14, 8], rows: [[t("nights.airportsCol"), t("nights.country"), t("nights.fromCol"), t("nights.toCol"), t("nights.nightsCol")], ...r.stays.map((s) => [s.airport, cname(s.country), s.from, s.to, s.nights])] },
     ]);
     try {
-      await shareFile(`geardown-nuitees-escale-${year}.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "org.openxmlformats.spreadsheetml.sheet");
+      await shareFile(`geardown-${locale.startsWith("fr") ? "nuitees-escale" : "layover-nights"}-${year}.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "org.openxmlformats.spreadsheetml.sheet");
     } catch (e) {
       Alert.alert(t("common.error"), e instanceof Error ? e.message : String(e));
     }
