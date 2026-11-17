@@ -38,3 +38,25 @@ describe("parseLeonRoster", () => {
     expect(on.length).toBe(17);
   });
 });
+
+describe("printedDutiesToEvents", () => {
+  it("turns printed UTC duties into roster events", async () => {
+    const { printedDutiesToEvents } = await import("../src/leon");
+    const ev = printedDutiesToEvents(
+      [{ kind: "FLIGHT", date: "2026-11-15", report: "05:30", start: "06:30", end: "08:10", endDayOffset: 0, flightNumber: "ABC12", dep: "LBG", arr: "LFMN", aircraftReg: "9h-j4k", aircraftType: null, title: null }],
+      "UTC",
+      { pilotId: "p", rosterId: "r", toIcao: (c) => (c === "LBG" ? "LFPB" : c), timezoneOf: () => "Europe/Paris" },
+    );
+    expect(ev[0]).toMatchObject({ depIcao: "LFPB", arrIcao: "LFMN", startUtc: "2026-11-15T06:30:00.000Z", endUtc: "2026-11-15T08:10:00.000Z", reportUtc: "2026-11-15T05:30:00.000Z", aircraftReg: "9H-J4K" });
+  });
+  it("converts local times with the airport time zone", async () => {
+    const { printedDutiesToEvents } = await import("../src/leon");
+    const ev = printedDutiesToEvents(
+      [{ kind: "FLIGHT", date: "2026-07-01", report: null, start: "23:30", end: "01:10", endDayOffset: 0, flightNumber: null, dep: "LFPB", arr: "LFMN", aircraftReg: null, aircraftType: null, title: null }],
+      "local",
+      { pilotId: "p", rosterId: "r", toIcao: (c) => c, timezoneOf: () => "Europe/Paris" },
+    );
+    expect(ev[0]!.startUtc).toBe("2026-07-01T21:30:00.000Z");
+    expect(ev[0]!.endUtc).toBe("2026-07-01T23:10:00.000Z");
+  });
+});

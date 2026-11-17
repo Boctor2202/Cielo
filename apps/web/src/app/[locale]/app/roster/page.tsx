@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight, Hotel, NotebookPen, Plus, Trash2, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ROSTER_KINDS, combineUtc, detectMapping, icalToRosterEvent, isoDate, parseCsv, parseFlexibleDate, parseIcal, stamp, type RosterEvent, type RosterEventKind } from "@cielo/core";
+import { ROSTER_KINDS, printedDutiesToEvents, type PrintedDuty, combineUtc, detectMapping, icalToRosterEvent, isoDate, parseCsv, parseFlexibleDate, parseIcal, stamp, type RosterEvent, type RosterEventKind } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { DropZone } from "@/components/app/DropZone";
@@ -11,6 +11,7 @@ import { useAirports } from "@/lib/airports";
 import { useFormatDate, usePilot, useTable } from "@/lib/hooks";
 import { put, saveLayover, saveRosterEvent, softDelete } from "@/lib/repo";
 import { db } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 
 const KINDS = ROSTER_KINDS;
 const KIND_STYLE: Record<RosterEventKind, string> = {
@@ -68,8 +69,57 @@ export default function RosterPage() {
   const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${cursor}-01T12:00:00Z`));
   const weekdays = Array.from({ length: 7 }, (_, i) => new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 0, 5 + i))));
 
+  const [reading, setReading] = useState(false);
+
+  /** A PDF roster (Leon read directly, other layouts by the server's reader): duties → events in UTC. */
+  async function onPdf(file: File) {
+    if (!pilot) return;
+    if (file.size > 3_000_000) return toast(t("pdf.err.too_big"));
+    const token = (await supabase()?.auth.getSession())?.data.session?.access_token;
+    if (!token) return toast(t("pdf.err.signin"));
+    setReading(true);
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let bin = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      const r = await fetch("/api/roster-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ pdf: btoa(bin), fileName: file.name, today: new Date().toISOString().slice(0, 10) }),
+      });
+      const d = (await r.json().catch(() => ({}))) as { timeBasis?: "UTC" | "local"; events?: PrintedDuty[]; error?: string };
+      if (!r.ok || !d.events) {
+        const code = ["signin", "plan", "unsupported", "not_configured", "too_big", "rate_limited"].includes(d.error ?? "") ? d.error! : "upstream";
+        return toast(t(`pdf.err.${code}` as "pdf.err.upstream"));
+      }
+      const roster = await put("rosters", { source: "manual", fileName: file.name, importedAt: new Date().toISOString() });
+      const key = (e: Pick<RosterEvent, "kind" | "startUtc" | "endUtc" | "depIcao" | "arrIcao" | "flightNumber">) =>
+        [e.kind, e.startUtc, e.endUtc, e.depIcao ?? "", e.arrIcao ?? "", e.flightNumber ?? ""].join("|");
+      const seen = new Set((events ?? []).filter((e) => !e.deletedAt).map(key));
+      const home = pilot.homeBaseIcao ? airports?.get(pilot.homeBaseIcao)?.timezone : undefined;
+      const rows = printedDutiesToEvents(d.events, d.timeBasis ?? "local", {
+        pilotId: pilot.id,
+        rosterId: roster.id,
+        toIcao: (c) => (c.length === 3 ? airports?.iataToIcao(c) ?? c : airports?.get(c)?.icao ?? c),
+        timezoneOf: (icao) => airports?.get(icao)?.timezone,
+        homeTimezone: home,
+      })
+        .filter((e) => (seen.has(key(e)) ? false : (seen.add(key(e)), true)))
+        .map((e) => stamp(e as RosterEvent));
+      await db().t("roster_events").bulkPut(rows);
+      setImportOpen(false);
+      toast(rows.length ? t("imported", { count: rows.length }) : t("pdf.nothingNew"));
+      if (rows[0]) setCursor(rows[0].startUtc.slice(0, 7));
+    } catch {
+      toast(t("pdf.err.upstream"));
+    } finally {
+      setReading(false);
+    }
+  }
+
   async function onFile(file: File) {
     if (!pilot) return;
+    if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") return onPdf(file);
     const text = await file.text();
     const roster = await put("rosters", { source: /\.ics$/i.test(file.name) || text.includes("BEGIN:VCALENDAR") ? "ical" : "csv", fileName: file.name, importedAt: new Date().toISOString() });
     let rows: RosterEvent[] = [];
@@ -201,7 +251,8 @@ export default function RosterPage() {
 
       <Modal open={importOpen} onClose={() => setImportOpen(false)} title={t("import")}>
         <p className="mb-4 text-sm text-muted">{t("importHelp")}</p>
-        <DropZone accept=".ics,.csv,.txt" onFile={onFile} label={ti("drop")} />
+        <DropZone accept=".ics,.csv,.txt,.pdf" onFile={(f) => void onFile(f)} label={ti("drop")} />
+        {reading ? <p className="mt-3 text-sm text-muted">{t("pdf.reading")}</p> : null}
       </Modal>
 
       <EventEditor draft={edit} onClose={() => setEdit(null)} />

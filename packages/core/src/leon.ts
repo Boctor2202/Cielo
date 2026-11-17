@@ -1,4 +1,5 @@
-import type { RosterEventKind } from "./types";
+import type { RosterEvent, RosterEventKind } from "./types";
+import { tzOffsetMs } from "./ical";
 
 /**
  * Reader for the roster PDF printed by Leon ("Printed by Leon", columns Day / Aircraft Type / Check In /
@@ -211,4 +212,61 @@ export function parseLeonRoster(pages: PdfTextItem[][]): PrintedRoster | null {
 
   events.sort((a, b) => `${a.date}${a.start ?? ""}`.localeCompare(`${b.date}${b.start ?? ""}`));
   return { timeBasis, pilotName: name, events };
+}
+
+const addDaysIso = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+
+/** A wall-clock time on a day, in a zone (or UTC when null), as an ISO instant. */
+function wallInstant(date: string, time: string, tz: string | null | undefined): string {
+  const [h, m] = time.split(":").map(Number) as [number, number];
+  const [y, mo, d] = date.split("-").map(Number) as [number, number, number];
+  const wall = Date.UTC(y, mo - 1, d, h, m);
+  return new Date(tz ? wall - tzOffsetMs(tz, wall) : wall).toISOString();
+}
+
+/**
+ * Duties as printed on a PDF roster → roster events in UTC (without id/timestamps: the caller stamps them).
+ * Local times are converted with the airport's time zone, all-day items with the home base's.
+ */
+export function printedDutiesToEvents(
+  list: PrintedDuty[],
+  basis: "UTC" | "local",
+  o: { pilotId: string; rosterId: string; toIcao: (code: string) => string; timezoneOf: (icao: string) => string | undefined; homeTimezone?: string },
+): Omit<RosterEvent, "id" | "createdAt" | "updatedAt">[] {
+  const home = o.homeTimezone ?? null;
+  const out: Omit<RosterEvent, "id" | "createdAt" | "updatedAt">[] = [];
+  for (const e of list) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date)) continue;
+    const dep = e.dep?.trim() ? o.toIcao(e.dep.trim().toUpperCase()) : "";
+    const arr = e.arr?.trim() ? o.toIcao(e.arr.trim().toUpperCase()) : "";
+    const tzOf = (icao: string) => (basis === "UTC" ? null : (icao ? o.timezoneOf(icao) : undefined) ?? home);
+    const startTz = tzOf(dep);
+    const endTz = tzOf(arr || dep);
+    const allDay = !e.start && !e.end;
+    const startUtc = wallInstant(e.date, e.start ?? "00:00", allDay ? home : startTz);
+    let endUtc = wallInstant(addDaysIso(e.date, e.endDayOffset || 0), e.end ?? "23:59", allDay ? home : endTz);
+    // an end printed before the start without a day offset: it is the next day
+    if (endUtc <= startUtc) endUtc = new Date(Date.parse(endUtc) + 86_400_000).toISOString();
+    let reportUtc: string | null = null;
+    if (e.report) {
+      reportUtc = wallInstant(e.date, e.report, startTz);
+      if (reportUtc > startUtc) reportUtc = new Date(Date.parse(reportUtc) - 86_400_000).toISOString();
+    }
+    out.push({
+      pilotId: o.pilotId,
+      rosterId: o.rosterId,
+      kind: e.kind,
+      title: e.title || [e.flightNumber, dep && arr ? `${dep}-${arr}` : ""].filter(Boolean).join(" ") || undefined,
+      reportUtc,
+      startUtc,
+      endUtc,
+      flightNumber: e.flightNumber || undefined,
+      depIcao: dep || undefined,
+      arrIcao: arr || undefined,
+      aircraftReg: e.aircraftReg?.toUpperCase() || undefined,
+      aircraftTypeIcao: e.aircraftType?.toUpperCase() || undefined,
+      flightId: null,
+    });
+  }
+  return out;
 }
