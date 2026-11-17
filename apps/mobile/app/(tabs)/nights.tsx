@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Alert, Pressable, View } from "react-native";
 import { countryName, layoverStays, nightsByCountry } from "@cielo/core";
+import { buildXlsx } from "@cielo/export";
 import { Button, Card, EmptyState, Row, Screen, Segmented, Stat, Txt } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
 import { shareFile } from "../../src/exporters";
@@ -34,6 +35,18 @@ export default function Nights() {
     ];
     try {
       await shareFile(`geardown-nuitees-escale-${year}.csv`, "﻿" + lines.join("\r\n"), "text/csv", "public.comma-separated-values-text");
+    } catch (e) {
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  const exportXlsx = async () => {
+    const bytes = buildXlsx([
+      { name: t("nights.sheetCountries"), header: true, widths: [28, 10, 10, 40], rows: [[t("nights.country"), t("nights.nightsCol"), t("nights.staysCol"), t("nights.airportsCol")], ...r.countries.map((x) => [cname(x.country), x.nights, x.stays, x.airports.join(", ")]), [t("nights.totalCol"), r.total, r.stays.length, ""]] },
+      { name: t("nights.sheetStays"), header: true, widths: [12, 28, 14, 14, 8], rows: [[t("nights.airportsCol"), t("nights.country"), t("nights.fromCol"), t("nights.toCol"), t("nights.nightsCol")], ...r.stays.map((s) => [s.airport, cname(s.country), s.from, s.to, s.nights])] },
+    ]);
+    try {
+      await shareFile(`geardown-nuitees-escale-${year}.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "org.openxmlformats.spreadsheetml.sheet");
     } catch (e) {
       Alert.alert(t("common.error"), e instanceof Error ? e.message : String(e));
     }
@@ -75,6 +88,7 @@ export default function Nights() {
           ) : null}
         </Card>
       ))}
+      {r.countries.length ? <Button title={t("nights.exportXlsx")} onPress={() => void exportXlsx()} /> : null}
       {r.countries.length ? <Button kind="secondary" title={t("nights.export")} onPress={() => void exportCsv()} /> : null}
       <Pressable>
         <Txt variant="small" color={c.muted}>{t("nights.note")}</Txt>

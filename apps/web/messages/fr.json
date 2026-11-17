@@ -1778,7 +1778,10 @@
       "staysCol": "Escales",
       "airportsCol": "Aéroports",
       "fromCol": "Arrivée",
-      "toCol": "Départ"
+      "toCol": "Départ",
+      "sheetCountries": "Par pays",
+      "sheetStays": "Escales",
+      "totalCol": "Total"
     }
   },
   "why": {

@@ -1778,7 +1778,10 @@
       "staysCol": "Stays",
       "airportsCol": "Airports",
       "fromCol": "Arrival",
-      "toCol": "Departure"
+      "toCol": "Departure",
+      "sheetCountries": "By country",
+      "sheetStays": "Stays",
+      "totalCol": "Total"
     }
   },
   "why": {

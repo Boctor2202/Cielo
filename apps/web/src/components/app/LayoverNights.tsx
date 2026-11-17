@@ -1,6 +1,6 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { Download, FileSpreadsheet } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { countryName, layoverStays, nightsByCountry, type Flight } from "@cielo/core";
@@ -31,6 +31,15 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
     downloadBlob("﻿" + lines.join("\r\n"), `geardown-nuitees-escale-${year}.csv`, "text/csv;charset=utf-8");
   };
 
+  const exportXlsx = async () => {
+    const { buildXlsx } = await import("@cielo/export");
+    const bytes = buildXlsx([
+      { name: t("sheetCountries"), header: true, widths: [28, 10, 10, 40], rows: [[t("country"), t("nightsCol"), t("staysCol"), t("airportsCol")], ...r.countries.map((x) => [cname(x.country), x.nights, x.stays, x.airports.join(", ")]), [t("totalCol"), r.total, r.stays.length, ""]] },
+      { name: t("sheetStays"), header: true, widths: [12, 28, 14, 14, 8], rows: [[t("airportsCol"), t("country"), t("fromCol"), t("toCol"), t("nightsCol")], ...r.stays.map((s) => [s.airport, cname(s.country), s.from, s.to, s.nights])] },
+    ]);
+    downloadBlob(bytes as BlobPart, `geardown-nuitees-escale-${year}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  };
+
   return (
     <Card title={t("title")}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -42,9 +51,14 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
           ))}
         </div>
         {r.countries.length > 0 && (
-          <button type="button" className="btn btn-secondary btn-sm" onClick={exportCsv}>
-            <Download size={14} /> CSV
-          </button>
+          <span className="flex gap-1.5">
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => void exportXlsx()}>
+              <FileSpreadsheet size={14} /> Excel
+            </button>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={exportCsv}>
+              <Download size={14} /> CSV
+            </button>
+          </span>
         )}
       </div>
       {!homeBase && <p className="mb-2 text-sm text-[var(--caution)]">{t("noBase")}</p>}
