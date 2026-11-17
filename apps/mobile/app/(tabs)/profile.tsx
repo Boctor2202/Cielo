@@ -2,9 +2,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { AUTHORITIES, countryName, type Pilot } from "@cielo/core";
+import { AUTHORITIES, RANKS, countryName, type Pilot } from "@cielo/core";
 import { CountryField } from "../../src/components/CountryField";
 import { Button, Card, Field, Row, Screen, Txt } from "../../src/components/ui";
+import { SuggestField } from "../../src/components/SuggestField";
 import { AirportField } from "../../src/components/AirportField";
 import { useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
@@ -85,7 +86,7 @@ export default function Profile() {
       </Card>
       <Card>
         <Field label={t("more.fullName")} value={d.fullName} onChangeText={(v) => set("fullName", v)} autoCapitalize="words" />
-        <Field label={t("profile.rank")} value={d.rank ?? ""} onChangeText={(v) => set("rank", v)} placeholder={t("profile.rankPh")} />
+        <SuggestField label={t("profile.rank")} value={d.rank ?? ""} onChange={(v) => set("rank", v)} options={RANKS} placeholder={t("profile.rankPh")} />
         <Field label={t("profile.employer")} value={d.employer ?? ""} onChangeText={(v) => set("employer", v)} />
         <AirportField label={t("more.homeBase")} value={d.homeBaseIcao ?? ""} onChange={(v) => set("homeBaseIcao", v)} />
         <Field

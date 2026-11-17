@@ -102,6 +102,16 @@ export default function More() {
             { value: "CASA", label: "CASA" },
           ]}
         />
+        <Segmented<"always" | "alternate" | "never">
+          label={t("more.defaultPf")}
+          value={pilot.defaultPilotFlying ?? "alternate"}
+          onChange={(v) => void app.savePilot({ defaultPilotFlying: v })}
+          options={[
+            { value: "always", label: t("more.pf.always") },
+            { value: "alternate", label: t("more.pf.alternate") },
+            { value: "never", label: t("more.pf.never") },
+          ]}
+        />
         <Segmented<IfrDefault>
           label={t("more.defaultIfr")}
           value={pilot.defaultIfr}

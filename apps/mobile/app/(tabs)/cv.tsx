@@ -3,6 +3,7 @@ import { Alert, Pressable, View } from "react-native";
 import { atsReport, buildCvDocument, buildCvPdf, CV_THEMES, cvToText, flightExperience, toJsonResume, type CvData, type CvExperience, type CvFonts, type CvProfile, type CvTheme } from "@cielo/cv";
 import { countryName } from "@cielo/core";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
+import { DateField } from "../../src/components/DateField";
 import { Requires } from "../../src/components/Access";
 import { API_URL } from "../../src/api";
 import { shareFile } from "../../src/exporters";
@@ -159,8 +160,8 @@ function Cv() {
             <Field label={t("cv.role")} value={x.role} onChangeText={(v) => updExp(i, { role: v })} />
             <Field label={t("profile.employer")} value={x.employer} onChangeText={(v) => updExp(i, { employer: v })} />
             <Row>
-              <Field style={{ flex: 1 }} label={t("cv.start")} value={x.start} onChangeText={(v) => updExp(i, { start: v })} placeholder="2021-03" monoValue />
-              <Field style={{ flex: 1 }} label={t("cv.end")} value={x.end ?? ""} onChangeText={(v) => updExp(i, { end: v || undefined })} placeholder={t("cv.present")} monoValue />
+              <DateField month style={{ flex: 1 }} label={t("cv.start")} value={x.start} onChange={(v) => updExp(i, { start: v })} />
+              <DateField month style={{ flex: 1 }} label={t("cv.end")} value={x.end ?? ""} onChange={(v) => updExp(i, { end: v || undefined })} hint={x.end ? undefined : t("cv.present")} />
             </Row>
             <Field label={t("cv.aircraft")} value={(x.aircraft ?? []).join(", ")} onChangeText={(v) => updExp(i, { aircraft: v.toUpperCase().split(/[,\s]+/).filter(Boolean) })} autoCapitalize="characters" monoValue />
             <Field label={t("cv.bullets")} value={x.bullets.join("\n")} onChangeText={(v) => updExp(i, { bullets: v.split("\n") })} multiline />
@@ -179,8 +180,8 @@ function Cv() {
               <Field label={t("cv.titleEdu")} value={x.title} onChangeText={(v) => upd({ title: v })} />
               <Field label={t("cv.school")} value={x.school} onChangeText={(v) => upd({ school: v })} />
               <Row>
-                <Field style={{ flex: 1 }} label={t("cv.start")} value={x.start ?? ""} onChangeText={(v) => upd({ start: v })} placeholder="2014-09" monoValue />
-                <Field style={{ flex: 1 }} label={t("cv.end")} value={x.end ?? ""} onChangeText={(v) => upd({ end: v })} placeholder="2016-06" monoValue />
+                <DateField month style={{ flex: 1 }} label={t("cv.start")} value={x.start ?? ""} onChange={(v) => upd({ start: v })} />
+                <DateField month style={{ flex: 1 }} label={t("cv.end")} value={x.end ?? ""} onChange={(v) => upd({ end: v })} />
               </Row>
               <Button kind="ghost" small title={t("common.delete")} onPress={() => set("education", profile.education.filter((_, j) => j !== i))} />
             </View>

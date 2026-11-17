@@ -4,6 +4,8 @@ import { router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button, Card, EmptyState, Field, Row, Screen, Txt } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
+import { AirportField } from "../../src/components/AirportField";
+import { DateField } from "../../src/components/DateField";
 import { formatDate } from "../../src/i18n";
 import { todayUtc, useApp } from "../../src/state";
 import { Requires } from "../../src/components/Access";
@@ -48,14 +50,12 @@ function LayoversScreen() {
       {adding ? (
         <Card>
           <Txt variant="h2">{t("lay.new")}</Txt>
-          <Field label={t("lay.airport")} value={icao} onChangeText={(v) => setIcao(v.toUpperCase())} autoCapitalize="characters" maxLength={4} monoValue hint={airport ? `${airport.name}${airport.city ? ` · ${airport.city}` : ""}` : undefined} />
-          <Row gap={12}>
-            <Field style={{ flex: 1 }} label={t("lay.arrival")} value={from} onChangeText={setFrom} monoValue error={!isDate(from)} />
-            <Field style={{ flex: 1 }} label={t("lay.departure")} value={to} onChangeText={setTo} monoValue error={!isDate(to)} />
-          </Row>
+          <AirportField label={t("lay.airport")} value={icao} onChange={(v) => setIcao(v.toUpperCase())} />
+          <DateField label={t("lay.arrival")} value={from} onChange={setFrom} required quick={["today", "yesterday"]} />
+          <DateField label={t("lay.departure")} value={to} onChange={setTo} required hint={isDate(from) && isDate(to) && to < from ? t("lay.departureBeforeArrival") : undefined} />
           <Row gap={12}>
             <Button style={{ flex: 1 }} kind="secondary" title={t("common.cancel")} onPress={() => setAdding(false)} />
-            <Button style={{ flex: 1 }} title={t("lay.create")} disabled={!airport || !isDate(from) || !isDate(to)} onPress={create} />
+            <Button style={{ flex: 1 }} title={t("lay.create")} disabled={!airport || !isDate(from) || !isDate(to) || to < from} onPress={create} />
           </Row>
         </Card>
       ) : (

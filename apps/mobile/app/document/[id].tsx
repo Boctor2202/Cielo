@@ -42,6 +42,7 @@ import { useTheme } from "../../src/theme";
 import { statusLabel } from "../../src/licenseLabel";
 import { Paywall } from "../../src/components/Access";
 import { ensureNotificationPermission } from "../../src/notifications";
+import { DateField } from "../../src/components/DateField";
 
 const KINDS: LicenseKind[] = [
   "licence",
@@ -393,11 +394,12 @@ function DocumentForm() {
             />
           ) : null}
           <Row>
-            <Field
+            <DateField
               style={{ flex: 1 }}
               label={t(`docs.date.${form.issued || "issuedOn"}` as I18nKey)}
               value={issuedOn ?? ""}
-              onChangeText={(v) => {
+              quick={["today"]}
+              onChange={(v) => {
                 setIssuedOn(v);
                 if (!(validDate(v) && v.length === 10)) return;
                 const lvl =
@@ -415,24 +417,15 @@ function DocumentForm() {
                     ) ?? "",
                   );
               }}
-              placeholder="YYYY-MM-DD"
-              monoValue
-              keyboardType="numbers-and-punctuation"
-              maxLength={10}
-              error={!validDate(issuedOn ?? "")}
             />
             {form.validity === true ||
             (form.validity === "optional" && (showExpiry || !!validUntil)) ? (
-              <Field
+              <DateField
                 style={{ flex: 1 }}
                 label={t("docs.validUntil")}
                 value={validUntil ?? ""}
-                onChangeText={setValidUntil}
-                placeholder="YYYY-MM-DD"
-                monoValue
-                keyboardType="numbers-and-punctuation"
-                maxLength={10}
-                error={!validDate(validUntil ?? "")}
+                onChange={setValidUntil}
+                quick={["plus1y", "plus2y", "plus5y"]}
               />
             ) : null}
           </Row>
@@ -448,15 +441,11 @@ function DocumentForm() {
             </View>
           ) : null}
           {form.lastCheck ? (
-            <Field
+            <DateField
               label={t("docs.lastCheckRating")}
               value={lastCheckOn ?? ""}
-              onChangeText={setLastCheckOn}
-              placeholder="YYYY-MM-DD"
-              monoValue
-              keyboardType="numbers-and-punctuation"
-              maxLength={10}
-              error={!validDate(lastCheckOn ?? "")}
+              onChange={setLastCheckOn}
+              quick={["today"]}
             />
           ) : null}
           {form.validity === true || validUntil ? (

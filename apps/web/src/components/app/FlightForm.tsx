@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   defaultIfrFor, deriveFlightTimes, isoDate, PILOT_FUNCTIONS, type Aircraft, type Approach, type Flight, type FlightFormInput, type Pilot,
+  APPROACH_TYPES,
 } from "@cielo/core";
 import { useRouter } from "@/i18n/navigation";
 import { useAirports } from "@/lib/airports";
@@ -18,7 +19,6 @@ import { FlightAwareFill } from "./FlightAwareFill";
 import { Card, ClockInput, DurationInput, Field, Segmented, Toggle, useToast } from "./ui";
 import { SignatureModal, SignatureStatus } from "./Signature";
 
-const APPROACH_TYPES = ["ILS CAT I", "ILS CAT II", "ILS CAT III", "LOC", "RNP", "RNP AR", "LPV", "VOR", "NDB", "GLS", "PAR", "Visual", "Circling"];
 
 function blank(pilot: Pilot | undefined): FlightFormInput {
   return {

@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight, Hotel, NotebookPen, Plus, Trash2, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { combineUtc, detectMapping, icalToRosterEvent, isoDate, parseCsv, parseFlexibleDate, parseIcal, stamp, type RosterEvent, type RosterEventKind } from "@cielo/core";
+import { ROSTER_KINDS, combineUtc, detectMapping, icalToRosterEvent, isoDate, parseCsv, parseFlexibleDate, parseIcal, stamp, type RosterEvent, type RosterEventKind } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { DropZone } from "@/components/app/DropZone";
@@ -12,7 +12,7 @@ import { useFormatDate, usePilot, useTable } from "@/lib/hooks";
 import { put, saveLayover, saveRosterEvent, softDelete } from "@/lib/repo";
 import { db } from "@/lib/db";
 
-const KINDS: RosterEventKind[] = ["FLIGHT", "DEADHEAD", "STANDBY", "SIM", "GROUND", "OFF", "REST", "LEAVE", "OTHER"];
+const KINDS = ROSTER_KINDS;
 const KIND_STYLE: Record<RosterEventKind, string> = {
   FLIGHT: "bg-accent/15 text-accent border-accent/30",
   DEADHEAD: "bg-chart-2/15 text-chart-2 border-chart-2/30",

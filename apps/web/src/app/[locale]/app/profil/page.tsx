@@ -6,7 +6,7 @@ import { AirportInput } from "@/components/app/AirportInput";
 import { motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { AUTHORITIES, countryName, licenseStatus, type Pilot } from "@cielo/core";
+import { AUTHORITIES, RANKS, countryName, licenseStatus, type Pilot } from "@cielo/core";
 import { flightExperience } from "@cielo/cv";
 import { Badge, Card, Field, useToast, type Level } from "@/components/app/ui";
 import { Link } from "@/i18n/navigation";
@@ -15,7 +15,6 @@ import { updatePilot } from "@/lib/repo";
 import { localStore } from "@/lib/db";
 import { PilotEntrance } from "./PilotEntrance";
 
-const RANKS = ["Captain", "Commandant de bord", "First Officer", "Officier pilote de ligne", "Senior First Officer", "Flight Instructor", "Instructeur", "Student Pilot", "Élève pilote", "Private Pilot", "Pilote privé"];
 
 type Draft = Pick<Pilot, "fullName" | "rank" | "employer" | "homeBaseIcao" | "nationality" | "licenceNumber" | "phone" | "bio" | "photoDataUrl">;
 

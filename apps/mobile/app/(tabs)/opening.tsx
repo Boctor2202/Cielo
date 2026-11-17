@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Alert, View } from "react-native";
 import { formatDuration, parseDuration, type OpeningBalance } from "@cielo/core";
 import { Button, Card, Field, Row, Screen, Txt } from "../../src/components/ui";
+import { DateField } from "../../src/components/DateField";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { todayUtc, useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
@@ -64,7 +65,7 @@ export default function Opening() {
         <Txt variant="h2">{t("open.add")}</Txt>
         <Field label={t("open.label")} value={label} onChangeText={setLabel} placeholder={t("open.labelPh")} />
         <Row>
-          <Field style={{ flex: 1 }} label={t("open.asOf")} value={asOf} onChangeText={setAsOf} placeholder="YYYY-MM-DD" monoValue keyboardType="numbers-and-punctuation" maxLength={10} />
+          <DateField style={{ flex: 1 }} label={t("open.asOf")} value={asOf} onChange={setAsOf} />
           <Field style={{ flex: 1 }} label={t("open.type")} value={type} onChangeText={setType} placeholder={t("open.allTypes")} monoValue autoCapitalize="characters" maxLength={4} />
         </Row>
         <Txt variant="small">{t("open.timeHint")}</Txt>

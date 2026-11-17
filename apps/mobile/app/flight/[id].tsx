@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import {
+  APPROACH_TYPES,
   PILOT_FUNCTIONS,
   addDays,
   defaultIfrFor,
@@ -13,9 +14,11 @@ import {
   type Approach,
   type Flight,
   type FlightFormInput,
+  type OperationMode,
   type PilotFunction,
 } from "@cielo/core";
 import { AirportField } from "../../src/components/AirportField";
+import { AircraftTypeField } from "../../src/components/AircraftTypeField";
 import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPicker";
 import { AircraftPhoto } from "../../src/components/AircraftPhoto";
 import { FlightTrackCard } from "../../src/components/FlightTrack";
@@ -39,6 +42,10 @@ interface FormState {
   on: string;
   in: string;
   aircraftId: string | null;
+  /** type picked directly when no aircraft (registration) is chosen */
+  typeIcao: string;
+  /** null: the chosen aircraft's default */
+  operation: OperationMode | null;
   function: PilotFunction;
   picName: string;
   ifr: boolean;
@@ -95,6 +102,8 @@ function FlightForm() {
         on: formatClock(f.onUtc),
         in: formatClock(f.inUtc),
         aircraftId: f.aircraftId ?? null,
+        typeIcao: f.aircraftId ? "" : (f.aircraftTypeIcao ?? ""),
+        operation: f.multiPilotMin > 0 ? "multi_pilot" : "single_pilot",
         function: f.function,
         picName: f.picName ?? "",
         ifr: f.ifrMin > 0,
@@ -128,6 +137,8 @@ function FlightForm() {
       on: "",
       in: ev ? formatClock(ev.endUtc) : "",
       aircraftId: ac?.id ?? null,
+      typeIcao: "",
+      operation: null,
       function: pilot.defaultFunction,
       picName: "",
       ifr: defaultIfrFor(pilot.defaultIfr, type),
@@ -151,7 +162,11 @@ function FlightForm() {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm((s) => ({ ...s, [k]: v }));
 
   const selectedAircraft = aircraft.find((a) => a.id === form.aircraftId);
-  const selectedType = selectedAircraft ? aircraftTypes.find((x) => x.id === selectedAircraft.aircraftTypeId) : undefined;
+  const selectedType = selectedAircraft
+    ? aircraftTypes.find((x) => x.id === selectedAircraft.aircraftTypeId)
+    : form.typeIcao
+      ? aircraftTypes.find((x) => x.icao.toUpperCase() === form.typeIcao.toUpperCase())
+      : undefined;
 
   const input: FlightFormInput = useMemo(
     () => ({
@@ -165,9 +180,9 @@ function FlightForm() {
       in: form.in || undefined,
       aircraftId: form.aircraftId,
       registration: selectedAircraft?.registration,
-      aircraftTypeIcao: selectedType?.icao,
+      aircraftTypeIcao: selectedType?.icao ?? (form.typeIcao || undefined),
       aircraftModel: selectedType ? `${selectedType.manufacturer} ${selectedType.model}` : undefined,
-      operation: selectedAircraft?.defaultOperation,
+      operation: form.operation ?? selectedAircraft?.defaultOperation ?? (selectedType?.multiPilot ? "multi_pilot" : undefined),
       function: form.function,
       picName: form.picName || undefined,
       ifr: form.ifr,
@@ -382,6 +397,23 @@ function FlightForm() {
             ) : null}
           </Pressable>
           <AircraftPhoto registration={selectedAircraft?.registration} />
+          {!selectedAircraft ? (
+            <AircraftTypeField
+              types={aircraftTypes}
+              label={t("flight.typeOnly")}
+              hint={form.typeIcao ? `${t("flight.typeChosen")} ${selectedType ? `${selectedType.manufacturer} ${selectedType.model} (${selectedType.icao})` : form.typeIcao}` : t("flight.typeOnlyHint")}
+              onPick={(ty) => set("typeIcao", ty.icao)}
+            />
+          ) : null}
+          <Segmented<OperationMode>
+            label={t("flight.operation")}
+            value={form.operation ?? selectedAircraft?.defaultOperation ?? (selectedType?.multiPilot ? "multi_pilot" : "single_pilot")}
+            onChange={(v) => set("operation", v)}
+            options={[
+              { value: "single_pilot", label: t("flight.singlePilot") },
+              { value: "multi_pilot", label: t("flight.multiPilot") },
+            ]}
+          />
           <Txt variant="label">{t("flight.function")}</Txt>
           <Row style={{ flexWrap: "wrap" }}>
             {PILOT_FUNCTIONS.map((fn) => (
@@ -432,13 +464,13 @@ function FlightForm() {
               );
             return (
               <Row key={i} style={{ alignItems: "flex-end" }}>
-                <Field
-                  style={{ flex: 2 }}
-                  value={a.type}
-                  placeholder={t("flight.approachType")}
-                  autoCapitalize="characters"
-                  onChangeText={(s) => update({ type: s })}
-                />
+                <View style={{ flex: 2, gap: space.xs }}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
+                    {(APPROACH_TYPES.includes(a.type) ? APPROACH_TYPES : [a.type, ...APPROACH_TYPES]).map((ty) => (
+                      <Chip key={ty} label={ty} selected={a.type === ty} onPress={() => update({ type: ty })} />
+                    ))}
+                  </ScrollView>
+                </View>
                 <Field
                   style={{ flex: 1 }}
                   value={a.runway ?? ""}
@@ -455,7 +487,7 @@ function FlightForm() {
             kind="secondary"
             small
             title={t("flight.addApproach")}
-            onPress={() => set("approaches", [...form.approaches, { type: form.ifr ? "ILS" : "VIS", count: 1 }])}
+            onPress={() => set("approaches", [...form.approaches, { type: form.ifr ? "ILS CAT I" : "Visual", count: 1 }])}
           />
         </Card>
 

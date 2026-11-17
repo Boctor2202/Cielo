@@ -3,7 +3,7 @@
 import { Plane, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import type { AircraftCategory, EngineType, OperationMode } from "@cielo/core";
+import { AIRCRAFT_CATEGORIES, ENGINE_TYPES, type AircraftCategory, type EngineType, type OperationMode } from "@cielo/core";
 import { AircraftPhoto } from "@/components/app/AircraftPhoto";
 import { Card, Empty, Field, Modal, PageTitle, Segmented, Toggle } from "@/components/app/ui";
 import { useDuration, useFlights, useTable, useTypes } from "@/lib/hooks";
@@ -105,12 +105,12 @@ export default function AircraftPage() {
               <Field label={t("rating")}><input className="input" value={ct.classOrTypeRating} onChange={(e) => setCt({ ...ct, classOrTypeRating: e.target.value })} /></Field>
               <Field label={t("category")}>
                 <select className="input" value={ct.category} onChange={(e) => setCt({ ...ct, category: e.target.value as AircraftCategory })}>
-                  {["airplane", "helicopter", "glider", "tmg", "ulm", "balloon", "airship"].map((c) => <option key={c}>{c}</option>)}
+                  {AIRCRAFT_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </Field>
               <Field label={t("engineType")}>
                 <select className="input" value={ct.engineType} onChange={(e) => setCt({ ...ct, engineType: e.target.value as EngineType })}>
-                  {["piston", "turboprop", "jet", "turboshaft", "electric", "none"].map((c) => <option key={c}>{c}</option>)}
+                  {ENGINE_TYPES.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </Field>
               <Field label={t("engines")}><input type="number" min={0} max={8} className="input num" value={ct.engineCount} onChange={(e) => setCt({ ...ct, engineCount: +e.target.value || 0 })} /></Field>
