@@ -5,7 +5,7 @@ import Constants from "expo-constants";
 import { PILOT_FUNCTIONS, REGULATORS, regulatorById, type IfrDefault, type Locale, type PilotFunction, type TimeDisplay } from "@cielo/core";
 import { Button, Card, Chip, Field, MenuGroup, MenuRow, Row, Screen, Segmented, Txt } from "../../src/components/ui";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf } from "../../src/exporters";
+import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf, exportLogbookXlsx } from "../../src/exporters";
 import { isCloudEnabled } from "../../src/auth";
 import { pickAndImportCsv } from "../../src/importer";
 import { sendReport } from "../../src/api";
@@ -185,6 +185,12 @@ export default function More() {
           title={t("more.exportCsv")}
           loading={busy === "csv"}
           onPress={() => run("csv", () => exportLogbookCsv(flights, pilot))}
+        />
+        <Button
+          kind="secondary"
+          title={t("more.exportXlsx")}
+          loading={busy === "xlsx"}
+          onPress={() => run("xlsx", () => exportLogbookXlsx(flights, pilot))}
         />
       </Card>
 

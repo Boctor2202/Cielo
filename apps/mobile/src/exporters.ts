@@ -1,7 +1,7 @@
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { SYNC_TABLES, isoDate, openingTotals, type LocalStore, type OpeningBalance, type Flight, type Pilot } from "@cielo/core";
-import { buildLogbookPdf, flightsToCsv, type LayoutId } from "@cielo/export";
+import { TABULAR_HEADERS, buildLogbookPdf, buildXlsx, flightsToCsv, flightsToRows, type LayoutId } from "@cielo/export";
 
 export async function shareFile(name: string, content: string | Uint8Array, mimeType: string, UTI: string): Promise<void> {
   const file = new File(Paths.cache, name);
@@ -30,6 +30,13 @@ export async function exportLogbookPdf(flights: Flight[], balances: OpeningBalan
     generatedAt: new Date(),
   });
   await shareFile(`geardown-logbook-${layout}-${slug(pilot.fullName)}-${isoDate(Date.now())}.pdf`, bytes, "application/pdf", "com.adobe.pdf");
+}
+
+/** The whole logbook as an Excel workbook (same columns as the CSV and the website export). */
+export async function exportLogbookXlsx(flights: Flight[], pilot: Pilot): Promise<void> {
+  const rows = flightsToRows(flights, { decimal: pilot.timeDisplay === "decimal" });
+  const bytes = buildXlsx([{ name: "Logbook", header: true, rows: [[...TABULAR_HEADERS], ...rows] }]);
+  await shareFile(`geardown-logbook-${isoDate(Date.now())}.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "org.openxmlformats.spreadsheetml.sheet");
 }
 
 export async function exportLogbookCsv(flights: Flight[], pilot: Pilot): Promise<void> {
