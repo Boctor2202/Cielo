@@ -718,7 +718,9 @@
         "functionsVsTotal": "Function times (PIC, co-pilot, dual, instructor) do not reach the total on {pct} % of flights: a function column may be missing.",
         "notACount": "“{field}” does not hold landing or takeoff counts on {pct} % of rows."
       },
-      "unused": "Unused columns: {cols}."
+      "unused": "Unused columns: {cols}.",
+      "fromApps": "Moving from another logbook? Export from LogTen Pro, ForeFlight, mccPILOTLOG, CrewLounge, Flylog, MyFlightbook, Logbook Pro, APDL or Safelog (CSV, tab-separated text or Excel) and drop the file here: the format is recognised and the columns matched for you.",
+      "appRecognised": "{app} export recognised"
     },
     "audit": {
       "title": "Logbook audit",

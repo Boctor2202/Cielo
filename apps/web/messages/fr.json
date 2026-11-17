@@ -718,7 +718,9 @@
         "functionsVsTotal": "Les temps de fonction (CDB, copilote, double, instructeur) n'atteignent pas le temps total sur {pct} % des vols : une colonne de fonction manque peut-être.",
         "notACount": "« {field} » ne contient pas des nombres d'atterrissages ou de décollages sur {pct} % des lignes."
       },
-      "unused": "Colonnes non utilisées : {cols}."
+      "unused": "Colonnes non utilisées : {cols}.",
+      "fromApps": "Vous venez d'un autre carnet ? Exportez depuis LogTen Pro, ForeFlight, mccPILOTLOG, CrewLounge, Flylog, MyFlightbook, Logbook Pro, APDL ou Safelog (CSV, texte tabulé ou Excel) et déposez le fichier ici : le format est reconnu et les colonnes associées pour vous.",
+      "appRecognised": "Export {app} reconnu"
     },
     "audit": {
       "title": "Audit du carnet",

@@ -71,6 +71,7 @@ function FileImport() {
   const [rows, setRows] = useState<string[][] | null>(null);
   const [mapping, setMapping] = useState<Record<ImportField, number> | null>(null);
   const [order, setOrder] = useState<DateOrder>("dmy");
+  const [app, setApp] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
 
   const parsed = useMemo<ImportedRow[]>(() => (rows && mapping ? rowsToFlights(rows.slice(1), mapping, { dateOrder: order }) : []), [rows, mapping, order]);
@@ -91,6 +92,7 @@ function FileImport() {
     setRows([a.header, ...a.rows]);
     setMapping(a.mapping);
     setOrder(a.dateOrder);
+    setApp(a.app);
   }
 
   async function run() {
@@ -118,6 +120,8 @@ function FileImport() {
   return (
     <div className="space-y-5">
       <DropZone accept=".csv,.txt,.tsv,.xlsx" onFile={onFile} label={t("drop")} />
+      <p className="mt-2 text-xs text-muted">{t("fromApps")}</p>
+      {app && rows && <p className="mt-2 text-sm font-semibold text-accent">{t("appRecognised", { app })}</p>}
       {rows && mapping && (
         <>
           <Card title={t("mapping")}>

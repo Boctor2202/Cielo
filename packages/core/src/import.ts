@@ -1,6 +1,7 @@
 import { parseDuration, parseClock } from "./time";
 import type { FlightFormInput } from "./flight";
 import type { PilotFunction } from "./types";
+import { prepareLogbookTable, type LogbookApp } from "./importFormats";
 
 /** Canonical import fields. */
 export type ImportField =
@@ -339,6 +340,8 @@ export interface TableAnalysis {
   checks: MappingCheck[];
   /** columns with data that no field uses */
   unused: string[];
+  /** the logbook app the file was exported from, when recognised (ForeFlight, LogTen…) */
+  app?: LogbookApp;
 }
 
 /**
@@ -346,6 +349,23 @@ export interface TableAnalysis {
  * column from its name and its values, and guesses the date order (31/12 vs 12/31).
  */
 export function analyseTable(table: string[][]): TableAnalysis {
+  // exports of other logbook apps have their own layout: flatten it first (ForeFlight sections, LogTen prefixes…)
+  const prepared = prepareLogbookTable(table);
+  if (prepared.app || prepared.header.includes("From") && prepared.header.at(-1) === "To") {
+    const data = prepared.rows;
+    const mapping = detectMapping(prepared.header, data);
+    const used = new Set(Object.values(mapping));
+    return {
+      headerRow: 0,
+      header: prepared.header,
+      rows: data,
+      mapping,
+      dateOrder: guessDateOrder(data.map((r) => (mapping.date >= 0 ? r[mapping.date] ?? "" : ""))),
+      checks: checkMapping(data, mapping),
+      unused: prepared.header.filter((h, i) => h && !used.has(i) && data.some((r) => (r[i] ?? "").trim())),
+      app: prepared.app,
+    };
+  }
   const rows = table.filter((r) => r.some((c) => (c ?? "").trim()));
   const hits = (r: string[]) => r.reduce((n, c) => n + (IMPORT_FIELDS.some((f) => headerScore(f, c) > 0) && !DATE_RE.test(c.trim()) ? 1 : 0), 0);
   let headerRow = 0;
