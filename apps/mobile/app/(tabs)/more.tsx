@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import Constants from "expo-constants";
 import { PILOT_FUNCTIONS, REGULATORS, regulatorById, type IfrDefault, type Locale, type PilotFunction, type TimeDisplay } from "@cielo/core";
 import { Button, Card, Chip, Field, MenuGroup, MenuRow, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
-import { liveActivityEnabled, setLiveActivityEnabled } from "../../src/widgets/sync";
+import { WIDGETS_IN_BUILD, liveActivityEnabled, setLiveActivityEnabled } from "../../src/widgets/sync";
 import { useCrewInbox } from "../../src/crew";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf, exportLogbookXlsx } from "../../src/exporters";
@@ -157,7 +157,7 @@ export default function More() {
             { value: "system", label: t("more.theme.system") },
           ]}
         />
-        {Platform.OS === "ios" ? (
+        {Platform.OS === "ios" && WIDGETS_IN_BUILD ? (
           <ToggleRow
             label={t("more.liveActivity")}
             hint={t("more.liveActivityHint")}

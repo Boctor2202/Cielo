@@ -15,7 +15,13 @@ import type { DutyProps } from "./DutyActivity";
  */
 type Native = { Summary: typeof import("./Summary").default; Duty: typeof import("./DutyActivity").default };
 let native: Native | null | undefined;
+/**
+ * The widget extension is not in the current build (its Apple provisioning profile needs an interactive Apple
+ * sign-in): until it is, nothing touches the native module. Set to true with the expo-widgets plugin restored.
+ */
+export const WIDGETS_IN_BUILD = false;
 function load(): Native | null {
+  if (!WIDGETS_IN_BUILD) return null;
   if (native !== undefined) return native;
   try {
     native = Platform.OS === "ios" ? { Summary: require("./Summary").default, Duty: require("./DutyActivity").default } : null;
