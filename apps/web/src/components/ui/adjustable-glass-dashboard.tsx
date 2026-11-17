@@ -112,6 +112,8 @@ export interface GlassWorkspaceProps {
   notifications?: { id: string; title: string; detail?: string; href?: string }[];
   /** Replaces the period label next to the Overview heading. */
   headingAction?: ReactNode;
+  /** Replaces headingAction on the goals view (e.g. a "set my goals" button). */
+  savingsAction?: ReactNode;
   /** "Where it goes" rows; by default, outgoing transactions grouped by category. */
   breakdown?: { label: string; value: number }[];
   /** Icons of the three report cards (in, out, net). */
@@ -276,6 +278,7 @@ export default function GlassWorkspace({
   avatarUrl,
   notifications = [],
   headingAction,
+  savingsAction,
   breakdown,
   reportIcons,
   reportsContent,
@@ -852,6 +855,8 @@ export default function GlassWorkspace({
                     <Download size={14} aria-hidden="true" />
                     {L.exportCsv}
                   </button>
+                ) : view === "savings" && savingsAction ? (
+                  savingsAction
                 ) : (
                   (headingAction ??
                   (periodLabel && <span className="gw-date">{periodLabel}</span>))

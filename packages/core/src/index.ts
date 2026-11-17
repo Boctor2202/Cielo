@@ -22,3 +22,4 @@ export * from "./countries";
 export * from "./options";
 export * from "./currency";
 export * from "./leon";
+export * from "./goals";

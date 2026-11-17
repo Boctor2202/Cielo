@@ -515,7 +515,19 @@
         "savingsNote": "Objectifs calculés automatiquement à partir de votre carnet et des règles FCL.060.",
         "otherTypes": "Autres types",
         "carried": "Reports du carnet précédent",
-        "auditIssues": "{n} points à vérifier dans le carnet"
+        "auditIssues": "{n} points à vérifier dans le carnet",
+        "setGoals": "Paramétrer mes objectifs",
+        "goalOf": "sur {v}",
+        "goalBy": "d'ici le {date}",
+        "goalPace": "{n}/mois nécessaires",
+        "goalKind_total": "{n} h au total",
+        "goalKind_pic": "{n} h commandant de bord",
+        "goalKind_type": "{n} h sur {icao}",
+        "goalKind_multiPilot": "{n} h multipilote",
+        "goalKind_jet": "{n} h réacteur",
+        "goalKind_night": "{n} h de nuit",
+        "goalKind_ifr": "{n} h IFR",
+        "goalKind_landings": "{n} atterrissages"
       }
     },
     "logbook": {
@@ -1711,6 +1723,33 @@
       "label": "Fond de carte",
       "light": "Clair",
       "dark": "Sombre"
+    },
+    "goals": {
+      "title": "Mes objectifs",
+      "intro": "Fixez les cibles qui comptent pour votre carrière : heures totales, heures sur un type, CDB, nuit… avec une échéance si vous en avez une. La progression est calculée depuis votre carnet et les totaux reportés.",
+      "close": "Fermer",
+      "empty": "Aucun objectif défini : les prochains paliers d'heures totales et CDB sont affichés.",
+      "kind": "Objectif",
+      "type": "Type d'avion",
+      "pickType": "Choisir un type",
+      "targetHours": "Cible (heures)",
+      "targetCount": "Cible (atterrissages)",
+      "by": "Échéance (facultatif)",
+      "remove": "Supprimer",
+      "add": "Ajouter un objectif",
+      "reset": "Revenir aux objectifs automatiques",
+      "save": "Enregistrer",
+      "hint": "Les récences (passagers et nuit, 90 jours) restent toujours affichées.",
+      "kinds": {
+        "total": "Heures totales",
+        "pic": "Commandant de bord",
+        "type": "Heures sur un type",
+        "multiPilot": "Heures multipilote",
+        "jet": "Heures réacteur",
+        "night": "Heures de nuit",
+        "ifr": "Heures IFR",
+        "landings": "Atterrissages"
+      }
     }
   },
   "why": {

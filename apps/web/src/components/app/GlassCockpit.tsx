@@ -1,9 +1,9 @@
 "use client";
 
-import { Moon, Plane, Plus, Sun } from "lucide-react";
+import { Moon, Plane, Plus, SlidersHorizontal, Sun } from "lucide-react";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocale, useMessages } from "next-intl";
-import { addDays, computeRecency, licenseStatus, type Flight, type License, type OpeningBalance, type Pilot } from "@cielo/core";
+import { addDays, computeRecency, defaultGoals, goalProgress, isHourGoal, licenseStatus, type Flight, type License, type OpeningBalance, type Pilot } from "@cielo/core";
 import GlassWorkspace, {
   type GlassSettings,
   type WorkspaceCashFlowPeriod,
@@ -14,11 +14,9 @@ import GlassWorkspace, {
 import { Link } from "@/i18n/navigation";
 import { useDuration, useFormatDate, useTypes } from "@/lib/hooks";
 import { LogbookReport } from "./LogbookReport";
+import { GoalsEditor } from "./GoalsEditor";
 
 const GLASS_KEY = "geardown-glass";
-const TOTAL_MILESTONES = [100, 200, 500, 1000, 1500, 3000, 5000, 10000, 15000, 20000];
-const PIC_MILESTONES = [50, 100, 250, 500, 1000, 1500, 3000, 5000, 10000];
-const next = (list: number[], h: number) => list.find((m) => m > h) ?? Math.ceil((h + 1) / 5000) * 5000;
 
 /** Map the app's theme tokens onto the tokens the glass workspace reads (it follows our light/dark switch). */
 const HOST_TOKENS = {
@@ -56,6 +54,7 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
   const dur = useDuration();
   const fd = useFormatDate();
   const types = useTypes();
+  const [editGoals, setEditGoals] = useState(false);
   const [glass, setGlass] = useState<Partial<GlassSettings> | undefined>(undefined);
   useEffect(() => {
     try {
@@ -135,13 +134,29 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
     const typeName = last?.aircraftTypeIcao ? types?.find((x) => x.icao === last.aircraftTypeIcao) : undefined;
 
     const rec = computeRecency(live, today);
-    const tH = Math.floor(total / 60);
-    const pH = Math.floor(pic / 60);
-    const tGoal = next(TOTAL_MILESTONES, tH);
-    const pGoal = next(PIC_MILESTONES, pH);
+    // goals the pilot set (or the next milestones), then the FCL.060 recency checks
+    const jet = (icao: string) => types?.find((x) => x.icao === icao)?.engineType === "jet";
+    const mine = pilot?.goals?.length ? pilot.goals : defaultGoals(live, opening);
+    const fmtH = (min: number) => `${Math.floor(min / 60).toLocaleString(locale)} h`;
     const goals: WorkspaceGoal[] = [
-      { id: "total", name: (g.goalTotal ?? "{h} h total").replace("{h}", tGoal.toLocaleString(locale)), saved: total, target: tGoal * 60 },
-      { id: "pic", name: (g.goalPic ?? "{h} h PIC").replace("{h}", pGoal.toLocaleString(locale)), saved: pic, target: pGoal * 60 },
+      ...mine.map((goal): WorkspaceGoal => {
+        const p = goalProgress(goal, live, opening, today, jet);
+        const hours = isHourGoal(goal.kind);
+        const name = (g[`goalKind_${goal.kind}`] ?? `{n} ${goal.kind}`)
+          .replace("{n}", hours ? Math.round(goal.target / 60).toLocaleString(locale) : goal.target.toLocaleString(locale))
+          .replace("{icao}", goal.icao ?? "");
+        const deadline = goal.by
+          ? ` · ${(g.goalBy ?? "by {date}").replace("{date}", fd(goal.by, { day: "numeric", month: "short", year: "numeric" }))}${p.perMonth ? ` · ${(g.goalPace ?? "{n}/month").replace("{n}", hours ? fmtH(p.perMonth) : String(p.perMonth))}` : ""}`
+          : "";
+        return {
+          id: goal.id,
+          name,
+          saved: Math.min(p.done, goal.target),
+          target: goal.target,
+          savedLabel: hours ? dur(p.done) : String(p.done),
+          targetLabel: `${(g.goalOf ?? "of {v}").replace("{v}", hours ? dur(goal.target) : goal.target.toLocaleString(locale))}${deadline}`,
+        };
+      }),
       {
         id: "recency",
         name: g.goalRecency ?? "Passenger recency (90 days)",
@@ -187,6 +202,8 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
   const first = pilot?.displayName || pilot?.fullName?.split(" ")[0] || undefined;
 
   return (
+    <>
+    {editGoals && <GoalsEditor goals={pilot?.goals} flights={flights} today={today} onClose={() => setEditGoals(false)} />}
     <GlassWorkspace
       brand="Geardown"
       brandMark={
@@ -206,6 +223,11 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
         <Link href="/app/carnet/nouveau" className="gw-button" style={{ textDecoration: "none" }}>
           <Plus size={14} aria-hidden="true" /> {g.newFlight}
         </Link>
+      }
+      savingsAction={
+        <button type="button" className="gw-button" onClick={() => setEditGoals(true)}>
+          <SlidersHorizontal size={14} aria-hidden="true" /> {g.setGoals ?? "Set my goals"}
+        </button>
       }
       reportsContent={<LogbookReport flights={flights} today={today} />}
       cashFlowPeriods={data.periods}
@@ -230,5 +252,6 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
       useHostTheme
       style={HOST_TOKENS}
     />
+    </>
   );
 }

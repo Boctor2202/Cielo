@@ -515,7 +515,19 @@
         "savingsNote": "Goals worked out automatically from your logbook and the FCL.060 rules.",
         "otherTypes": "Other types",
         "carried": "Carried forward from previous logbook",
-        "auditIssues": "{n} items to check in your logbook"
+        "auditIssues": "{n} items to check in your logbook",
+        "setGoals": "Set my goals",
+        "goalOf": "of {v}",
+        "goalBy": "by {date}",
+        "goalPace": "{n}/month needed",
+        "goalKind_total": "{n} h total",
+        "goalKind_pic": "{n} h pilot in command",
+        "goalKind_type": "{n} h on {icao}",
+        "goalKind_multiPilot": "{n} h multi-pilot",
+        "goalKind_jet": "{n} h jet",
+        "goalKind_night": "{n} h night",
+        "goalKind_ifr": "{n} h IFR",
+        "goalKind_landings": "{n} landings"
       }
     },
     "logbook": {
@@ -1711,6 +1723,33 @@
       "label": "Map style",
       "light": "Light",
       "dark": "Dark"
+    },
+    "goals": {
+      "title": "My goals",
+      "intro": "Set the targets that matter for your career: total hours, hours on a type, PIC, night… with a deadline if you have one. Progress is worked out from your logbook and carried totals.",
+      "close": "Close",
+      "empty": "No goal set: the next total and PIC milestones are shown.",
+      "kind": "Goal",
+      "type": "Aircraft type",
+      "pickType": "Choose a type",
+      "targetHours": "Target (hours)",
+      "targetCount": "Target (landings)",
+      "by": "Deadline (optional)",
+      "remove": "Remove",
+      "add": "Add a goal",
+      "reset": "Back to automatic goals",
+      "save": "Save",
+      "hint": "Recent experience (passengers and night, 90 days) is always shown as well.",
+      "kinds": {
+        "total": "Total hours",
+        "pic": "Pilot in command",
+        "type": "Hours on a type",
+        "multiPilot": "Multi-pilot hours",
+        "jet": "Jet hours",
+        "night": "Night hours",
+        "ifr": "IFR hours",
+        "landings": "Landings"
+      }
     }
   },
   "why": {

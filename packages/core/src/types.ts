@@ -43,6 +43,8 @@ export interface Pilot extends SyncedRecord {
   ftlReleaseMin?: number;
   /** FTL reference IANA time zone chosen by the pilot (unset: the home base airport's zone) */
   ftlTimezone?: string;
+  /** goals set by the pilot (unset: the automatic milestones) */
+  goals?: PilotGoal[];
   licenceNumber?: string;
   defaultFunction: PilotFunction;
   defaultIfr: IfrDefault;
@@ -302,3 +304,17 @@ export interface Layover extends SyncedRecord {
 }
 
 export type FtlRegime = "oro" | "subq" | "none";
+
+export type GoalKind = "total" | "pic" | "type" | "multiPilot" | "jet" | "night" | "ifr" | "landings";
+
+/** A goal the pilot sets: hours (minutes stored) or a count, optionally by a date, optionally on one type. */
+export interface PilotGoal {
+  id: string;
+  kind: GoalKind;
+  /** minutes for hour goals, a count for landings */
+  target: number;
+  /** ICAO type designator, for kind "type" */
+  icao?: string;
+  /** deadline YYYY-MM-DD */
+  by?: string;
+}
