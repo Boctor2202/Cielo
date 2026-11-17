@@ -1,6 +1,6 @@
 # Minimal Supabase CLI configuration for Geardown.
 # Full reference: https://supabase.com/docs/guides/local-development/cli/config
-project_id = "cielo"
+project_id = "geardown"
 
 [api]
 enabled = true
@@ -24,7 +24,7 @@ file_size_limit = "20MiB"
 [auth]
 enabled = true
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000", "cielo://auth-callback"]
+additional_redirect_urls = ["http://localhost:3000", "geardown://auth-callback"]
 jwt_expiry = 3600
 enable_signup = true
 

@@ -92,11 +92,11 @@ Pour les builds EAS, déclarez-les côté serveur : `eas env:create --environmen
 
 Dans le tableau de bord Supabase → *Authentication* :
 
-1. **URL Configuration** : ajoutez `cielo://auth-callback` (et `exp://**` pour Expo Go) aux *Redirect URLs*.
+1. **URL Configuration** : ajoutez `geardown://auth-callback` (et `exp://**` pour Expo Go) aux *Redirect URLs*.
 2. **E-mail** : activez les liens magiques (flux PKCE, le lien doit être ouvert sur le même appareil).
 3. **Apple** : activez le fournisseur ; renseignez le *Services ID*, la clé `.p8` et le Team ID. Sur iOS,
    l'app utilise Sign in with Apple natif (`signInWithIdToken` + nonce) : ajoutez aussi le bundle id
-   `app.cielo.logbook` dans *Authorized Client IDs*.
+   `app.geardown.logbook` dans *Authorized Client IDs*.
 4. **Google** : créez des identifiants OAuth (Google Cloud Console) et renseignez-les dans Supabase.
    L'app ouvre le flux OAuth dans un navigateur sécurisé (`expo-web-browser`).
 
@@ -163,7 +163,7 @@ eas submit --profile production --platform android  # → piste « internal » d
 
 ### Fiche magasin (store listing)
 
-- **App Store Connect** : créez l'app (bundle `app.cielo.logbook`, SKU), nom « Geardown », sous-titre, description FR/EN,
+- **App Store Connect** : créez l'app (bundle `app.geardown.logbook`, SKU), nom « Geardown », sous-titre, description FR/EN,
   mots-clés (carnet de vol, logbook, EASA, pilote…), catégorie *Navigation* ou *Productivité*, captures 6,9″ et 13″ iPad,
   URL de politique de confidentialité, questionnaire *App Privacy* (données de contact et contenu utilisateur si la
   synchro est activée), classification d'âge, coordonnées de revue (fournir un compte de démonstration si la connexion
@@ -182,9 +182,9 @@ eas submit --profile production --platform android  # → piste « internal » d
 
 ## Abonnements — RevenueCat
 
-1. Créez un projet RevenueCat et deux apps : **App Store** (bundle `app.cielo.logbook`, clé *In-App Purchase* `.p8`
-   d'App Store Connect) et **Play Store** (package `app.cielo.logbook`, JSON du compte de service avec accès financier).
-2. Créez les produits dans les magasins (ex. `cielo_premium_monthly`, `cielo_premium_yearly` — abonnements
+1. Créez un projet RevenueCat et deux apps : **App Store** (bundle `app.geardown.logbook`, clé *In-App Purchase* `.p8`
+   d'App Store Connect) et **Play Store** (package `app.geardown.logbook`, JSON du compte de service avec accès financier).
+2. Créez les produits dans les magasins (ex. `geardown_premium_monthly`, `geardown_premium_yearly` — abonnements
    auto-renouvelables, même groupe d'abonnement côté Apple), puis importez-les dans RevenueCat.
 3. Créez l'**entitlement** `premium` (identifiant utilisé par `src/purchases.ts`), rattachez-y les produits, et une
    **offering** marquée *current* contenant les packages (mensuel / annuel).

@@ -14,7 +14,7 @@ import { MAP_STYLE_URL } from "@/config/site";
 import { currentTheme } from "@/lib/theme";
 
 /** Sober base map from the MapLibre demo tiles (override with NEXT_PUBLIC_MAP_STYLE_URL in production). */
-function cieloStyle(dark: boolean): import("maplibre-gl").StyleSpecification {
+function geardownStyle(dark: boolean): import("maplibre-gl").StyleSpecification {
   const c = dark ? { water: "#0a1626", land: "#13263f", border: "#25406a", text: "#93a6bc" } : { water: "#e9eef3", land: "#ffffff", border: "#c9d3de", text: "#4a5d73" };
   return {
     version: 8,
@@ -75,7 +75,7 @@ export default function MapPage() {
       if (cancelled || !ref.current) return;
       maplibregl.setWorkerUrl("/vendor/maplibre-gl-worker.mjs");
       const dark = currentTheme() === "dark";
-      const map = new maplibregl.Map({ container: ref.current, style: process.env.NEXT_PUBLIC_MAP_STYLE_URL ? MAP_STYLE_URL : cieloStyle(currentTheme() === "dark"), center: [5, 46], zoom: 3.2, attributionControl: { compact: true } });
+      const map = new maplibregl.Map({ container: ref.current, style: process.env.NEXT_PUBLIC_MAP_STYLE_URL ? MAP_STYLE_URL : geardownStyle(currentTheme() === "dark"), center: [5, 46], zoom: 3.2, attributionControl: { compact: true } });
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
       map.on("load", () => {
         map.addSource("routes", { type: "geojson", data: { type: "FeatureCollection", features: [] } });

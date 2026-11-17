@@ -28,7 +28,7 @@ export default function ExportPage() {
   async function generate() {
     setBusy(true);
     const stamp = new Date().toISOString().slice(0, 10);
-    const name = `cielo-logbook-${stamp}`;
+    const name = `geardown-logbook-${stamp}`;
     try {
       if (format === "csv") {
         downloadBlob(flightsToCsv(selected, { decimal }), `${name}.csv`, "text/csv;charset=utf-8");

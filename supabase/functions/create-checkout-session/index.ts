@@ -2,7 +2,7 @@
 // Body: { plan: "basic" | "premium" (Max), interval?: "monthly", returnPath?: "/settings" }
 // No free plan: the first subscription of a pilot starts with a 7-day trial; the card is collected up front.
 // Response: { url }
-// Secrets: STRIPE_SECRET_KEY, STRIPE_PRICE_*, APP_URL (e.g. https://app.cielo.aero).
+// Secrets: STRIPE_SECRET_KEY, STRIPE_PRICE_*, APP_URL (e.g. https://geardown.app).
 import { errorResponse, json, preflight, readJson, requireEnv } from "../_shared/http.ts";
 import { adminClient, getUser } from "../_shared/supabase.ts";
 import { type Interval, type Plan, priceIdFor, stripeRequest } from "../_shared/stripe.ts";

@@ -201,7 +201,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                 <Field label={t("aircraft")}>
                   <input
                     className="input num uppercase"
-                    list="cielo-aircraft"
+                    list="geardown-aircraft"
                     value={v.registration ?? ""}
                     placeholder="F-XXXX"
                     onChange={(e) => {
@@ -210,7 +210,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                       setV((s) => ({ ...s, registration: reg, aircraftId: a?.id ?? null, aircraftTypeIcao: a ? findType(types ?? [], a.aircraftTypeId)?.icao : s.aircraftTypeIcao }));
                     }}
                   />
-                  <datalist id="cielo-aircraft">
+                  <datalist id="geardown-aircraft">
                     {aircraftList?.map((a) => (
                       <option key={a.id} value={a.registration}>
                         {findType(types ?? [], a.aircraftTypeId)?.icao}
@@ -221,12 +221,12 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                 <Field label={ta("type")} hint={type ? `${type.manufacturer} ${type.model} · ${type.classOrTypeRating ?? ""}` : undefined}>
                   <input
                     className="input num uppercase"
-                    list="cielo-types"
+                    list="geardown-types"
                     value={aircraft ? (type?.icao ?? "") : (v.aircraftTypeIcao ?? "")}
                     disabled={!!aircraft}
                     onChange={(e) => set("aircraftTypeIcao", e.target.value.toUpperCase())}
                   />
-                  <datalist id="cielo-types">
+                  <datalist id="geardown-types">
                     {types?.map((ty) => (
                       <option key={ty.id} value={ty.icao}>
                         {ty.manufacturer} {ty.model}

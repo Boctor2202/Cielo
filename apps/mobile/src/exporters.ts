@@ -29,12 +29,12 @@ export async function exportLogbookPdf(flights: Flight[], balances: OpeningBalan
     appName: "Geardown",
     generatedAt: new Date(),
   });
-  await shareFile(`cielo-logbook-${layout}-${slug(pilot.fullName)}-${isoDate(Date.now())}.pdf`, bytes, "application/pdf", "com.adobe.pdf");
+  await shareFile(`geardown-logbook-${layout}-${slug(pilot.fullName)}-${isoDate(Date.now())}.pdf`, bytes, "application/pdf", "com.adobe.pdf");
 }
 
 export async function exportLogbookCsv(flights: Flight[], pilot: Pilot): Promise<void> {
   const csv = flightsToCsv(flights, { decimal: pilot.timeDisplay === "decimal" });
-  await shareFile(`cielo-logbook-${isoDate(Date.now())}.csv`, "﻿" + csv, "text/csv", "public.comma-separated-values-text");
+  await shareFile(`geardown-logbook-${isoDate(Date.now())}.csv`, "﻿" + csv, "text/csv", "public.comma-separated-values-text");
 }
 
 /** GDPR art. 15/20: every table of the local store, as JSON. */
@@ -43,6 +43,6 @@ export async function exportAllDataJson(store: LocalStore): Promise<void> {
   for (const t of SYNC_TABLES) tables[t] = await store.all(t);
   // Reference aircraft types are public data, not personal data.
   tables.aircraft_types = (tables.aircraft_types as { ownerPilotId?: string | null }[]).filter((r) => r.ownerPilotId);
-  const payload = { app: "Geardown", format: "cielo-export", version: 1, exportedAt: new Date().toISOString(), tables };
-  await shareFile(`cielo-data-${isoDate(Date.now())}.json`, JSON.stringify(payload, null, 2), "application/json", "public.json");
+  const payload = { app: "Geardown", format: "geardown-export", version: 1, exportedAt: new Date().toISOString(), tables };
+  await shareFile(`geardown-data-${isoDate(Date.now())}.json`, JSON.stringify(payload, null, 2), "application/json", "public.json");
 }

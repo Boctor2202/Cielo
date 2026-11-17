@@ -7,7 +7,7 @@ import { completeAuthFromUrl, isCloudEnabled } from "../src/auth";
 import { useApp } from "../src/state";
 import { useTheme } from "../src/theme";
 
-/** Deep link target of the magic link / OAuth redirect: cielo://auth-callback?code=… */
+/** Deep link target of the magic link / OAuth redirect: geardown://auth-callback?code=… */
 export default function AuthCallback() {
   const { t } = useApp();
   const c = useTheme();

@@ -155,7 +155,7 @@ export default function SettingsPage() {
 
         <Card title={t("data")} className="lg:col-span-2">
           <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn btn-secondary" onClick={async () => downloadBlob(JSON.stringify(await exportAll(), null, 2), `cielo-export-${new Date().toISOString().slice(0, 10)}.json`, "application/json")}>
+            <button type="button" className="btn btn-secondary" onClick={async () => downloadBlob(JSON.stringify(await exportAll(), null, 2), `geardown-export-${new Date().toISOString().slice(0, 10)}.json`, "application/json")}>
               <Download size={16} /> {t("exportJson")}
             </button>
             <label className="btn btn-secondary">
