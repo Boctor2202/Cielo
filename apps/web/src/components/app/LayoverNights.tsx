@@ -1,7 +1,7 @@
 "use client";
 
-import { Download, FileSpreadsheet } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronDown, ChevronRight, Download, FileSpreadsheet } from "lucide-react";
+import { Fragment, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { countryName, layoverStays, nightsByCountry, type Flight } from "@cielo/core";
 import { Card } from "./ui";
@@ -16,6 +16,7 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
   const now = new Date();
   const years = [0, 1, 2].map((k) => now.getUTCFullYear() - k);
   const [year, setYear] = useState(now.getUTCFullYear() - (now.getUTCMonth() < 6 ? 1 : 0));
+  const [open, setOpen] = useState<string | null>(null);
   const stays = useMemo(() => layoverStays(flights, homeBase, countryOf), [flights, homeBase, countryOf]);
   const r = useMemo(() => nightsByCountry(stays, year), [stays, year]);
   const cname = (c: string) => (c === "??" ? t("unknown") : countryName(c, locale));
@@ -77,16 +78,56 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
             </tr>
           </thead>
           <tbody>
-            {r.countries.map((x) => (
-              <tr key={x.country} className="border-t border-border align-top [&>td]:py-1.5">
-                <td className="font-medium">{cname(x.country)}</td>
-                <td className="num text-right font-semibold">{x.nights}</td>
-                <td className="num text-right">{x.stays}</td>
-                <td className="num pl-4 text-xs text-muted" title={r.stays.filter((s) => s.country === x.country).map((s) => `${s.airport} ${fd(s.from)} → ${fd(s.to)} (${s.nights})`).join("\n")}>
-                  {x.airports.join(", ")}
-                </td>
-              </tr>
-            ))}
+            {r.countries.map((x) => {
+              const isOpen = open === x.country;
+              return (
+                <Fragment key={x.country}>
+                  <tr
+                    className="cursor-pointer border-t border-border align-top hover:bg-surface-2 [&>td]:py-1.5"
+                    onClick={() => setOpen(isOpen ? null : x.country)}
+                    aria-expanded={isOpen}
+                  >
+                    <td className="font-medium">
+                      <span className="inline-flex items-center gap-1">
+                        {isOpen ? <ChevronDown size={14} aria-hidden /> : <ChevronRight size={14} aria-hidden />}
+                        {cname(x.country)}
+                      </span>
+                    </td>
+                    <td className="num text-right font-semibold">{x.nights}</td>
+                    <td className="num text-right">{x.stays}</td>
+                    <td className="num pl-4 text-xs text-muted">{x.airports.join(", ")}</td>
+                  </tr>
+                  {isOpen && (
+                    <tr className="bg-surface-2/60">
+                      <td colSpan={4} className="px-3 py-2">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="text-left text-muted [&>th]:py-1 [&>th]:font-medium">
+                              <th>{t("airportsCol")}</th>
+                              <th>{t("fromCol")}</th>
+                              <th>{t("toCol")}</th>
+                              <th className="!text-right">{t("nightsCol")}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {r.stays
+                              .filter((st) => st.country === x.country)
+                              .map((st) => (
+                                <tr key={`${st.airport}${st.from}`} className="border-t border-border/60 [&>td]:py-1">
+                                  <td className="num font-semibold">{st.airport}</td>
+                                  <td className="num">{fd(st.from)}</td>
+                                  <td className="num">{fd(st.to)}</td>
+                                  <td className="num text-right">{st.nights}</td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
           </tbody>
         </table>
       )}
