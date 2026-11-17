@@ -20,12 +20,13 @@ type GMap = {
     addListener: (ev: string, cb: (e: { feature: { getProperty: (k: string) => unknown; getGeometry: () => { getType: () => string } }; latLng: unknown }) => void) => void;
   };
   fitBounds: (b: unknown, pad?: number) => void;
+  addListener: (ev: string, cb: () => void) => void;
 };
 type GoogleNS = {
   maps: {
     Map: new (el: HTMLElement, o: Record<string, unknown>) => GMap;
     LatLngBounds: new () => { extend: (p: { lat: number; lng: number }) => void };
-    InfoWindow: new () => { setContent: (c: string) => void; setPosition: (p: unknown) => void; open: (o: { map: GMap }) => void; close: () => void };
+    InfoWindow: new (o?: Record<string, unknown>) => { setContent: (c: string) => void; setPosition: (p: unknown) => void; open: (o: { map: GMap }) => void; close: () => void };
     SymbolPath: { CIRCLE: number };
     Point: new (x: number, y: number) => unknown;
   };
@@ -73,6 +74,7 @@ export function GoogleRoutesMap({ apiKey, lang, dark, lines, points, onError }: 
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<GMap | null>(null);
   const g = useRef<GoogleNS | null>(null);
+  const cleanup = useRef<(() => void) | null>(null);
   // always draw the latest data, whichever arrives last (the data or the map)
   const data = useRef({ lines, points });
   data.current = { lines, points };
@@ -114,7 +116,13 @@ export function GoogleRoutesMap({ apiKey, lang, dark, lines, points, onError }: 
             title: `${f.getProperty("icao")} · ${n}`,
           };
         });
-        const info = new google.maps.InfoWindow();
+        // no header row (its empty space and hard-to-see close button): the bubble closes on a click elsewhere
+        const info = new google.maps.InfoWindow({ headerDisabled: true });
+        m.addListener("click", () => info.close());
+        m.addListener("dragstart", () => info.close());
+        const onKey = (ev: KeyboardEvent) => ev.key === "Escape" && info.close();
+        window.addEventListener("keydown", onKey);
+        cleanup.current = () => window.removeEventListener("keydown", onKey);
         m.data.addListener("click", (e) => {
           if (e.feature.getGeometry().getType() !== "Point") return;
           // explicit colours: the bubble is always white, whatever the page theme
@@ -138,6 +146,7 @@ export function GoogleRoutesMap({ apiKey, lang, dark, lines, points, onError }: 
       .catch(() => alive && onError());
     return () => {
       alive = false;
+      cleanup.current?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiKey, lang, dark]);
