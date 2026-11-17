@@ -5,6 +5,7 @@ import Constants from "expo-constants";
 import { PILOT_FUNCTIONS, REGULATORS, regulatorById, type IfrDefault, type Locale, type PilotFunction, type TimeDisplay } from "@cielo/core";
 import { Button, Card, Chip, Field, MenuGroup, MenuRow, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
 import { liveActivityEnabled, setLiveActivityEnabled } from "../../src/widgets/sync";
+import { useCrewInbox } from "../../src/crew";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf, exportLogbookXlsx } from "../../src/exporters";
 import { isCloudEnabled } from "../../src/auth";
@@ -22,6 +23,7 @@ export default function More() {
   const [busy, setBusy] = useState<string | null>(null);
   const [theme, setTheme] = useState<ThemePref>(loadThemePref);
   const [live, setLive] = useState(liveActivityEnabled);
+  const crewInbox = useCrewInbox();
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key);
@@ -70,6 +72,7 @@ export default function More() {
       <MenuGroup title={t("more.g.pilot")}>
         <MenuRow icon={<Ionicons name="person" size={17} color="#fff" />} color="#0A84FF" label={t("more.openProfile")} onPress={() => router.navigate("/profile")} />
         <MenuRow icon={<Ionicons name="ribbon" size={17} color="#fff" />} color="#FF9F0A" label={t("more.documents")} onPress={() => router.navigate("/documents")} />
+        <MenuRow icon={<Ionicons name="create" size={17} color="#fff" />} color="#30B0C7" label={t("crew.menu")} value={crewInbox ? String(crewInbox) : undefined} onPress={() => router.navigate("/crew")} />
         <MenuRow icon={<Ionicons name="notifications" size={17} color="#fff" />} color="#FF3B30" label={t("more.reminders")} onPress={() => router.navigate("/reminders")} />
         <MenuRow icon={<Ionicons name="airplane" size={17} color="#fff" />} color="#5E5CE6" label={t("more.aircraft")} onPress={() => router.navigate("/aircraft")} />
         <MenuRow icon={<Ionicons name="document-text" size={17} color="#fff" />} color="#30B0C7" label={t("more.cv")} onPress={() => router.navigate("/cv")} />

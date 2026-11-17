@@ -10,6 +10,7 @@ import { AppProvider, useApp, useBootError } from "../src/state";
 import { applyThemePref, loadThemePref } from "../src/appearance";
 import { useTheme } from "../src/theme";
 import { WidgetSync } from "../src/widgets/sync";
+import { CrewInboxWatcher } from "../src/crewWatcher";
 import { Backdrop, Txt } from "../src/components/ui";
 import { glass } from "../src/theme";
 
@@ -36,8 +37,9 @@ function Navigator() {
   // a tap on an expiry reminder opens the document it is about (also when it launched the app)
   useEffect(() => {
     const open = (r: Notifications.NotificationResponse | null) => {
-      const id = (r?.notification.request.content.data as { licenseId?: string } | undefined)?.licenseId;
-      if (id) router.push({ pathname: "/document/[id]", params: { id } });
+      const data = r?.notification.request.content.data as { licenseId?: string; route?: string } | undefined;
+      if (data?.licenseId) router.push({ pathname: "/document/[id]", params: { id: data.licenseId } });
+      else if (data?.route === "/crew") router.navigate("/crew");
     };
     Notifications.getLastNotificationResponseAsync().then(open).catch(() => undefined);
     const sub = Notifications.addNotificationResponseReceivedListener(open);
@@ -54,6 +56,7 @@ function Navigator() {
       <StatusBar style={c.scheme === "dark" ? "light" : "dark"} />
       <Backdrop />
       <WidgetSync />
+      <CrewInboxWatcher />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: glass(c).strong },
