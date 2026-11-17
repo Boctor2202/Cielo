@@ -297,7 +297,9 @@
     "email": "E-mail",
     "message": "Message",
     "send": "Send",
-    "sent": "Your e-mail client will open with your message."
+    "sent": "Message sent, thank you! We'll reply by e-mail.",
+    "sending": "Sending…",
+    "error": "Sending failed. Try again, or write to us at {email}."
   },
   "auth": {
     "loginTitle": "Log in",

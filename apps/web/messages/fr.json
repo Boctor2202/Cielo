@@ -297,7 +297,9 @@
     "email": "E-mail",
     "message": "Message",
     "send": "Envoyer",
-    "sent": "Votre logiciel de messagerie va s'ouvrir avec votre message."
+    "sent": "Message envoyé, merci ! Nous vous répondons par e-mail.",
+    "sending": "Envoi…",
+    "error": "L'envoi a échoué. Réessayez, ou écrivez-nous à {email}."
   },
   "auth": {
     "loginTitle": "Connexion",
