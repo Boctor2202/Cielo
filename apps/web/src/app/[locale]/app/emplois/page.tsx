@@ -34,14 +34,24 @@ export default function JobsPage() {
   const pilot = usePilot();
   // Where the pilot may work (citizenship, visas): saved on this device, defaults from the licence regime
   const [workRegions, setWorkRegions] = useState<RegionId[] | null>(null);
+  // "all regions": shows every offer; the ticked regions stay the pilot's work rights (they weigh on the match)
+  const [allRegions, setAllRegions] = useState(false);
   useEffect(() => {
     try {
       const v = localStorage.getItem("cielo-work-regions");
       if (v) setWorkRegions(JSON.parse(v));
+      setAllRegions(localStorage.getItem("cielo-jobs-all-regions") === "1");
     } catch {}
   }, []);
+  const showAll = (on: boolean) => {
+    setAllRegions(on);
+    try {
+      localStorage.setItem("cielo-jobs-all-regions", on ? "1" : "0");
+    } catch {}
+  };
   const saveWork = (r: RegionId[]) => {
     setWorkRegions(r);
+    showAll(false);
     try {
       localStorage.setItem("cielo-work-regions", JSON.stringify(r));
     } catch {}
@@ -70,7 +80,7 @@ export default function JobsPage() {
   const byType = (r: Row, on = onTypeOnly) => !on || r.match.onType;
   // one place filters by region: the regions the pilot ticked (where they may work). None ticked: every offer.
   // Offers elsewhere whose employer sponsors the visa are kept; one needing another licence keeps its badge.
-  const byRegion = (r: Row) => !myRegions.length || r.match.canWork;
+  const byRegion = (r: Row) => allRegions || !myRegions.length || r.match.canWork;
 
   const rows = useMemo(() => {
     const list = all.filter((r) => byPosition(r) && byType(r) && byRegion(r));
@@ -85,7 +95,7 @@ export default function JobsPage() {
     );
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [all, position, onTypeOnly, sort, myRegions]);
+  }, [all, position, onTypeOnly, sort, myRegions, allRegions]);
   const counts = useMemo(() => {
     const pos = new Map<string, number>();
     const reg = new Map<string, number>();
@@ -103,7 +113,7 @@ export default function JobsPage() {
     }
     return { pos, reg, typeN };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [all, position, onTypeOnly, myRegions]);
+  }, [all, position, onTypeOnly, myRegions, allRegions]);
 
   const positions = useMemo(() => [...new Set((feed?.jobs ?? []).map((j) => j.position))] as Position[], [feed]);
   const followed = feed?.sources.filter((s) => s.ok).length ?? 0;
@@ -127,7 +137,7 @@ export default function JobsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <select className="input !w-auto" value={position} onChange={(e) => setPosition(e.target.value as Position | "ALL")} aria-label={t("filter.position")}>
-            <option value="ALL">{t("filter.position")} · {t("filter.all")} ({counts.pos.get("ALL") ?? 0})</option>
+            <option value="ALL">{t("filter.position")} · {t("filter.all")}</option>
             {positions.map((p) => (
               <option key={p} value={p}>{t(`positions.${p}`)} ({counts.pos.get(p) ?? 0})</option>
             ))}
@@ -142,20 +152,20 @@ export default function JobsPage() {
         <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t("work.title")}>
           <button
             type="button"
-            aria-pressed={!myRegions.length}
-            onClick={() => saveWork([])}
-            className={`min-h-9 cursor-pointer rounded-full border px-3 text-[13px] font-medium transition-colors ${!myRegions.length ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:border-accent/50 hover:text-text"}`}
+            aria-pressed={allRegions}
+            onClick={() => showAll(!allRegions)}
+            className={`min-h-9 cursor-pointer rounded-full border px-3 text-[13px] font-medium transition-colors ${allRegions ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:border-accent/50 hover:text-text"}`}
           >
-            {!myRegions.length ? "✓ " : ""}{t("filter.allRegions")} <span className="num opacity-70">{counts.reg.get("ALL") ?? 0}</span>
+            {allRegions ? "✓ " : ""}{t("filter.allRegions")} <span className="num opacity-70">{counts.reg.get("ALL") ?? 0}</span>
           </button>
           {REGIONS.filter((r) => r !== "OTHER").map((r) => {
-            const on = myRegions.includes(r);
+            const on = !allRegions && myRegions.includes(r);
             return (
               <button
                 key={r}
                 type="button"
                 aria-pressed={on}
-                onClick={() => saveWork(on ? myRegions.filter((x) => x !== r) : [...myRegions, r])}
+                onClick={() => saveWork(allRegions ? (myRegions.includes(r) ? myRegions : [...myRegions, r]) : on ? myRegions.filter((x) => x !== r) : [...myRegions, r])}
                 className={`min-h-9 cursor-pointer rounded-full border px-3 text-[13px] font-medium transition-colors ${on ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:border-accent/50 hover:text-text"}`}
               >
                 {on ? "✓ " : ""}{t(`regions.${r}`)} <span className="num opacity-70">{counts.reg.get(r) ?? 0}</span>
