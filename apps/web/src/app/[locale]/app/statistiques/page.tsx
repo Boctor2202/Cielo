@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { distanceNm, groupTotals, sumFlights } from "@cielo/core";
 import { Card, PageTitle, Readout } from "@/components/app/ui";
 import { HoursBars, SplitBar } from "@/components/app/Charts";
 import { useAirports } from "@/lib/airports";
-import { useDuration, useFlights } from "@/lib/hooks";
+import { useDuration, useFlights, usePilot } from "@/lib/hooks";
+import { LayoverNights } from "@/components/app/LayoverNights";
 
 export default function StatsPage() {
   const t = useTranslations("app.stats");
@@ -15,6 +16,8 @@ export default function StatsPage() {
   const locale = useLocale();
   const flights = useFlights();
   const airports = useAirports();
+  const pilot = usePilot();
+  const countryOf = useCallback((icao: string) => airports?.get(icao)?.country, [airports]);
   const d = useDuration();
   const [year, setYear] = useState("");
   const years = useMemo(() => [...new Set((flights ?? []).map((f) => f.date.slice(0, 4)))].sort().reverse(), [flights]);
@@ -112,6 +115,11 @@ export default function StatsPage() {
           </ul>
         </Card>
       </div>
+      {flights && (
+        <div className="mt-5">
+          <LayoverNights flights={flights} homeBase={pilot?.homeBaseIcao} countryOf={countryOf} />
+        </div>
+      )}
     </>
   );
 }

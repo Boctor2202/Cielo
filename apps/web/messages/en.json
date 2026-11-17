@@ -1764,6 +1764,21 @@
         "ifr": "IFR hours",
         "landings": "Landings"
       }
+    },
+    "nights": {
+      "title": "Layover nights by country",
+      "how": "From your logbook: after a leg ending away from {base}, the nights until the next leg leaves from that airport.",
+      "noBase": "Set your home base in your profile: nights at base must not be counted.",
+      "totalLine": "{n} nights away · {c} countries",
+      "empty": "No layover night this year.",
+      "note": "For your tax return (frais réels): apply the official per-country rates with your accountant. Positioning not logged is not counted.",
+      "unknown": "Unknown country",
+      "country": "Country",
+      "nightsCol": "Nights",
+      "staysCol": "Stays",
+      "airportsCol": "Airports",
+      "fromCol": "Arrival",
+      "toCol": "Departure"
     }
   },
   "why": {

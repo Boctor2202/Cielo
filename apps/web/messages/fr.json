@@ -1764,6 +1764,21 @@
         "ifr": "Heures IFR",
         "landings": "Atterrissages"
       }
+    },
+    "nights": {
+      "title": "Nuitées en escale par pays",
+      "how": "D'après votre carnet : après un vol arrivant ailleurs qu'à {base}, les nuits jusqu'au vol suivant au départ de cet aéroport.",
+      "noBase": "Renseignez votre base dans votre profil : les nuits à la base ne doivent pas être comptées.",
+      "totalLine": "{n} nuits hors base · {c} pays",
+      "empty": "Aucune nuitée en escale cette année.",
+      "note": "Pour votre déclaration (frais réels) : appliquez les taux officiels par pays avec votre comptable. Les mises en place non enregistrées ne sont pas comptées.",
+      "unknown": "Pays inconnu",
+      "country": "Pays",
+      "nightsCol": "Nuits",
+      "staysCol": "Escales",
+      "airportsCol": "Aéroports",
+      "fromCol": "Arrivée",
+      "toCol": "Départ"
     }
   },
   "why": {
