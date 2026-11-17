@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Geardown — the electronic pilot logbook",
-    "description": "EASA Part-FCL compliant electronic logbook: fast entry, automatic night time, official exports, licences, FTL and roster. For airline, business and private pilots."
+    "description": "EASA, FAA and CASA compliant electronic logbook: fast entry, automatic night time, official exports, licences, FTL and roster. For airline, business and private pilots."
   },
   "nav": {
     "features": "Features",
@@ -85,7 +85,7 @@
       },
       "ftl": {
         "title": "Rest and FTL limits",
-        "text": "Flight duty and rest periods computed under EASA ORO.FTL from your flights and roster, with alerts before you exceed a limit.",
+        "text": "Flight duty and rest periods computed under EASA ORO.FTL or EU-OPS Subpart Q (business aviation) from your flights and roster, with alerts before you exceed a limit.",
         "points": [
           "Max FDP from reporting time",
           "7, 14, 28-day and 12-month totals",
@@ -1714,7 +1714,7 @@
     "title": "Built like a flight instrument",
     "items": [
       {
-        "t": "EASA compliant by design",
+        "t": "EASA, FAA and CASA compliant",
         "d": "AMC1 FCL.050 columns, the EASA night definition and FCL.060 recent experience. FAA and CASA exports included."
       },
       {
@@ -1768,7 +1768,7 @@
       "label": "02 · Your aircraft",
       "title": "Your {name}. The right columns, automatically.",
       "titleGeneric": "Your aircraft. The right columns, automatically.",
-      "text": "Geardown knows your type: every flight feeds the right EASA logbook columns, the totals by type and your recent experience.",
+      "text": "Geardown knows your type: every flight feeds the right columns of your logbook, EASA, FAA or CASA, the totals by type and your recent experience.",
       "icao": "ICAO type",
       "rating": "Rating",
       "engines": "Engines",
@@ -1826,8 +1826,8 @@
   },
   "seo": {
     "home": {
-      "title": "Geardown — EASA electronic pilot logbook",
-      "description": "EASA Part-FCL compliant electronic pilot logbook: automatic night time, official PDF export, licences, FTL, roster, pilot jobs and pilot CV. Free trial, web, iOS and Android."
+      "title": "Geardown — Electronic pilot logbook (EASA, FAA, CASA)",
+      "description": "EASA, FAA and CASA compliant electronic pilot logbook: automatic night time, official PDF export, licences, FTL, roster, pilot jobs and pilot CV. Free trial, web, iOS and Android."
     },
     "features": {
       "title": "Electronic pilot logbook features",
@@ -1839,7 +1839,7 @@
     },
     "airlines": {
       "title": "Electronic logbook for airlines and flight schools",
-      "description": "Geardown for airlines, business aviation operators and flight schools: imported rosters, crew licence tracking, EASA compliance and official exports."
+      "description": "Geardown for airlines, business aviation operators and flight schools: imported rosters, crew licence tracking, EASA, FAA and CASA compliance, official exports."
     },
     "blog": {
       "title": "Blog — EASA rules and pilot life",

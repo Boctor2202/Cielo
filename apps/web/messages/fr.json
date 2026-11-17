@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Geardown — le carnet de vol électronique des pilotes",
-    "description": "Carnet de vol électronique conforme EASA Part-FCL : saisie rapide, calcul automatique du temps de nuit, exports officiels, licences, FTL et roster. Pour pilotes de ligne, d'affaires et privés."
+    "description": "Carnet de vol électronique conforme EASA, FAA et CASA : saisie rapide, calcul automatique du temps de nuit, exports officiels, licences, FTL et roster. Pour pilotes de ligne, d'affaires et privés."
   },
   "nav": {
     "features": "Fonctionnalités",
@@ -85,7 +85,7 @@
       },
       "ftl": {
         "title": "Temps de repos et limites FTL",
-        "text": "Temps de service de vol et de repos calculés selon EASA ORO.FTL à partir de vos vols et de votre roster, avec alertes avant dépassement.",
+        "text": "Temps de service de vol et de repos calculés selon EASA ORO.FTL ou EU-OPS Subpart Q (aviation d'affaires) à partir de vos vols et de votre roster, avec alertes avant dépassement.",
         "points": [
           "FDP maximum selon l'heure de présentation",
           "Cumuls 7 j, 14 j, 28 j, 12 mois",
@@ -1714,7 +1714,7 @@
     "title": "Conçu comme un instrument de bord",
     "items": [
       {
-        "t": "Conforme EASA d'origine",
+        "t": "Conforme EASA, FAA et CASA",
         "d": "Les colonnes de l'AMC1 FCL.050, la définition EASA de la nuit et l'expérience récente FCL.060. Exports FAA et CASA inclus."
       },
       {
@@ -1768,7 +1768,7 @@
       "label": "02 · Votre machine",
       "title": "Votre {name}. Vos colonnes, sans y penser.",
       "titleGeneric": "Votre avion. Vos colonnes, sans y penser.",
-      "text": "Geardown connaît votre type : chaque vol alimente automatiquement les bonnes colonnes du carnet EASA, les totaux par type et votre expérience récente.",
+      "text": "Geardown connaît votre type : chaque vol alimente les bonnes colonnes de votre carnet, EASA, FAA ou CASA, les totaux par type et votre expérience récente.",
       "icao": "Type OACI",
       "rating": "Qualification",
       "engines": "Motorisation",
@@ -1826,8 +1826,8 @@
   },
   "seo": {
     "home": {
-      "title": "Geardown — Carnet de vol électronique EASA pour pilotes",
-      "description": "Carnet de vol électronique conforme EASA Part-FCL : temps de nuit calculé automatiquement, export PDF officiel, licences, FTL, roster, offres d'emploi pilote et CV. Essai gratuit, web, iOS et Android."
+      "title": "Geardown — Carnet de vol électronique pour pilotes (EASA, FAA, CASA)",
+      "description": "Carnet de vol électronique conforme EASA, FAA et CASA : temps de nuit calculé automatiquement, export PDF officiel, licences, FTL, roster, offres d'emploi pilote et CV. Essai gratuit, web, iOS et Android."
     },
     "features": {
       "title": "Fonctionnalités du carnet de vol électronique",
@@ -1839,7 +1839,7 @@
     },
     "airlines": {
       "title": "Carnet de vol électronique pour compagnies et écoles",
-      "description": "Geardown pour les compagnies, opérateurs d'affaires et écoles de pilotage : rosters importés, suivi des licences de l'équipage, conformité EASA et exports officiels."
+      "description": "Geardown pour les compagnies, opérateurs d'affaires et écoles de pilotage : rosters importés, suivi des licences de l'équipage, conformité EASA, FAA et CASA, exports officiels."
     },
     "blog": {
       "title": "Blog — réglementation EASA et métier de pilote",
