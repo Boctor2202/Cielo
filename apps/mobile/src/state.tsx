@@ -24,6 +24,7 @@ import { getSession, onAuthChange, signOut as authSignOut, supabase } from "./au
 import { startSync, type SyncHandle } from "./sync";
 import { cancelAllLicenseAlerts, scheduleLicenseAlerts } from "./notifications";
 import { setSyncStatus } from "./syncStatus";
+import { currencyFor, scheduleCurrencyAlerts } from "./currencyAlerts";
 import { identify } from "./purchases";
 
 export interface AppData {
@@ -106,6 +107,7 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
       if (loaded.licenses.some((l) => l.validUntil)) {
         void scheduleLicenseAlerts(loaded.licenses, translator(loaded.pilot.locale), loaded.pilot.locale, false).catch(() => undefined);
       }
+      void scheduleCurrencyAlerts(currencyFor(loaded.flights, loaded.aircraftTypes, loaded.licenses, loaded.pilot), translator(loaded.pilot.locale), loaded.pilot.locale).catch(() => undefined);
     })().catch((e: unknown) => setError(e instanceof Error ? e : new Error(String(e))));
   }, []);
 
@@ -115,6 +117,7 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
     setData(next);
     // documents may have arrived from the cloud: keep the reminders in step (no permission prompt here)
     void scheduleLicenseAlerts(next.licenses, translator(next.pilot.locale), next.pilot.locale, false).catch(() => undefined);
+    void scheduleCurrencyAlerts(currencyFor(next.flights, next.aircraftTypes, next.licenses, next.pilot), translator(next.pilot.locale), next.pilot.locale).catch(() => undefined);
   }, [store]);
 
   // Auth session (cloud mode only).
@@ -160,6 +163,8 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
       const next = await loadAll(store);
       setData(next);
       if (table === "licenses") void scheduleLicenseAlerts(next.licenses, t, locale).catch(() => undefined);
+      if (table === "flights" || table === "licenses" || table === "pilots")
+        void scheduleCurrencyAlerts(currencyFor(next.flights, next.aircraftTypes, next.licenses, next.pilot), t, locale).catch(() => undefined);
       void syncRef.current?.refresh().catch(() => undefined);
       void syncRef.current?.syncNow().catch(() => undefined);
       return rec;

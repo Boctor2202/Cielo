@@ -57,6 +57,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="stats" options={sub(t("stats.title"))} />
       <Tabs.Screen name="reports" options={sub(t("logReport.title"))} />
       <Tabs.Screen name="drafts" options={sub(t("drafts.title"))} />
+      <Tabs.Screen name="currency" options={sub(t("cur.title"))} />
       <Tabs.Screen name="reminders" options={sub(t("rem.title"))} />
       <Tabs.Screen name="profile" options={sub(t("profile.title"))} />
       <Tabs.Screen name="audit" options={sub(t("audit.title"))} />

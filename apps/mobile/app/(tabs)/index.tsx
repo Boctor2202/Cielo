@@ -20,6 +20,7 @@ import { AccessBanner } from "../../src/components/Access";
 import { todayUtc, useApp } from "../../src/state";
 import { useFtlSettings } from "../../src/ftlSettings";
 import { loadDismissed, pendingDrafts } from "../../src/flightDrafts";
+import { useCurrency } from "../../src/currency";
 import { space, useTheme } from "../../src/theme";
 
 const FTL_KEYS = ["duty7d", "duty14d", "duty28d", "flight28d", "flightYear", "flight12m"] as const;
@@ -36,6 +37,8 @@ export default function Dashboard() {
 
   const periods = useMemo(() => dashboardPeriods(flights, balances, today), [flights, balances, today]);
   const recency = useMemo(() => computeRecency(flights, today), [flights, today]);
+  // per type or class rating, with the pilot's rules (EASA / FAA)
+  const currency = useCurrency();
   const { settings: ftlSettings } = useFtlSettings();
   const ftl = useMemo(() => analyseFtl(buildDutyPeriods(flights, ftlSettings), new Date().toISOString(), ftlSettings), [flights, ftlSettings]);
   const expiries = useMemo(
@@ -68,8 +71,8 @@ export default function Dashboard() {
     <Stat label={label} value={fmt(p.totalMin)} sub={t("dash.flights", { n: p.flights })} />
   );
 
-  const recencyRow = (label: string, r: typeof recency.passengers) => (
-    <Row style={{ alignItems: "flex-start" }}>
+  const recencyRow = (label: string, r: { valid: boolean; validUntil?: string; takeoffs: number; landings: number; key?: string }) => (
+    <Row key={r.key ?? label} style={{ alignItems: "flex-start" }}>
       <View style={{ paddingTop: 5 }}>
         <Dot color={r.valid ? c.success : c.warning} />
       </View>
@@ -172,10 +175,21 @@ export default function Dashboard() {
           </Row>
         </Card>
 
-        <Card>
-          <Txt variant="h2">{t("dash.recency")}</Txt>
-          {recencyRow(t("dash.recencyPax"), recency.passengers)}
-          {recencyRow(t("dash.recencyNight"), recency.night)}
+        <Card onPress={() => router.navigate("/currency")}>
+          <Row style={{ justifyContent: "space-between", alignItems: "baseline" }}>
+            <Txt variant="h2">{t("dash.recency")}</Txt>
+            <Txt variant="small" color={currency.alerts.length ? c.warning : c.success} style={{ fontWeight: "700" }}>
+              {currency.items.length ? (currency.alerts.length ? t("cur.alerts", { n: currency.alerts.length }) : t("cur.allGood")) : ""}
+            </Txt>
+          </Row>
+          {currency.items.length
+            ? (currency.alerts.length ? currency.alerts : currency.items.filter((i) => i.kind === "passengers")).slice(0, 3).map((i) =>
+                recencyRow(`${t(`cur.kind.${i.kind}` as I18nKey)}${i.group === "all" ? "" : ` · ${i.group}`}`, i),
+              )
+            : <>
+                {recencyRow(t("dash.recencyPax"), recency.passengers)}
+                {recencyRow(t("dash.recencyNight"), recency.night)}
+              </>}
           {recency.lastFlightDate ? (
             <Txt variant="small">
               {t("dash.lastFlight", { date: formatDate(recency.lastFlightDate, locale), n: recency.daysSinceLastFlight ?? 0 })}
