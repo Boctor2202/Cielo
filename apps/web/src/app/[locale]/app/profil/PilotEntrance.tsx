@@ -3,6 +3,8 @@
 import { UserRound } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
+import { rankStripes } from "@cielo/core";
+import { Epaulette } from "@/components/app/Epaulette";
 
 /** Profile hero: the crew badge, still, on the left of the apron photo. */
 
@@ -45,6 +47,7 @@ export function PilotEntrance({ photo, name, rank, employer, base }: { photo?: s
               <p className="mono-label !text-[10px] !text-[#86efac]">{t("crew")}</p>
               <p className="truncate font-display text-xl font-semibold leading-tight">{name || t("noName")}</p>
               {rank && <p className="truncate text-sm text-white/80">{rank}</p>}
+              {rankStripes(rank) ? <Epaulette stripes={rankStripes(rank)!} title={rank} className="mt-2 drop-shadow-[0_4px_10px_rgba(0,0,0,.5)]" /> : null}
             </div>
           </div>
           <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 text-xs text-white/70">

@@ -18,3 +18,17 @@ describe("dayPart", () => {
     expect(dayPart(new Date(2026, 10, 18, 2, 0))).toBe("evening");
   });
 });
+
+import { rankStripes } from "../src/profile";
+describe("rankStripes", () => {
+  it("reads the rank", () => {
+    expect(rankStripes("Captain")).toBe(4);
+    expect(rankStripes("Commandant de bord")).toBe(4);
+    expect(rankStripes("First Officer")).toBe(3);
+    expect(rankStripes("Senior First Officer")).toBe(3);
+    expect(rankStripes("Officier pilote de ligne")).toBe(3);
+    expect(rankStripes("Student Pilot")).toBe(2);
+    expect(rankStripes("Élève pilote")).toBe(2);
+    expect(rankStripes("Private Pilot")).toBeUndefined();
+  });
+});

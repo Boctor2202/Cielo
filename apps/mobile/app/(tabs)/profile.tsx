@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { formatPhoneIntl, AUTHORITIES, RANKS, countryName, type Pilot } from "@cielo/core";
+import { formatPhoneIntl, AUTHORITIES, RANKS, countryName, rankStripes, type Pilot } from "@cielo/core";
+import { Epaulette } from "../../src/components/Epaulette";
 import { CountryField } from "../../src/components/CountryField";
 import { Button, Card, Field, Row, Screen, Txt } from "../../src/components/ui";
 import { SuggestField } from "../../src/components/SuggestField";
@@ -84,6 +85,7 @@ export default function Profile() {
           <View style={{ flex: 1, gap: 2 }}>
             <Txt variant="h2">{pilot.fullName || "—"}</Txt>
             <Txt variant="muted">{[pilot.rank, pilot.employer, pilot.homeBaseIcao].filter(Boolean).join(" · ")}</Txt>
+            {rankStripes(pilot.rank) ? <View style={{ marginTop: 4 }}><Epaulette stripes={rankStripes(pilot.rank)!} /></View> : null}
           </View>
         </Row>
         {!pilot.photoDataUrl ? <Txt variant="small">{t("profile.photoHint")}</Txt> : null}
