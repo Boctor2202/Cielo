@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Pressable, View } from "react-native";
-import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, LinearGradient, Rect, Stop, Text as SvgText } from "react-native-svg";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { formatDuration, type Flight, type GoalProgress, type Totals } from "@cielo/core";
 import { Roll } from "./Roll";
@@ -35,7 +35,8 @@ function MonthBars({ months, width, height = 70 }: { months: { label: string; to
   const max = Math.max(1, ...months.map((m) => m.total));
   const slot = width / Math.max(1, months.length);
   const w = Math.min(18, slot * 0.62);
-  const h = (v: number) => (v / max) * (height - 4);
+  // room above the bars for their value
+  const h = (v: number) => (v / max) * (height - 16);
   return (
     <View style={{ gap: 4 }}>
       <Svg width={width} height={height}>
@@ -51,6 +52,11 @@ function MonthBars({ months, width, height = 70 }: { months: { label: string; to
             <React.Fragment key={i}>
               {m.total > 0 ? <Rect x={x} y={height - h(m.total)} width={w} height={h(m.total)} rx={3} fill="url(#bar)" /> : <Rect x={x} y={height - 2} width={w} height={2} rx={1} fill={c.muted} opacity={0.3} />}
               {m.night > 0 ? <Rect x={x} y={height - h(m.night)} width={w} height={h(m.night)} rx={2} fill={INDIGO} /> : null}
+              {m.total > 0 ? (
+                <SvgText x={i * slot + slot / 2} y={height - h(m.total) - 4} fontSize={9} fontWeight="700" fill={c.text} textAnchor="middle">
+                  {String(Math.round(m.total))}
+                </SvgText>
+              ) : null}
             </React.Fragment>
           );
         })}

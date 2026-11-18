@@ -381,13 +381,12 @@ export default function GlassWorkspace({
     (sum, point) => sum + nonnegative(point.expenses),
     0,
   );
-  const chartMaximum = Math.max(
-    1,
-    ...points.flatMap((point) => [
-      nonnegative(point.income),
-      nonnegative(point.expenses),
-    ]),
-  );
+  // a round scale above the highest value (minutes): steps of 1, 2, 5, 10, 20, 25, 50… hours, four at most
+  const highest = Math.max(1, ...points.flatMap((point) => [nonnegative(point.income), nonnegative(point.expenses)]));
+  const chartStep =
+    [15, 30, 60, 120, 300, 600, 1200, 1500, 3000, 6000, 12000, 30000, 60000].find((step) => highest / step <= 4) ?? Math.ceil(highest / 4);
+  const chartMaximum = Math.ceil(highest / chartStep) * chartStep;
+  const chartTicks = Array.from({ length: chartMaximum / chartStep + 1 }, (_, i) => chartMaximum - i * chartStep);
   // bars: one slot per period, the bar centred in it
   const slot = 600 / Math.max(1, points.length);
   const chartX = (index: number) => (index + 0.5) * slot;
@@ -533,10 +532,11 @@ export default function GlassWorkspace({
   const chart = points.length ? (
     <div className="gw-chart-wrap">
       <div className="gw-chart-labels">
-        <span>{format(chartMaximum)}</span>
-        <span>{format(chartMaximum / 2)}</span>
-        <span>{format(0)}</span>
+        {chartTicks.map((tick) => (
+          <span key={tick}>{format(tick)}</span>
+        ))}
       </div>
+      <div className="gw-chart-plot">
       <svg
         viewBox="0 0 600 185"
         role="img"
@@ -557,7 +557,7 @@ export default function GlassWorkspace({
             <stop offset="1" stopColor="var(--gw-accent)" stopOpacity=".55" />
           </linearGradient>
         </defs>
-        {[20, 100, 180].map((y) => (
+        {chartTicks.map((tick) => chartY(tick)).map((y) => (
           <path
             key={y}
             d={`M0 ${y} H600`}
@@ -587,6 +587,19 @@ export default function GlassWorkspace({
           );
         })}
       </svg>
+      {/* each bar's total above it (HTML, the drawing is stretched) */}
+      {points.length <= 16 && (
+        <div className="gw-bar-values" aria-hidden="true">
+          {points.map((point, index) =>
+            nonnegative(point.income) > 0 ? (
+              <span key={`${point.label}-${index}`} style={{ left: `${chartX(index) / 6}%`, top: `${(chartY(point.income) / 185) * 100}%` }}>
+                {format(nonnegative(point.income))}
+              </span>
+            ) : null,
+          )}
+        </div>
+      )}
+      </div>
       <div className="gw-chart-months">
         {points.map(
           (point, index) =>
@@ -1910,8 +1923,25 @@ const styles = `
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 10px;
   color: var(--gw-muted);
+}
+.gw-chart-plot {
+  position: relative;
+}
+.gw-bar-values {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.gw-bar-values > span {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 3px));
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--gw-ink);
 }
 .gw-chart-months {
   position: relative;
