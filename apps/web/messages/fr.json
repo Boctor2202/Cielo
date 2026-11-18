@@ -532,7 +532,10 @@
         "goalKind_landings": "{n} atterrissages",
         "goalEta": "≈ {date} à votre rythme",
         "goalLate": "(après l'échéance)",
-        "goalNoPace": "aucun vol sur les 12 derniers mois"
+        "goalNoPace": "aucun vol sur les 12 derniers mois",
+        "greet_morning": "Bonjour {name}",
+        "greet_afternoon": "Bon après-midi {name}",
+        "greet_evening": "Bonsoir {name}"
       }
     },
     "logbook": {

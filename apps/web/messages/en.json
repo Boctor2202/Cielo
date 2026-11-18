@@ -532,7 +532,10 @@
         "goalKind_landings": "{n} landings",
         "goalEta": "≈ {date} at your pace",
         "goalLate": "(after the deadline)",
-        "goalNoPace": "no flying in the last 12 months"
+        "goalNoPace": "no flying in the last 12 months",
+        "greet_morning": "Good morning {name}",
+        "greet_afternoon": "Good afternoon {name}",
+        "greet_evening": "Good evening {name}"
       }
     },
     "logbook": {

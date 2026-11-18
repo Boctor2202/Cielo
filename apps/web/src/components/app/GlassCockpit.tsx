@@ -3,7 +3,7 @@
 import { Award, Clock, Cloud, Moon, Plane, Plus, SlidersHorizontal, Sun, Target, Users } from "lucide-react";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocale, useMessages } from "next-intl";
-import { addDays, pilotFirstName, computeRecency, defaultGoals, goalProgress, isHourGoal, licenseStatus, type Flight, type License, type OpeningBalance, type Pilot } from "@cielo/core";
+import { addDays, dayPart, pilotFirstName, computeRecency, defaultGoals, goalProgress, isHourGoal, licenseStatus, type Flight, type License, type OpeningBalance, type Pilot } from "@cielo/core";
 import GlassWorkspace, {
   type GlassSettings,
   type WorkspaceCashFlowPeriod,
@@ -302,6 +302,19 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
   }, [flights, opening, licenses, today, locale, fd, types, g, auditIssues, auditHref]);
 
   const first = pilotFirstName(pilot);
+  // "Good morning / afternoon / evening", by the hour on this device (set after mounting: the server has no local time)
+  const [part, setPart] = useState<"morning" | "afternoon" | "evening" | null>(null);
+  useEffect(() => {
+    const tick = () => setPart(dayPart());
+    tick();
+    const t = setInterval(tick, 300_000);
+    return () => clearInterval(t);
+  }, []);
+  const labels = useMemo(() => {
+    const greet = part ? g[`greet_${part}`] : undefined;
+    // without a name in the profile: the greeting alone
+    return greet ? { ...g, welcome: greet, yourWorkspace: greet.replace(/\s*\{name\}/, "") } : g;
+  }, [g, part]);
 
   return (
     <>
@@ -360,7 +373,7 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
       categoryIcon={() => Plane}
       breakdown={data.breakdown}
       reportIcons={[Plane, Moon, Sun]}
-      labels={g}
+      labels={labels}
       useHostTheme
       style={HOST_TOKENS}
     />

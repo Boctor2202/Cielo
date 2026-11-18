@@ -14,6 +14,7 @@ import {
   formatDuration,
   goalProgress,
   pilotFirstName,
+  dayPart,
   licenseStatus,
   type Totals,
 } from "@cielo/core";
@@ -99,7 +100,7 @@ export default function Dashboard() {
     <View style={{ flex: 1 }}>
       <Screen columns>
         <View style={{ gap: 2, marginTop: 4 }}>
-          <Txt variant="muted">{[locale === "fr" ? "Bonjour" : "Hello", pilotFirstName(pilot)].filter(Boolean).join(" ")}</Txt>
+          <Txt variant="muted">{[t(`dash.greet_${dayPart()}` as I18nKey), pilotFirstName(pilot)].filter(Boolean).join(" ")}</Txt>
           <Txt variant="title">{locale === "fr" ? "Vue d'ensemble" : "Overview"}</Txt>
         </View>
 
