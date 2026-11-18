@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Alert, LayoutAnimation, Platform, Pressable, UIManager, View } from "react-native";
-import { SvgXml } from "react-native-svg";
-import * as FLAGS from "country-flag-icons/string/3x2";
+import { Flag } from "../../src/components/Flag";
 import { countryName, layoverStays, nightsByCountry } from "@cielo/core";
 import { EXPORT_EN, buildXlsx } from "@cielo/export";
 import { Button, Card, EmptyState, Row, Screen, Segmented, Stat, Txt } from "../../src/components/ui";
@@ -13,15 +12,6 @@ import { space, useTheme } from "../../src/theme";
 
 if (Platform.OS === "android") UIManager.setLayoutAnimationEnabledExperimental?.(true);
 
-/** A round flag: the 3:2 flag cropped to a circle. */
-function Flag({ code, size = 26 }: { code: string; size?: number }) {
-  const svg = (FLAGS as Record<string, string>)[code];
-  return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, overflow: "hidden", backgroundColor: "rgba(127,127,127,0.25)" }}>
-      {svg ? <SvgXml xml={svg.replace("<svg ", '<svg preserveAspectRatio="xMidYMid slice" ')} width={size} height={size} /> : null}
-    </View>
-  );
-}
 
 /**
  * Nights spent on layover per country and year, from the logbook: what a pilot needs for the "frais réels"
