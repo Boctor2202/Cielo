@@ -1134,7 +1134,13 @@
           "TML": "time-limited validity",
           "RXO": "specialist eye examination"
         }
-      }
+      },
+      "nextExpiry": "Next expiry",
+      "daysUnit": "days left",
+      "sumValid": "Valid",
+      "sumSoon": "Expiring",
+      "sumExpired": "Expired",
+      "noExpiryHint": "No expiry date"
     },
     "stats": {
       "title": "Statistics",

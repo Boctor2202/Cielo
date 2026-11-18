@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, Bell, Plus, Trash2 } from "lucide-react";
+import { Award, BadgeCheck, Bell, CalendarClock, FileText, HeartPulse, IdCard, Languages, Moon, Plane, Plus, Radio, ShieldCheck, Trash2, Users, type LucideIcon } from "lucide-react";
 import { AircraftTypeInput } from "@/components/app/AircraftTypeInput";
 import { useTypes } from "@/lib/hooks";
 import { AuthorityInput } from "@/components/app/AuthorityInput";
@@ -11,6 +11,22 @@ import { Badge, Card, Empty, Field, Modal, PageTitle, type Level } from "@/compo
 import { useFlights, useFormatDate, useTable, useToday } from "@/lib/hooks";
 import { saveLicense, softDelete } from "@/lib/repo";
 import { localStore } from "@/lib/db";
+
+// each kind of document: its icon and colour
+const KIND_LOOK: Partial<Record<LicenseKind, { icon: LucideIcon; tone: string }>> = {
+  licence: { icon: IdCard, tone: "#22C55E" },
+  type_rating: { icon: Plane, tone: "#38BDF8" },
+  rating: { icon: Plane, tone: "#38BDF8" },
+  class_rating: { icon: Award, tone: "#818CF8" },
+  skill_rating: { icon: Award, tone: "#A78BFA" },
+  medical: { icon: HeartPulse, tone: "#F43F5E" },
+  language: { icon: Languages, tone: "#F59E0B" },
+  radio: { icon: Radio, tone: "#2DD4BF" },
+  insurance: { icon: ShieldCheck, tone: "#64748B" },
+};
+const lookOf = (k: LicenseKind) => KIND_LOOK[k] ?? { icon: FileText, tone: "#94A3B8" };
+// colour of the time left
+const STATE_TONE = { ok: "#22C55E", info: "#38BDF8", caution: "#F59E0B", warning: "#EF4444", neutral: "#94A3B8" } as const;
 
 type Draft = Omit<License, "id" | "createdAt" | "updatedAt" | "pilotId"> & { id?: string };
 // display groups: the older single "rating" category is shown with the type ratings
@@ -54,38 +70,127 @@ export default function DocumentsPage() {
   const level = (s: ReturnType<typeof licenseStatus>): Level =>
     s.state === "expired" ? "warning" : s.state === "expiring" ? ((s.daysLeft ?? 99) <= 30 ? "caution" : "info") : s.state === "valid" ? "ok" : "neutral";
 
+  // how much of the validity is left (from the issue date, else a year)
+  const left = (l: License, s: ReturnType<typeof licenseStatus>) => {
+    if (s.daysLeft === undefined || !l.validUntil) return undefined;
+    const span = l.issuedOn ? Math.max(1, Math.round((Date.parse(l.validUntil) - Date.parse(l.issuedOn)) / 86_400_000)) : 365;
+    return Math.max(0, Math.min(1, s.daysLeft / span));
+  };
+  const summary = useMemo(() => {
+    const all = (licenses ?? []).filter((l) => !l.deletedAt).map((l) => ({ l, s: licenseStatus(l, today) }));
+    const dated = all.filter((x) => x.s.daysLeft !== undefined && x.s.state !== "expired").sort((a, b) => a.s.daysLeft! - b.s.daysLeft!);
+    return {
+      next: dated[0],
+      valid: all.filter((x) => x.s.state === "valid" || x.s.state === "no_expiry").length,
+      soon: all.filter((x) => x.s.state === "expiring").length,
+      expired: all.filter((x) => x.s.state === "expired").length,
+    };
+  }, [licenses, today]);
+
   return (
     <>
       <PageTitle title={t("title")} subtitle={t("subtitle")} actions={<button type="button" className="btn btn-primary btn-sm" onClick={() => setDraft(blank())}><Plus size={15} /> {t("add")}</button>} />
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-5">
           {licenses && groups.length === 0 && <Card><Empty icon={<BadgeCheck size={36} />} text={t("empty")} /></Card>}
-          {groups.map((g) => (
-            <Card key={g.k} title={t(`kinds.${g.k}`)} pad={false}>
-              <ul className="divide-y divide-border">
-                {g.items.map(({ l, s }) => (
-                  <li key={l.id}>
-                    <button type="button" className="flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left hover:bg-surface-2" onClick={() => setDraft(l)}>
+          {groups.length > 0 && (
+            <div className="grid gap-3 sm:grid-cols-[1.4fr_1fr]">
+              {summary.next ? (() => {
+                const { l, s } = summary.next;
+                const tone = STATE_TONE[level(s)];
+                const Icon = lookOf(l.kind).icon;
+                return (
+                  <button type="button" onClick={() => setDraft(l)} className="group relative overflow-hidden rounded-2xl border border-border bg-surface/70 p-5 text-left backdrop-blur transition hover:-translate-y-0.5">
+                    <div aria-hidden className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full blur-3xl" style={{ background: tone, opacity: 0.18 }} />
+                    <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted"><CalendarClock size={14} /> {t("nextExpiry")}</p>
+                    <div className="relative mt-3 flex items-end justify-between gap-4">
                       <div className="min-w-0">
-                        <p className="font-semibold">{l.code}</p>
-                        <p className="truncate text-xs text-muted">{[l.authority, l.number, l.validUntil && `${t("validUntil")} ${fd(l.validUntil)}`].filter(Boolean).join(" · ")}</p>
+                        <p className="flex items-center gap-2 truncate text-xl font-bold"><Icon size={20} style={{ color: lookOf(l.kind).tone }} /> {l.code}</p>
+                        <p className="mt-1 text-sm text-muted">{l.validUntil ? `${t("validUntil")} ${fd(l.validUntil)}` : ""}</p>
                       </div>
-                      <Badge level={level(s)}>
-                        {s.state === "no_expiry" ? t("state.no_expiry") : s.state === "expired" ? t("expiredSince", { count: -(s.daysLeft ?? 0) }) : t("daysLeft", { count: s.daysLeft ?? 0 })}
-                      </Badge>
-                    </button>
-                  </li>
+                      <div className="shrink-0 text-right">
+                        <p className="num text-4xl font-bold leading-none" style={{ color: tone }}>{s.daysLeft}</p>
+                        <p className="mt-1 text-xs text-muted">{t("daysUnit")}</p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })() : <div />}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { n: summary.valid, label: t("sumValid"), tone: STATE_TONE.ok },
+                  { n: summary.soon, label: t("sumSoon"), tone: STATE_TONE.caution },
+                  { n: summary.expired, label: t("sumExpired"), tone: STATE_TONE.warning },
+                ].map((x) => (
+                  <div key={x.label} className="flex flex-col justify-between rounded-2xl border border-border bg-surface/70 p-4 backdrop-blur">
+                    <span className="h-1.5 w-8 rounded-full" style={{ background: x.tone, opacity: x.n ? 1 : 0.35 }} />
+                    <div>
+                      <p className="num mt-3 text-3xl font-bold leading-none">{x.n}</p>
+                      <p className="mt-1 text-xs text-muted">{x.label}</p>
+                    </div>
+                  </div>
                 ))}
-              </ul>
-            </Card>
-          ))}
+              </div>
+            </div>
+          )}
+          {groups.map((g) => {
+            const look = lookOf(g.k);
+            return (
+              <section key={g.k} className="space-y-3">
+                <h2 className="flex items-center gap-2 text-lg font-semibold">
+                  <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: `color-mix(in srgb, ${look.tone} 20%, transparent)`, color: `color-mix(in srgb, ${look.tone} 75%, var(--text))` }}><look.icon size={15} /></span>
+                  {t(`kinds.${g.k}`)}
+                  <span className="text-sm font-normal text-muted">{g.items.length}</span>
+                </h2>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {g.items.map(({ l, s }) => {
+                    const lvl = level(s);
+                    const tone = STATE_TONE[lvl];
+                    const ratio = left(l, s);
+                    return (
+                      <button key={l.id} type="button" onClick={() => setDraft(l)} className="group relative overflow-hidden rounded-2xl border border-border bg-surface/70 p-4 text-left backdrop-blur transition hover:-translate-y-0.5 hover:border-[color:var(--accent)]/40">
+                        <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: tone }} />
+                        <div className="flex items-start justify-between gap-3 pl-1">
+                          <div className="min-w-0">
+                            <p className="line-clamp-2 text-lg font-bold leading-snug">{l.code}</p>
+                            <p className="mt-0.5 truncate text-xs text-muted">{[l.authority, l.number].filter(Boolean).join(" · ") || "—"}</p>
+                          </div>
+                          <Badge level={lvl}>
+                            {s.state === "no_expiry" ? t("state.no_expiry") : s.state === "expired" ? t("expiredSince", { count: -(s.daysLeft ?? 0) }) : t("daysLeft", { count: s.daysLeft ?? 0 })}
+                          </Badge>
+                        </div>
+                        {ratio !== undefined ? (
+                          <div className="mt-4 pl-1">
+                            <div className="h-1.5 overflow-hidden rounded-full bg-[color:var(--text)]/10">
+                              <div className="h-full rounded-full transition-[width] duration-700" style={{ width: `${Math.max(3, ratio * 100)}%`, background: tone }} />
+                            </div>
+                            <p className="num mt-1.5 text-xs text-muted">{t("validUntil")} {fd(l.validUntil!)}</p>
+                          </div>
+                        ) : (
+                          <p className="mt-4 pl-1 text-xs text-muted">{t("noExpiryHint")}</p>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
         </div>
         <div className="min-w-0 space-y-5">
           {recency && (
             <Card title={t("recency")}>
               <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between"><span>{td("recencyPax")}</span><Badge level={recency.passengers.valid ? "ok" : "warning"}>{recency.passengers.valid ? fd(recency.passengers.validUntil) : `${recency.passengers.landings}/3`}</Badge></div>
-                <div className="flex items-center justify-between"><span>{td("recencyNight")}</span><Badge level={recency.night.valid ? "ok" : "warning"}>{recency.night.valid ? fd(recency.night.validUntil) : "0/1"}</Badge></div>
+                {[
+                  { icon: Users, tone: "#F59E0B", label: td("recencyPax"), ok: recency.passengers.valid, v: recency.passengers.valid ? fd(recency.passengers.validUntil) : `${recency.passengers.landings}/3` },
+                  { icon: Moon, tone: "#818CF8", label: td("recencyNight"), ok: recency.night.valid, v: recency.night.valid ? fd(recency.night.validUntil) : "0/1" },
+                ].map((x) => (
+                  <div key={x.label} className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl" style={{ background: `color-mix(in srgb, ${x.tone} 20%, transparent)`, color: `color-mix(in srgb, ${x.tone} 75%, var(--text))` }}><x.icon size={17} /></span>
+                    <span className="min-w-0 flex-1">{x.label}</span>
+                    <Badge level={x.ok ? "ok" : "warning"}>{x.v}</Badge>
+                  </div>
+                ))}
               </div>
             </Card>
           )}

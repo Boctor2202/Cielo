@@ -1134,7 +1134,13 @@
           "TML": "validité limitée dans le temps",
           "RXO": "examen ophtalmologique spécialisé"
         }
-      }
+      },
+      "nextExpiry": "Prochaine échéance",
+      "daysUnit": "jours restants",
+      "sumValid": "Valides",
+      "sumSoon": "Bientôt",
+      "sumExpired": "Expirés",
+      "noExpiryHint": "Sans date d'expiration"
     },
     "stats": {
       "title": "Statistiques",

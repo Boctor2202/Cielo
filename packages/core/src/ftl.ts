@@ -67,6 +67,8 @@ export const SPLIT_MIN_BREAK = 3 * 60;
 const SPLIT_DUTIES_MIN = 30;
 /** Longest FDP extension (ORO.FTL.205(d)): overruns within it are warnings. */
 export const FDP_EXTENSION_MAX = 60;
+/** Roster events this long are whole-day markers (availability, standby days), not timed duties. */
+const ALL_DAY_MIN = 16 * 60;
 /** Shortest rest the rules allow (away from base, ORO.FTL.235(b)). */
 const MIN_REST_AWAY = 10 * 60;
 
@@ -231,6 +233,10 @@ export function dutyPeriodsFromRoster(events: RosterEvent[], settings: FtlSettin
   const duties: DutyPeriod[] = [];
   const sorted = events
     .filter((e) => !e.deletedAt && ["FLIGHT", "DEADHEAD", "SIM", "GROUND", "STANDBY"].includes(e.kind))
+    // a whole-day marker (an "ON" availability or standby day, 16 h or more) is not a duty period to chain flights
+    // into, and a flight without its two airports is not a sector
+    .filter((e) => minutesBetween(e.startUtc, e.endUtc) < ALL_DAY_MIN)
+    .filter((e) => e.kind !== "FLIGHT" || (e.depIcao && e.arrIcao))
     .sort((a, b) => a.startUtc.localeCompare(b.startUtc));
   let cur: DutyPeriod | null = null;
   for (const e of sorted) {
