@@ -25,6 +25,7 @@ export default function StatsPage() {
   const opening = useTable("opening_balances");
   const airports = useAirports();
   const pilot = usePilot();
+  const airportOf = useCallback((icao: string) => airports?.get(icao), [airports]);
   const countryOf = useCallback((icao: string) => airports?.get(icao)?.country, [airports]);
   const d = useDuration();
   const [year, setYear] = useState("");
@@ -88,7 +89,7 @@ export default function StatsPage() {
           </select>
         }
       />
-      {flights && <div className="mb-5"><Achievements flights={flights} opening={opening ?? []} /></div>}
+      {flights && <div className="mb-5"><Achievements flights={flights} opening={opening ?? []} airport={airportOf} /></div>}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Readout
           label={t("distance")}

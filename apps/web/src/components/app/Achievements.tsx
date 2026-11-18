@@ -1,9 +1,10 @@
 "use client";
 
-import { Flame } from "lucide-react";
+import { Earth, Flame, Globe2, MapPin, Moon, MoonStar, PenLine, Plane, type LucideIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { HOUR_LEVELS, hourLevel, loggingStreak, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
+import { discoveryBadges, HOUR_LEVELS, hourLevel, loggingStreak, type DiscoveryId, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
+import { useFormatDate } from "@/lib/hooks";
 import { Card } from "./ui";
 
 const TIER: Record<Tier, [string, string]> = {
@@ -11,6 +12,20 @@ const TIER: Record<Tier, [string, string]> = {
   silver: ["#E6EBF2", "#8C99AB"],
   gold: ["#F6D77A", "#B8871F"],
   platinum: ["#C7F0FF", "#5B8DB8"],
+};
+
+const DISCOVERY: Record<DiscoveryId, { icon: LucideIcon; tone: string }> = {
+  firstNight: { icon: Moon, tone: "#818CF8" },
+  nightLandings100: { icon: MoonStar, tone: "#6366F1" },
+  airports10: { icon: MapPin, tone: "#38BDF8" },
+  airports50: { icon: MapPin, tone: "#0EA5E9" },
+  airports100: { icon: MapPin, tone: "#0284C7" },
+  countries5: { icon: Globe2, tone: "#F59E0B" },
+  countries10: { icon: Globe2, tone: "#F97316" },
+  countries25: { icon: Globe2, tone: "#EF4444" },
+  earthLap: { icon: Earth, tone: "#22C55E" },
+  types3: { icon: Plane, tone: "#2DD4BF" },
+  firstSigned: { icon: PenLine, tone: "#E879F9" },
 };
 
 /** A round medal with the hours on it; grey and dimmed while locked. */
@@ -36,13 +51,17 @@ function Medal({ hours, tier, locked, size = 56 }: { hours: number; tier: Tier; 
   );
 }
 
-export function Achievements({ flights, opening }: { flights: Flight[]; opening: OpeningBalance[] }) {
+export function Achievements({ flights, opening, airport }: { flights: Flight[]; opening: OpeningBalance[]; airport: (icao: string) => { country?: string; lat: number; lon: number } | undefined }) {
   const t = useTranslations("app.badges");
   const level = useMemo(() => hourLevel(flights, opening), [flights, opening]);
   const streak = useMemo(() => loggingStreak(flights), [flights]);
   const h = Math.floor(level.totalMin / 60);
+  const discoveries = useMemo(() => discoveryBadges(flights, airport), [flights, airport]);
+  const fd = useFormatDate();
+  const nf = (n: number) => Math.floor(n).toLocaleString();
 
   return (
+    <div className="space-y-5">
     <div className="grid gap-5 lg:grid-cols-2">
       <Card title={t("levels")}>
         <div className="flex items-center gap-4">
@@ -95,6 +114,35 @@ export function Achievements({ flights, opening }: { flights: Flight[]; opening:
         </div>
         <p className="mt-2 text-xs text-muted">{t("hint")}</p>
       </Card>
+    </div>
+    <Card title={`${t("discoveries")} · ${discoveries.filter((b) => b.unlocked).length}/${discoveries.length}`}>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {discoveries.map((b) => {
+          const look = DISCOVERY[b.id];
+          return (
+            <div key={b.id} className={`rounded-2xl border p-3.5 transition ${b.unlocked ? "border-border bg-surface/60" : "border-dashed border-border/70 opacity-70"}`}>
+              <span
+                className="grid h-11 w-11 place-items-center rounded-full"
+                style={b.unlocked ? { background: `radial-gradient(circle at 35% 30%, ${look.tone}, color-mix(in srgb, ${look.tone} 55%, #000))`, color: "#fff", boxShadow: `0 6px 18px -6px ${look.tone}` } : { background: "color-mix(in srgb, var(--text) 8%, transparent)", color: "var(--muted)" }}
+              >
+                <look.icon size={20} />
+              </span>
+              <p className="mt-2.5 text-sm font-semibold leading-tight">{t(`d.${b.id}`)}</p>
+              {b.unlocked ? (
+                <p className="mt-1 text-xs text-muted">{t("earned", { date: fd(b.on!) })}</p>
+              ) : (
+                <>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[color:var(--text)]/10">
+                    <div className="h-full rounded-full" style={{ width: `${Math.max(3, (b.value / b.target) * 100)}%`, background: look.tone }} />
+                  </div>
+                  <p className="num mt-1 text-xs text-muted">{b.id === "earthLap" ? `${nf(b.value)} / ${nf(b.target)} NM` : `${nf(b.value)} / ${nf(b.target)}`}</p>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </Card>
     </div>
   );
 }

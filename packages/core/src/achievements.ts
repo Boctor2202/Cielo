@@ -1,3 +1,4 @@
+import { distanceNm } from "./geo";
 import type { Flight, OpeningBalance } from "./types";
 
 /**
@@ -99,4 +100,81 @@ export function loggingStreak(flights: Flight[], nowIso: string = new Date().toI
     return { monday: m, state: byWeek.get(m) ?? ("none" as WeekState) };
   });
   return { current: run, best, onTimeRate: logged.length ? onTime / logged.length : undefined, weeks };
+}
+
+/* ---------- discovery badges ---------- */
+
+export type DiscoveryId =
+  | "firstNight"
+  | "nightLandings100"
+  | "airports10"
+  | "airports50"
+  | "airports100"
+  | "countries5"
+  | "countries10"
+  | "countries25"
+  | "earthLap"
+  | "types3"
+  | "firstSigned";
+
+export interface DiscoveryBadge {
+  id: DiscoveryId;
+  unlocked: boolean;
+  /** the day it was earned */
+  on?: string;
+  value: number;
+  target: number;
+}
+
+/** Equatorial circumference of the Earth, in nautical miles. */
+export const EARTH_NM = 21_639;
+
+/**
+ * Badges for firsts and collections, earned in the order of the logbook (the date is the flight that crossed the
+ * mark). Simulator sessions do not count; the airport lookup gives countries and distances.
+ */
+export function discoveryBadges(
+  flights: Flight[],
+  airport: (icao: string) => { country?: string; lat: number; lon: number } | undefined,
+): DiscoveryBadge[] {
+  const real = flights.filter((f) => !f.deletedAt && !f.isFstd).sort((a, b) => (a.date + (a.outUtc ?? "")).localeCompare(b.date + (b.outUtc ?? "")));
+  const goals: { id: DiscoveryId; target: number; measure: () => number }[] = [];
+  const airports = new Set<string>();
+  const countries = new Set<string>();
+  const types = new Set<string>();
+  let night = 0;
+  let nightLandings = 0;
+  let nm = 0;
+  let signed = 0;
+  goals.push(
+    { id: "firstNight", target: 1, measure: () => night },
+    { id: "nightLandings100", target: 100, measure: () => nightLandings },
+    { id: "airports10", target: 10, measure: () => airports.size },
+    { id: "airports50", target: 50, measure: () => airports.size },
+    { id: "airports100", target: 100, measure: () => airports.size },
+    { id: "countries5", target: 5, measure: () => countries.size },
+    { id: "countries10", target: 10, measure: () => countries.size },
+    { id: "countries25", target: 25, measure: () => countries.size },
+    { id: "earthLap", target: EARTH_NM, measure: () => nm },
+    { id: "types3", target: 3, measure: () => types.size },
+    { id: "firstSigned", target: 1, measure: () => signed },
+  );
+  const on = new Map<DiscoveryId, string>();
+  for (const f of real) {
+    for (const icao of [f.depIcao, f.arrIcao]) {
+      if (!icao) continue;
+      airports.add(icao);
+      const c = airport(icao)?.country;
+      if (c) countries.add(c);
+    }
+    if (f.aircraftTypeIcao) types.add(f.aircraftTypeIcao);
+    if (f.nightMin > 0) night++;
+    nightLandings += f.landingsNight ?? 0;
+    if (f.signatureId) signed++;
+    const a = airport(f.depIcao);
+    const b = airport(f.arrIcao);
+    if (a && b && f.depIcao !== f.arrIcao) nm += distanceNm(a, b);
+    for (const g of goals) if (!on.has(g.id) && g.measure() >= g.target) on.set(g.id, f.date);
+  }
+  return goals.map((g) => ({ id: g.id, unlocked: on.has(g.id), on: on.get(g.id), value: Math.min(g.measure(), g.target), target: g.target }));
 }

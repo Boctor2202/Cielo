@@ -1912,7 +1912,22 @@
       "best": "Best: {n, plural, one {# week} other {# weeks}}",
       "onTime": "{p} % logged on time",
       "last12": "Last 12 weeks",
-      "hint": "A week counts when every flight is entered within 48 h of landing. Weeks without flights do not break the streak; imported flights are left out."
+      "hint": "A week counts when every flight is entered within 48 h of landing. Weeks without flights do not break the streak; imported flights are left out.",
+      "discoveries": "Discoveries",
+      "earned": "Earned on {date}",
+      "d": {
+        "firstNight": "First night flight",
+        "nightLandings100": "100 night landings",
+        "airports10": "10 airports",
+        "airports50": "50 airports",
+        "airports100": "100 airports",
+        "countries5": "5 countries",
+        "countries10": "10 countries",
+        "countries25": "25 countries",
+        "earthLap": "Once around the Earth",
+        "types3": "3 aircraft types",
+        "firstSigned": "First signed flight"
+      }
     }
   },
   "why": {

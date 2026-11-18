@@ -1912,7 +1912,22 @@
       "best": "Record : {n, plural, one {# semaine} other {# semaines}}",
       "onTime": "{p} % saisis à temps",
       "last12": "12 dernières semaines",
-      "hint": "Une semaine compte quand chaque vol est saisi dans les 48 h suivant l'atterrissage. Une semaine sans vol ne casse pas la série ; les vols importés ne comptent pas."
+      "hint": "Une semaine compte quand chaque vol est saisi dans les 48 h suivant l'atterrissage. Une semaine sans vol ne casse pas la série ; les vols importés ne comptent pas.",
+      "discoveries": "Découvertes",
+      "earned": "Obtenu le {date}",
+      "d": {
+        "firstNight": "Premier vol de nuit",
+        "nightLandings100": "100 atterrissages de nuit",
+        "airports10": "10 aérodromes",
+        "airports50": "50 aérodromes",
+        "airports100": "100 aérodromes",
+        "countries5": "5 pays",
+        "countries10": "10 pays",
+        "countries25": "25 pays",
+        "earthLap": "Un tour de la Terre",
+        "types3": "3 types d'avion",
+        "firstSigned": "Premier vol signé"
+      }
     }
   },
   "why": {

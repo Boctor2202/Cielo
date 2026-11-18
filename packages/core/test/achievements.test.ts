@@ -32,3 +32,23 @@ describe("loggingStreak", () => {
     expect(s.onTimeRate).toBeCloseTo(0.8);
   });
 });
+
+import { discoveryBadges } from "../src";
+describe("discoveryBadges", () => {
+  it("earns a badge on the flight that crosses the mark", () => {
+    const ap: Record<string, { country: string; lat: number; lon: number }> = {
+      LFPG: { country: "FR", lat: 49, lon: 2.5 },
+      EGLL: { country: "GB", lat: 51.5, lon: -0.5 },
+      LEMD: { country: "ES", lat: 40.5, lon: -3.6 },
+    };
+    const fl = [
+      f("2026-01-02", "2026-01-02T20:00:00Z", { depIcao: "LFPG", arrIcao: "EGLL", aircraftTypeIcao: "A320", nightMin: 0 }),
+      f("2026-02-03", "2026-02-03T20:00:00Z", { depIcao: "EGLL", arrIcao: "LEMD", aircraftTypeIcao: "A321", nightMin: 30, signatureId: "s" }),
+    ];
+    const b = Object.fromEntries(discoveryBadges(fl, (i) => ap[i]).map((x) => [x.id, x]));
+    expect(b.firstNight!.on).toBe("2026-02-03");
+    expect(b.firstSigned!.unlocked).toBe(true);
+    expect(b.countries5!.value).toBe(3);
+    expect(b.airports10!.unlocked).toBe(false);
+  });
+});
