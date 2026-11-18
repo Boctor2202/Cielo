@@ -1531,7 +1531,8 @@
       "statNights": "Nuits en escale",
       "statCities": "Aéroports",
       "statCountries": "Pays",
-      "fromRoster": "Depuis votre planning"
+      "fromRoster": "Depuis votre planning",
+      "dayStop": "Escale de jour · {h} h"
     },
     "radar": {
       "title": "Radar",

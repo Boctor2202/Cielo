@@ -166,6 +166,7 @@ function LayoversScreen() {
         const w = when(l);
         const n = nightsOf(l);
         const d1 = day(l.arrivalUtc);
+        const hours = l.departureUtc && l.departureUtc.slice(0, 10) === l.arrivalUtc?.slice(0, 10) ? Math.round((Date.parse(l.departureUtc) - Date.parse(l.arrivalUtc!)) / 3_600_000) : 0;
         const d2 = l.departureUtc && l.departureUtc.slice(0, 10) !== l.arrivalUtc?.slice(0, 10) ? day(l.departureUtc) : null;
         return (
           <Pressable key={l.id} onPress={() => void open(l)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
@@ -204,6 +205,15 @@ function LayoversScreen() {
                     </View>
                     <View style={{ flex: 1, borderTopWidth: 1, borderStyle: "dashed", borderColor: c.muted }} />
                     <DayBlock {...d2} color={SKY} />
+                  </>
+                ) : hours > 0 ? (
+                  <>
+                    <View style={{ flex: 1, borderTopWidth: 1, borderStyle: "dashed", borderColor: c.muted }} />
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, backgroundColor: AMBER + "26" }}>
+                      <Ionicons name="sunny" size={12} color={AMBER} />
+                      <Txt variant="small" color={AMBER} style={{ fontWeight: "700", fontSize: 12 }}>{t("lay.dayStop", { h: hours })}</Txt>
+                    </View>
+                    <View style={{ flex: 1, borderTopWidth: 1, borderStyle: "dashed", borderColor: c.muted }} />
                   </>
                 ) : null}
               </Row>

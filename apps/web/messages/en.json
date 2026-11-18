@@ -1531,7 +1531,8 @@
       "statNights": "Nights away",
       "statCities": "Airports",
       "statCountries": "Countries",
-      "fromRoster": "From your roster"
+      "fromRoster": "From your roster",
+      "dayStop": "{h} h day stop"
     },
     "radar": {
       "title": "Radar",
