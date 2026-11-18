@@ -31,7 +31,10 @@ const remarks = (f: Flight) => {
   if (f.function === "PICUS") parts.push("PICUS");
   if (f.function === "FE") parts.push("FE");
   if (f.flightNumber) parts.push(f.flightNumber);
-  if (f.approaches?.length) parts.push(f.approaches.map((a) => `${a.count}x${a.type}`).join(" "));
+  if (f.approaches?.length) parts.push(f.approaches.map((a) => `${a.count}x${a.type}${a.airport ? ` ${a.airport}` : ""}`).join(" "));
+  if (f.via?.length) parts.push(`Via ${f.via.join(" ")}`);
+  if (f.safetyPilotName) parts.push(`Safety pilot/instr. ${f.safetyPilotName}`);
+  if (f.purpose) parts.push(f.purpose);
   if (f.signatureId) parts.push("Signed");
   if (f.remarks) parts.push(f.remarks);
   return parts.join(" / ");
@@ -94,14 +97,18 @@ const FAA: Layout = {
     { group: "CATEGORY / CLASS", sub: "MEL", w: 3.4, align: "right", value: (f, fmt) => t(f.singlePilotMeMin + f.multiPilotMin, fmt), sum: (x) => x.singlePilotMeMin + x.multiPilotMin },
     { group: "CONDITIONS", sub: "NIGHT", w: 3.4, align: "right", value: (f, fmt) => t(f.nightMin, fmt), sum: (x) => x.nightMin },
     { group: "CONDITIONS", sub: "ACTUAL INST.", w: 3.4, align: "right", value: (f, fmt) => t(f.actualImcMin, fmt), sum: (x) => x.actualImcMin },
+    { group: "CONDITIONS", sub: "SIM. INST.", w: 3.2, align: "right", value: (f, fmt) => t(f.simInstrumentMin ?? 0, fmt), sum: (x) => x.simInstrumentMin },
     { group: "CONDITIONS", sub: "CROSS COUNTRY", w: 3.4, align: "right", value: (f, fmt) => t(f.xcMin, fmt), sum: (x) => x.xcMin },
+    { sub: "HOLDS", w: 2.4, align: "right", value: (f) => n(f.holdings ?? 0), sum: (x) => x.holdings, sumKind: "count" },
     { sub: "FSTD / SIM", w: 3.4, align: "right", value: (f, fmt) => (f.isFstd ? t(f.fstdMin, fmt) : ""), sum: (x) => x.fstdMin },
+    { sub: "GROUND TRNG", w: 3.2, align: "right", value: (f, fmt) => t(f.groundTrainingMin ?? 0, fmt), sum: (x) => x.groundTrainingMin },
     { group: "TYPE OF PILOTING TIME", sub: "DUAL RECEIVED", w: 3.4, align: "right", value: (f, fmt) => t(f.dualMin, fmt), sum: (x) => x.dualMin },
+    { group: "TYPE OF PILOTING TIME", sub: "SOLO", w: 3, align: "right", value: (f, fmt) => t(f.soloMin ?? 0, fmt), sum: (x) => x.soloMin },
     { group: "TYPE OF PILOTING TIME", sub: "PIC", w: 3.4, align: "right", value: (f, fmt) => t(f.picMin + f.picusMin, fmt), sum: (x) => x.picMin + x.picusMin },
     { group: "TYPE OF PILOTING TIME", sub: "SIC", w: 3.4, align: "right", value: (f, fmt) => t(f.copilotMin, fmt), sum: (x) => x.copilotMin },
     { group: "TYPE OF PILOTING TIME", sub: "AS FLIGHT INSTR.", w: 3.4, align: "right", value: (f, fmt) => t(f.instructorMin + f.examinerMin, fmt), sum: (x) => x.instructorMin + x.examinerMin },
     { sub: "TOTAL DURATION OF FLIGHT", w: 4, align: "right", value: (f, fmt) => t(f.totalMin, fmt), sum: (x) => x.totalMin },
-    { sub: "REMARKS AND ENDORSEMENTS", w: 11, align: "left", value: (f) => remarks(f) },
+    { sub: "REMARKS AND ENDORSEMENTS", w: 10, align: "left", value: (f) => remarks(f) },
   ],
 };
 

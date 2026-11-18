@@ -12,6 +12,7 @@ const base = (i: number): Flight => ({
   picMin: 0, picusMin: i % 3 ? 0 : 95, copilotMin: i % 3 ? 95 : 0, dualMin: 0, instructorMin: 0, examinerMin: 0, nightMin: 20, ifrMin: 95,
   actualImcMin: 0, xcMin: 0, nightCalc: "auto", takeoffsDay: 1, takeoffsNight: 0, landingsDay: 1, landingsNight: 0, pilotFlying: true,
   approaches: [{ type: "ILS", count: 1 }], isFstd: i === 5, fstdType: i === 5 ? "A320 FFS" : undefined, fstdMin: i === 5 ? 240 : 0, crew: [], remarks: i === 2 ? "Line check — très bien ✈" : undefined, locked: false,
+  ...(i % 4 === 0 ? { simInstrumentMin: 30, holdings: 1, soloMin: 0, groundTrainingMin: 60, safetyPilotName: "J. Smith", via: ["LFLY"] } : {}),
 });
 
 describe("pdf export", () => {

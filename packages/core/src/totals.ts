@@ -25,19 +25,24 @@ export interface Totals {
   approaches: number;
   fstdSessions: number;
   fstdMin: number;
+  /* entries some authorities require beyond EASA */
+  simInstrumentMin: number;
+  holdings: number;
+  groundTrainingMin: number;
+  soloMin: number;
 }
 
 export const ZERO_TOTALS: Totals = Object.freeze({
   flights: 0, totalMin: 0, airMin: 0, singlePilotSeMin: 0, singlePilotMeMin: 0, multiPilotMin: 0, picMin: 0,
   picusMin: 0, copilotMin: 0, dualMin: 0, instructorMin: 0, examinerMin: 0, nightMin: 0, ifrMin: 0,
   actualImcMin: 0, xcMin: 0, takeoffsDay: 0, takeoffsNight: 0, landingsDay: 0, landingsNight: 0, approaches: 0,
-  fstdSessions: 0, fstdMin: 0,
+  fstdSessions: 0, fstdMin: 0, simInstrumentMin: 0, holdings: 0, groundTrainingMin: 0, soloMin: 0,
 }) as Totals;
 
 const SUM_KEYS = [
   "totalMin", "airMin", "singlePilotSeMin", "singlePilotMeMin", "multiPilotMin", "picMin", "picusMin", "copilotMin",
   "dualMin", "instructorMin", "examinerMin", "nightMin", "ifrMin", "actualImcMin", "xcMin", "takeoffsDay",
-  "takeoffsNight", "landingsDay", "landingsNight", "fstdMin",
+  "takeoffsNight", "landingsDay", "landingsNight", "fstdMin", "simInstrumentMin", "holdings", "groundTrainingMin", "soloMin",
 ] as const;
 
 export function sumFlights(flights: Flight[], base: Totals = ZERO_TOTALS): Totals {
