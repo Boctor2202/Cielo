@@ -1,9 +1,10 @@
 "use client";
 
+import { CountryInput } from "@/components/app/CountryInput";
 import { AlertTriangle, Check, Copy, FileDown, FileJson, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { formatPhoneIntl, countryName } from "@cielo/core";
+import { countryCodeOf, formatPhoneIntl, countryName } from "@cielo/core";
 import { CV_LOCALES, SCRIPT_FONT, type CvLocale, atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, cvToText, CV_THEMES, flightExperience, toJsonResume, type CvData, type CvDocument, type CvProfile, type CvTheme } from "@cielo/cv";
 import type { Job } from "@cielo/jobs";
 import { Card, Field, PageTitle, Segmented, useToast, type Level } from "@/components/app/ui";
@@ -206,7 +207,7 @@ export default function CvPage() {
               <Field label={t("f.email")}><input className="input" type="email" value={profile.email ?? ""} onChange={(e) => set("email", e.target.value)} /></Field>
               <Field label={t("f.phone")}><input className="input" type="tel" placeholder="+33 6 12 34 56 78" value={profile.phone ?? ""} onChange={(e) => set("phone", e.target.value)} onBlur={() => set("phone", formatPhoneIntl(profile.phone, pilot?.nationality))} /></Field>
               <Field label={t("f.location")}><input className="input" value={profile.location ?? ""} onChange={(e) => set("location", e.target.value)} /></Field>
-              <Field label={t("f.nationality")}><input className="input" value={profile.nationality ?? ""} onChange={(e) => set("nationality", e.target.value)} /></Field>
+              <CountryInput label={t("f.nationality")} value={countryCodeOf(profile.nationality)} onChange={(code) => set("nationality", code ? countryName(code, uiLocale) : undefined)} />
               <Field label={t("f.rightToWork")}><input className="input" placeholder={t("f.rightToWorkPh")} value={profile.rightToWork ?? ""} onChange={(e) => set("rightToWork", e.target.value)} /></Field>
               <Field label={t("f.linkedin")}><input className="input" value={profile.linkedin ?? ""} onChange={(e) => set("linkedin", e.target.value)} /></Field>
             </div>

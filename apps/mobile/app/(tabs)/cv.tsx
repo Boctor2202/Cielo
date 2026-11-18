@@ -2,9 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { CV_LOCALES, SCRIPT_FONT, type CvLocale, atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, CV_THEMES, cvToText, flightExperience, toJsonResume, type CvData, type CvExperience, type CvFonts, type CvProfile, type CvTheme } from "@cielo/cv";
-import { formatPhoneIntl, countryName } from "@cielo/core";
+import { countryCodeOf, formatPhoneIntl, countryName } from "@cielo/core";
 import { buildProfile, detectAircraft, matchJob, type Job } from "@cielo/jobs";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
+import { CountryField } from "../../src/components/CountryField";
 import { DateField } from "../../src/components/DateField";
 import { Requires } from "../../src/components/Access";
 import { api, API_URL } from "../../src/api";
@@ -216,7 +217,11 @@ function Cv() {
         <Field label={t("cv.email")} value={profile.email ?? ""} onChangeText={(v) => set("email", v)} keyboardType="email-address" autoCapitalize="none" />
         <Field label={t("profile.phone")} value={profile.phone ?? ""} onChangeText={(v) => set("phone", v)} onBlur={() => set("phone", formatPhoneIntl(profile.phone, pilot.nationality))} placeholder="+33 6 12 34 56 78" keyboardType="phone-pad" />
         <Field label={t("cv.location")} value={profile.location ?? ""} onChangeText={(v) => set("location", v)} />
-        <Field label={t("profile.nationality")} value={profile.nationality ?? ""} onChangeText={(v) => set("nationality", v)} />
+        <CountryField
+          label={t("profile.nationality")}
+          value={countryCodeOf(profile.nationality)}
+          onChange={(code) => set("nationality", code ? countryName(code, uiLocale) : undefined)}
+        />
         <Field label={t("cv.rightToWork")} value={profile.rightToWork ?? ""} onChangeText={(v) => set("rightToWork", v)} placeholder={t("cv.rightToWorkPh")} />
         <Field label="LinkedIn" value={profile.linkedin ?? ""} onChangeText={(v) => set("linkedin", v)} autoCapitalize="none" />
       </Card>

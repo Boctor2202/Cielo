@@ -285,3 +285,16 @@ export function searchCountries(query: string, locale = "en", limit = 8): { code
   }
   return out.sort((a, b) => a.r - b.r || a.name.localeCompare(b.name)).slice(0, limit).map(({ code, name }) => ({ code, name }));
 }
+
+/** The ISO code of a country written by name (in French or English) or as a code; undefined when not found. */
+export function countryCodeOf(nameOrCode: string | undefined | null): string | undefined {
+  const s = (nameOrCode ?? "").trim();
+  if (!s) return undefined;
+  if (/^[A-Za-z]{2}$/.test(s) && countryName(s.toUpperCase(), "en") !== s.toUpperCase()) return s.toUpperCase();
+  const norm = (x: string) => x.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  for (const loc of ["fr", "en"]) {
+    const hit = searchCountries(s, loc, 1)[0];
+    if (hit && norm(hit.name) === norm(s)) return hit.code;
+  }
+  return undefined;
+}
