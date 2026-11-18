@@ -16,19 +16,59 @@ const TIER: Record<Tier, [string, string]> = {
   platinum: ["#C7F0FF", "#5B8DB8"],
 };
 
-const DISCOVERY: Record<DiscoveryId, { icon: keyof typeof Ionicons.glyphMap; tone: string }> = {
-  firstNight: { icon: "moon", tone: "#818CF8" },
-  nightLandings100: { icon: "moon-outline", tone: "#6366F1" },
-  airports10: { icon: "location", tone: "#38BDF8" },
-  airports50: { icon: "location", tone: "#0EA5E9" },
-  airports100: { icon: "location", tone: "#0284C7" },
-  countries5: { icon: "flag", tone: "#F59E0B" },
-  countries10: { icon: "flag", tone: "#F97316" },
-  countries25: { icon: "flag", tone: "#EF4444" },
-  earthLap: { icon: "earth", tone: "#22C55E" },
-  types3: { icon: "airplane", tone: "#2DD4BF" },
-  firstSigned: { icon: "create", tone: "#E879F9" },
+const DISCOVERY: Record<DiscoveryId, { icon: keyof typeof Ionicons.glyphMap; from: string; to: string; stars?: number }> = {
+  firstNight: { icon: "moon", from: "#A5B4FC", to: "#3730A3" },
+  nightLandings100: { icon: "moon-outline", from: "#C4B5FD", to: "#4C1D95" },
+  airports10: { icon: "compass", from: "#7DD3FC", to: "#0369A1", stars: 1 },
+  airports50: { icon: "compass", from: "#67E8F9", to: "#0E7490", stars: 2 },
+  airports100: { icon: "map", from: "#5EEAD4", to: "#115E59", stars: 3 },
+  countries5: { icon: "flag", from: "#FCD34D", to: "#B45309", stars: 1 },
+  countries10: { icon: "globe", from: "#FDBA74", to: "#C2410C", stars: 2 },
+  countries25: { icon: "globe", from: "#FCA5A5", to: "#B91C1C", stars: 3 },
+  earthLap: { icon: "earth", from: "#86EFAC", to: "#15803D" },
+  types3: { icon: "airplane", from: "#F9A8D4", to: "#9D174D" },
+  firstSigned: { icon: "ribbon", from: "#F0ABFC", to: "#86198F" },
 };
+
+/** A hexagonal emblem: glossy when earned, a dark silhouette with a lock while it is still to earn. */
+function Emblem({ id, locked, size = 56 }: { id: DiscoveryId; locked?: boolean; size?: number }) {
+  const look = DISCOVERY[id];
+  const g = `e${id}${locked ? "l" : "u"}`;
+  const h = (size * 68) / 64;
+  return (
+    <View style={{ width: size, height: h }}>
+      <Svg width={size} height={h} viewBox="0 0 64 68">
+        <Defs>
+          <LinearGradient id={g} x1="0" y1="0" x2="0.6" y2="1">
+            <Stop offset="0" stopColor={locked ? "#3B4657" : look.from} />
+            <Stop offset="1" stopColor={locked ? "#151C27" : look.to} />
+          </LinearGradient>
+          <LinearGradient id={`${g}s`} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#fff" stopOpacity={locked ? 0.08 : 0.45} />
+            <Stop offset="1" stopColor="#fff" stopOpacity={0} />
+          </LinearGradient>
+        </Defs>
+        <Path d="M32 2 L59 17.5 V50.5 L32 66 L5 50.5 V17.5 Z" fill={`url(#${g})`} stroke={locked ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.55)"} strokeWidth={1.5} />
+        <Path d="M32 8 L54 20.7 V47.3 L32 60 L10 47.3 V20.7 Z" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={1} strokeDasharray={locked ? "2 3" : undefined} />
+        <Path d="M5 17.5 L32 2 L59 17.5 V30 C44 24 20 24 5 30 Z" fill={`url(#${g}s)`} />
+        {look.stars && !locked
+          ? Array.from({ length: look.stars }, (_, i) => {
+              const cx = 32 + (i - (look.stars! - 1) / 2) * 8;
+              return <Path key={i} d={`M${cx} 47 l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z`} fill="#FFF7D6" />;
+            })
+          : null}
+      </Svg>
+      <View style={{ position: "absolute", left: 0, right: 0, top: h * (look.stars && !locked ? 0.22 : 0.29), alignItems: "center" }}>
+        <Ionicons name={look.icon} size={size * 0.38} color={locked ? "rgba(255,255,255,0.28)" : "#fff"} />
+      </View>
+      {locked ? (
+        <View style={{ position: "absolute", right: -2, bottom: -2, width: 20, height: 20, borderRadius: 10, backgroundColor: "#0b1526", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" }}>
+          <Ionicons name="lock-closed" size={10} color="rgba(255,255,255,0.7)" />
+        </View>
+      ) : null}
+    </View>
+  );
+}
 
 function Medal({ hours, tier, locked, size = 56 }: { hours: number; tier: Tier; locked?: boolean; size?: number }) {
   const [a, b] = locked ? ["#3A4658", "#1E2836"] : TIER[tier];
@@ -66,6 +106,7 @@ export function Achievements({ flights, opening, t, locale }: { flights: Flight[
         <Row gap={14} style={{ alignItems: "center" }}>
           <Medal hours={level.current?.hours ?? 100} tier={level.current?.tier ?? "bronze"} locked={!level.current} size={68} />
           <View style={{ flex: 1, gap: 4 }}>
+            {level.current ? <Txt style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1 }} color={TIER[level.current.tier][1]}>{t(`badges.title.${level.current.hours}` as I18nKey).toUpperCase()}</Txt> : null}
             <Txt style={{ fontSize: 17, fontWeight: "800" }}>{level.current ? t("badges.club", { n: level.current.hours.toLocaleString() }) : t("badges.noLevel")}</Txt>
             {level.next ? (
               <>
@@ -112,20 +153,22 @@ export function Achievements({ flights, opening, t, locale }: { flights: Flight[
           {discoveries.map((b) => {
             const look = DISCOVERY[b.id];
             return (
-              <View key={b.id} style={{ flexBasis: "47%", flexGrow: 1, padding: 10, gap: 6, borderRadius: 14, borderWidth: 1, borderStyle: b.unlocked ? "solid" : "dashed", borderColor: c.scheme === "dark" ? "rgba(255,255,255,0.10)" : "rgba(10,22,38,0.12)", opacity: b.unlocked ? 1 : 0.75 }}>
-                <View style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: b.unlocked ? look.tone : track }}>
-                  <Ionicons name={look.icon} size={18} color={b.unlocked ? "#fff" : c.muted} />
-                </View>
-                <Txt style={{ fontWeight: "700", fontSize: 13.5 }}>{t(`badges.d.${b.id}` as I18nKey)}</Txt>
+              <View key={b.id} style={{ flexBasis: "47%", flexGrow: 1, padding: 12, gap: 4, alignItems: "center", borderRadius: 16, overflow: "hidden", borderWidth: 1, borderStyle: b.unlocked ? "solid" : "dashed", borderColor: c.scheme === "dark" ? "rgba(255,255,255,0.10)" : "rgba(10,22,38,0.12)" }}>
+                {b.unlocked ? <View style={{ position: "absolute", top: -40, width: 90, height: 90, borderRadius: 45, backgroundColor: look.from, opacity: 0.18 }} /> : null}
+                <Emblem id={b.id} locked={!b.unlocked} size={52} />
+                <Txt style={{ fontWeight: "800", fontSize: 14, textAlign: "center", marginTop: 4 }}>{t(`badges.d.${b.id}` as I18nKey)}</Txt>
+                <Txt variant="small" style={{ fontSize: 11.5, textAlign: "center" }}>{t(`badges.dd.${b.id}` as I18nKey)}</Txt>
                 {b.unlocked ? (
-                  <Txt variant="small" style={{ fontSize: 11.5 }}>{t("badges.earned", { date: formatDate(b.on!, locale) })}</Txt>
+                  <View style={{ marginTop: 2, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: look.from + "33" }}>
+                    <Txt variant="small" style={{ fontSize: 11, fontWeight: "700" }} color={c.scheme === "dark" ? look.from : look.to}>{t("badges.earned", { date: formatDate(b.on!, locale) })}</Txt>
+                  </View>
                 ) : (
-                  <>
+                  <View style={{ alignSelf: "stretch", gap: 3, marginTop: 2 }}>
                     <View style={{ height: 4, borderRadius: 2, backgroundColor: track, overflow: "hidden" }}>
-                      <View style={{ height: 4, width: `${Math.max(3, (b.value / b.target) * 100)}%`, backgroundColor: look.tone }} />
+                      <View style={{ height: 4, width: `${Math.max(3, (b.value / b.target) * 100)}%`, backgroundColor: look.to }} />
                     </View>
-                    <Txt mono variant="small" style={{ fontSize: 11 }}>{`${Math.floor(b.value).toLocaleString()} / ${b.target.toLocaleString()}${b.id === "earthLap" ? " NM" : ""}`}</Txt>
-                  </>
+                    <Txt mono variant="small" style={{ fontSize: 11, textAlign: "center" }}>{`${Math.floor(b.value).toLocaleString()} / ${b.target.toLocaleString()}${b.id === "earthLap" ? " NM" : ""}`}</Txt>
+                  </View>
                 )}
               </View>
             );
