@@ -1,9 +1,11 @@
-import React, { useMemo } from "react";
-import { View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Path, Stop, Text as SvgText } from "react-native-svg";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { discoveryBadges, HOUR_LEVELS, hourLevel, loggingStreak, type DiscoveryId, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
+import { distanceNm, discoveryBadges, HOUR_LEVELS, hourLevel, loggingStreak, type DiscoveryId, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
 import { lookupAirport } from "../airports";
+import { API_URL } from "../api";
+import { shareFile } from "../exporters";
 import { formatDate } from "../i18n";
 import { Card, Row, Txt } from "./ui";
 import { useTheme } from "../theme";
@@ -92,12 +94,50 @@ function Medal({ hours, tier, locked, size = 56 }: { hours: number; tier: Tier; 
 }
 
 /** Hour levels and the logging streak (computed from the logbook). */
-export function Achievements({ flights, opening, t, locale }: { flights: Flight[]; opening: OpeningBalance[]; t: (k: I18nKey, v?: Record<string, string | number>) => string; locale: Parameters<typeof formatDate>[1] }) {
+export function Achievements({ flights, opening, t, locale, pilot }: { flights: Flight[]; opening: OpeningBalance[]; t: (k: I18nKey, v?: Record<string, string | number>) => string; locale: Parameters<typeof formatDate>[1]; pilot?: { fullName?: string; rank?: string } }) {
   const c = useTheme();
   const level = useMemo(() => hourLevel(flights, opening), [flights, opening]);
   const streak = useMemo(() => loggingStreak(flights), [flights]);
   const h = Math.floor(level.totalMin / 60);
   const discoveries = useMemo(() => discoveryBadges(flights, lookupAirport), [flights]);
+  // the figures printed on a share image (the whole logbook)
+  const totals = useMemo(() => {
+    const aps = new Set<string>();
+    const cts = new Set<string>();
+    let nm = 0;
+    for (const f of flights) {
+      if (f.deletedAt || f.isFstd) continue;
+      const a = lookupAirport(f.depIcao);
+      const b = lookupAirport(f.arrIcao);
+      aps.add(f.depIcao);
+      aps.add(f.arrIcao);
+      if (a?.country) cts.add(a.country);
+      if (b?.country) cts.add(b.country);
+      if (a && b && f.depIcao !== f.arrIcao) nm += distanceNm(a, b);
+    }
+    return { ap: aps.size, ct: cts.size, nm: Math.round(nm) };
+  }, [flights]);
+  const [sharing, setSharing] = useState<string | null>(null);
+  /** Downloads the share image drawn by geardown.app and opens the iOS share sheet with it. */
+  const share = async (key: string, what: string) => {
+    setSharing(key);
+    try {
+      const q = new URLSearchParams({ lang: locale === "fr" ? "fr" : "en", name: pilot?.fullName ?? "", rank: pilot?.rank ?? "", hrs: String(h), ap: String(totals.ap), ct: String(totals.ct), nm: String(totals.nm) });
+      const r = await fetch(`${API_URL}/api/share-card?${what}&${q}`);
+      if (!r.ok) throw new Error(String(r.status));
+      await shareFile(`geardown-${key}.png`, new Uint8Array(await r.arrayBuffer()), "image/png", "public.png");
+    } catch {
+      Alert.alert(t("badges.shareError"));
+    } finally {
+      setSharing(null);
+    }
+  };
+  const ShareButton = ({ k, what }: { k: string; what: string }) => (
+    <Pressable onPress={() => void share(k, what)} disabled={!!sharing} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: c.scheme === "dark" ? "rgba(255,255,255,0.16)" : "rgba(10,22,38,0.16)" }}>
+      {sharing === k ? <ActivityIndicator size="small" /> : <Ionicons name="share-outline" size={13} color={c.text} />}
+      <Txt variant="small" style={{ fontWeight: "700", fontSize: 12 }} color={c.text}>{t("badges.share")}</Txt>
+    </Pressable>
+  );
   const track = c.scheme === "dark" ? "rgba(255,255,255,0.10)" : "rgba(10,22,38,0.08)";
   return (
     <>
@@ -108,6 +148,7 @@ export function Achievements({ flights, opening, t, locale }: { flights: Flight[
           <View style={{ flex: 1, gap: 4 }}>
             {level.current ? <Txt style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1 }} color={TIER[level.current.tier][1]}>{t(`badges.title.${level.current.hours}` as I18nKey).toUpperCase()}</Txt> : null}
             <Txt style={{ fontSize: 17, fontWeight: "800" }}>{level.current ? t("badges.club", { n: level.current.hours.toLocaleString() }) : t("badges.noLevel")}</Txt>
+            {level.current ? <View style={{ alignSelf: "flex-start" }}><ShareButton k={`level-${level.current.hours}`} what={`type=level&h=${level.current.hours}`} /></View> : null}
             {level.next ? (
               <>
                 <Txt variant="small">{t("badges.toNext", { left: (level.next.hours - h).toLocaleString(), n: level.next.hours.toLocaleString() })}</Txt>
@@ -159,9 +200,12 @@ export function Achievements({ flights, opening, t, locale }: { flights: Flight[
                 <Txt style={{ fontWeight: "800", fontSize: 14, textAlign: "center", marginTop: 4 }}>{t(`badges.d.${b.id}` as I18nKey)}</Txt>
                 <Txt variant="small" style={{ fontSize: 11.5, textAlign: "center" }}>{t(`badges.dd.${b.id}` as I18nKey)}</Txt>
                 {b.unlocked ? (
-                  <View style={{ marginTop: 2, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: look.from + "33" }}>
-                    <Txt variant="small" style={{ fontSize: 11, fontWeight: "700" }} color={c.scheme === "dark" ? look.from : look.to}>{t("badges.earned", { date: formatDate(b.on!, locale) })}</Txt>
-                  </View>
+                  <>
+                    <View style={{ marginTop: 2, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: look.from + "33" }}>
+                      <Txt variant="small" style={{ fontSize: 11, fontWeight: "700" }} color={c.scheme === "dark" ? look.from : look.to}>{t("badges.earned", { date: formatDate(b.on!, locale) })}</Txt>
+                    </View>
+                    <ShareButton k={b.id} what={`type=badge&id=${b.id}&on=${b.on}`} />
+                  </>
                 ) : (
                   <View style={{ alignSelf: "stretch", gap: 3, marginTop: 2 }}>
                     <View style={{ height: 4, borderRadius: 2, backgroundColor: track, overflow: "hidden" }}>

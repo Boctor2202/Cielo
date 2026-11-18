@@ -21,11 +21,19 @@ const num = (v: string | null) => {
 };
 const uri = (svg: string) => `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 
-let fonts: Promise<{ name: string; data: Buffer; weight: 400 | 600 | 700 }[]> | null = null;
-const loadFonts = () =>
+let fonts: Promise<{ name: string; data: ArrayBuffer; weight: 400 | 600 | 700 }[]> | null = null;
+/** Inter, from the site's own public files (served by the CDN), else from the disk in development. */
+const loadFonts = (origin: string) =>
   (fonts ??= Promise.all(
-    ([400, 600, 700] as const).map(async (w) => ({ name: "Inter", weight: w, data: await readFile(path.join(process.cwd(), "public/fonts/cv", `Inter-${w}.ttf`)) })),
-  ));
+    ([400, 600, 700] as const).map(async (w) => {
+      const r = await fetch(`${origin}/fonts/cv/Inter-${w}.ttf`).catch(() => null);
+      const data = r?.ok ? await r.arrayBuffer() : (await readFile(path.join(process.cwd(), "public/fonts/cv", `Inter-${w}.ttf`))).buffer as ArrayBuffer;
+      return { name: "Inter", weight: w, data };
+    }),
+  ).catch((e) => {
+    fonts = null;
+    throw e;
+  }));
 
 export async function GET(req: Request) {
   const q = new URL(req.url).searchParams;
@@ -122,6 +130,6 @@ export async function GET(req: Request) {
         </div>
       </div>
     ),
-    { width: W, height: H, fonts: await loadFonts(), headers: { "Cache-Control": "public, max-age=86400" } },
+    { width: W, height: H, fonts: await loadFonts(new URL(req.url).origin), headers: { "Cache-Control": "public, max-age=86400" } },
   );
 }
