@@ -89,7 +89,7 @@ export default function StatsPage() {
           </select>
         }
       />
-      {flights && <div className="mb-5"><Achievements flights={flights} opening={opening ?? []} airport={airportOf} /></div>}
+      {flights && <div className="mb-5"><Achievements flights={flights} opening={opening ?? []} airport={airportOf} pilot={pilot ? { fullName: pilot.fullName, rank: pilot.rank } : undefined} /></div>}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Readout
           label={t("distance")}

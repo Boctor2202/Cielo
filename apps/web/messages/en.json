@@ -1950,7 +1950,13 @@
         "3000": "Master Aviator",
         "5000": "Legend of the Skies",
         "10000": "Ten Thousand Club"
-      }
+      },
+      "share": "Share",
+      "shareTitle": "Share your achievement",
+      "fmtPortrait": "Portrait (stories, Instagram)",
+      "fmtSquare": "Square",
+      "download": "Download the image",
+      "shareHint": "Download the image, then add it to your post. Only what you see here is shared."
     }
   },
   "why": {

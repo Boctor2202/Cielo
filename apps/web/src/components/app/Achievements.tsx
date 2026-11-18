@@ -1,11 +1,11 @@
 "use client";
 
-import { BadgeCheck, Compass, Earth, Flame, Globe2, Lock, Map, Moon, MoonStar, Plane, Stamp, type LucideIcon } from "lucide-react";
-import { useMemo } from "react";
-import { useTranslations } from "next-intl";
-import { discoveryBadges, HOUR_LEVELS, hourLevel, loggingStreak, type DiscoveryId, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
+import { BadgeCheck, Compass, Download, Earth, Flame, Globe2, Lock, Map, Moon, MoonStar, Plane, Share2, Stamp, type LucideIcon } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { distanceNm, discoveryBadges, HOUR_LEVELS, hourLevel, loggingStreak, type DiscoveryId, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
 import { useFormatDate } from "@/lib/hooks";
-import { Card } from "./ui";
+import { Card, Modal } from "./ui";
 
 const TIER: Record<Tier, [string, string]> = {
   bronze: ["#E7A46B", "#9A5B2C"],
@@ -96,7 +96,7 @@ function Medal({ hours, tier, locked, size = 56 }: { hours: number; tier: Tier; 
   );
 }
 
-export function Achievements({ flights, opening, airport }: { flights: Flight[]; opening: OpeningBalance[]; airport: (icao: string) => { country?: string; lat: number; lon: number } | undefined }) {
+export function Achievements({ flights, opening, airport, pilot }: { flights: Flight[]; opening: OpeningBalance[]; airport: (icao: string) => { country?: string; lat: number; lon: number } | undefined; pilot?: { fullName?: string; rank?: string } }) {
   const t = useTranslations("app.badges");
   const level = useMemo(() => hourLevel(flights, opening), [flights, opening]);
   const streak = useMemo(() => loggingStreak(flights), [flights]);
@@ -104,6 +104,56 @@ export function Achievements({ flights, opening, airport }: { flights: Flight[];
   const discoveries = useMemo(() => discoveryBadges(flights, airport), [flights, airport]);
   const fd = useFormatDate();
   const nf = (n: number) => Math.floor(n).toLocaleString();
+  const locale = useLocale();
+
+  // the figures printed on a share image (the whole logbook)
+  const totals = useMemo(() => {
+    const aps = new Set<string>();
+    const cts = new Set<string>();
+    let nm = 0;
+    for (const f of flights) {
+      if (f.deletedAt || f.isFstd) continue;
+      const a = airport(f.depIcao);
+      const b = airport(f.arrIcao);
+      for (const [icao, x] of [[f.depIcao, a], [f.arrIcao, b]] as const) {
+        aps.add(icao);
+        if (x?.country) cts.add(x.country);
+      }
+      if (a && b && f.depIcao !== f.arrIcao) nm += distanceNm(a, b);
+    }
+    return { ap: aps.size, ct: cts.size, nm: Math.round(nm) };
+  }, [flights, airport]);
+  const [preview, setPreview] = useState<{ base: string; text: string; square: boolean } | null>(null);
+  const cardUrl = (base: string, square: boolean) => `${base}${square ? "&fmt=square" : ""}`;
+  /** Shares the image through the device's share sheet; on a computer, shows it with download and links. */
+  const share = async (what: string, text: string) => {
+    const base = `/api/share-card?${what}&${new URLSearchParams({
+      lang: locale === "fr" ? "fr" : "en",
+      name: pilot?.fullName ?? "",
+      rank: pilot?.rank ?? "",
+      hrs: String(Math.floor(level.totalMin / 60)),
+      ap: String(totals.ap),
+      ct: String(totals.ct),
+      nm: String(totals.nm),
+    })}`;
+    try {
+      const blob = await (await fetch(base)).blob();
+      const file = new File([blob], "geardown.png", { type: "image/png" });
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (nav.canShare?.({ files: [file] }) && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)) {
+        await navigator.share({ files: [file], text: `${text} · geardown.app` });
+        return;
+      }
+    } catch (e) {
+      if ((e as Error)?.name === "AbortError") return;
+    }
+    setPreview({ base, text, square: false });
+  };
+  const ShareButton = ({ onClick }: { onClick: () => void }) => (
+    <button type="button" onClick={onClick} className="relative mt-2 inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-semibold text-muted transition hover:border-accent hover:text-accent">
+      <Share2 size={12} /> {t("share")}
+    </button>
+  );
 
   return (
     <div className="space-y-5">
@@ -114,6 +164,7 @@ export function Achievements({ flights, opening, airport }: { flights: Flight[];
           <div className="min-w-0 flex-1">
             {level.current ? <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: TIER[level.current.tier][1] }}>{t(`title.${level.current.hours}`)}</p> : null}
             <p className="text-lg font-bold">{level.current ? t("club", { n: level.current.hours.toLocaleString() }) : t("noLevel")}</p>
+            {level.current ? <ShareButton onClick={() => void share(`type=level&h=${level.current!.hours}`, `${t(`title.${level.current!.hours}`)} · ${t("club", { n: level.current!.hours.toLocaleString() })}`)} /> : null}
             {level.next ? (
               <>
                 <p className="text-sm text-muted">{t("toNext", { left: (level.next.hours - h).toLocaleString(), n: level.next.hours.toLocaleString() })}</p>
@@ -175,9 +226,12 @@ export function Achievements({ flights, opening, airport }: { flights: Flight[];
               <p className="relative mt-3 text-[15px] font-bold leading-tight">{t(`d.${b.id}`)}</p>
               <p className="relative mt-1 text-xs leading-snug text-muted">{t(`dd.${b.id}`)}</p>
               {b.unlocked ? (
-                <p className="relative mt-2 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: `color-mix(in srgb, ${look.from} 22%, transparent)`, color: `color-mix(in srgb, ${look.to} 55%, var(--text))` }}>
-                  {t("earned", { date: fd(b.on!) })}
-                </p>
+                <>
+                  <p className="relative mt-2 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: `color-mix(in srgb, ${look.from} 22%, transparent)`, color: `color-mix(in srgb, ${look.to} 55%, var(--text))` }}>
+                    {t("earned", { date: fd(b.on!) })}
+                  </p>
+                  <ShareButton onClick={() => void share(`type=badge&id=${b.id}&on=${b.on}`, `${t(`d.${b.id}`)} · ${t(`dd.${b.id}`)}`)} />
+                </>
               ) : (
                 <div className="mt-2 w-full">
                   <div className="h-1.5 overflow-hidden rounded-full bg-[color:var(--text)]/10">
@@ -191,6 +245,28 @@ export function Achievements({ flights, opening, airport }: { flights: Flight[];
         })}
       </div>
     </Card>
+    <Modal open={!!preview} onClose={() => setPreview(null)} title={t("shareTitle")}>
+      {preview && (
+        <div className="space-y-4">
+          <div className="flex justify-center gap-2">
+            {[false, true].map((sq) => (
+              <button key={String(sq)} type="button" onClick={() => setPreview({ ...preview, square: sq })} className={`rounded-full px-3 py-1 text-xs font-semibold ${preview.square === sq ? "bg-accent text-black" : "border border-border text-muted"}`}>
+                {sq ? t("fmtSquare") : t("fmtPortrait")}
+              </button>
+            ))}
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={cardUrl(preview.base, preview.square)} alt={preview.text} className="mx-auto max-h-[55vh] w-auto rounded-xl border border-border" />
+          <div className="flex flex-wrap justify-center gap-2">
+            <a className="btn btn-primary btn-sm" href={cardUrl(preview.base, preview.square)} download="geardown.png"><Download size={14} /> {t("download")}</a>
+            <a className="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgeardown.app">LinkedIn</a>
+            <a className="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href={`https://x.com/intent/post?text=${encodeURIComponent(preview.text)}&url=${encodeURIComponent("https://geardown.app")}`}>X</a>
+            <a className="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://geardown.app")}`}>Facebook</a>
+          </div>
+          <p className="text-center text-xs text-muted">{t("shareHint")}</p>
+        </div>
+      )}
+    </Modal>
     </div>
   );
 }

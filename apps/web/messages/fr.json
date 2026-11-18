@@ -1950,7 +1950,13 @@
         "3000": "Maître aviateur",
         "5000": "Légende du ciel",
         "10000": "Club des dix mille"
-      }
+      },
+      "share": "Partager",
+      "shareTitle": "Partager ton succès",
+      "fmtPortrait": "Portrait (stories, Instagram)",
+      "fmtSquare": "Carré",
+      "download": "Télécharger l'image",
+      "shareHint": "Télécharge l'image puis ajoute-la à ta publication. Seul ce que tu vois ici est partagé."
     }
   },
   "why": {
