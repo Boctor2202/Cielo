@@ -19,3 +19,17 @@ describe("goals", () => {
     expect(defaultGoals(flights, opening).map((g) => g.target / 60)).toEqual([100, 100]);
   });
 });
+
+describe("goal projection", () => {
+  it("projects the date from the pace of the last 12 months", async () => {
+    const { goalProgress } = await import("../src/goals");
+    // 100 h flown in the last year, 50 h left → about half a year
+    const flights = Array.from({ length: 100 }, (_, i) => ({ date: `2026-${String((i % 10) + 1).padStart(2, "0")}-10`, totalMin: 60, isFstd: false } as never));
+    const p = goalProgress({ id: "g", kind: "total", target: 150 * 60, by: "2027-12-31" }, flights, [], "2026-11-18");
+    expect(p.lastYear).toBe(6000);
+    expect(p.eta! > "2027-05-01" && p.eta! < "2027-06-01").toBe(true);
+    expect(p.onTrack).toBe(true);
+    const idle = goalProgress({ id: "g", kind: "total", target: 150 * 60 }, [], [], "2026-11-18");
+    expect(idle.eta).toBeUndefined();
+  });
+});

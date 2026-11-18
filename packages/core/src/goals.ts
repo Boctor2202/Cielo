@@ -14,6 +14,12 @@ export interface GoalProgress {
   daysLeft?: number;
   /** pace needed per 30 days to make the deadline */
   perMonth?: number;
+  /** what was logged towards the goal over the last 365 days (the pilot's current pace) */
+  lastYear: number;
+  /** approximate date the goal will be reached at that pace (none without flying in the last year) */
+  eta?: string;
+  /** with a deadline: whether that pace reaches the goal in time */
+  onTrack?: boolean;
 }
 
 export const GOAL_KINDS: GoalKind[] = ["total", "pic", "type", "multiPilot", "jet", "night", "ifr", "landings"];
@@ -51,9 +57,21 @@ export function goalProgress(goal: PilotGoal, flights: Flight[], opening: Openin
   const done = goalValue(goal.kind, flights, opening, { icao: goal.icao, typeIsJet });
   const left = Math.max(0, goal.target - done);
   const daysLeft = goal.by ? daysBetween(today, goal.by) : undefined;
+  // the pace of the last 12 months, projected forward (paper totals carried forward do not count as pace)
+  const from = addDays(today, -365);
+  const recentFlights = flights.filter((f) => f.date > from && f.date <= today);
+  const lastYear = goalValue(goal.kind, recentFlights, [], { icao: goal.icao, typeIsJet });
+  let eta: string | undefined;
+  if (left > 0 && lastYear > 0) {
+    const days = Math.ceil(left / (lastYear / 365));
+    if (days <= 365 * 50) eta = addDays(today, days);
+  }
   return {
     goal,
     done,
+    lastYear,
+    eta,
+    onTrack: goal.by && left > 0 ? (eta ? eta <= goal.by : false) : undefined,
     ratio: goal.target > 0 ? Math.min(1, done / goal.target) : 1,
     reached: done >= goal.target,
     left,

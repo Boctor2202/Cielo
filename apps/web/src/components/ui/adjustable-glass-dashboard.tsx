@@ -708,7 +708,7 @@ export default function GlassWorkspace({
             <p>
               <strong>{g.savedLabel ?? format(g.saved)}</strong>
               <span>
-                {L.of} {g.targetLabel ?? format(g.target)}
+                {g.targetLabel ?? `${L.of} ${format(g.target)}`}
               </span>
             </p>
           </div>

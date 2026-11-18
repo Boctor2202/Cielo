@@ -180,13 +180,19 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
         const deadline = goal.by
           ? ` · ${(g.goalBy ?? "by {date}").replace("{date}", fd(goal.by, { day: "numeric", month: "short", year: "numeric" }))}${p.perMonth ? ` · ${(g.goalPace ?? "{n}/month").replace("{n}", hours ? fmtH(p.perMonth) : String(p.perMonth))}` : ""}`
           : "";
+        // when it will be reached at the pace of the last 12 months
+        const eta = p.reached
+          ? ""
+          : p.eta
+            ? ` · ${(g.goalEta ?? "≈ {date} at your pace").replace("{date}", fd(p.eta, { month: "short", year: "numeric" }))}${p.onTrack === false ? ` ${g.goalLate ?? "(after the deadline)"}` : ""}`
+            : ` · ${g.goalNoPace ?? "no flying in the last 12 months"}`;
         return {
           id: goal.id,
           name,
           saved: Math.min(p.done, goal.target),
           target: goal.target,
           savedLabel: hours ? dur(p.done) : String(p.done),
-          targetLabel: `${(g.goalOf ?? "of {v}").replace("{v}", hours ? dur(goal.target) : goal.target.toLocaleString(locale))}${deadline}`,
+          targetLabel: `${(g.goalOf ?? "of {v}").replace("{v}", hours ? dur(goal.target) : goal.target.toLocaleString(locale))}${deadline}${eta}`,
         };
       }),
       {

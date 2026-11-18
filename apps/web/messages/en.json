@@ -529,7 +529,10 @@
         "goalKind_jet": "{n} h jet",
         "goalKind_night": "{n} h night",
         "goalKind_ifr": "{n} h IFR",
-        "goalKind_landings": "{n} landings"
+        "goalKind_landings": "{n} landings",
+        "goalEta": "≈ {date} at your pace",
+        "goalLate": "(after the deadline)",
+        "goalNoPace": "no flying in the last 12 months"
       }
     },
     "logbook": {

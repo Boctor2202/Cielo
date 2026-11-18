@@ -5,7 +5,7 @@ import { GOAL_KINDS, defaultGoals, formatDuration, goalProgress, isHourGoal, typ
 import { Button, Card, Chip, Field, Row, Screen, Txt, tap } from "../../src/components/ui";
 import { Track } from "../../src/components/Bars";
 import { DateField } from "../../src/components/DateField";
-import { formatDate, type I18nKey } from "../../src/i18n";
+import { formatDate, formatMonth, type I18nKey } from "../../src/i18n";
 import { todayUtc, useApp } from "../../src/state";
 import { space, useTheme } from "../../src/theme";
 
@@ -114,6 +114,13 @@ export default function Goals() {
             <Txt mono variant="small">{val(p.goal, p.done)}</Txt>
             <Txt mono variant="small">{t("goals.of", { v: val(p.goal, p.goal.target) })}</Txt>
           </Row>
+          {!p.reached ? (
+            <Txt variant="small" color={p.onTrack === false ? c.caution : undefined}>
+              {p.eta
+                ? `${t("goals.eta", { date: formatMonth(p.eta.slice(0, 7), locale) })}${p.onTrack === false ? ` ${t("goals.late")}` : ""}`
+                : t("goals.noPace")}
+            </Txt>
+          ) : null}
           {p.goal.by ? (
             <Txt variant="small" color={p.daysLeft !== undefined && p.daysLeft < 0 && !p.reached ? c.warning : undefined}>
               {t("goals.deadline", { date: formatDate(p.goal.by, locale) })}

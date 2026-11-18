@@ -529,7 +529,10 @@
         "goalKind_jet": "{n} h réacteur",
         "goalKind_night": "{n} h de nuit",
         "goalKind_ifr": "{n} h IFR",
-        "goalKind_landings": "{n} atterrissages"
+        "goalKind_landings": "{n} atterrissages",
+        "goalEta": "≈ {date} à votre rythme",
+        "goalLate": "(après l'échéance)",
+        "goalNoPace": "aucun vol sur les 12 derniers mois"
       }
     },
     "logbook": {
