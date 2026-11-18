@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, StyleSheet, View } from "react-native";
+import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../theme";
 
 const NAVY = "#0E1B2E";
@@ -67,6 +67,26 @@ export function Splash() {
     />
   );
 
+  // the O of the wordmark: same 40-unit drawing as the website's logo, its dots lit with the big mark's
+  const FS = 22;
+  const O = FS * 1.3;
+  const u = O / 40;
+  const oDot = (i: number, cx: number, cy: number) => (
+    <Animated.View
+      key={`o${i}`}
+      style={{
+        position: "absolute",
+        left: (cx - 4.6) * u,
+        top: (cy - 4.6) * u,
+        width: 9.2 * u,
+        height: 9.2 * u,
+        borderRadius: 4.6 * u,
+        backgroundColor: GREEN,
+        opacity: dots[i]!.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }),
+      }}
+    />
+  );
+
   return (
     <View style={[StyleSheet.absoluteFill, { backgroundColor: c.bg, alignItems: "center", justifyContent: "center" }]}>
       <Animated.View
@@ -82,7 +102,18 @@ export function Splash() {
           {dot(1, 18, 58)}
           {dot(2, S - 18 - D, 58)}
         </View>
-        <Animated.Text style={{ color: c.text, fontSize: 20, fontWeight: "600", letterSpacing: 7 }}>GEARDOWN</Animated.Text>
+        {/* the wordmark: GEAR bold, DOWN regular, its O drawn as the three greens (as on the website) */}
+        <View style={{ flexDirection: "row", alignItems: "center" }} accessible accessibilityLabel="Geardown">
+          <Text style={{ color: c.text, fontSize: FS, fontWeight: "700", letterSpacing: FS * 0.18 }}>GEAR</Text>
+          <Text style={{ color: c.text, fontSize: FS, fontWeight: "400", letterSpacing: FS * 0.18 }}>D</Text>
+          <View style={{ width: O, height: O, marginRight: FS * 0.18 }}>
+            <View style={{ position: "absolute", left: 0, top: 0, width: O, height: O, borderRadius: O / 2, borderWidth: O * 0.085, borderColor: c.text }} />
+            {oDot(0, 20, 13.4)}
+            {oDot(1, 14, 23.8)}
+            {oDot(2, 26, 23.8)}
+          </View>
+          <Text style={{ color: c.text, fontSize: FS, fontWeight: "400", letterSpacing: FS * 0.18 }}>WN</Text>
+        </View>
         <View style={{ width: 120, height: 2, borderRadius: 1, backgroundColor: c.scheme === "dark" ? "rgba(255,255,255,0.10)" : "rgba(14,27,46,0.10)", overflow: "hidden" }}>
           <Animated.View
             style={{
