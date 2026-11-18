@@ -140,9 +140,15 @@ const day = (iso: string | undefined | null, locale: CvLocale) =>
   iso ? new Intl.DateTimeFormat(LANG_TAG[locale], { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${iso.slice(0, 10)}T12:00:00Z`)) : "";
 
 /** Types relevant to the target job first, then by hours. */
-export function orderTypes(types: TypeHours[], target?: string[]): TypeHours[] {
-  if (!target?.length) return types;
-  return [...types].sort((a, b) => Number(target.includes(b.icao)) - Number(target.includes(a.icao)) || b.totalMin - a.totalMin);
+/**
+ * Order of the aircraft types on the CV: those of the targeted offer first, then the types flown in the 12
+ * months before the hours' date (the pilot's current types, what recruiters look at), then by hours.
+ */
+export function orderTypes(types: TypeHours[], target?: string[], asOf?: string): TypeHours[] {
+  const since = asOf ? new Date(Date.parse(`${asOf.slice(0, 10)}T00:00:00Z`) - 365 * 86_400_000).toISOString().slice(0, 10) : undefined;
+  const current = (x: TypeHours) => Number(!!since && !!x.lastFlown && x.lastFlown >= since);
+  const wanted = (x: TypeHours) => Number(!!target?.includes(x.icao));
+  return [...types].sort((a, b) => wanted(b) - wanted(a) || current(b) - current(a) || b.totalMin - a.totalMin);
 }
 
 function hourLines(h: FlightExperience, t: (typeof L)["en"], locale: CvLocale): Line[] {
@@ -168,7 +174,7 @@ export function buildCvDocument(cv: CvData): CvDocument {
   const { profile: p, hours: h, locale } = cv;
   const t = L[locale];
   const sections: Section[] = [];
-  const types = orderTypes(h.byType, p.target?.aircraft);
+  const types = orderTypes(h.byType, p.target?.aircraft, h.asOf);
 
   const contact: Line[] = [];
   if (p.email) contact.push({ kind: "pair", label: t.email, value: p.email });

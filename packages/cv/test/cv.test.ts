@@ -106,3 +106,19 @@ describe("cv document", () => {
     }
   });
 });
+
+describe("type order", () => {
+  it("puts the type flown in the last 12 months before older types with more hours", async () => {
+    const { orderTypes } = await import("../src/document");
+    const base = { category: "aeroplane", engineType: "jet", multiPilot: true, picMin: 0, copilotMin: 0 };
+    const out = orderTypes(
+      [
+        { ...base, icao: "AT76", name: "ATR 72-600", totalMin: 19600, lastFlown: "2024-10-27" },
+        { ...base, icao: "C68A", name: "Cessna Citation Latitude", totalMin: 14300, lastFlown: "2026-11-15" },
+      ],
+      undefined,
+      "2026-11-18",
+    );
+    expect(out[0]!.icao).toBe("C68A");
+  });
+});
