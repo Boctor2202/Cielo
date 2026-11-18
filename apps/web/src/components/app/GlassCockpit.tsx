@@ -22,7 +22,8 @@ const GLASS_KEY = "geardown-glass";
 const HOST_TOKENS = {
   "--color-background": "var(--bg)",
   "--color-foreground": "var(--text)",
-  "--color-muted-foreground": "var(--muted)",
+  // stronger than the app's muted grey: the glass lets the photo through, light text on light clouds was hard to read
+  "--color-muted-foreground": "color-mix(in srgb, var(--text) 74%, transparent)",
   "--color-primary": "var(--accent)",
   "--color-primary-foreground": "var(--accent-contrast)",
   "--color-card": "var(--surface)",
@@ -79,7 +80,7 @@ function Chips({ items }: { items: { icon: typeof Plane; color: string; label: s
     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 16 }}>
       {items.map(({ icon: Icon, color, label, value, share }) => (
         <div key={label} style={{ padding: "9px 10px", borderRadius: 12, background: `color-mix(in srgb, ${color} 13%, transparent)`, display: "grid", gap: 4, minWidth: 0 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: `color-mix(in srgb, ${color} 70%, currentColor)` }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: `color-mix(in srgb, ${color} 58%, currentColor)` }}>
             <Icon size={12} aria-hidden="true" /> {label}
           </span>
           <strong style={{ fontSize: 15, fontWeight: 700, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{value}</strong>

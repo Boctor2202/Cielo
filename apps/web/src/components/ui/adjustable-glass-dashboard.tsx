@@ -653,7 +653,7 @@ export default function GlassWorkspace({
               <strong>
                 {t.name}
                 {t.badge ? (
-                  <em className="gw-badge" style={t.tone ? { color: t.tone, background: `color-mix(in srgb, ${t.tone} 15%, transparent)` } : undefined}>
+                  <em className="gw-badge" style={t.tone ? { color: `color-mix(in srgb, ${t.tone} 62%, var(--gw-ink))`, background: `color-mix(in srgb, ${t.tone} 15%, transparent)` } : undefined}>
                     {t.badge}
                   </em>
                 ) : null}
@@ -775,25 +775,42 @@ export default function GlassWorkspace({
       )}
       <div className="gw-room-shade" aria-hidden="true" />
       <div className="gw-workspace">
-        <header className="gw-topbar gw-glass">
-          <a
-            className="gw-brand"
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              changeView("overview");
-            }}
-          >
-            <span className="gw-brand-icon">
-              {brandMark ?? (
-                <Layers size={18} strokeWidth={1.7} aria-hidden="true" />
-              )}
-            </span>
-            <strong>{brand}</strong>
-            <span className="gw-brand-divider" />
-            <span className="gw-personal">{L.personalWorkspace}</span>
-          </a>
-          <div className="gw-toolbar">
+        <div className="gw-stage">
+          <main className="gw-main gw-glass">
+            <div className="gw-view-heading">
+              <div>
+                <p className="gw-greeting">
+                  {view === "overview" && userName
+                    ? fill(L.welcome, { name: userName })
+                    : L.yourWorkspace}
+                </p>
+                <h1>
+                  {view === "overview"
+                    ? L.tabOverview
+                    : view === "activity"
+                      ? L.tabActivity
+                      : view === "savings"
+                        ? L.headingSavings
+                        : L.tabReports}
+                </h1>
+              </div>
+              <div className="gw-heading-action" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {view === "activity" || (view === "reports" && !reportsContent) ? (
+                  <button
+                    type="button"
+                    className="gw-button"
+                    onClick={exportReport}
+                  >
+                    <Download size={14} aria-hidden="true" />
+                    {L.exportCsv}
+                  </button>
+                ) : view === "savings" && savingsAction ? (
+                  savingsAction
+                ) : (
+                  (headingAction ??
+                  (periodLabel && <span className="gw-date">{periodLabel}</span>))
+                )}
+          <div className="gw-toolbar" style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <button
               type="button"
               className="gw-adjust"
@@ -804,9 +821,10 @@ export default function GlassWorkspace({
               }}
               aria-expanded={settingsOpen}
               aria-controls={`${id}-material`}
+              aria-label={L.adjustGlass}
+              title={L.adjustGlass}
             >
               <Settings2 size={16} aria-hidden="true" />
-              <span>{L.adjustGlass}</span>
             </button>
             {!useHostTheme && (
               <button
@@ -832,62 +850,7 @@ export default function GlassWorkspace({
               <Bell size={17} aria-hidden="true" />
               {notifications.length > 0 && <i />}
             </button>
-            {userName && (
-              <span className="gw-avatar" title={userName}>
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt=""
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
-                  userName.slice(0, 1).toUpperCase()
-                )}
-              </span>
-            )}
           </div>
-        </header>
-        <div className="gw-stage">
-          {nav(true)}
-          <main className="gw-main gw-glass">
-            <div className="gw-view-heading">
-              <div>
-                <p className="gw-greeting">
-                  {view === "overview" && userName
-                    ? fill(L.welcome, { name: userName })
-                    : L.yourWorkspace}
-                </p>
-                <h1>
-                  {view === "overview"
-                    ? L.tabOverview
-                    : view === "activity"
-                      ? L.tabActivity
-                      : view === "savings"
-                        ? L.headingSavings
-                        : L.tabReports}
-                </h1>
-              </div>
-              <div className="gw-heading-action">
-                {view === "activity" || (view === "reports" && !reportsContent) ? (
-                  <button
-                    type="button"
-                    className="gw-button"
-                    onClick={exportReport}
-                  >
-                    <Download size={14} aria-hidden="true" />
-                    {L.exportCsv}
-                  </button>
-                ) : view === "savings" && savingsAction ? (
-                  savingsAction
-                ) : (
-                  (headingAction ??
-                  (periodLabel && <span className="gw-date">{periodLabel}</span>))
-                )}
               </div>
             </div>
             <div className="gw-mobile-nav">{nav()}</div>
@@ -1168,7 +1131,6 @@ export default function GlassWorkspace({
                 </span>
               </footer>
             )}
-            <div className="gw-desktop-dock">{nav()}</div>
           </main>
         </div>
         {alerts && (
@@ -1650,7 +1612,7 @@ const styles = `
   margin: 0 4px;
 }
 .gw-personal {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--gw-muted);
 }
 .gw-toolbar {
@@ -1759,7 +1721,7 @@ const styles = `
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--gw-muted);
   white-space: nowrap;
 }
@@ -1789,7 +1751,7 @@ const styles = `
   gap: 16px;
   margin-bottom: 20px;
   color: var(--gw-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .gw-panel-title h2 {
   font-size: 14px;
@@ -1818,7 +1780,7 @@ const styles = `
 }
 .gw-badge {
   font-style: normal;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
   padding: 2px 6px;
@@ -1835,7 +1797,7 @@ const styles = `
   white-space: nowrap;
 }
 .gw-balance-meta {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--gw-muted);
   margin-top: 10px !important;
 }
@@ -1869,10 +1831,10 @@ const styles = `
 }
 .gw-account strong {
   font-weight: 500;
-  font-size: 12px;
+  font-size: 13px;
 }
 .gw-account span {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--gw-muted);
 }
 .gw-account > button {
@@ -1892,7 +1854,7 @@ const styles = `
   background: var(--gw-segment);
   border-radius: 8px;
   padding: 3px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .gw-segment button {
   padding: 4px 8px;
@@ -1913,7 +1875,7 @@ const styles = `
   display: flex;
   gap: 20px;
   margin: -4px 0 14px;
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--gw-muted);
 }
 .gw-chart-legend span {
@@ -1936,7 +1898,7 @@ const styles = `
   gap: 4px;
 }
 .gw-chart-summary span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--gw-muted);
   display: flex;
   align-items: center;
@@ -1981,7 +1943,7 @@ const styles = `
 .gw-chart-months {
   position: relative;
   height: 24px;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--gw-muted);
   padding-top: 10px;
 }
@@ -1994,7 +1956,7 @@ const styles = `
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px !important;
+  font-size: 12.5px !important;
 }
 .gw-text-button:hover {
   color: var(--gw-accent);
@@ -2034,24 +1996,24 @@ const styles = `
   flex: 1;
 }
 .gw-transaction-name strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 .gw-transaction-name span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--gw-muted);
   margin-top: 2px;
 }
 .gw-transaction > strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
 }
 .gw-transaction-status {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--gw-muted);
   display: flex;
   align-items: center;
@@ -2061,7 +2023,7 @@ const styles = `
   color: var(--gw-pending);
 }
 .gw-small-label {
-  font-size: 10px;
+  font-size: 12px;
 }
 .gw-goal + .gw-goal {
   margin-top: 22px;
@@ -2072,12 +2034,12 @@ const styles = `
   gap: 9px;
 }
 .gw-goal-top strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   flex: 1;
 }
 .gw-goal-top > span:last-child {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--gw-muted);
 }
 .gw-goal-icon {
@@ -2104,7 +2066,7 @@ const styles = `
 .gw-goal p {
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--gw-muted);
 }
 .gw-goal p strong {
@@ -2116,7 +2078,7 @@ const styles = `
   align-items: center;
   justify-content: space-between;
   color: var(--gw-muted);
-  font-size: 9px;
+  font-size: 11px;
   margin-top: 22px;
   gap: 16px;
 }
@@ -2162,7 +2124,7 @@ const styles = `
   gap: 8px;
   border-radius: 24px;
   padding: 10px 17px;
-  font-size: 11px;
+  font-size: 12.5px;
   transition:
     background 0.22s,
     color 0.22s;
@@ -2179,7 +2141,8 @@ const styles = `
   background: var(--gw-dock-hover);
 }
 .gw-mobile-nav {
-  display: none;
+  display: flex;
+  margin-bottom: 20px;
 }
 .gw-button {
   padding: 9px 13px;
@@ -2189,7 +2152,7 @@ const styles = `
   gap: 7px;
   background: var(--gw-button) !important;
   color: var(--gw-button-ink) !important;
-  font-size: 11px !important;
+  font-size: 12.5px !important;
   white-space: nowrap;
 }
 .gw-button:hover {
@@ -2209,7 +2172,7 @@ const styles = `
   background: none;
   border: 0;
   caret-color: var(--gw-accent);
-  font-size: 11px;
+  font-size: 12.5px;
 }
 .gw-search input::placeholder {
   color: var(--gw-muted);
@@ -2220,14 +2183,14 @@ const styles = `
 }
 .gw-count {
   margin-left: 6px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--gw-muted);
 }
 .gw-empty {
   text-align: center;
   padding: 70px 15px;
   color: var(--gw-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .gw-empty svg {
   margin-bottom: 12px;
@@ -2257,7 +2220,7 @@ const styles = `
   box-shadow: inset 0 1px 0 var(--gw-strong-edge);
 }
 .gw-savings-intro p {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--gw-muted);
 }
 .gw-savings-intro strong {
@@ -2283,7 +2246,7 @@ const styles = `
   align-items: center;
   gap: 12px;
   color: var(--gw-muted);
-  font-size: 12px;
+  font-size: 13px;
   padding: 24px 4px;
 }
 .gw-report-stats {
@@ -2299,7 +2262,7 @@ const styles = `
   display: block;
 }
 .gw-report-stats section > span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--gw-muted);
 }
 .gw-report-stats .gw-panel-title {
@@ -2314,7 +2277,7 @@ const styles = `
   height: 185px;
 }
 .gw-chart-footnote {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--gw-muted);
   margin-top: 15px !important;
 }
@@ -2325,7 +2288,7 @@ const styles = `
   display: flex;
   gap: 7px;
   align-items: center;
-  font-size: 11px;
+  font-size: 12.5px;
 }
 .gw-category-list strong {
   margin-left: auto;
@@ -2355,7 +2318,7 @@ const styles = `
   scrollbar-width: thin;
   scrollbar-color: var(--gw-scrollbar) transparent;
   right: 10px;
-  top: 75px;
+  top: 110px;
   width: 300px;
   border-radius: 22px;
   padding: 22px;
@@ -2384,7 +2347,7 @@ const styles = `
   place-items: center;
 }
 .gw-material > p {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--gw-muted);
   margin: 7px 0 18px;
 }
@@ -2410,7 +2373,7 @@ const styles = `
         transparent
       ),
     0 12px 20px -18px var(--gw-sample-shadow);
-  font-size: 12px;
+  font-size: 13px;
 }
 .gw-presets {
   display: flex;
@@ -2422,7 +2385,7 @@ const styles = `
   border: 1px solid var(--gw-line);
   border-radius: 7px;
   padding: 6px 0;
-  font-size: 11px;
+  font-size: 12.5px;
 }
 .gw-presets button:hover {
   background: var(--gw-control-hover);
@@ -2434,10 +2397,10 @@ const styles = `
 .gw-range > span {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 12.5px;
 }
 .gw-range output {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--gw-muted);
 }
 .gw-range input {
@@ -2451,7 +2414,7 @@ const styles = `
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  font-size: 12.5px;
   margin-top: 20px;
 }
 .gw-tint input {
@@ -2469,7 +2432,7 @@ const styles = `
   border-radius: 8px;
   padding: 8px;
   margin-top: 22px;
-  font-size: 11px !important;
+  font-size: 12.5px !important;
 }
 .gw-reset:hover {
   background: var(--gw-control-hover);
@@ -2477,7 +2440,7 @@ const styles = `
 .gw-notifications {
   position: absolute;
   right: 25px;
-  top: 75px;
+  top: 110px;
   z-index: 21;
   width: 280px;
   border-radius: 16px;
@@ -2495,7 +2458,7 @@ const styles = `
 }
 .gw-notifications p {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--gw-muted);
 }
 .gw-toast {
@@ -2512,7 +2475,7 @@ const styles = `
   background: var(--gw-toast);
   color: var(--gw-toast-ink);
   box-shadow: 0 10px 30px var(--gw-toast-shadow);
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 .gw-sun {
@@ -2602,7 +2565,7 @@ const styles = `
     gap: 7px;
   }
   .gw-brand strong {
-    font-size: 12px;
+    font-size: 13px;
   }
   .gw-brand-icon {
     width: 25px;
@@ -2614,7 +2577,7 @@ const styles = `
   }
   .gw-adjust {
     padding: 8px;
-    font-size: 11px !important;
+    font-size: 12.5px !important;
     gap: 5px;
   }
   .gw-main {
@@ -2632,14 +2595,14 @@ const styles = `
     line-height: 1.12;
   }
   .gw-greeting {
-    font-size: 11px;
+    font-size: 12.5px;
   }
   .gw-heading-action .gw-date {
     display: none;
   }
   .gw-heading-action .gw-button {
     padding: 8px 10px;
-    font-size: 10px !important;
+    font-size: 12px !important;
   }
   .gw-mobile-nav {
     display: block;
@@ -2657,7 +2620,7 @@ const styles = `
     box-shadow: none;
   }
   .gw-dock button {
-    font-size: 10px;
+    font-size: 12px;
     padding: 9px 10px;
     border-radius: 9px;
     gap: 5px;
@@ -2685,7 +2648,7 @@ const styles = `
     font-size: 39px;
   }
   .gw-balance-meta {
-    font-size: 11px;
+    font-size: 12.5px;
   }
   .gw-account {
     padding-top: 23px;
@@ -2730,7 +2693,7 @@ const styles = `
   }
   .gw-transaction-name strong,
   .gw-transaction > strong {
-    font-size: 11px;
+    font-size: 12.5px;
   }
   .gw-search {
     padding: 7px;
@@ -2790,7 +2753,7 @@ const styles = `
   }
   .gw-toast {
     max-width: calc(100% - 30px);
-    font-size: 11px;
+    font-size: 12.5px;
     white-space: normal;
   }
   .gw-chart-months {
