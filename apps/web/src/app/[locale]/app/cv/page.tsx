@@ -22,8 +22,7 @@ function keywordsFor(job: Job): string[] {
   const k = new Set<string>();
   if (job.requirements.licence) k.add(job.requirements.licence === "FATPL" ? "ATPL" : job.requirements.licence);
   if (job.requirements.authority) k.add(job.requirements.authority);
-  const name = job.title.replace(/\(.*?\)|first officer|captain|commandant|copilot|co-pilot|\bm\/[fw]\/d\b|[-–|/]/gi, " ").replace(/\s+/g, " ").trim();
-  if (name.length > 2) k.add(name);
+  // the aircraft come as their ICAO codes (job.aircraft); the rest of the title (base, contract…) is not a keyword
   if (job.requirements.jetHours) k.add("Jet");
   if (job.requirements.multiPilotHours) k.add("Multi-pilot");
   if (job.requirements.picHours) k.add("PIC");

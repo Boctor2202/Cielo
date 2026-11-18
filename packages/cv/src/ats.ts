@@ -50,7 +50,8 @@ export function atsReport(cv: CvData, doc: CvDocument, text: string, today: stri
   add("recency", h.last90dMin > 0 || !h.lastFlight, "warn", h.lastFlight);
 
   const hay = text.toLowerCase();
-  const kws = [...new Set([...(p.target?.keywords ?? []), ...(p.target?.aircraft ?? [])])];
+  // a long phrase (an offer title kept by an older draft) is not a keyword
+  const kws = [...new Set([...(p.target?.keywords ?? []).filter((k) => k.trim().split(/\s+/).length <= 3), ...(p.target?.aircraft ?? [])])];
   const found = kws.filter((k) => hay.includes(k.toLowerCase()));
   const missing = kws.filter((k) => !hay.includes(k.toLowerCase()));
   if (kws.length) add("targetKeywords", missing.length === 0, "warn", missing.join(", "));

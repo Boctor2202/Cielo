@@ -269,9 +269,12 @@ export function buildCvDocument(cv: CvData): CvDocument {
   if (h.multiPilotMin) kw.add("Multi-crew");
   if (h.jetMin) kw.add("Jet");
   if (h.turbineMin) kw.add("Turbine");
-  for (const k of p.target?.keywords ?? []) kw.add(k);
+  for (const k of p.target?.keywords ?? []) if (k.trim().split(/\s+/).length <= 3) kw.add(k);
 
-  const headline = p.headline?.trim() || [p.target?.title, types[0] ? `${fmtH(h.totalMin, locale)} TT · ${types[0].name}` : `${fmtH(h.totalMin, locale)} TT`].filter(Boolean).join(" · ");
+  // the pilot's own profile: current position, total time, main current type (never the offer's title, which
+  // describes the job applied for, not what the pilot flies; it has its own "Target position" line)
+  const current = p.experience.find((x) => !x.end)?.role?.trim();
+  const headline = p.headline?.trim() || [current, `${fmtH(h.totalMin, locale)} TT`, types[0]?.name].filter(Boolean).join(" · ");
   const figures = [
     { label: t.figTotal, value: fmtH(h.totalMin, locale) },
     { label: t.figPic, value: fmtH(h.picMin, locale) },
@@ -306,7 +309,7 @@ export function cvToText(doc: CvDocument): string {
 export function targetKeywordsMet(data: CvData): string[] {
   const p = data.profile;
   const h = data.hours;
-  const want = [...new Set([...(p.target?.keywords ?? []), ...(p.target?.aircraft ?? [])])];
+  const want = [...new Set([...(p.target?.keywords ?? []).filter((k) => k.trim().split(/\s+/).length <= 3), ...(p.target?.aircraft ?? [])])];
   const lic = data.licences.map((l) => `${l.code} ${expandLicence(l.code)} ${l.authority ?? ""}`.toLowerCase()).join(" | ");
   const types = h.byType.map((x) => `${x.icao} ${x.name}`.toLowerCase());
   const met = (k: string): boolean => {
