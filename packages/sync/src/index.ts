@@ -14,7 +14,7 @@
  * Never throws: network/server failures are reported in SyncResult.errors and the
  * watermarks only advance over what actually succeeded, so the next run resumes.
  */
-import { rowFromDb, rowToDb, SYNC_TABLES, type LocalStore, type SyncedRecord, type TableMap, type TableName } from "@cielo/core";
+import { PILOT_DIRTY_KEY, rowFromDb, rowToDb, SYNC_TABLES, type LocalStore, type SyncedRecord, type TableMap, type TableName } from "@cielo/core";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type SyncPhase = "push" | "pull";
@@ -110,6 +110,43 @@ export function createSupabaseSync(options: SupabaseSyncOptions): SupabaseSync {
 
   let inFlight: Promise<SyncResult> | null = null;
   let timer: ReturnType<typeof setInterval> | null = null;
+
+  /**
+   * The profile: only the fields changed on this device are sent (see PILOT_DIRTY_KEY), then the merged row is
+   * read back. A device that never pushed its profile (no list yet) sends the whole row once.
+   */
+  async function pushPilot(): Promise<number> {
+    const since = (await store.getMeta(lastPushKey("pilots"))) ?? EPOCH;
+    const row = ((await store.changedSince("pilots", since)) as unknown as AnyRow[]).find((r) => r.id === pilotId);
+    if (!row) return 0;
+    const raw = await store.getMeta(PILOT_DIRTY_KEY);
+    const fields = raw ? (JSON.parse(raw) as string[]) : undefined;
+    let pushed = 0;
+    if (!fields || fields.length) {
+      const full = rowToDb(row);
+      // without a list (first push from this device), empty values are left out so they cannot wipe the server's
+      const payload = fields
+        ? Object.fromEntries(Object.entries(full).filter(([k]) => k === "id" || k === "updated_at" || fields.some((f) => rowToDb({ [f]: null })[k] !== undefined)))
+        : Object.fromEntries(Object.entries(full).filter(([, v]) => v !== null && v !== ""));
+      const { error } = await supabase.from("pilots").upsert([payload], { onConflict: "id" });
+      if (error) throw error;
+      pushed = 1;
+    }
+    // fields changed while the push was in flight stay listed
+    const now = await store.getMeta(PILOT_DIRTY_KEY);
+    const left = fields ? (now ? (JSON.parse(now) as string[]) : []).filter((f) => !fields.includes(f)) : [];
+    await store.setMeta(PILOT_DIRTY_KEY, JSON.stringify(left));
+    let mark = String(row.updatedAt);
+    // the server row now merges every device's changes: bring it back whole
+    const { data } = await supabase.from("pilots").select("*").eq("id", pilotId).limit(1);
+    const merged = Array.isArray(data) && data[0] ? (normalizeTimestamps(rowFromDb<Record<string, unknown>>(data[0] as Record<string, unknown>)) as AnyRow) : undefined;
+    if (merged) {
+      await store.bulkPut("pilots", [{ ...row, ...merged } as never]);
+      if (time(String(merged.updatedAt)) > time(mark)) mark = String(merged.updatedAt);
+    }
+    await store.setMeta(lastPushKey("pilots"), mark);
+    return pushed;
+  }
 
   async function pushTable(table: TableName): Promise<number> {
     const since = (await store.getMeta(lastPushKey(table))) ?? EPOCH;
@@ -217,7 +254,7 @@ export function createSupabaseSync(options: SupabaseSyncOptions): SupabaseSync {
 
     for (const table of tables) {
       try {
-        result.pushed[table] = await pushTable(table);
+        result.pushed[table] = table === "pilots" ? await pushPilot() : await pushTable(table);
       } catch (e) {
         result.errors.push({ table, phase: "push", message: errorMessage(e) });
       }

@@ -19,6 +19,7 @@ import {
   type SyncedRecord,
   type TableMap,
   type TableName,
+  markPilotFields,
 } from "@cielo/core";
 import { SqliteStore } from "./db/sqliteStore";
 import { ensureLocalPilot, seedReferenceData } from "./db/seed";
@@ -137,7 +138,10 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
     let cancelled = false;
     (async () => {
       const p = await store.get("pilots", pilotId);
-      if (p && !p.email && session.user.email) await store.bulkPut("pilots", [stamp({ ...p, email: session.user.email })]);
+      if (p && !p.email && session.user.email) {
+        await store.bulkPut("pilots", [stamp({ ...p, email: session.user.email })]);
+        await markPilotFields(store, ["email"]);
+      }
       await identify(session.user.id);
       const handle = await startSync({ supabase: supabase!, store, pilotId, onChange: () => void reload() });
       if (cancelled) return handle.stop();
@@ -192,7 +196,10 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
         await put(table, { ...row, deletedAt: new Date().toISOString() } as Partial<TableMap[typeof table]>);
       },
       async savePilot(patch) {
-        await put("pilots", { ...data.pilot, ...patch });
+        // from the stored copy (the screen's may be older), and only these fields are pushed
+        const cur = (await store.get("pilots", data.pilot.id)) ?? data.pilot;
+        await put("pilots", { ...cur, ...patch });
+        await markPilotFields(store, Object.keys(patch));
       },
       reload,
       async wipeAll() {

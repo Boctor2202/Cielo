@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  markPilotFields,
   canonicalFlightContent, deriveFlightTimes, extraFlightFields, flightRevision, newId, stamp, SYNC_TABLES, type Aircraft, type AircraftType, type Flight,
   type FlightFormInput, type Layover, type License, type Locale, type OpeningBalance, type Pilot, type RosterEvent,
   type Signature, type TableMap, type TableName, type FlightRevision,
@@ -47,6 +48,8 @@ export async function ensurePilot(locale: Locale = "fr"): Promise<Pilot> {
 export async function updatePilot(patch: Partial<Pilot>) {
   const p = await ensurePilot();
   await db().t("pilots").put({ ...p, ...patch, id: p.id, updatedAt: now() });
+  // only these fields are pushed: another device's copy of the profile is never sent back whole
+  await markPilotFields(localStore, Object.keys(patch));
 }
 
 /** Rebind local data to the authenticated user id (first sign-in after local use). */
@@ -70,6 +73,12 @@ export async function adoptPilotId(newPilotId: string, email?: string): Promise<
     }
     await db().meta.put({ key: "pilotId", value: newPilotId });
   });
+  // what was filled in before signing in is pushed, never its empty fields over the account's profile
+  const adopted = await db().t("pilots").get(newPilotId);
+  if (adopted) {
+    const skip = new Set(["id", "createdAt", "updatedAt", "deletedAt", "subscriptionTier", "subscriptionSource", "subscriptionExpiresAt"]);
+    await markPilotFields(localStore, Object.entries(adopted).filter(([k, v]) => !skip.has(k) && v !== undefined && v !== null && v !== "").map(([k]) => k));
+  }
   return true;
 }
 

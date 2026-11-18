@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AircraftType, Flight, Pilot, TableName } from "@cielo/core";
 import { createSupabaseSync, lastPullKey, lastPushKey } from "../src/index";
+import { markPilotFields } from "@cielo/core";
 import { FakeSupabase, MemoryStore } from "./fakes";
 
 const ME = "11111111-1111-4111-8111-111111111111";
@@ -210,5 +211,39 @@ describe("server-owned fields", () => {
     expect(after.subscriptionTier).toBe("premium");
     // local edit time untouched: no endless push loop
     expect(after.updatedAt).toBe("2026-11-16T09:59:04.940Z");
+  });
+});
+
+describe("profile from several devices", () => {
+  it("does not let a device with an old copy wipe a name saved elsewhere", async () => {
+    const fake = new FakeSupabase(ME);
+    const mk = () => {
+      const store = new MemoryStore();
+      return { store, sync: createSupabaseSync({ supabase: fake as unknown as SupabaseClient, store, pilotId: ME, tables: ["pilots"] }) };
+    };
+    const base = { id: ME, email: "p@x.io", fullName: "", locale: "fr", regulatoryFramework: "EASA", defaultFunction: "PIC", defaultIfr: "ask", defaultPilotFlying: "always", timeDisplay: "hhmm", subscriptionTier: "free", subscriptionSource: null, createdAt: "2026-11-01T00:00:00.000Z", updatedAt: "2026-11-01T00:00:00.000Z" } as unknown as Pilot;
+    const web = mk();
+    const phone = mk();
+    // both start from the same profile
+    await web.store.bulkPut("pilots", [base]);
+    await phone.store.bulkPut("pilots", [base]);
+    await web.sync.syncNow();
+    await phone.sync.syncNow();
+
+    // the name is saved on the web
+    await web.store.bulkPut("pilots", [{ ...base, fullName: "Cyrille Boctor", updatedAt: "2026-11-18T10:00:00.000Z" }]);
+    await markPilotFields(web.store, ["fullName"]);
+    await web.sync.syncNow();
+
+    // the phone, still without the name, changes the rank
+    await phone.store.bulkPut("pilots", [{ ...base, rank: "First Officer", updatedAt: "2026-11-18T10:05:00.000Z" }]);
+    await markPilotFields(phone.store, ["rank"]);
+    await phone.sync.syncNow();
+
+    const row = fake.table("pilots").get(ME)!;
+    expect(row.full_name).toBe("Cyrille Boctor");
+    expect(row.rank).toBe("First Officer");
+    // and the phone gets the name back
+    expect((await phone.store.get("pilots", ME))?.fullName).toBe("Cyrille Boctor");
   });
 });

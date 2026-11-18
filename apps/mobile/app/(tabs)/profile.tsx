@@ -30,8 +30,16 @@ export default function Profile() {
   const fill = (x: Draft): Draft => ({ ...x, licenceNumber: x.licenceNumber || known.licenceNumber, phone: x.phone || known.phone });
   const [d, setD] = useState<Draft>(draftOf(pilot));
   const [saved, setSaved] = useState(false);
-  useEffect(() => setD(fill(draftOf(pilot))), [pilot, known]); // eslint-disable-line react-hooks/exhaustive-deps
-  const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
+  // the draft follows the stored profile (sync, other screens) until the pilot starts typing, so a sync in the
+  // middle of typing does not wipe what was typed
+  const [touched, setTouched] = useState(false);
+  useEffect(() => {
+    if (!touched) setD(fill(draftOf(pilot)));
+  }, [pilot, known, touched]); // eslint-disable-line react-hooks/exhaustive-deps
+  const set = <K extends keyof Draft>(k: K, v: Draft[K]) => {
+    setTouched(true);
+    setD((x) => ({ ...x, [k]: v }));
+  };
   const initials = (d.fullName || "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   /** Square photo, compressed JPEG so it stays light to sync. */
@@ -57,6 +65,7 @@ export default function Profile() {
       phone: clean(formatPhoneIntl(d.phone, d.nationality || pilot.nationality)),
       bio: clean(d.bio),
     });
+    setTouched(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

@@ -169,10 +169,11 @@ export class FakeSupabase {
             // pilots protection trigger: end users cannot change their subscription columns
             if (name === "pilots") {
               const keep = existing ?? { subscription_tier: "free", subscription_source: null, subscription_expires_at: null };
-              fake.seed(name, { ...r, subscription_tier: keep.subscription_tier, subscription_source: keep.subscription_source, subscription_expires_at: keep.subscription_expires_at });
+              fake.seed(name, { ...existing, ...r, subscription_tier: keep.subscription_tier, subscription_source: keep.subscription_source, subscription_expires_at: keep.subscription_expires_at });
               continue;
             }
-            fake.seed(name, r);
+            // PostgREST upsert: the columns sent replace the stored ones, the others are kept
+            fake.seed(name, { ...existing, ...r });
           }
           return { data: null, error: null };
         });

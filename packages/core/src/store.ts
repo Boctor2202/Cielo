@@ -40,6 +40,20 @@ export interface LocalStore {
   clear(): Promise<void>;
 }
 
+/**
+ * The profile fields changed on this device since its last push. The profile is one row edited from several
+ * devices: pushing the whole row would let a device with an old copy wipe what another one saved (a name, say).
+ * Once a device has pushed its profile, only the fields listed here are sent.
+ */
+export const PILOT_DIRTY_KEY = "dirty:pilots";
+
+export async function markPilotFields(store: Pick<LocalStore, "getMeta" | "setMeta">, fields: string[]): Promise<void> {
+  if (!fields.length) return;
+  const raw = await store.getMeta(PILOT_DIRTY_KEY);
+  const prev: string[] = raw ? (JSON.parse(raw) as string[]) : [];
+  await store.setMeta(PILOT_DIRTY_KEY, JSON.stringify([...new Set([...prev, ...fields])]));
+}
+
 export function newId(): string {
   const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
   if (c?.randomUUID) return c.randomUUID();
