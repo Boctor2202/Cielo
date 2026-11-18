@@ -13,6 +13,7 @@ import { WidgetSync } from "../src/widgets/sync";
 import { CrewInboxWatcher } from "../src/crewWatcher";
 import { Backdrop, Txt } from "../src/components/ui";
 import { glass } from "../src/theme";
+import { Splash, SplashOverlay } from "../src/components/Splash";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 // dark by default; applied before the first render so the app never flashes light
@@ -23,7 +24,7 @@ function Boot() {
   const error = useBootError();
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: c.bg, padding: 24 }}>
-      {error ? <Txt color={c.warning}>{error.message}</Txt> : <ActivityIndicator color={c.accent} />}
+      {error ? <Txt color={c.warning}>{error.message}</Txt> : <Splash />}
     </View>
   );
 }
@@ -77,6 +78,8 @@ function Navigator() {
         <Stack.Screen name="letter" options={{ contentStyle: { backgroundColor: c.bg }, title: t("letter.title"), presentation: "modal" }} />
         <Stack.Screen name="subscription" options={{ contentStyle: { backgroundColor: c.bg }, title: t("sub.title"), presentation: "modal" }} />
       </Stack>
+      {/* the opening screen stays a moment, then fades onto the overview */}
+      <SplashOverlay />
     </ThemeProvider>
   );
 }
