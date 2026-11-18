@@ -9,9 +9,10 @@ function ThreeGreensO({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 40 40" fill="none" aria-hidden className={className}>
       <circle cx="20" cy="20" r="17.3" stroke="currentColor" strokeWidth="3.4" />
-      <circle cx="20" cy="13.4" r="4.6" fill={GREEN} />
-      <circle cx="14" cy="23.8" r="4.6" fill={GREEN} />
-      <circle cx="26" cy="23.8" r="4.6" fill={GREEN} />
+      {/* the three greens come on one after the other, like a gear-down check (see .gear-light in globals.css) */}
+      <circle className="gear-light" cx="20" cy="13.4" r="4.6" fill={GREEN} />
+      <circle className="gear-light gear-light-2" cx="14" cy="23.8" r="4.6" fill={GREEN} />
+      <circle className="gear-light gear-light-3" cx="26" cy="23.8" r="4.6" fill={GREEN} />
     </svg>
   );
 }

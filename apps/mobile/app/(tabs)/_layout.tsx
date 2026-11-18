@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, type ColorValue } from "react-native";
+import { StyleSheet, View, type ColorValue } from "react-native";
+import { ThreeGreensO, Wordmark } from "../../src/components/Logo";
 import { BlurView } from "expo-blur";
 import { Pressable } from "react-native";
 import { router } from "expo-router";
@@ -26,7 +27,18 @@ export default function TabsLayout() {
   );
   // Not `href: null`: in this expo-router version a hidden tab is treated like a protected screen and any
   // navigation to it is redirected to the first tab. Hiding only the tab button keeps the screen reachable.
-  const sub = (title: string) => ({ headerTitle: title, headerLeft: back, tabBarItemStyle: { display: "none" as const }, tabBarButton: () => null });
+  const sub = (title: string) => ({ headerTitle: title, headerLeft: back, headerRight: mark, tabBarItemStyle: { display: "none" as const }, tabBarButton: () => null });
+  // the logo on every page: the wordmark on the main tabs, the lit "O" on the sub-pages (their left is the back button)
+  const brand = () => (
+    <View style={{ marginLeft: 16 }}>
+      <Wordmark size={12} />
+    </View>
+  );
+  const mark = () => (
+    <View style={{ marginRight: 16 }}>
+      <ThreeGreensO size={22} color={c.text} />
+    </View>
+  );
   const bar = () => <BlurView tint={g.tint} intensity={g.intensity + 20} style={[StyleSheet.absoluteFill, { backgroundColor: g.pane }]} />;
   return (
     <Tabs
@@ -46,11 +58,11 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: "transparent" },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: t("tabs.dashboard"), headerTitle: t("dash.title"), tabBarIcon: icon("speedometer-outline"), headerRight: () => <SyncBadge /> }} />
-      <Tabs.Screen name="logbook" options={{ title: t("tabs.logbook"), headerTitle: t("log.title"), tabBarIcon: icon("book-outline"), headerRight: () => <SyncBadge /> }} />
-      <Tabs.Screen name="layovers" options={{ title: t("tabs.layovers"), headerTitle: t("lay.title"), tabBarIcon: icon("bed-outline") }} />
-      <Tabs.Screen name="radar" options={{ title: t("tabs.radar"), headerTitle: t("radar.title"), tabBarIcon: icon("radio-outline") }} />
-      <Tabs.Screen name="more" options={{ title: t("tabs.more"), headerTitle: t("more.title"), tabBarIcon: icon("ellipsis-horizontal-circle-outline") }} />
+      <Tabs.Screen name="index" options={{ title: t("tabs.dashboard"), headerTitle: t("dash.title"), headerLeft: brand, tabBarIcon: icon("speedometer-outline"), headerRight: () => <SyncBadge /> }} />
+      <Tabs.Screen name="logbook" options={{ title: t("tabs.logbook"), headerTitle: t("log.title"), headerLeft: brand, tabBarIcon: icon("book-outline"), headerRight: () => <SyncBadge /> }} />
+      <Tabs.Screen name="layovers" options={{ title: t("tabs.layovers"), headerTitle: t("lay.title"), headerLeft: brand, tabBarIcon: icon("bed-outline") }} />
+      <Tabs.Screen name="radar" options={{ title: t("tabs.radar"), headerTitle: t("radar.title"), headerLeft: brand, tabBarIcon: icon("radio-outline") }} />
+      <Tabs.Screen name="more" options={{ title: t("tabs.more"), headerTitle: t("more.title"), headerLeft: brand, tabBarIcon: icon("ellipsis-horizontal-circle-outline") }} />
       <Tabs.Screen name="roster" options={sub(t("roster.title"))} />
       <Tabs.Screen name="documents" options={sub(t("docs.title"))} />
       <Tabs.Screen name="ftl" options={sub(t("ftl.title"))} />

@@ -14,6 +14,7 @@ import { CrewInboxWatcher } from "../src/crewWatcher";
 import { Backdrop, Txt } from "../src/components/ui";
 import { glass } from "../src/theme";
 import { Splash, SplashOverlay } from "../src/components/Splash";
+import { ThreeGreensO } from "../src/components/Logo";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 // dark by default; applied before the first render so the app never flashes light
@@ -65,6 +66,8 @@ function Navigator() {
           headerTitleStyle: { fontWeight: "600" },
           headerShadowVisible: false,
           contentStyle: { backgroundColor: "transparent" },
+          // the lit "O" of the logo on every page opened over the tabs (a screen's own button replaces it)
+          headerRight: () => <ThreeGreensO size={22} color={c.text} />,
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
