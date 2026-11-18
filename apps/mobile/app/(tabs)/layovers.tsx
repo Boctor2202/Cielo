@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Alert, Pressable, View } from "react-native";
-import { countryName, rosterLayovers, unsavedRosterLayovers } from "@cielo/core";
+import { countryName, rosterLayovers, splitBreak, unsavedRosterLayovers } from "@cielo/core";
 import { Flag } from "../../src/components/Flag";
 import { Roll } from "../../src/components/Roll";
 import { router } from "expo-router";
@@ -167,6 +167,9 @@ function LayoversScreen() {
         const n = nightsOf(l);
         const d1 = day(l.arrivalUtc);
         const hours = l.departureUtc && l.departureUtc.slice(0, 10) === l.arrivalUtc?.slice(0, 10) ? Math.round((Date.parse(l.departureUtc) - Date.parse(l.arrivalUtc!)) / 3_600_000) : 0;
+        // a short split duty break (under 6 h, outside the WOCL) needs no hotel
+        const split = hours > 0 ? splitBreak(l.arrivalUtc!, l.departureUtc!, pilot.ftlTimezone ?? "Europe/Paris") : undefined;
+        const needsHotel = !hours || !split || split.accommodationRequired;
         const d2 = l.departureUtc && l.departureUtc.slice(0, 10) !== l.arrivalUtc?.slice(0, 10) ? day(l.departureUtc) : null;
         return (
           <Pressable key={l.id} onPress={() => void open(l)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
@@ -218,10 +221,12 @@ function LayoversScreen() {
                 ) : null}
               </Row>
               <Row gap={8} style={{ alignItems: "center" }}>
+                {l.hotelName || needsHotel ? (
                 <View style={{ flexShrink: 1, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: l.hotelName ? chip : AMBER + "26" }}>
                   <Ionicons name="bed-outline" size={14} color={l.hotelName ? c.text : AMBER} />
                   <Txt variant="small" numberOfLines={1} color={l.hotelName ? c.text : AMBER} style={{ flexShrink: 1 }}>{l.hotelName || t("lay.noHotel")}</Txt>
                 </View>
+                ) : null}
                 {l.contacts?.length ? (
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: chip }}>
                     <Ionicons name="people-outline" size={14} color={c.text} />

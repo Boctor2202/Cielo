@@ -3,7 +3,7 @@
 import { PauseCircle, BedDouble, CalendarDays, ChevronRight, Globe2, Hotel, MapPin, Plus, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { countryName, rosterLayovers, unsavedRosterLayovers } from "@cielo/core";
+import { countryName, rosterLayovers, splitBreak, unsavedRosterLayovers } from "@cielo/core";
 import { Flag } from "@/components/app/LayoverNights";
 import { Roll } from "@/components/ui/Roll";
 import { AirportInput } from "@/components/app/AirportInput";
@@ -77,6 +77,9 @@ export default function LayoversPage() {
     const sameDay = !!l.departureUtc && l.departureUtc.slice(0, 10) === l.arrivalUtc?.slice(0, 10);
     const hours = sameDay ? Math.round((Date.parse(l.departureUtc!) - Date.parse(l.arrivalUtc!)) / 3_600_000) : 0;
     const b = sameDay ? null : day(l.departureUtc);
+    // a short split duty break (under 6 h, outside the WOCL) needs no hotel
+    const split = sameDay ? splitBreak(l.arrivalUtc!, l.departureUtc!, pilot?.ftlTimezone ?? "Europe/Paris") : undefined;
+    const needsHotel = !sameDay || !split || split.accommodationRequired;
     return (
       <Link
         href={{ pathname: "/app/escales/[id]", params: { id: l.id } }}
@@ -94,7 +97,7 @@ export default function LayoversPage() {
                 {cc ? ` · ${countryName(cc, locale) ?? cc}` : ""}
               </div>
               {l.rosterEventId ? (
-                <div className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-sky-400">
+                <div className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-sky-700 dark:text-sky-400">
                   <CalendarDays size={12} /> {t("fromRoster")}
                 </div>
               ) : null}
@@ -117,7 +120,7 @@ export default function LayoversPage() {
             <span className="h-px flex-1 border-t border-dashed border-muted/60" />
             {b || hours > 0 ? (
               <>
-                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${b ? "bg-indigo-400/15 text-indigo-300" : "bg-amber-400/15 text-amber-300"}`}>
+                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${b ? "bg-indigo-400/15 text-indigo-700 dark:text-indigo-300" : "bg-amber-400/15 text-amber-700 dark:text-amber-300"}`}>
                   {b ? <><BedDouble size={13} /> {t("nights", { n })}</> : <><PauseCircle size={13} /> {t("dayStop", { h: hours })}</>}
                 </span>
                 <span className="h-px flex-1 border-t border-dashed border-muted/60" />
@@ -133,9 +136,11 @@ export default function LayoversPage() {
         </div>
 
         <div className="relative mt-4 flex flex-wrap items-center gap-2 text-sm">
-          <span className={`inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-lg px-2.5 py-1 ${l.hotelName ? "bg-surface-2" : "bg-amber-400/15 text-amber-300"}`}>
+{(l.hotelName || needsHotel) && (
+          <span className={`inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-lg px-2.5 py-1 ${l.hotelName ? "bg-surface-2" : "bg-amber-400/15 text-amber-700 dark:text-amber-300"}`}>
             <Hotel size={14} className="shrink-0" /> <span className="truncate">{l.hotelName || t("noHotel")}</span>
           </span>
+          )}
           {l.contacts?.length ? (
             <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface-2 px-2.5 py-1">
               <Users size={14} /> {l.contacts.length}
@@ -188,7 +193,7 @@ export default function LayoversPage() {
             </span>
           </span>
           {nightsOf(l) > 0 && (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-indigo-400/15 px-2 py-0.5 text-xs font-semibold text-indigo-300">
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-indigo-400/15 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
               <BedDouble size={12} /> {nightsOf(l)}
             </span>
           )}
@@ -219,9 +224,9 @@ export default function LayoversPage() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               { icon: CalendarDays, color: "text-accent bg-accent/15", label: t("statLayovers"), v: stats.count },
-              { icon: BedDouble, color: "text-indigo-300 bg-indigo-400/15", label: t("statNights"), v: stats.nights },
-              { icon: MapPin, color: "text-sky-300 bg-sky-400/15", label: t("statCities"), v: stats.cities },
-              { icon: Globe2, color: "text-amber-300 bg-amber-400/15", label: t("statCountries"), v: stats.countries },
+              { icon: BedDouble, color: "text-indigo-700 dark:text-indigo-300 bg-indigo-400/15", label: t("statNights"), v: stats.nights },
+              { icon: MapPin, color: "text-sky-700 dark:text-sky-300 bg-sky-400/15", label: t("statCities"), v: stats.cities },
+              { icon: Globe2, color: "text-amber-700 dark:text-amber-300 bg-amber-400/15", label: t("statCountries"), v: stats.countries },
             ].map(({ icon: Icon, color, label, v }) => (
               <div key={label} className="flex items-center gap-3 rounded-2xl border border-border bg-surface/70 p-4 backdrop-blur">
                 <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${color}`}><Icon size={19} /></span>

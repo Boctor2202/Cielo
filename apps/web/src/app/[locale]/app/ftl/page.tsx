@@ -134,7 +134,17 @@ export default function FtlPage() {
                         <td className="whitespace-nowrap">{fd(a.duty.reportUtc, { day: "2-digit", month: "short" })} {a.duty.reportUtc.slice(11, 16)} <span className="text-muted">{a.duty.startIcao}→{a.duty.endIcao}</span></td>
                         <td>{a.duty.sectors}</td>
                         <td className={`text-right font-semibold ${over ? "text-warning" : ""}`}>{f(a.fdpMin)}</td>
-                        <td className="text-right text-muted">{Number.isFinite(a.maxFdpMin) ? f(a.maxFdpMin) : "—"}</td>
+                        <td className="text-right text-muted">
+                          {Number.isFinite(a.maxFdpMin) ? f(a.maxFdpMin) : "—"}
+                          {a.split ? (
+                            <span
+                              className="ml-1.5 inline-block rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-300"
+                              title={`${t("splitDetail", { b: f(a.split.breakMin), m: f(a.split.extensionMin) })}${a.split.accommodationRequired ? ` · ${t("splitHotel", { m: f(a.split.extensionWithoutAccommodationMin) })}` : ""}`}
+                            >
+                              {t("splitBadge", { m: f(a.split.extensionMin) })}{a.split.accommodationRequired ? " 🛏" : ""}
+                            </span>
+                          ) : null}
+                        </td>
                         <td className={`text-right ${restShort ? "font-semibold text-warning" : "text-muted"}`}>{a.restBeforeMin !== undefined ? `${f(a.restBeforeMin)} (${t("minRest")} ${f(a.minRestBeforeMin ?? 0)})` : "—"}</td>
                       </tr>
                     );

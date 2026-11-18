@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { rosterLayovers, unsavedRosterLayovers } from "./rosterLayovers";
-import type { Layover, RosterEvent } from "./types";
+import { rosterLayovers, unsavedRosterLayovers } from "../src/rosterLayovers";
+import type { Layover, RosterEvent } from "../src/types";
 
 const ev = (id: string, dep: string, arr: string, start: string, end: string, kind: RosterEvent["kind"] = "FLIGHT") =>
   ({ id, pilotId: "p", kind, depIcao: dep, arrIcao: arr, startUtc: start, endUtc: end, createdAt: start, updatedAt: start }) as RosterEvent;

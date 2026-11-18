@@ -1024,7 +1024,10 @@
         "oro": "Compagnies aériennes en transport commercial (Part-ORO, sous-partie FTL).",
         "subq": "EU-OPS Subpart Q (OPS 1.1090–1.1135) : FDP de 13 h moins 30 min par étape à partir de la 3e et réduction WOCL ; 60 h / 7 j, 190 h / 28 j, 100 h de vol / 28 j, 900 h / année civile.",
         "none": "Aucune limite n'est contrôlée ; les cumuls restent affichés."
-      }
+      },
+      "splitBadge": "split +{m}",
+      "splitDetail": "Split duty : pause de {b}, FDP max +{m} (CS FTL.1.220)",
+      "splitHotel": "hébergement adapté requis (sans : +{m})"
     },
     "documents": {
       "title": "Licences, médical et qualifications",

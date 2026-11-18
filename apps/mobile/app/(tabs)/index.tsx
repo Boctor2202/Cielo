@@ -13,6 +13,7 @@ import {
   defaultGoals,
   formatDuration,
   goalProgress,
+  pilotFirstName,
   licenseStatus,
   type Totals,
 } from "@cielo/core";
@@ -98,7 +99,7 @@ export default function Dashboard() {
     <View style={{ flex: 1 }}>
       <Screen columns>
         <View style={{ gap: 2, marginTop: 4 }}>
-          <Txt variant="muted">{locale === "fr" ? "Bonjour" : "Hello"} {pilot.fullName?.split(" ")[0] ?? ""}</Txt>
+          <Txt variant="muted">{[locale === "fr" ? "Bonjour" : "Hello", pilotFirstName(pilot, session?.user?.user_metadata?.full_name ?? session?.user?.user_metadata?.name)].filter(Boolean).join(" ")}</Txt>
           <Txt variant="title">{locale === "fr" ? "Vue d'ensemble" : "Overview"}</Txt>
         </View>
 

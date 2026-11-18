@@ -42,6 +42,23 @@ export interface DutyPeriod {
   flightIds: string[];
   /** longest time on the ground between two sectors of this duty (split duty), minutes */
   longestBreakMin?: number;
+  /** on-block and off-block around that longest time on the ground */
+  breakFromUtc?: string;
+  breakToUtc?: string;
+}
+
+/** A split duty break (CS FTL.1.220), worked out from the on-block before it and the off-block after it. */
+export interface SplitBreak {
+  /** the break: time on the ground less the post- and pre-flight duties (30 min) */
+  breakMin: number;
+  /** FDP increase with suitable accommodation: half the break */
+  extensionMin: number;
+  /** suitable accommodation is required: a break of 6 h or more, or one in the WOCL */
+  accommodationRequired: boolean;
+  /** minutes of the break in the WOCL (02:00–05:59 reference time) */
+  woclMin: number;
+  /** FDP increase without suitable accommodation: what is beyond 6 h or in the WOCL does not count */
+  extensionWithoutAccommodationMin: number;
 }
 
 /** A ground break counts for split duty from 3 h (CS FTL.1.220). */
@@ -53,10 +70,45 @@ export const FDP_EXTENSION_MAX = 60;
 /** Shortest rest the rules allow (away from base, ORO.FTL.235(b)). */
 const MIN_REST_AWAY = 10 * 60;
 
-/** FDP increase earned by a split duty break: half the break less the post/pre-flight duties. */
-export function splitDutyExtension(breakMin: number | undefined): number {
-  if (!breakMin || breakMin < SPLIT_MIN_BREAK) return 0;
-  return Math.round((breakMin - SPLIT_DUTIES_MIN) / 2);
+/** FDP increase earned by a time on the ground: half the break (the time less the post/pre-flight duties), from a 3 h break. */
+export function splitDutyExtension(groundMin: number | undefined): number {
+  const b = (groundMin ?? 0) - SPLIT_DUTIES_MIN;
+  return b >= SPLIT_MIN_BREAK ? Math.round(b / 2) : 0;
+}
+
+/** Minutes of [from, to] falling in the WOCL (02:00–05:59) of the given reference time zone. */
+function woclOverlap(fromUtc: string, toUtc: string, timeZone: string): number {
+  const from = Date.parse(fromUtc);
+  const to = Date.parse(toUtc);
+  let n = 0;
+  // minute by quarter hour: precise enough, and safe across DST changes
+  for (let t = from; t < to; t += 15 * 60000) {
+    const m = localMinuteOfDay(new Date(t).toISOString(), timeZone);
+    if (m >= 120 && m < 360) n += Math.min(15, (to - t) / 60000);
+  }
+  return Math.round(n);
+}
+
+/**
+ * CS FTL.1.220: a break on the ground of at least 3 h (post- and pre-flight duties excluded, 30 min at least) raises
+ * the max FDP by up to 50 % of the break. Suitable accommodation is needed for a break of 6 h or more or one in the
+ * WOCL; without it, the part beyond 6 h and the part in the WOCL do not count.
+ */
+export function splitBreak(onBlockUtc: string, offBlockUtc: string, timeZone: string): SplitBreak | undefined {
+  const breakMin = minutesBetween(onBlockUtc, offBlockUtc) - SPLIT_DUTIES_MIN;
+  if (breakMin < SPLIT_MIN_BREAK) return undefined;
+  // the break itself starts after the post-flight duties (half of the 30 min each side)
+  const from = shift(onBlockUtc, SPLIT_DUTIES_MIN / 2);
+  const to = shift(offBlockUtc, -SPLIT_DUTIES_MIN / 2);
+  const woclMin = woclOverlap(from, to, timeZone);
+  const counted = Math.max(0, Math.min(breakMin, 6 * 60) - woclMin);
+  return {
+    breakMin,
+    extensionMin: Math.round(breakMin / 2),
+    accommodationRequired: breakMin >= 6 * 60 || woclMin > 0,
+    woclMin,
+    extensionWithoutAccommodationMin: counted >= SPLIT_MIN_BREAK ? Math.round(counted / 2) : 0,
+  };
 }
 
 /** ORO.FTL.205(b)(1) table: [startMinuteOfDay, endMinuteOfDay (exclusive), max FDP for 1–2 sectors]. */
@@ -142,7 +194,11 @@ export function buildDutyPeriods(flights: Flight[], settings: FtlSettings = DEFA
   for (const leg of legs) {
     const gap = cur ? minutesBetween(cur.fdpEndUtc, leg.start) : Infinity;
     if (cur && gap < maxGap) {
-      if (gap > (cur.longestBreakMin ?? 0)) cur.longestBreakMin = gap;
+      if (gap > (cur.longestBreakMin ?? 0)) {
+        cur.longestBreakMin = gap;
+        cur.breakFromUtc = cur.fdpEndUtc;
+        cur.breakToUtc = leg.start;
+      }
       if (leg.end > cur.fdpEndUtc) {
         cur.fdpEndUtc = leg.end;
         cur.releaseUtc = shift(leg.end, settings.releaseAfterMin);
@@ -180,7 +236,15 @@ export function dutyPeriodsFromRoster(events: RosterEvent[], settings: FtlSettin
   for (const e of sorted) {
     const isSector = e.kind === "FLIGHT";
     const report = e.reportUtc ?? shift(e.startUtc, -settings.reportBeforeMin);
-    if (cur && minutesBetween(cur.fdpEndUtc, e.startUtc) <= 6 * 60) {
+    // the same duty unless the time between the release and the next report leaves room for the shortest legal
+    // rest (10 h): a shorter time on the ground is a break within the duty (split duty), not a rest
+    if (cur && minutesBetween(cur.releaseUtc, report) < MIN_REST_AWAY) {
+      const gap = minutesBetween(cur.fdpEndUtc, e.startUtc);
+      if (isSector && gap > (cur.longestBreakMin ?? 0)) {
+        cur.longestBreakMin = gap;
+        cur.breakFromUtc = cur.fdpEndUtc;
+        cur.breakToUtc = e.startUtc;
+      }
       cur.fdpEndUtc = e.endUtc;
       cur.releaseUtc = e.debriefUtc ?? shift(e.endUtc, settings.releaseAfterMin);
       if (isSector) {
@@ -235,6 +299,8 @@ export interface DutyAnalysis {
   maxFdpMin: number;
   /** of which split duty extension */
   splitExtensionMin: number;
+  /** the split duty break, when there is one */
+  split?: SplitBreak;
   dutyMin: number;
   restBeforeMin?: number;
   minRestBeforeMin?: number;
@@ -281,11 +347,12 @@ export function analyseFtl(duties: DutyPeriod[], nowUtc: string, settings: FtlSe
   sorted.forEach((d, i) => {
     const fdpMin = minutesBetween(d.reportUtc, d.fdpEndUtc);
     const dutyMin = minutesBetween(d.reportUtc, d.releaseUtc);
-    const splitExtensionMin = splitDutyExtension(d.longestBreakMin);
+    const split = d.breakFromUtc && d.breakToUtc ? splitBreak(d.breakFromUtc, d.breakToUtc, settings.homeTimezone) : undefined;
+    const splitExtensionMin = split?.extensionMin ?? splitDutyExtension(d.longestBreakMin);
     const startLocal = localMinuteOfDay(d.reportUtc, settings.homeTimezone);
     const base = settings.regime === "subq" ? subpartQMaxFdp(startLocal, fdpMin, d.sectors) : maxDailyFdp(startLocal, d.sectors);
     const maxFdpMin = d.kind === "FDP" && settings.regime !== "none" ? base + splitExtensionMin : Infinity;
-    const a: DutyAnalysis = { duty: d, fdpMin, maxFdpMin, splitExtensionMin, dutyMin };
+    const a: DutyAnalysis = { duty: d, fdpMin, maxFdpMin, splitExtensionMin, dutyMin, ...(split ? { split } : {}) };
     if (d.kind === "FDP" && fdpMin > maxFdpMin) {
       const severity = fdpMin - maxFdpMin <= FDP_EXTENSION_MAX ? "warning" : "error";
       violations.push({ code: "fdpExceeded", severity, dutyId: d.id, atUtc: d.reportUtc, actualMin: fdpMin, limitMin: maxFdpMin });

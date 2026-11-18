@@ -1024,7 +1024,10 @@
         "oro": "Airlines in commercial air transport (Part-ORO, Subpart FTL).",
         "subq": "EU-OPS Subpart Q (OPS 1.1090–1.1135): 13 h FDP less 30 min per sector from the 3rd and the WOCL reduction; 60 h / 7 d, 190 h / 28 d, 100 flight hours / 28 d, 900 h / calendar year.",
         "none": "No limit is checked; the totals are still shown."
-      }
+      },
+      "splitBadge": "split +{m}",
+      "splitDetail": "Split duty: {b} break, max FDP +{m} (CS FTL.1.220)",
+      "splitHotel": "suitable accommodation required (without it: +{m})"
     },
     "documents": {
       "title": "Licences, medical and ratings",

@@ -86,9 +86,21 @@ function Ftl() {
               </Row>
               <Txt variant="small" mono color={restShort ? c.warning : c.muted}>
                 {t("ftl.sectors", { n: a.duty.sectors })}
-                {a.splitExtensionMin ? ` · ${t("ftl.split", { m: f(a.splitExtensionMin) })}` : ""}
+                {a.splitExtensionMin && !a.split ? ` · ${t("ftl.split", { m: f(a.splitExtensionMin) })}` : ""}
                 {a.restBeforeMin !== undefined ? ` · ${t("ftl.rest", { r: f(a.restBeforeMin), min: f(a.minRestBeforeMin ?? 0) })}` : ""}
               </Txt>
+              {a.split ? (
+                <View style={{ alignSelf: "flex-start", flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: "#F59E0B26" }}>
+                  <Txt variant="small" color="#F59E0B" style={{ fontWeight: "700" }}>
+                    {t("ftl.splitDetail", { b: f(a.split.breakMin), m: f(a.split.extensionMin) })}
+                  </Txt>
+                  {a.split.accommodationRequired ? (
+                    <Txt variant="small" color="#F59E0B">
+                      {t("ftl.splitHotel", { m: f(a.split.extensionWithoutAccommodationMin) })}
+                    </Txt>
+                  ) : null}
+                </View>
+              ) : null}
             </View>
           );
         })}

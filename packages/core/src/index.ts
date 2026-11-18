@@ -27,5 +27,6 @@ export * from "./regulators";
 export * from "./importFormats";
 export * from "./layoverNights";
 export * from "./rosterLayovers";
+export * from "./profile";
 export * from "./revisions";
 export * from "./phone";

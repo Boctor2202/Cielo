@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   addDays, analyseFtl, DEFAULT_FTL_SETTINGS, auditLogbook, buildDutyPeriods, computeRecency, cumulativeLevel, dashboardPeriods, FTL_LIMITS, licenseStatus,
+  pilotFirstName,
 } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Badge, Card, Empty, Meter, PageTitle, Readout, type Level } from "@/components/app/ui";
@@ -62,7 +63,7 @@ export default function Dashboard() {
 
   if (!flights || !data) return <p className="text-muted">…</p>;
 
-  const name = pilot?.displayName || pilot?.fullName?.split(" ")[0] || "";
+  const name = pilotFirstName(pilot) ?? "";
   const { periods: p, recency } = data;
 
   if (flights.length === 0 && (balances?.length ?? 0) === 0) {

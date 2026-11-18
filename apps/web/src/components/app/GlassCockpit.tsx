@@ -3,7 +3,7 @@
 import { Award, Clock, Cloud, Moon, Plane, Plus, SlidersHorizontal, Sun, Target, Users } from "lucide-react";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocale, useMessages } from "next-intl";
-import { addDays, computeRecency, defaultGoals, goalProgress, isHourGoal, licenseStatus, type Flight, type License, type OpeningBalance, type Pilot } from "@cielo/core";
+import { addDays, pilotFirstName, computeRecency, defaultGoals, goalProgress, isHourGoal, licenseStatus, type Flight, type License, type OpeningBalance, type Pilot } from "@cielo/core";
 import GlassWorkspace, {
   type GlassSettings,
   type WorkspaceCashFlowPeriod,
@@ -301,7 +301,7 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
     };
   }, [flights, opening, licenses, today, locale, fd, types, g, auditIssues, auditHref]);
 
-  const first = pilot?.displayName || pilot?.fullName?.split(" ")[0] || undefined;
+  const first = pilotFirstName(pilot);
 
   return (
     <>
