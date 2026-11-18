@@ -12,7 +12,7 @@ import { downloadBlob } from "@/lib/download";
 import { useFormatDate } from "@/lib/hooks";
 
 /** A round flag: the 3:2 flag cropped to a circle (cover), as SVG, so it renders the same everywhere. */
-function Flag({ code }: { code: string }) {
+export function Flag({ code }: { code: string }) {
   const svg = (FLAGS as Record<string, string>)[code];
   if (!svg) return <span className="inline-block h-5 w-5 rounded-full bg-surface-2" aria-hidden />;
   const src = `data:image/svg+xml;utf8,${encodeURIComponent(svg.replace("<svg ", '<svg preserveAspectRatio="xMidYMid slice" '))}`;

@@ -1149,7 +1149,9 @@
       "distance": "Distance flown",
       "airportsCount": "Airports visited",
       "countries": "Countries",
-      "longest": "Longest flight"
+      "longest": "Longest flight",
+      "earthLaps": "≈ {n} times around the Earth",
+      "movements": "{n, plural, one {# movement} other {# movements}}"
     },
     "map": {
       "title": "Flight map",

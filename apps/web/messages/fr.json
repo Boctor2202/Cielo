@@ -1149,7 +1149,9 @@
       "distance": "Distance parcourue",
       "airportsCount": "Aéroports visités",
       "countries": "Pays",
-      "longest": "Plus long vol"
+      "longest": "Plus long vol",
+      "earthLaps": "≈ {n} tours de la Terre",
+      "movements": "{n, plural, one {# mouvement} other {# mouvements}}"
     },
     "map": {
       "title": "Carte des vols",

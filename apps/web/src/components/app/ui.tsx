@@ -1,7 +1,7 @@
 "use client";
 
 import { Roll } from "@/components/ui/Roll";
-import { X } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -60,16 +60,22 @@ const LEVEL_BG: Record<Level, string> = {
 };
 
 /** Instrument-style readout: label in small caps, big tabular figure, status bar. */
-export function Readout({ label, value, sub, level = "info" }: { label: string; value: ReactNode; sub?: ReactNode; level?: Level }) {
+export function Readout({ label, value, sub, level = "info", onClick }: { label: string; value: ReactNode; sub?: ReactNode; level?: Level; onClick?: () => void }) {
+  const Box = onClick ? "button" : "div";
   return (
-    <div className="card relative overflow-hidden p-5">
+    <Box
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      className={`card relative flex flex-col justify-start overflow-hidden p-5 text-left ${onClick ? "group cursor-pointer transition hover:border-accent/50 hover:bg-accent/[0.04] focus-visible:outline-2 focus-visible:outline-accent" : ""}`}
+    >
+      {onClick ? <ChevronRight size={16} className="absolute right-4 top-5 text-muted opacity-60 transition group-hover:translate-x-0.5 group-hover:text-accent group-hover:opacity-100" aria-hidden /> : null}
       <p className="label-caps flex items-center gap-1.5 !text-[12.5px]">
         <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${LEVEL_BG[level]}`} />
         {label}
       </p>
       <p className="num mt-3 text-[28px] font-normal leading-none tracking-[-0.03em] sm:text-[34px]"><Roll>{value}</Roll></p>
-      {sub && <p className="mt-2 text-xs text-muted">{sub}</p>}
-    </div>
+      {sub && <div className="mt-2 text-xs text-muted">{sub}</div>}
+    </Box>
   );
 }
 
