@@ -11,7 +11,7 @@ import { applyThemePref, loadThemePref } from "../src/appearance";
 import { useTheme } from "../src/theme";
 import { WidgetSync } from "../src/widgets/sync";
 import { CrewInboxWatcher } from "../src/crewWatcher";
-import { Backdrop, Txt } from "../src/components/ui";
+import { Backdrop, KeyboardDoneBar, Txt } from "../src/components/ui";
 import { glass } from "../src/theme";
 import { Splash, SplashOverlay } from "../src/components/Splash";
 import { ThreeGreensO } from "../src/components/Logo";
@@ -66,6 +66,7 @@ function Navigator() {
       <WidgetSync />
       <CrewInboxWatcher />
       <LogReminderSync />
+      <KeyboardDoneBar label={t("common.ok")} />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: glass(c).strong },

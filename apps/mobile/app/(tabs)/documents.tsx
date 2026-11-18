@@ -30,6 +30,8 @@ export default function Documents() {
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <FlatList
         data={items}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         keyExtractor={(x) => x.l.id}
         contentContainerStyle={[{ padding: space.lg, gap: space.md, paddingBottom: 140, flexGrow: 1 }, wide ? { width: "100%", maxWidth: 760, alignSelf: "center" } : null]}
         ListEmptyComponent={<EmptyState title={t("docs.empty")} hint={t("docs.emptyHint")} />}

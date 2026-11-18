@@ -73,6 +73,8 @@ function RosterScreen() {
       <SectionList
         style={{ flex: 1, backgroundColor: "transparent" }}
         sections={days}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         keyExtractor={(e) => e.id}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={[{ padding: space.lg, paddingBottom: 140, flexGrow: 1 }, wide ? { width: "100%", maxWidth: 760, alignSelf: "center" } : null]}

@@ -94,6 +94,8 @@ export default function Logbook() {
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <SectionList
         sections={view === "calendar" ? [] : sections}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         keyExtractor={(f) => f.id}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={[{ paddingBottom: 140, paddingTop: space.sm, flexGrow: 1 }, wide ? { width: "100%", maxWidth: 760, alignSelf: "center" } : null]}

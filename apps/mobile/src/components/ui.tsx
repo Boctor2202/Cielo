@@ -5,6 +5,9 @@ import {
   Animated,
   Easing,
   ImageBackground,
+  InputAccessoryView,
+  Keyboard,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -113,6 +116,8 @@ export function Screen({ children, scroll = true, style, backdrop, columns }: { 
         style,
       ]}
       keyboardShouldPersistTaps="handled"
+      // the keyboard always goes away: drag the screen down, or tap outside a field
+      keyboardDismissMode="interactive"
       contentInsetAdjustmentBehavior="automatic"
     >
       {wide && columns ? (
@@ -293,6 +298,11 @@ export function Field({
       {label ? <Txt variant="label">{label}</Txt> : null}
       <TextInput
         placeholderTextColor={c.muted}
+        // the return key closes the keyboard on a one-line field; the "OK" bar above the keyboard does it for
+        // the number pads (no return key) and the multi-line fields
+        returnKeyType={input.multiline ? "default" : "done"}
+        submitBehavior={input.multiline ? "newline" : "blurAndSubmit"}
+        inputAccessoryViewID={Platform.OS === "ios" ? KEYBOARD_DONE : undefined}
         {...input}
         style={[
           styles.input,
@@ -491,3 +501,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
   },
 });
+
+/** The "OK" bar shown above the iPhone keyboard of every field: closes the keyboard. Rendered once at the root. */
+export const KEYBOARD_DONE = "geardown-keyboard-done";
+export function KeyboardDoneBar({ label }: { label: string }) {
+  const c = useTheme();
+  if (Platform.OS !== "ios") return null;
+  return (
+    <InputAccessoryView nativeID={KEYBOARD_DONE}>
+      <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 12, paddingVertical: 6, backgroundColor: c.scheme === "dark" ? "#1C2433" : "#E9EDF2", borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: glass(c).edge }}>
+        <Pressable onPress={() => Keyboard.dismiss()} hitSlop={10} accessibilityRole="button">
+          <Text style={{ color: c.accent, fontSize: 16, fontWeight: "600", paddingHorizontal: 6, paddingVertical: 4 }}>{label}</Text>
+        </Pressable>
+      </View>
+    </InputAccessoryView>
+  );
+}
