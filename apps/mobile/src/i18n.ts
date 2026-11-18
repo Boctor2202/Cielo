@@ -1127,7 +1127,7 @@ const fr: Dict = {
 
   "tabs.dashboard": "Tableau",
   "tabs.logbook": "Carnet",
-  "tabs.roster": "Planning",
+  "tabs.roster": "Schedule",
   "tabs.documents": "Documents",
   "tabs.more": "Plus",
 
@@ -1238,7 +1238,7 @@ const fr: Dict = {
   "aircraft.none": "Aucun aéronef — ajoutez-en un ci-dessous.",
   "aircraft.missing": "Immatriculation et type obligatoires.",
 
-  "roster.title": "Planning",
+  "roster.title": "Schedule",
   "roster.addEvent": "Ajouter une activité",
   "roster.editEvent": "Modifier l'activité",
   "roster.deleteEvent": "Supprimer l'activité",
@@ -2166,7 +2166,7 @@ const fr: Dict = {
   "radar.trackSince": "Trace depuis {time} UTC",
   "radar.attribution": "Données ADS-B © contributeurs adsb.lol (ODbL)",
   "more.shortcuts": "Mes outils",
-  "more.roster": "Planning",
+  "more.roster": "Schedule",
   "more.documents": "Licences et médical",
   "more.import": "Importer des vols (CSV)",
   "more.importHint": "Exportez votre ancien carnet en CSV (depuis Excel ou une autre app) puis choisissez le fichier.",

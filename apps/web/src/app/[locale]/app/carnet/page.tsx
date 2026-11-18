@@ -1,12 +1,22 @@
 "use client";
 
-import { FileDown, NotebookPen, Plus, ScanSearch, ShieldCheck, Upload, BookCopy } from "lucide-react";
+import { FileDown, Moon, NotebookPen, Plane, Plus, ScanSearch, ShieldCheck, Upload, BookCopy } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { sumFlights } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, PageTitle } from "@/components/app/ui";
 import { useDuration, useFlights, useFormatDate } from "@/lib/hooks";
+
+/** Function badges: command green, co-pilot blue, supervised command teal, instruction amber / violet. */
+const FUNCTION_TONE: Record<string, string> = {
+  PIC: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
+  SIC: "bg-sky-500/15 text-sky-700 dark:text-sky-300",
+  PICUS: "bg-teal-500/15 text-teal-700 dark:text-teal-300",
+  DUAL: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+  FI: "bg-violet-500/15 text-violet-700 dark:text-violet-300",
+  FE: "bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300",
+};
 
 export default function Logbook() {
   const t = useTranslations("app.logbook");
@@ -85,17 +95,49 @@ export default function Logbook() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {filtered.slice(0, limit).map((f) => (
-                    <tr key={f.id} className="cursor-pointer hover:bg-surface-2 [&>td]:px-3 [&>td]:py-2.5" onClick={() => router.push({ pathname: "/app/carnet/[id]", params: { id: f.id } })}>
-                      <td className="num whitespace-nowrap">{fd(f.date, { day: "2-digit", month: "2-digit", year: "2-digit" })}</td>
+                    <tr
+                      key={f.id}
+                      className="group cursor-pointer transition-colors hover:bg-accent/[0.06] [&>td]:px-3 [&>td]:py-2.5"
+                      onClick={() => router.push({ pathname: "/app/carnet/[id]", params: { id: f.id } })}
+                    >
+                      <td className="num whitespace-nowrap">
+                        {/* a coloured edge: night flights indigo, IFR sky, VFR green, simulator violet */}
+                        <span className={`mr-2.5 inline-block h-6 w-1 rounded-full align-middle ${f.isFstd ? "bg-violet-400" : f.nightMin > 0 ? "bg-indigo-400" : f.ifrMin > 0 ? "bg-sky-400" : "bg-emerald-400"}`} aria-hidden />
+                        {fd(f.date, { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                      </td>
                       <td className="num whitespace-nowrap font-semibold">
-                        {f.isFstd ? <span className="text-accent">{t("fstd")}</span> : <>{f.depIcao} <span className="text-muted">→</span> {f.arrIcao}</>}
+                        {f.isFstd ? (
+                          <span className="rounded-md bg-violet-500/15 px-2 py-0.5 text-violet-700 dark:text-violet-300">{t("fstd")}</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5">
+                            {f.depIcao}
+                            <Plane size={12} className="text-accent" aria-hidden />
+                            {f.arrIcao}
+                          </span>
+                        )}
                       </td>
                       <td className="num whitespace-nowrap text-muted">{f.isFstd ? f.fstdType : `${f.outUtc?.slice(11, 16) ?? "--"} – ${f.inUtc?.slice(11, 16) ?? "--"}`}</td>
-                      <td className="whitespace-nowrap"><span className="num">{f.registration}</span> <span className="text-muted">{f.aircraftTypeIcao}</span></td>
-                      <td className="whitespace-nowrap text-muted" title={tfn(f.function)}>{f.function}</td>
-                      <td className="num text-right font-semibold">{d(f.isFstd ? f.fstdMin : f.totalMin)}</td>
-                      <td className="num text-right text-muted">{d(f.nightMin, true)}</td>
-                      <td className="num text-right text-muted">{d(f.ifrMin, true)}</td>
+                      <td className="whitespace-nowrap">
+                        {f.registration ? <span className="num rounded-md border border-border bg-surface-2 px-1.5 py-0.5 text-[12.5px] font-semibold">{f.registration}</span> : null}{" "}
+                        <span className="num text-[12.5px] text-muted">{f.aircraftTypeIcao}</span>
+                      </td>
+                      <td className="whitespace-nowrap" title={tfn(f.function)}>
+                        <span className={`num rounded-full px-2 py-0.5 text-[12px] font-semibold ${FUNCTION_TONE[f.function] ?? "bg-surface-2 text-muted"}`}>{f.function}</span>
+                      </td>
+                      <td className="num text-right">
+                        <span className="rounded-md bg-accent/12 px-2 py-0.5 font-bold text-accent">{d(f.isFstd ? f.fstdMin : f.totalMin)}</span>
+                      </td>
+                      <td className="num text-right">
+                        {f.nightMin > 0 ? (
+                          <span className="inline-flex items-center gap-1 text-indigo-700 dark:text-indigo-300">
+                            <Moon size={12} aria-hidden />
+                            {d(f.nightMin, true)}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="num text-right">
+                        {f.ifrMin > 0 ? <span className="rounded-md bg-sky-500/12 px-1.5 py-0.5 text-sky-700 dark:text-sky-300">{d(f.ifrMin, true)}</span> : null}
+                      </td>
                       <td className="num text-right text-muted">{f.landingsDay + f.landingsNight || ""}</td>
                       <td className="w-6">{f.signatureId && <ShieldCheck size={15} className="text-success" aria-label={t("signed")} />}</td>
                     </tr>
