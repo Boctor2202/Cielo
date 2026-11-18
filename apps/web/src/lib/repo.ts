@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  canonicalFlightContent, deriveFlightTimes, flightRevision, newId, stamp, SYNC_TABLES, type Aircraft, type AircraftType, type Flight,
+  canonicalFlightContent, deriveFlightTimes, extraFlightFields, flightRevision, newId, stamp, SYNC_TABLES, type Aircraft, type AircraftType, type Flight,
   type FlightFormInput, type Layover, type License, type Locale, type OpeningBalance, type Pilot, type RosterEvent,
   type Signature, type TableMap, type TableName, type FlightRevision,
 } from "@cielo/core";
@@ -286,6 +286,7 @@ export async function buildFlight(
     fstdMin: input.isFstd ? (input.fstdMin ?? 0) : 0,
     crew: input.crew ?? [],
     remarks: input.remarks?.trim() || undefined,
+    ...extraFlightFields(input, d.totalMin),
     signatureId: existing?.signatureId ?? null,
     locked: existing?.locked ?? false,
   };
@@ -385,6 +386,13 @@ export function flightToInput(f: Flight): FlightFormInput {
     fstdMin: f.fstdMin,
     crew: f.crew,
     remarks: f.remarks,
+    simInstrumentMin: f.simInstrumentMin,
+    holdings: f.holdings,
+    groundTrainingMin: f.groundTrainingMin,
+    soloMin: f.soloMin,
+    safetyPilotName: f.safetyPilotName,
+    purpose: f.purpose,
+    via: f.via,
   };
 }
 

@@ -16,6 +16,10 @@ import {
   type FlightFormInput,
   type OperationMode,
   type PilotFunction,
+  EXTRA_FLIGHT_FIELDS,
+  extraFieldsFor,
+  extraFlightFields,
+  frameworkOf,
 } from "@cielo/core";
 import { AirportField } from "../../src/components/AirportField";
 import { AircraftTypeField } from "../../src/components/AircraftTypeField";
@@ -69,6 +73,14 @@ interface FormState {
   fstdQualification: string;
   fstdMin: string;
   remarks: string;
+  /* entries some authorities require beyond EASA (h:mm strings, counts, text) */
+  simInstr: string;
+  holdings: number;
+  ground: string;
+  solo: string;
+  safetyPilot: string;
+  purpose: string;
+  via: string;
 }
 
 const nowClock = () => formatClock(new Date().toISOString());
@@ -132,6 +144,13 @@ function FlightForm() {
         fstdQualification: f.fstdQualification ?? "",
         fstdMin: f.fstdMin ? formatDuration(f.fstdMin) : "",
         remarks: f.remarks ?? "",
+        simInstr: f.simInstrumentMin ? formatDuration(f.simInstrumentMin) : "",
+        holdings: f.holdings ?? 0,
+        ground: f.groundTrainingMin ? formatDuration(f.groundTrainingMin) : "",
+        solo: f.soloMin ? formatDuration(f.soloMin) : "",
+        safetyPilot: f.safetyPilotName ?? "",
+        purpose: f.purpose ?? "",
+        via: (f.via ?? []).join(" "),
       };
     }
     const last = flights.find((x) => !x.isFstd);
@@ -170,6 +189,13 @@ function FlightForm() {
       fstdQualification: "",
       fstdMin: "",
       remarks: "",
+      simInstr: "",
+      holdings: 0,
+      ground: "",
+      solo: "",
+      safetyPilot: "",
+      purpose: "",
+      via: "",
     };
   }
 
@@ -217,6 +243,13 @@ function FlightForm() {
       fstdQualification: form.fstdQualification || undefined,
       fstdMin: parseDuration(normDuration(form.fstdMin)) ?? 0,
       remarks: form.remarks || undefined,
+      simInstrumentMin: parseDuration(normDuration(form.simInstr)) ?? undefined,
+      holdings: form.holdings || undefined,
+      groundTrainingMin: parseDuration(normDuration(form.ground)) ?? undefined,
+      soloMin: parseDuration(normDuration(form.solo)) ?? undefined,
+      safetyPilotName: form.safetyPilot || undefined,
+      purpose: form.purpose || undefined,
+      via: form.via.split(/[\s,;-]+/).filter(Boolean),
     }),
     [form, selectedAircraft, selectedType],
   );
@@ -270,6 +303,7 @@ function FlightForm() {
         fstdMin: input.isFstd ? (input.fstdMin ?? 0) : 0,
         crew: existing?.crew ?? [],
         remarks: input.remarks,
+        ...extraFlightFields(input, times.totalMin),
         signatureId: existing?.signatureId ?? null,
         locked: existing?.locked ?? false,
       };
@@ -536,6 +570,15 @@ function FlightForm() {
                   autoCapitalize="characters"
                   onChangeText={(s) => update({ runway: s || undefined })}
                 />
+                <Field
+                  style={{ flex: 1 }}
+                  value={a.airport ?? ""}
+                  placeholder={t("flight.approachAirport")}
+                  monoValue
+                  autoCapitalize="characters"
+                  maxLength={4}
+                  onChangeText={(s) => update({ airport: s.toUpperCase().replace(/[^A-Z0-9]/g, "") || undefined })}
+                />
                 <Stepper label="×" value={a.count} onChange={(v) => update({ count: v })} />
               </Row>
             );
@@ -547,6 +590,8 @@ function FlightForm() {
             onPress={() => set("approaches", [...form.approaches, { type: form.ifr ? "ILS CAT I" : "Visual", count: 1 }])}
           />
         </Card>
+
+        <ExtraEntries form={form} set={set} />
 
         <Card>
           <Field label={t("flight.remarks")} value={form.remarks} multiline onChangeText={(s) => set("remarks", s)} />
@@ -570,5 +615,55 @@ function FlightForm() {
         }}
       />
     </KeyboardAvoidingView>
+  );
+}
+
+/**
+ * Entries some authorities require beyond the EASA columns (FAA, CASA, New Zealand, Canada): open when the
+ * pilot's authority asks for them, folded otherwise.
+ */
+function ExtraEntries({ form, set }: { form: FormState; set: <K extends keyof FormState>(k: K, v: FormState[K]) => void }) {
+  const { t, pilot } = useApp();
+  const c = useTheme();
+  const wanted = extraFieldsFor(frameworkOf(pilot), pilot.authority);
+  const filled = !!(form.simInstr || form.holdings || form.ground || form.solo || form.safetyPilot || form.purpose || form.via);
+  const [open, setOpen] = useState(wanted.length > 0 || filled);
+  const order = [...wanted, ...EXTRA_FLIGHT_FIELDS.filter((k) => !wanted.includes(k))];
+  const field = (k: (typeof EXTRA_FLIGHT_FIELDS)[number]) => {
+    switch (k) {
+      case "simInstrumentMin":
+        return <DurationField key={k} label={t("flight.x.simInstrumentMin")} hint={t("flight.cappedHint")} value={form.simInstr} onChange={(s) => set("simInstr", s)} />;
+      case "groundTrainingMin":
+        return <DurationField key={k} label={t("flight.x.groundTrainingMin")} hint={t("flight.x.groundHint")} value={form.ground} onChange={(s) => set("ground", s)} />;
+      case "soloMin":
+        return <DurationField key={k} label={t("flight.x.soloMin")} hint={t("flight.cappedHint")} value={form.solo} onChange={(s) => set("solo", s)} />;
+      case "holdings":
+        return (
+          <Row key={k} style={{ justifyContent: "space-between", alignItems: "center" }}>
+            <Txt variant="label">{t("flight.x.holdings")}</Txt>
+            <Stepper label="" value={form.holdings} onChange={(v) => set("holdings", v)} />
+          </Row>
+        );
+      case "safetyPilotName":
+        return <Field key={k} label={t("flight.x.safetyPilotName")} value={form.safetyPilot} autoCapitalize="words" onChangeText={(s) => set("safetyPilot", s)} />;
+      case "purpose":
+        return <Field key={k} label={t("flight.x.purpose")} value={form.purpose} onChangeText={(s) => set("purpose", s)} />;
+      case "via":
+        return <Field key={k} label={t("flight.x.via")} value={form.via} placeholder="LFLY LFMN" monoValue autoCapitalize="characters" onChangeText={(s) => set("via", s.toUpperCase())} />;
+    }
+  };
+  return (
+    <Card>
+      <Pressable onPress={() => setOpen((x) => !x)} accessibilityRole="button" accessibilityState={{ expanded: open }}>
+        <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Txt variant="label">{t("flight.x.title")}</Txt>
+            <Txt variant="small">{wanted.length ? t("flight.x.hintAuthority", { authority: pilot.authority ?? "" }) : t("flight.x.hint")}</Txt>
+          </View>
+          <Txt color={c.accent}>{open ? "▴" : "▾"}</Txt>
+        </Row>
+      </Pressable>
+      {open ? order.map(field) : null}
+    </Card>
   );
 }

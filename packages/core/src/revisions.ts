@@ -64,6 +64,8 @@ const LABELS: Record<"fr" | "en", Record<string, string>> = {
     takeoffsDay: "Décollages jour", takeoffsNight: "Décollages nuit", landingsDay: "Atterrissages jour", landingsNight: "Atterrissages nuit",
     pilotFlying: "PF", approaches: "Approches", isFstd: "Simulateur", fstdType: "Type de simulateur", fstdQualification: "Qualification FSTD",
     fstdMin: "Temps simulateur", crew: "Équipage", remarks: "Remarques",
+    simInstrumentMin: "Instrument simulé", holdings: "Attentes", groundTrainingMin: "Instruction au sol", soloMin: "Solo",
+    safetyPilotName: "Pilote de sécurité / instructeur", purpose: "Objet du vol", via: "Escales",
   },
   en: {
     date: "Date", flightNumber: "Flight no.", depIcao: "From", arrIcao: "To", outUtc: "Off-block", offUtc: "Take-off", onUtc: "Landing",
@@ -74,6 +76,8 @@ const LABELS: Record<"fr" | "en", Record<string, string>> = {
     takeoffsDay: "Day take-offs", takeoffsNight: "Night take-offs", landingsDay: "Day landings", landingsNight: "Night landings",
     pilotFlying: "PF", approaches: "Approaches", isFstd: "Simulator", fstdType: "Simulator type", fstdQualification: "FSTD qualification",
     fstdMin: "Simulator time", crew: "Crew", remarks: "Remarks",
+    simInstrumentMin: "Simulated instrument", holdings: "Holds", groundTrainingMin: "Ground training", soloMin: "Solo",
+    safetyPilotName: "Safety pilot / instructor", purpose: "Purpose of flight", via: "Stops",
   },
 };
 export const revisionFieldLabel = (field: string, locale: string) => LABELS[locale === "fr" ? "fr" : "en"][field] ?? field;
@@ -84,7 +88,8 @@ export function revisionValue(field: string, v: unknown, locale: string): string
   if (typeof v === "boolean") return v ? (locale === "fr" ? "oui" : "yes") : locale === "fr" ? "non" : "no";
   if (typeof v === "number" && /Min$/.test(field)) return `${Math.floor(v / 60)}:${String(Math.round(v % 60)).padStart(2, "0")}`;
   if (typeof v === "string" && /Utc$/.test(field)) return `${v.slice(11, 16)} UTC${v.slice(0, 10) ? ` (${v.slice(0, 10)})` : ""}`;
-  if (field === "approaches" && Array.isArray(v)) return v.map((a: { type?: string; count?: number }) => `${a.count ?? 1}× ${a.type ?? ""}`.trim()).join(", ") || "—";
+  if (field === "approaches" && Array.isArray(v)) return v.map((a: { type?: string; count?: number; airport?: string }) => `${a.count ?? 1}× ${a.type ?? ""}${a.airport ? ` ${a.airport}` : ""}`.trim()).join(", ") || "—";
+  if (field === "via" && Array.isArray(v)) return v.join(" · ") || "—";
   if (field === "crew" && Array.isArray(v)) return v.map((c: { name?: string; role?: string }) => [c.name, c.role].filter(Boolean).join(" ")).join(", ") || "—";
   if (typeof v === "object") return JSON.stringify(v).slice(0, 80);
   return String(v);

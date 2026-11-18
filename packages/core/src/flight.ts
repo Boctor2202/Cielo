@@ -39,6 +39,13 @@ export interface FlightFormInput {
   fstdMin?: number;
   crew?: Flight["crew"];
   remarks?: string;
+  simInstrumentMin?: number;
+  holdings?: number;
+  groundTrainingMin?: number;
+  soloMin?: number;
+  safetyPilotName?: string;
+  purpose?: string;
+  via?: string[];
 }
 
 export interface DeriveContext {
@@ -195,5 +202,42 @@ export function canonicalFlightContent(f: Flight): string {
     "picusMin", "copilotMin", "dualMin", "instructorMin", "examinerMin", "nightMin", "ifrMin", "takeoffsDay",
     "takeoffsNight", "landingsDay", "landingsNight", "isFstd", "fstdType", "fstdMin", "remarks",
   ];
-  return JSON.stringify(keys.map((k) => [k, f[k] ?? null]));
+  const entries: [string, unknown][] = keys.map((k) => [k, f[k] ?? null]);
+  // fields added later count only when filled, so the signatures made before them stay valid
+  for (const k of EXTRA_FLIGHT_FIELDS) {
+    const v = f[k];
+    if (v !== undefined && v !== null && v !== "" && !(Array.isArray(v) && !v.length)) entries.push([k, v]);
+  }
+  return JSON.stringify(entries);
+}
+
+/** Entries some authorities require beyond the EASA columns. */
+export const EXTRA_FLIGHT_FIELDS = ["simInstrumentMin", "holdings", "groundTrainingMin", "soloMin", "safetyPilotName", "purpose", "via"] as const;
+export type ExtraFlightField = (typeof EXTRA_FLIGHT_FIELDS)[number];
+
+/** The extra entries of a flight from the form, cleaned: durations within the flight, names trimmed. */
+export function extraFlightFields(input: Partial<FlightFormInput>, totalMin: number): Pick<Flight, ExtraFlightField> {
+  const dur = (v: number | undefined, cap?: number) => (v && v > 0 ? Math.round(cap !== undefined ? Math.min(v, cap) : v) : undefined);
+  const via = (input.via ?? []).map((x) => x.trim().toUpperCase()).filter((x) => /^[A-Z0-9]{3,4}$/.test(x));
+  return {
+    simInstrumentMin: dur(input.simInstrumentMin, totalMin),
+    holdings: input.holdings && input.holdings > 0 ? Math.round(input.holdings) : undefined,
+    groundTrainingMin: dur(input.groundTrainingMin),
+    soloMin: dur(input.soloMin, totalMin),
+    safetyPilotName: input.safetyPilotName?.trim() || undefined,
+    purpose: input.purpose?.trim() || undefined,
+    via: via.length ? via : undefined,
+  };
+}
+
+/**
+ * Which extra entries an authority's logbook asks for, so the form shows them first (all stay available).
+ * framework: the rule family; regulator: the chosen authority id.
+ */
+export function extraFieldsFor(framework: string | undefined, regulator?: string | null): ExtraFlightField[] {
+  if (framework === "FAA") return ["simInstrumentMin", "holdings", "groundTrainingMin", "soloMin", "safetyPilotName"];
+  if (regulator === "NZCAA") return ["simInstrumentMin", "safetyPilotName", "purpose", "via", "groundTrainingMin"];
+  if (regulator === "TCCA") return ["soloMin", "simInstrumentMin", "via"];
+  if (framework === "CASA") return ["simInstrumentMin", "safetyPilotName"];
+  return [];
 }

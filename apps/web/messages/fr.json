@@ -637,7 +637,22 @@
         "close": "Fermer",
         "diverted": "dérouté",
         "attribution": "Heures réelles UTC (cales / piste) fournies par FlightAware. Vérifiez-les avant d'enregistrer."
-      }
+      },
+      "extra": {
+        "title": "Autres informations",
+        "hint": "Champs demandés par certaines autorités (FAA, CASA, Nouvelle-Zélande, Canada). Facultatifs.",
+        "hintAuthority": "Demandés par votre autorité ({authority}) pour le carnet. Facultatifs.",
+        "show": "Afficher",
+        "simInstrumentMin": "Instrument simulé (capote)",
+        "holdings": "Attentes",
+        "groundTrainingMin": "Instruction au sol reçue",
+        "groundHint": "Ce n'est pas du temps de vol : compté à part des totaux.",
+        "soloMin": "Solo",
+        "safetyPilotName": "Pilote de sécurité / instructeur",
+        "purpose": "Objet du vol",
+        "via": "Escales"
+      },
+      "approachAirport": "Aéroport"
     },
     "signature": {
       "title": "Signature du vol",

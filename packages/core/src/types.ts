@@ -123,6 +123,8 @@ export interface Approach {
   type: string; // ILS CAT I, RNP, VOR...
   runway?: string;
   count: number;
+  /** where it was flown (ICAO), required by 14 CFR 61.51 for IFR currency */
+  airport?: string;
 }
 
 export interface CrewMember {
@@ -191,6 +193,22 @@ export interface Flight extends SyncedRecord {
   remarks?: string;
   signatureId?: UUID | null;
   locked: boolean;
+
+  /* Entries some authorities require beyond the EASA columns (all optional) */
+  /** simulated instrument time, under a hood or view-limiting device (FAA, CASA, NZ) */
+  simInstrumentMin?: number;
+  /** holding procedures flown (FAA 61.57 IFR currency) */
+  holdings?: number;
+  /** ground training received, not flight time (FAA 61.51(b)(3)) */
+  groundTrainingMin?: number;
+  /** solo flight time (FAA, Transport Canada) */
+  soloMin?: number;
+  /** safety pilot or instructor on board (FAA simulated instrument, NZ 61.29) */
+  safetyPilotName?: string;
+  /** purpose of the flight (NZ 61.29: training, cross-country, check…) */
+  purpose?: string;
+  /** intermediate stops, ICAO (NZ, Canada) */
+  via?: string[];
 }
 
 export interface Signature extends SyncedRecord {

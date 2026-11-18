@@ -637,7 +637,22 @@
         "close": "Close",
         "diverted": "diverted",
         "attribution": "Actual UTC times (block / runway) from FlightAware. Check them before saving."
-      }
+      },
+      "extra": {
+        "title": "Other entries",
+        "hint": "Entries some authorities require (FAA, CASA, New Zealand, Canada). Optional.",
+        "hintAuthority": "Asked by your authority ({authority}) for the logbook. Optional.",
+        "show": "Show",
+        "simInstrumentMin": "Simulated instrument (hood)",
+        "holdings": "Holds",
+        "groundTrainingMin": "Ground training received",
+        "groundHint": "Not flight time: kept apart from the totals.",
+        "soloMin": "Solo",
+        "safetyPilotName": "Safety pilot / instructor",
+        "purpose": "Purpose of flight",
+        "via": "Intermediate stops"
+      },
+      "approachAirport": "Airport"
     },
     "signature": {
       "title": "Flight signature",

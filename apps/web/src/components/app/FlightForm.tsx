@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   defaultIfrFor, deriveFlightTimes, isoDate, PILOT_FUNCTIONS, type Aircraft, type Approach, type Flight, type FlightFormInput, type Pilot,
-  APPROACH_TYPES,
+  APPROACH_TYPES, EXTRA_FLIGHT_FIELDS, extraFieldsFor, frameworkOf,
 } from "@cielo/core";
 import { useRouter } from "@/i18n/navigation";
 import { useAirports } from "@/lib/airports";
@@ -313,6 +313,8 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
           </Card>
         )}
 
+        <ExtraEntries v={v} set={set} pilot={pilot} />
+
         <Card title={t("approachesTitle")}>
           <ApproachList value={v.approaches ?? []} onChange={(a) => set("approaches", a)} />
         </Card>
@@ -409,12 +411,13 @@ function ApproachList({ value, onChange }: { value: Approach[]; onChange: (a: Ap
   return (
     <div className="space-y-2">
       {value.map((a, i) => (
-        <div key={i} className="grid grid-cols-[1fr_80px_70px_auto] gap-2">
+        <div key={i} className="grid grid-cols-[1fr_80px_80px_70px_auto] gap-2">
           <select className="input" aria-label={t("approachType")} value={a.type} onChange={(e) => onChange(value.map((x, j) => (j === i ? { ...x, type: e.target.value } : x)))}>
             {APPROACH_TYPES.map((ty) => (
               <option key={ty}>{ty}</option>
             ))}
           </select>
+          <input className="input num uppercase" aria-label={t("approachAirport")} placeholder="LFPB" maxLength={4} value={a.airport ?? ""} onChange={(e) => onChange(value.map((x, j) => (j === i ? { ...x, airport: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") || undefined } : x)))} />
           <input className="input num uppercase" aria-label={t("runway")} placeholder="27R" value={a.runway ?? ""} onChange={(e) => onChange(value.map((x, j) => (j === i ? { ...x, runway: e.target.value.toUpperCase() } : x)))} />
           <input type="number" min={1} className="input num" aria-label={t("count")} value={a.count} onChange={(e) => onChange(value.map((x, j) => (j === i ? { ...x, count: Math.max(1, Number(e.target.value) || 1) } : x)))} />
           <button type="button" className="btn btn-ghost !px-2" aria-label="remove" onClick={() => onChange(value.filter((_, j) => j !== i))}>
@@ -426,5 +429,51 @@ function ApproachList({ value, onChange }: { value: Approach[]; onChange: (a: Ap
         <Plus size={14} /> {t("addApproach")}
       </button>
     </div>
+  );
+}
+
+/**
+ * Entries some authorities require beyond the EASA columns (FAA, CASA, New Zealand, Canada): shown open when the
+ * pilot's authority asks for them, folded otherwise.
+ */
+function ExtraEntries({ v, set, pilot }: { v: FlightFormInput; set: <K extends keyof FlightFormInput>(k: K, val: FlightFormInput[K]) => void; pilot?: Pilot }) {
+  const t = useTranslations("app.form.extra");
+  const wanted = extraFieldsFor(pilot ? frameworkOf(pilot) : undefined, pilot?.authority);
+  const filled = EXTRA_FLIGHT_FIELDS.some((k) => { const x = v[k]; return Array.isArray(x) ? x.length > 0 : !!x; });
+  const [open, setOpen] = useState(wanted.length > 0 || filled);
+  // the stops as typed (spaces kept while typing), the parsed list goes to the flight
+  const [viaText, setViaText] = useState((v.via ?? []).join(" "));
+  const order = [...wanted, ...EXTRA_FLIGHT_FIELDS.filter((k) => !wanted.includes(k))];
+  const field = (k: (typeof EXTRA_FLIGHT_FIELDS)[number]) => {
+    switch (k) {
+      case "simInstrumentMin":
+      case "groundTrainingMin":
+      case "soloMin":
+        return <DurationInput value={v[k] || undefined} onChange={(m) => set(k, m)} />;
+      case "holdings":
+        return <input type="number" min={0} max={99} className="input num" value={v.holdings ?? ""} onChange={(e) => set("holdings", Math.max(0, Number(e.target.value) || 0) || undefined)} />;
+      case "via":
+        return <input className="input num uppercase" placeholder="LFLY LFMN" value={viaText} onChange={(e) => { const x = e.target.value.toUpperCase(); setViaText(x); set("via", x.split(/[\s,;-]+/).filter(Boolean)); }} />;
+      default:
+        return <input className="input" value={v[k] ?? ""} onChange={(e) => set(k, e.target.value)} />;
+    }
+  };
+  return (
+    <Card title={t("title")}>
+      <p className="-mt-1 text-xs text-muted">{wanted.length ? t("hintAuthority", { authority: pilot?.authority ?? "" }) : t("hint")}</p>
+      {open ? (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          {order.map((k) => (
+            <Field key={k} label={t(k)} hint={k === "groundTrainingMin" ? t("groundHint") : undefined}>
+              {field(k)}
+            </Field>
+          ))}
+        </div>
+      ) : (
+        <button type="button" className="btn btn-ghost btn-sm mt-2" onClick={() => setOpen(true)}>
+          <Plus size={14} /> {t("show")}
+        </button>
+      )}
+    </Card>
   );
 }
