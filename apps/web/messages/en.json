@@ -1522,7 +1522,15 @@
       "airport": "Airport (ICAO, IATA or city)",
       "arrival": "Arrival",
       "departure": "Departure",
-      "create": "Create layover"
+      "create": "Create layover",
+      "now": "Now",
+      "tomorrow": "Tomorrow",
+      "inDays": "In {n} days",
+      "nights": "{n, plural, one {# night} other {# nights}}",
+      "statLayovers": "Layovers",
+      "statNights": "Nights away",
+      "statCities": "Airports",
+      "statCountries": "Countries"
     },
     "radar": {
       "title": "Radar",

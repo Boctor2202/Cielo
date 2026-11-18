@@ -1522,7 +1522,15 @@
       "airport": "Aéroport (code OACI, IATA ou ville)",
       "arrival": "Arrivée",
       "departure": "Départ",
-      "create": "Créer l'escale"
+      "create": "Créer l'escale",
+      "now": "En cours",
+      "tomorrow": "Demain",
+      "inDays": "Dans {n} jours",
+      "nights": "{n, plural, one {# nuit} other {# nuits}}",
+      "statLayovers": "Escales",
+      "statNights": "Nuits en escale",
+      "statCities": "Aéroports",
+      "statCountries": "Pays"
     },
     "radar": {
       "title": "Radar",
