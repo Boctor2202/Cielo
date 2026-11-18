@@ -70,7 +70,7 @@ export default function More() {
     });
 
   return (
-    <Screen>
+    <Screen columns>
       <MenuGroup title={t("more.g.pilot")}>
         <MenuRow icon={<Ionicons name="person" size={17} color="#fff" />} color="#0A84FF" label={t("more.openProfile")} onPress={() => router.navigate("/profile")} />
         <MenuRow icon={<Ionicons name="ribbon" size={17} color="#fff" />} color="#FF9F0A" label={t("more.documents")} onPress={() => router.navigate("/documents")} />
