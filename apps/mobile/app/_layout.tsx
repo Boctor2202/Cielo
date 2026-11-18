@@ -78,7 +78,7 @@ function Navigator() {
         <Stack.Screen name="letter" options={{ contentStyle: { backgroundColor: c.bg }, title: t("letter.title"), presentation: "modal" }} />
         <Stack.Screen name="subscription" options={{ contentStyle: { backgroundColor: c.bg }, title: t("sub.title"), presentation: "modal" }} />
       </Stack>
-      {/* the opening screen stays a moment, then fades onto the overview */}
+      {/* the opening screen stays 5 s, then fades onto the overview */}
       <SplashOverlay />
     </ThemeProvider>
   );

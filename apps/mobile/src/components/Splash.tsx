@@ -100,7 +100,7 @@ export function Splash() {
 }
 
 /** Keeps the opening screen at least `min` ms, then fades it out over what is behind. */
-export function SplashOverlay({ min = 1400 }: { min?: number }) {
+export function SplashOverlay({ min = 5000 }: { min?: number }) {
   const fade = useRef(new Animated.Value(1)).current;
   const [gone, setGone] = React.useState(false);
   useEffect(() => {
