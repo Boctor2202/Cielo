@@ -3,7 +3,9 @@ import { Alert, Pressable, SectionList, StyleSheet, TextInput, View } from "reac
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { formatClock, formatDuration, sumFlights, type Flight } from "@cielo/core";
-import { EmptyState, Fab, Row, Txt, tap } from "../../src/components/ui";
+import { EmptyState, Fab, Row, Segmented, Txt, tap } from "../../src/components/ui";
+import { LogbookCalendar } from "../../src/components/LogbookCalendar";
+import Storage from "expo-sqlite/kv-store";
 import { formatDate, formatMonth } from "../../src/i18n";
 import { useApp } from "../../src/state";
 import { useSyncStatus } from "../../src/syncStatus";
@@ -25,6 +27,22 @@ export default function Logbook() {
   const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
 
   const [q, setQ] = useState("");
+  // list or month calendar, remembered on this phone
+  const [view, setView] = useState<"list" | "calendar">(() => {
+    try {
+      return Storage.getItemSync("logbook.view") === "calendar" ? "calendar" : "list";
+    } catch {
+      return "list";
+    }
+  });
+  const pickView = (v: "list" | "calendar") => {
+    setView(v);
+    try {
+      Storage.setItemSync("logbook.view", v);
+    } catch {
+      /* not kept */
+    }
+  };
   /** Words all found in the flight: airports, registration, type, flight number, crew, remarks, date. */
   const shown = useMemo(() => {
     const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -55,13 +73,21 @@ export default function Logbook() {
   return (
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <SectionList
-        sections={sections}
+        sections={view === "calendar" ? [] : sections}
         keyExtractor={(f) => f.id}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={{ paddingBottom: 140, paddingTop: space.sm, flexGrow: 1 }}
         ListHeaderComponent={
           flights.length ? (
-            <View style={{ marginHorizontal: space.md, marginTop: space.sm }}>
+            <View style={{ marginHorizontal: space.md, marginTop: space.sm, gap: space.sm }}>
+              <Segmented<"list" | "calendar">
+                value={view}
+                onChange={pickView}
+                options={[
+                  { value: "list", label: t("cal.list") },
+                  { value: "calendar", label: t("cal.calendar") },
+                ]}
+              />
               <Row style={{ paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: glass(c).strong }}>
                 <Ionicons name="search" size={16} color={c.muted} />
                 <TextInput
@@ -76,7 +102,8 @@ export default function Logbook() {
                   returnKeyType="search"
                 />
               </Row>
-              {q.trim() ? (
+              {view === "calendar" ? <View style={{ marginHorizontal: -space.md }}><LogbookCalendar flights={shown} /></View> : null}
+              {view === "list" && q.trim() ? (
                 <Txt variant="small" style={{ marginTop: 6, marginLeft: 4 }}>
                   {t("log.found", { n: shown.length, time: fmt(sumFlights(shown).totalMin) })}
                 </Txt>
@@ -84,7 +111,7 @@ export default function Logbook() {
             </View>
           ) : undefined
         }
-        ListEmptyComponent={q.trim() ? <EmptyState title={t("log.noMatch")} /> : <EmptyState title={t("log.empty")} hint={t("log.emptyHint")} />}
+        ListEmptyComponent={view === "calendar" && flights.length ? undefined : q.trim() ? <EmptyState title={t("log.noMatch")} /> : <EmptyState title={t("log.empty")} hint={t("log.emptyHint")} />}
         renderSectionHeader={({ section }) => (
           <Row style={{ justifyContent: "space-between", marginHorizontal: space.md + 4, marginTop: space.lg, paddingHorizontal: 4, paddingVertical: 6 }}>
             <Txt variant="h2" style={{ fontSize: 20, fontWeight: "700", textTransform: "capitalize" }}>
