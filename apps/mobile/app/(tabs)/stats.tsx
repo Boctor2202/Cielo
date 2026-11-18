@@ -79,7 +79,7 @@ export default function Stats() {
 
   return (
     <Screen columns>
-      <Achievements flights={flights} opening={balances} t={t} />
+      <Achievements flights={flights} opening={balances} t={t} locale={locale} />
       <Segmented<Range>
         value={range}
         onChange={setRange}
