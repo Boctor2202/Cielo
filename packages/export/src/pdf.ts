@@ -10,6 +10,7 @@ export interface LogbookPdfOptions {
   /** Totals brought forward from previous logbook(s) — shown as "total from previous pages" on page 1. */
   opening?: Totals;
   rowsPerPage?: number;
+  /** ignored: logbook exports are always in English, the language of aviation records */
   locale?: "fr" | "en";
   appName?: string;
   generatedAt?: Date;
@@ -58,16 +59,16 @@ export async function buildLogbookPdf(flights: Flight[], opts: LogbookPdfOptions
     page.drawText(safe(opts.appName ?? "Geardown"), { x: 40, y: 548, size: 22, font: bold, color: rgb(1, 1, 1) });
     page.drawText(safe(layout.title), { x: 40, y: 528, size: 11, font, color: rgb(0.75, 0.85, 0.95) });
     const lines: [string, string][] = [
-      [opts.locale === "en" ? "Pilot" : "Pilote", opts.pilotName],
-      [opts.locale === "en" ? "Licence number" : "N° de licence", opts.licenceNumber ?? "—"],
+      ["Pilot", opts.pilotName],
+      ["Licence number", opts.licenceNumber ?? "—"],
       ...(opts.holderDetails ?? []),
-      [opts.locale === "en" ? "Period" : "Période", opts.periodLabel ?? "—"],
-      [opts.locale === "en" ? "Entries" : "Entrées", `${sorted.length}`],
-      [opts.locale === "en" ? "Total time (incl. brought forward)" : "Temps total (report inclus)", fmt(all.totalMin)],
+      ["Period", opts.periodLabel ?? "—"],
+      ["Entries", `${sorted.length}`],
+      ["Total time (incl. brought forward)", fmt(all.totalMin)],
       ["PIC", fmt(all.picMin + all.picusMin)],
-      [opts.locale === "en" ? "Night" : "Nuit", fmt(all.nightMin)],
+      ["Night", fmt(all.nightMin)],
       ["IFR", fmt(all.ifrMin)],
-      [opts.locale === "en" ? "Landings day / night" : "Atterrissages jour / nuit", `${all.landingsDay} / ${all.landingsNight}`],
+      ["Landings day / night", `${all.landingsDay} / ${all.landingsNight}`],
       ["FSTD", fmt(all.fstdMin)],
     ];
     lines.forEach(([k, v], i) => {
@@ -76,7 +77,7 @@ export async function buildLogbookPdf(flights: Flight[], opts: LogbookPdfOptions
     });
     page.drawText(safe(layout.reference), { x: 40, y: 60, size: 8, font, color: GRID });
     const gen = (opts.generatedAt ?? new Date()).toISOString().slice(0, 16).replace("T", " ");
-    page.drawText(safe(`${opts.locale === "en" ? "Generated" : "Généré le"} ${gen} UTC`), { x: 40, y: 46, size: 8, font, color: GRID });
+    page.drawText(safe(`${"Generated"} ${gen} UTC`), { x: 40, y: 46, size: 8, font, color: GRID });
   }
 
   for (let p = 0; p < pages; p++) {
@@ -180,9 +181,9 @@ function drawPage(page: PDFPage, columns: Column[], rows: Flight[], c: DrawCtx) 
 
   // Footer totals
   const labels = [
-    [c.opts.locale === "en" ? "TOTAL THIS PAGE" : "TOTAL DE CETTE PAGE", c.thisPage],
-    [c.opts.locale === "en" ? "TOTAL FROM PREVIOUS PAGES" : "TOTAL DES PAGES PRÉCÉDENTES", c.previous],
-    [c.opts.locale === "en" ? "TOTAL TIME" : "TEMPS TOTAL", c.total],
+    ["TOTAL THIS PAGE", c.thisPage],
+    ["TOTAL FROM PREVIOUS PAGES", c.previous],
+    ["TOTAL TIME", c.total],
   ] as const;
   const firstSum = columns.findIndex((col) => col.sum);
   labels.forEach(([label, t], li) => {
@@ -211,7 +212,7 @@ function drawPage(page: PDFPage, columns: Column[], rows: Flight[], c: DrawCtx) 
 
   // Certification
   page.drawText(safe(c.certify), { x: marginX, y: tableBottom - 14, size: 7, font: c.font, color: INK });
-  const sigLabel = c.opts.locale === "en" ? "PILOT'S SIGNATURE" : "SIGNATURE DU PILOTE";
+  const sigLabel = "PILOT'S SIGNATURE";
   page.drawText(safe(sigLabel), { x: 842 - marginX - 220, y: tableBottom - 14, size: 7, font: c.bold, color: INK });
   page.drawLine({ start: { x: 842 - marginX - 130, y: tableBottom - 16 }, end: { x: 842 - marginX, y: tableBottom - 16 }, thickness: 0.5, color: GRID });
 }

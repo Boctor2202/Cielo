@@ -3,7 +3,7 @@ import { Alert, LayoutAnimation, Platform, Pressable, UIManager, View } from "re
 import { SvgXml } from "react-native-svg";
 import * as FLAGS from "country-flag-icons/string/3x2";
 import { countryName, layoverStays, nightsByCountry } from "@cielo/core";
-import { buildXlsx } from "@cielo/export";
+import { EXPORT_EN, buildXlsx } from "@cielo/export";
 import { Button, Card, EmptyState, Row, Screen, Segmented, Stat, Txt } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
 import { shareFile } from "../../src/exporters";
@@ -39,16 +39,19 @@ export default function Nights() {
   const r = useMemo(() => nightsByCountry(stays, Number(year)), [stays, year]);
   const cname = (code: string) => (code === "??" ? t("nights.unknown") : countryName(code, locale) ?? code);
 
+  // exports are in English, whatever the language of the app
+  const N = EXPORT_EN.nights;
+  const ename = (code: string) => (code === "??" ? N.unknown : countryName(code, "en") ?? code);
   const exportCsv = async () => {
     const lines = [
-      [t("nights.country"), t("nights.nightsCol"), t("nights.staysCol"), t("nights.airportsCol")].join(";"),
-      ...r.countries.map((x) => [cname(x.country), x.nights, x.stays, x.airports.join(" ")].join(";")),
+      [N.country, N.nights, N.stays, N.airports].join(";"),
+      ...r.countries.map((x) => [ename(x.country), x.nights, x.stays, x.airports.join(" ")].join(";")),
       "",
-      [t("nights.airportsCol"), t("nights.country"), t("nights.fromCol"), t("nights.toCol"), t("nights.nightsCol")].join(";"),
-      ...r.stays.map((s) => [s.airport, cname(s.country), s.from, s.to, s.nights].join(";")),
+      [N.airports, N.country, N.from, N.to, N.nights].join(";"),
+      ...r.stays.map((s) => [s.airport, ename(s.country), s.from, s.to, s.nights].join(";")),
     ];
     try {
-      await shareFile(`geardown-${locale.startsWith("fr") ? "nuitees-escale" : "layover-nights"}-${year}.csv`, "﻿" + lines.join("\r\n"), "text/csv", "public.comma-separated-values-text");
+      await shareFile(`geardown-${N.file}-${year}.csv`, "﻿" + lines.join("\r\n"), "text/csv", "public.comma-separated-values-text");
     } catch (e) {
       Alert.alert(t("common.error"), e instanceof Error ? e.message : String(e));
     }
@@ -56,11 +59,11 @@ export default function Nights() {
 
   const exportXlsx = async () => {
     const bytes = buildXlsx([
-      { name: t("nights.sheetCountries"), header: true, widths: [28, 10, 10, 40], rows: [[t("nights.country"), t("nights.nightsCol"), t("nights.staysCol"), t("nights.airportsCol")], ...r.countries.map((x) => [cname(x.country), x.nights, x.stays, x.airports.join(", ")]), [t("nights.totalCol"), r.total, r.stays.length, ""]] },
-      { name: t("nights.sheetStays"), header: true, widths: [12, 28, 14, 14, 8], rows: [[t("nights.airportsCol"), t("nights.country"), t("nights.fromCol"), t("nights.toCol"), t("nights.nightsCol")], ...r.stays.map((s) => [s.airport, cname(s.country), s.from, s.to, s.nights])] },
+      { name: N.sheetCountries, header: true, widths: [28, 10, 10, 40], rows: [[N.country, N.nights, N.stays, N.airports], ...r.countries.map((x) => [ename(x.country), x.nights, x.stays, x.airports.join(", ")]), [N.total, r.total, r.stays.length, ""]] },
+      { name: N.sheetStays, header: true, widths: [12, 28, 14, 14, 8], rows: [[N.airports, N.country, N.from, N.to, N.nights], ...r.stays.map((s) => [s.airport, ename(s.country), s.from, s.to, s.nights])] },
     ]);
     try {
-      await shareFile(`geardown-${locale.startsWith("fr") ? "nuitees-escale" : "layover-nights"}-${year}.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "org.openxmlformats.spreadsheetml.sheet");
+      await shareFile(`geardown-${N.file}-${year}.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "org.openxmlformats.spreadsheetml.sheet");
     } catch (e) {
       Alert.alert(t("common.error"), e instanceof Error ? e.message : String(e));
     }

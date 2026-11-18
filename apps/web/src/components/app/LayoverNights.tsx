@@ -1,5 +1,6 @@
 "use client";
 
+import { EXPORT_EN } from "@cielo/export";
 import { Roll } from "@/components/ui/Roll";
 import { ChevronDown, ChevronRight, Download, FileSpreadsheet } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
@@ -32,24 +33,27 @@ export function LayoverNights({ flights, homeBase, countryOf }: { flights: Fligh
   const r = useMemo(() => nightsByCountry(stays, year), [stays, year]);
   const cname = (c: string) => (c === "??" ? t("unknown") : countryName(c, locale));
 
+  // exports are in English, whatever the language of the app
+  const N = EXPORT_EN.nights;
+  const ename = (code: string) => (code === "??" ? N.unknown : countryName(code, "en") ?? code);
   const exportCsv = () => {
     const lines = [
-      [t("country"), t("nightsCol"), t("staysCol"), t("airportsCol")].join(";"),
-      ...r.countries.map((x) => [cname(x.country), x.nights, x.stays, x.airports.join(" ")].join(";")),
+      [N.country, N.nights, N.stays, N.airports].join(";"),
+      ...r.countries.map((x) => [ename(x.country), x.nights, x.stays, x.airports.join(" ")].join(";")),
       "",
-      [t("airportsCol"), t("country"), t("fromCol"), t("toCol"), t("nightsCol")].join(";"),
-      ...r.stays.map((s) => [s.airport, cname(s.country), s.from, s.to, s.nights].join(";")),
+      [N.airports, N.country, N.from, N.to, N.nights].join(";"),
+      ...r.stays.map((s) => [s.airport, ename(s.country), s.from, s.to, s.nights].join(";")),
     ];
-    downloadBlob("﻿" + lines.join("\r\n"), `geardown-${locale.startsWith("fr") ? "nuitees-escale" : "layover-nights"}-${year}.csv`, "text/csv;charset=utf-8");
+    downloadBlob("﻿" + lines.join("\r\n"), `geardown-${N.file}-${year}.csv`, "text/csv;charset=utf-8");
   };
 
   const exportXlsx = async () => {
     const { buildXlsx } = await import("@cielo/export");
     const bytes = buildXlsx([
-      { name: t("sheetCountries"), header: true, widths: [28, 10, 10, 40], rows: [[t("country"), t("nightsCol"), t("staysCol"), t("airportsCol")], ...r.countries.map((x) => [cname(x.country), x.nights, x.stays, x.airports.join(", ")]), [t("totalCol"), r.total, r.stays.length, ""]] },
-      { name: t("sheetStays"), header: true, widths: [12, 28, 14, 14, 8], rows: [[t("airportsCol"), t("country"), t("fromCol"), t("toCol"), t("nightsCol")], ...r.stays.map((s) => [s.airport, cname(s.country), s.from, s.to, s.nights])] },
+      { name: N.sheetCountries, header: true, widths: [28, 10, 10, 40], rows: [[N.country, N.nights, N.stays, N.airports], ...r.countries.map((x) => [ename(x.country), x.nights, x.stays, x.airports.join(", ")]), [N.total, r.total, r.stays.length, ""]] },
+      { name: N.sheetStays, header: true, widths: [12, 28, 14, 14, 8], rows: [[N.airports, N.country, N.from, N.to, N.nights], ...r.stays.map((s) => [s.airport, ename(s.country), s.from, s.to, s.nights])] },
     ]);
-    downloadBlob(bytes as BlobPart, `geardown-${locale.startsWith("fr") ? "nuitees-escale" : "layover-nights"}-${year}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    downloadBlob(bytes as BlobPart, `geardown-${N.file}-${year}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   };
 
   return (

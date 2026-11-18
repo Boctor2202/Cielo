@@ -1,5 +1,6 @@
 "use client";
 
+import { EXPORT_EN, exportMonth } from "@cielo/export";
 import { Roll } from "@/components/ui/Roll";
 import { Download, FileSpreadsheet, RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -105,9 +106,12 @@ export function LogbookReport({ flights, today }: { flights: Flight[]; today: st
   const csvCell = (v: string | number) => (/[;"\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
   const h = (m: number) => (m / 60).toFixed(2);
   const exportReport = () => {
-    const head = [t(`group.${group}`), t("col.flights"), t("col.total"), t("col.pic"), t("col.copilot"), t("col.dual"), t("col.instructor"), t("col.multiPilot"), t("col.night"), t("col.ifr"), t("col.fstd"), t("col.landings")];
-    const line = (k: string, x: Totals) => [label(k), x.flights + x.fstdSessions, h(x.totalMin), h(x.picMin), h(x.copilotMin), h(x.dualMin), h(x.instructorMin), h(x.multiPilotMin), h(x.nightMin), h(x.ifrMin), h(x.fstdMin), ldg(x)];
-    const csv = [head, ...rows.map((r) => line(r.key, r.t)), line(t("total"), totals)].map((r) => r.map(csvCell).join(";")).join("\r\n");
+    // exports are in English, whatever the language of the app
+    const E = EXPORT_EN.col;
+    const head = [EXPORT_EN.group[group] ?? group, E.flights, E.total, E.pic, E.copilot, E.dual, E.instructor, E.multiPilot, E.night, E.ifr, E.fstd, E.landings];
+    const exportLabel = (k: string) => (group === "month" && /^\d{4}-\d{2}$/.test(k) ? exportMonth(k) : k);
+    const line = (k: string, x: Totals) => [exportLabel(k), x.flights + x.fstdSessions, h(x.totalMin), h(x.picMin), h(x.copilotMin), h(x.dualMin), h(x.instructorMin), h(x.multiPilotMin), h(x.nightMin), h(x.ifrMin), h(x.fstdMin), ldg(x)];
+    const csv = [head, ...rows.map((r) => line(r.key, r.t)), line(EXPORT_EN.total, totals)].map((r) => r.map(csvCell).join(";")).join("\r\n");
     downloadBlob("﻿" + csv, `geardown-report-${start.replace(/^0000.*/, "start")}_${end.replace(/^9999.*/, today)}.csv`, "text/csv;charset=utf-8");
   };
   const exportFlights = () => {

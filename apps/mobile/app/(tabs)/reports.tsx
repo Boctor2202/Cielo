@@ -1,3 +1,4 @@
+import { EXPORT_EN, exportMonth } from "@cielo/export";
 import React, { useMemo, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 import { formatDuration, PILOT_FUNCTIONS, sumFlights, type Flight, type Totals } from "@cielo/core";
@@ -117,9 +118,12 @@ export default function Reports() {
   const h = (m: number) => (m / 60).toFixed(2);
   const [busy, setBusy] = useState(false);
   const exportReport = async () => {
-    const head = [t(`logReport.group.${group}` as I18nKey), t("logReport.col.flights"), t("logReport.col.total"), t("logReport.col.pic"), t("logReport.col.copilot"), t("logReport.col.dual"), t("logReport.col.instructor"), t("logReport.col.multiPilot"), t("logReport.col.night"), t("logReport.col.ifr"), t("logReport.col.fstd"), t("logReport.col.landings")];
-    const line = (k: string, x: Totals) => [label(k), x.flights + x.fstdSessions, h(x.totalMin), h(x.picMin), h(x.copilotMin), h(x.dualMin), h(x.instructorMin), h(x.multiPilotMin), h(x.nightMin), h(x.ifrMin), h(x.fstdMin), ldg(x)];
-    const csv = [head, ...rows.map((r) => line(r.key, r.t)), line(t("logReport.total"), totals)].map((r) => r.map(csvCell).join(";")).join("\r\n");
+    // exports are in English, whatever the language of the app
+    const E = EXPORT_EN.col;
+    const head = [EXPORT_EN.group[group] ?? group, E.flights, E.total, E.pic, E.copilot, E.dual, E.instructor, E.multiPilot, E.night, E.ifr, E.fstd, E.landings];
+    const exportLabel = (k: string) => (group === "month" && /^\d{4}-\d{2}$/.test(k) ? exportMonth(k) : k);
+    const line = (k: string, x: Totals) => [exportLabel(k), x.flights + x.fstdSessions, h(x.totalMin), h(x.picMin), h(x.copilotMin), h(x.dualMin), h(x.instructorMin), h(x.multiPilotMin), h(x.nightMin), h(x.ifrMin), h(x.fstdMin), ldg(x)];
+    const csv = [head, ...rows.map((r) => line(r.key, r.t)), line(EXPORT_EN.total, totals)].map((r) => r.map(csvCell).join(";")).join("\r\n");
     setBusy(true);
     try {
       await shareFile(`geardown-report-${preset}-${today}.csv`, "﻿" + csv, "text/csv", "public.comma-separated-values-text");

@@ -29,7 +29,7 @@ export async function exportLogbookPdf(flights: Flight[], balances: OpeningBalan
     locale: pilot.locale,
     appName: "Geardown",
     generatedAt: new Date(),
-    holderDetails: layout === "HKCAD" && pilot.employer ? [[pilot.locale === "en" ? "Employer" : "Employeur", pilot.employer]] : undefined,
+    holderDetails: layout === "HKCAD" && pilot.employer ? [["Employer", pilot.employer]] : undefined,
   });
   await shareFile(`geardown-logbook-${layout}-${slug(pilot.fullName)}-${isoDate(Date.now())}.pdf`, bytes, "application/pdf", "com.adobe.pdf");
 }

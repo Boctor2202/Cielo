@@ -53,10 +53,10 @@ export default function ExportPage() {
           layout: format as LayoutId,
           pilotName: pilot?.fullName || "—",
           licenceNumber: pilot?.licenceNumber,
-          periodLabel: from || to ? `${from || "…"} → ${to || "…"}` : t("allTime"),
+          periodLabel: from || to ? `${from || "…"} → ${to || "…"}` : "All time",
           opening: sumFlights(before, base),
           locale: pilot?.locale ?? "fr",
-          holderDetails: format === "HKCAD" && pilot?.employer ? [[pilot.locale === "en" ? "Employer" : "Employeur", pilot.employer]] : undefined,
+          holderDetails: format === "HKCAD" && pilot?.employer ? [["Employer", pilot.employer]] : undefined,
         });
         downloadBlob(bytes as BlobPart, `${name}-${format}.pdf`, "application/pdf");
       }
