@@ -28,5 +28,6 @@ export * from "./importFormats";
 export * from "./layoverNights";
 export * from "./rosterLayovers";
 export * from "./profile";
+export * from "./achievements";
 export * from "./revisions";
 export * from "./phone";

@@ -1900,6 +1900,19 @@
       "undoConfirm": "Put back the values from before this change?",
       "more": "Show {n} more",
       "less": "Show less"
+    },
+    "badges": {
+      "levels": "Hour levels",
+      "club": "{n} h club",
+      "noLevel": "First level at 100 h",
+      "toNext": "{left} h to the {n} h club",
+      "allLevels": "Every level reached",
+      "streak": "Logging streak",
+      "weeks": "{n, plural, =0 {No streak yet} one {# week in a row} other {# weeks in a row}}",
+      "best": "Best: {n, plural, one {# week} other {# weeks}}",
+      "onTime": "{p} % logged on time",
+      "last12": "Last 12 weeks",
+      "hint": "A week counts when every flight is entered within 48 h of landing. Weeks without flights do not break the streak; imported flights are left out."
     }
   },
   "why": {

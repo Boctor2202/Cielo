@@ -1,3 +1,4 @@
+import { Achievements } from "../../src/components/Achievements";
 import React, { useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -13,7 +14,7 @@ import { glass, space, useTheme } from "../../src/theme";
 type Range = "all" | "y" | "m12";
 
 export default function Stats() {
-  const { t, flights, pilot, locale } = useApp();
+  const { t, flights, pilot, locale, balances } = useApp();
   const [range, setRange] = useState<Range>("all");
   const [open, setOpen] = useState<"airports" | "countries" | null>(null);
   const c = useTheme();
@@ -78,6 +79,7 @@ export default function Stats() {
 
   return (
     <Screen columns>
+      <Achievements flights={flights} opening={balances} t={t} />
       <Segmented<Range>
         value={range}
         onChange={setRange}

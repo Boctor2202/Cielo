@@ -1900,6 +1900,19 @@
       "undoConfirm": "Remettre les valeurs d'avant cette modification ?",
       "more": "Voir {n} de plus",
       "less": "Voir moins"
+    },
+    "badges": {
+      "levels": "Paliers d'heures",
+      "club": "Club des {n} h",
+      "noLevel": "Premier palier à 100 h",
+      "toNext": "Encore {left} h avant le club des {n} h",
+      "allLevels": "Tous les paliers atteints",
+      "streak": "Série d'assiduité",
+      "weeks": "{n, plural, =0 {Pas encore de série} one {# semaine d'affilée} other {# semaines d'affilée}}",
+      "best": "Record : {n, plural, one {# semaine} other {# semaines}}",
+      "onTime": "{p} % saisis à temps",
+      "last12": "12 dernières semaines",
+      "hint": "Une semaine compte quand chaque vol est saisi dans les 48 h suivant l'atterrissage. Une semaine sans vol ne casse pas la série ; les vols importés ne comptent pas."
     }
   },
   "why": {

@@ -7,7 +7,8 @@ import { countryName, distanceNm, groupTotals, sumFlights } from "@cielo/core";
 import { Card, Modal, PageTitle, Readout } from "@/components/app/ui";
 import { HoursBars, SplitBar } from "@/components/app/Charts";
 import { useAirports } from "@/lib/airports";
-import { useDuration, useFlights, usePilot } from "@/lib/hooks";
+import { useDuration, useFlights, usePilot, useTable } from "@/lib/hooks";
+import { Achievements } from "@/components/app/Achievements";
 import { Flag, LayoverNights } from "@/components/app/LayoverNights";
 import { useRouter } from "@/i18n/navigation";
 import { Earth } from "lucide-react";
@@ -21,6 +22,7 @@ export default function StatsPage() {
   const tl = useTranslations("app.logbook");
   const locale = useLocale();
   const flights = useFlights();
+  const opening = useTable("opening_balances");
   const airports = useAirports();
   const pilot = usePilot();
   const countryOf = useCallback((icao: string) => airports?.get(icao)?.country, [airports]);
@@ -86,6 +88,7 @@ export default function StatsPage() {
           </select>
         }
       />
+      {flights && <div className="mb-5"><Achievements flights={flights} opening={opening ?? []} /></div>}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Readout
           label={t("distance")}
