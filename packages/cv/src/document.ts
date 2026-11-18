@@ -1,4 +1,4 @@
-import type { CvData, CvLicence, FlightExperience, TypeHours } from "./types";
+import { LANG_TAG, type CvData, type CvLicence, type CvLocale, type FlightExperience, type TypeHours } from "./types";
 
 /**
  * One neutral structure for every output (preview, plain text, PDF, JSON Resume).
@@ -62,6 +62,54 @@ const L = {
     source: "Heures calculées à partir du carnet de vol du pilote.", figTotal: "Temps total", figPic: "CDB (PIC)", figMp: "Multipilote", figTurbine: "Turbine",
     figNight: "Nuit", fig12m: "12 derniers mois",
   },
+  es: {
+    contact: "Contacto", summary: "Perfil profesional", hours: "Experiencia de vuelo", types: "Tipos de aeronave", licences: "Licencias, habilitaciones y certificado médico",
+    experience: "Experiencia profesional", education: "Formación", languages: "Idiomas", skills: "Competencias", additional: "Información adicional",
+    total: "Tiempo de vuelo total", pic: "Piloto al mando (PIC)", picus: "PIC bajo supervisión (PICUS)", copilot: "Copiloto (SIC)", multiPilot: "Multipiloto",
+    multiEngine: "Multimotor", seSingle: "Monopiloto monomotor", meSingle: "Monopiloto multimotor", jet: "Reactor (jet)", turboprop: "Turbohélice",
+    turbine: "Turbina (jet + turbohélice)", piston: "Pistón", helicopter: "Helicóptero", night: "Noche", ifr: "IFR", imc: "IMC real", fstd: "Simulador (FSTD)",
+    instructor: "Instructor", dual: "Doble mando recibido", landings: "Aterrizajes", last12m: "Últimos 12 meses", last90d: "Últimos 90 días", sectors: "Tramos volados",
+    asOf: "Horas a fecha de", lastFlight: "Último vuelo", validUntil: "válido hasta", noExpiry: "sin caducidad", present: "Actualidad", email: "Correo electrónico", phone: "Teléfono",
+    location: "Ubicación", nationality: "Nacionalidad", dob: "Fecha de nacimiento", linkedin: "LinkedIn", rightToWork: "Permiso de trabajo", onType: "en el tipo",
+    asPic: "PIC", asCopilot: "SIC", lastFlown: "último vuelo", targetRole: "Puesto buscado", icao: "nivel OACI", source: "Horas calculadas a partir del libro de vuelo del piloto.",
+    figTotal: "Tiempo total", figPic: "PIC", figMp: "Multipiloto", figTurbine: "Turbina", figNight: "Noche", fig12m: "Últimos 12 meses",
+  },
+  ru: {
+    contact: "Контакты", summary: "Профессиональный профиль", hours: "Лётный опыт", types: "Типы воздушных судов", licences: "Свидетельства, допуски и медицинское заключение",
+    experience: "Опыт работы", education: "Образование и подготовка", languages: "Языки", skills: "Навыки", additional: "Дополнительная информация",
+    total: "Общий налёт", pic: "Командир ВС (PIC)", picus: "PIC под наблюдением (PICUS)", copilot: "Второй пилот (SIC)", multiPilot: "Многочленный экипаж",
+    multiEngine: "Многодвигательные", seSingle: "Одиночный пилот, однодвигательные", meSingle: "Одиночный пилот, многодвигательные", jet: "Реактивные", turboprop: "Турбовинтовые",
+    turbine: "Газотурбинные (реактивные + турбовинтовые)", piston: "Поршневые", helicopter: "Вертолёт", night: "Ночь", ifr: "ППП (IFR)", imc: "Фактические ПМУ (IMC)", fstd: "Тренажёр (FSTD)",
+    instructor: "Инструктор", dual: "Полёты с инструктором", landings: "Посадки", last12m: "За 12 месяцев", last90d: "За 90 дней", sectors: "Выполнено рейсов",
+    asOf: "Налёт на дату", lastFlight: "Последний полёт", validUntil: "действует до", noExpiry: "бессрочно", present: "по настоящее время", email: "Эл. почта", phone: "Телефон",
+    location: "Местоположение", nationality: "Гражданство", dob: "Дата рождения", linkedin: "LinkedIn", rightToWork: "Право на работу", onType: "на типе",
+    asPic: "КВС", asCopilot: "2-й пилот", lastFlown: "последний полёт", targetRole: "Желаемая должность", icao: "уровень ИКАО", source: "Налёт рассчитан по лётной книжке пилота.",
+    figTotal: "Общий налёт", figPic: "КВС (PIC)", figMp: "Многочл. экипаж", figTurbine: "Газотурбинные", figNight: "Ночь", fig12m: "За 12 месяцев",
+  },
+  zh: {
+    contact: "联系方式", summary: "职业概述", hours: "飞行经历", types: "机型", licences: "执照、等级与体检合格证",
+    experience: "工作经历", education: "教育与培训", languages: "语言", skills: "技能", additional: "其他信息",
+    total: "总飞行时间", pic: "机长 (PIC)", picus: "监视下机长 (PICUS)", copilot: "副驾驶 (SIC)", multiPilot: "多人制机组",
+    multiEngine: "多发", seSingle: "单人制单发", meSingle: "单人制多发", jet: "喷气式", turboprop: "涡轮螺旋桨",
+    turbine: "涡轮 (喷气式 + 涡桨)", piston: "活塞式", helicopter: "直升机", night: "夜间", ifr: "仪表飞行 (IFR)", imc: "实际仪表气象条件 (IMC)", fstd: "模拟机 (FSTD)",
+    instructor: "教员", dual: "带飞", landings: "着陆次数", last12m: "近12个月", last90d: "近90天", sectors: "航段数",
+    asOf: "飞行时间截至", lastFlight: "最近飞行", validUntil: "有效期至", noExpiry: "长期有效", present: "至今", email: "电子邮件", phone: "电话",
+    location: "所在地", nationality: "国籍", dob: "出生日期", linkedin: "LinkedIn", rightToWork: "工作许可", onType: "本机型",
+    asPic: "机长", asCopilot: "副驾驶", lastFlown: "最近飞行", targetRole: "应聘职位", icao: "ICAO 等级", source: "飞行时间根据飞行员飞行记录本计算。",
+    figTotal: "总时间", figPic: "机长", figMp: "多人制机组", figTurbine: "涡轮", figNight: "夜间", fig12m: "近12个月",
+  },
+  ar: {
+    contact: "معلومات الاتصال", summary: "الملخص المهني", hours: "الخبرة في الطيران", types: "أنواع الطائرات", licences: "الرخص والتأهيلات والشهادة الطبية",
+    experience: "الخبرة المهنية", education: "التعليم والتدريب", languages: "اللغات", skills: "المهارات", additional: "معلومات إضافية",
+    total: "إجمالي ساعات الطيران", pic: "قائد الطائرة (PIC)", picus: "قائد تحت الإشراف (PICUS)", copilot: "مساعد الطيار (SIC)", multiPilot: "طاقم متعدد",
+    multiEngine: "متعددة المحركات", seSingle: "طيار واحد محرك واحد", meSingle: "طيار واحد متعددة المحركات", jet: "نفاثة", turboprop: "مروحية توربينية",
+    turbine: "توربينية (نفاثة + مروحية توربينية)", piston: "مكبسية", helicopter: "مروحية", night: "ليلي", ifr: "طيران آلي (IFR)", imc: "ظروف آلية فعلية (IMC)", fstd: "جهاز محاكاة (FSTD)",
+    instructor: "مدرب", dual: "تدريب مزدوج", landings: "عدد الهبوط", last12m: "آخر 12 شهرا", last90d: "آخر 90 يوما", sectors: "عدد الرحلات",
+    asOf: "الساعات حتى تاريخ", lastFlight: "آخر رحلة", validUntil: "صالح حتى", noExpiry: "بدون انتهاء", present: "حتى الآن", email: "البريد الإلكتروني", phone: "الهاتف",
+    location: "الموقع", nationality: "الجنسية", dob: "تاريخ الميلاد", linkedin: "LinkedIn", rightToWork: "تصريح العمل", onType: "على النوع",
+    asPic: "قائد", asCopilot: "مساعد", lastFlown: "آخر رحلة", targetRole: "الوظيفة المطلوبة", icao: "مستوى إيكاو", source: "الساعات محسوبة من سجل طيران الطيار.",
+    figTotal: "إجمالي الوقت", figPic: "قائد الطائرة", figMp: "طاقم متعدد", figTurbine: "توربينية", figNight: "ليلي", fig12m: "آخر 12 شهرا",
+  },
 };
 
 const LICENCE_NAMES: Record<string, string> = {
@@ -82,14 +130,14 @@ export function expandLicence(code: string): string {
   return `${base}${cat}${tail ? ` ${tail}` : ""}`;
 }
 
-const fmtH = (min: number, locale: "en" | "fr") => `${new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-GB").format(Math.round(min / 60))} h`;
-const month = (ym: string | undefined, locale: "en" | "fr") => {
+const fmtH = (min: number, locale: CvLocale) => `${new Intl.NumberFormat(LANG_TAG[locale]).format(Math.round(min / 60))} h`;
+const month = (ym: string | undefined, locale: CvLocale) => {
   if (!ym) return "";
   const d = new Date(`${ym.slice(0, 7)}-01T12:00:00Z`);
-  return Number.isNaN(d.getTime()) ? ym : new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", { month: "short", year: "numeric", timeZone: "UTC" }).format(d);
+  return Number.isNaN(d.getTime()) ? ym : new Intl.DateTimeFormat(LANG_TAG[locale], { month: "short", year: "numeric", timeZone: "UTC" }).format(d);
 };
-const day = (iso: string | undefined | null, locale: "en" | "fr") =>
-  iso ? new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${iso.slice(0, 10)}T12:00:00Z`)) : "";
+const day = (iso: string | undefined | null, locale: CvLocale) =>
+  iso ? new Intl.DateTimeFormat(LANG_TAG[locale], { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${iso.slice(0, 10)}T12:00:00Z`)) : "";
 
 /** Types relevant to the target job first, then by hours. */
 export function orderTypes(types: TypeHours[], target?: string[]): TypeHours[] {
@@ -97,7 +145,7 @@ export function orderTypes(types: TypeHours[], target?: string[]): TypeHours[] {
   return [...types].sort((a, b) => Number(target.includes(b.icao)) - Number(target.includes(a.icao)) || b.totalMin - a.totalMin);
 }
 
-function hourLines(h: FlightExperience, t: (typeof L)["en"], locale: "en" | "fr"): Line[] {
+function hourLines(h: FlightExperience, t: (typeof L)["en"], locale: CvLocale): Line[] {
   const rows: [string, number, boolean?][] = [
     [t.total, h.totalMin, true], [t.pic, h.picMin, true], [t.picus, h.picusMin], [t.copilot, h.copilotMin], [t.multiPilot, h.multiPilotMin, true],
     [t.multiEngine, h.multiEngineMin], [t.turbine, h.turbineMin, true], [t.jet, h.jetMin], [t.turboprop, h.turbopropMin], [t.piston, h.pistonMin],
@@ -105,12 +153,12 @@ function hourLines(h: FlightExperience, t: (typeof L)["en"], locale: "en" | "fr"
     [t.imc, h.actualImcMin], [t.instructor, h.instructorMin], [t.fstd, h.fstdMin], [t.last12m, h.last12mMin], [t.last90d, h.last90dMin],
   ];
   const lines: Line[] = rows.filter(([, v], i) => i === 0 || v > 0).map(([label, v, strong]) => ({ kind: "pair" as const, label, value: fmtH(v, locale), strong }));
-  if (h.landings) lines.push({ kind: "pair", label: t.landings, value: new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-GB").format(h.landings) });
+  if (h.landings) lines.push({ kind: "pair", label: t.landings, value: new Intl.NumberFormat(LANG_TAG[locale]).format(h.landings) });
   lines.push({ kind: "text", text: `${t.asOf} ${day(h.asOf, locale)}${h.lastFlight ? ` · ${t.lastFlight} ${day(h.lastFlight, locale)}` : ""}. ${t.source}` });
   return lines;
 }
 
-function licenceLine(l: CvLicence, t: (typeof L)["en"], locale: "en" | "fr"): Line {
+function licenceLine(l: CvLicence, t: (typeof L)["en"], locale: CvLocale): Line {
   const name = l.kind === "licence" || /rating$/.test(l.kind) ? expandLicence(l.code) : l.code;
   const meta = [l.authority, l.number, l.validUntil ? `${t.validUntil} ${day(l.validUntil, locale)}` : l.kind === "medical" ? "" : t.noExpiry].filter(Boolean).join(" · ");
   return { kind: "item", title: name, meta };

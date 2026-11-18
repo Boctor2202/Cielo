@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Share, View } from "react-native";
+import { Alert, ScrollView, Share, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import { countryName } from "@cielo/core";
-import { flightExperience, letterPilot, type CvData, type CvProfile } from "@cielo/cv";
-import { Button, Card, Field, Screen, Segmented, Txt, tap } from "../src/components/ui";
+import { CV_LOCALES, flightExperience, type CvLocale, letterPilot, type CvData, type CvProfile } from "@cielo/cv";
+import { Button, Card, Chip, Field, Screen, Segmented, Txt, tap } from "../src/components/ui";
 import { Paywall } from "../src/components/Access";
 import { API_URL } from "../src/api";
 import { getLetterJob } from "../src/letterJob";
@@ -21,7 +21,7 @@ export default function Letter() {
   const { t, store, pilot, flights, balances, licenses, aircraftTypes, session, access, locale: uiLocale } = useApp();
   const c = useTheme();
   const job = useMemo(() => getLetterJob(), []);
-  const [locale, setLocale] = useState<"fr" | "en">(uiLocale === "fr" ? "fr" : "en");
+  const [locale, setLocale] = useState<CvLocale>(uiLocale === "fr" ? "fr" : "en");
   const [adText, setAdText] = useState("");
   const [notes, setNotes] = useState("");
   const [copied, setCopied] = useState(false);
@@ -96,7 +96,11 @@ export default function Letter() {
           style={{ minHeight: job ? 80 : 160 }}
         />
         <Field label={t("letter.notes")} value={notes} onChangeText={setNotes} multiline placeholder={t("letter.notesPh")} />
-        <Segmented<"fr" | "en"> value={locale} onChange={setLocale} options={[{ value: "fr", label: "Français" }, { value: "en", label: "English" }]} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+          {CV_LOCALES.map((l) => (
+            <Chip key={l} label={({ en: "English", fr: "Français", es: "Español", ru: "Русский", zh: "中文", ar: "العربية" } as const)[l]} selected={locale === l} onPress={() => setLocale(l)} />
+          ))}
+        </ScrollView>
         <Button title={letter ? t("letter.again") : t("letter.write")} loading={busy} onPress={() => void write()} />
         <Txt variant="small" color={c.muted}>{t("letter.atsNote")}</Txt>
       </Card>

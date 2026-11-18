@@ -27,3 +27,4 @@ export * from "./regulators";
 export * from "./importFormats";
 export * from "./layoverNights";
 export * from "./revisions";
+export * from "./phone";

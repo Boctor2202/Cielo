@@ -7,7 +7,7 @@ import { AirportInput } from "@/components/app/AirportInput";
 import { motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { AUTHORITIES, RANKS, countryName, licenseStatus, type Pilot } from "@cielo/core";
+import { formatPhoneIntl, AUTHORITIES, RANKS, countryName, licenseStatus, type Pilot } from "@cielo/core";
 import { flightExperience } from "@cielo/cv";
 import { Badge, Card, Field, useToast, type Level } from "@/components/app/ui";
 import { Link } from "@/i18n/navigation";
@@ -82,7 +82,7 @@ export default function ProfilePage() {
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => (d ? { ...d, [k]: v } : d));
   const save = async () => {
-    await updatePilot({ ...draft, fullName: draft.fullName.trim(), homeBaseIcao: draft.homeBaseIcao?.trim().toUpperCase() || undefined, nationality: draft.nationality?.trim().toUpperCase() || undefined, licenceNumber: draft.licenceNumber?.trim() || undefined, phone: draft.phone?.trim() || undefined });
+    await updatePilot({ ...draft, fullName: draft.fullName.trim(), homeBaseIcao: draft.homeBaseIcao?.trim().toUpperCase() || undefined, nationality: draft.nationality?.trim().toUpperCase() || undefined, licenceNumber: draft.licenceNumber?.trim() || undefined, phone: formatPhoneIntl(draft.phone, draft.nationality?.trim() || pilot?.nationality) || undefined });
     setEditing(false);
     toast(t("saved"));
   };
@@ -179,7 +179,7 @@ export default function ProfilePage() {
                 }
               />
               <Field label={t("f.licenceNumber")} hint={known.licenceNumber && draft.licenceNumber === known.licenceNumber ? t("f.fromLicence") : undefined}><input id="p-lic" className="input num" value={draft.licenceNumber ?? ""} onChange={(e) => set("licenceNumber", e.target.value || undefined)} /></Field>
-              <Field label={t("f.phone")} hint={known.phone && draft.phone === known.phone && !pilot.phone ? t("f.fromCv") : undefined}><input id="p-phone" className="input" type="tel" value={draft.phone ?? ""} onChange={(e) => set("phone", e.target.value || undefined)} /></Field>
+              <Field label={t("f.phone")} hint={known.phone && draft.phone === known.phone && !pilot.phone ? t("f.fromCv") : undefined}><input id="p-phone" className="input" type="tel" value={draft.phone ?? ""} onChange={(e) => set("phone", e.target.value || undefined)} onBlur={() => set("phone", formatPhoneIntl(draft.phone, draft.nationality || pilot?.nationality) || undefined)} placeholder="+33 6 12 34 56 78" /></Field>
               <Field label={t("f.email")}><input id="p-email" className="input" value={pilot.email} disabled /></Field>
               <Field label={t("f.bio")} className="sm:col-span-2"><textarea id="p-bio" className="input min-h-28" maxLength={600} value={draft.bio ?? ""} onChange={(e) => set("bio", e.target.value || undefined)} /></Field>
             </div>

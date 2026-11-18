@@ -3,8 +3,8 @@
 import { AlertTriangle, Check, Copy, FileDown, FileJson, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { countryName } from "@cielo/core";
-import { atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, cvToText, CV_THEMES, flightExperience, toJsonResume, type CvData, type CvDocument, type CvProfile, type CvTheme } from "@cielo/cv";
+import { formatPhoneIntl, countryName } from "@cielo/core";
+import { CV_LOCALES, SCRIPT_FONT, type CvLocale, atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, cvToText, CV_THEMES, flightExperience, toJsonResume, type CvData, type CvDocument, type CvProfile, type CvTheme } from "@cielo/cv";
 import type { Job } from "@cielo/jobs";
 import { Card, Field, PageTitle, Segmented, useToast, type Level } from "@/components/app/ui";
 import { localStore } from "@/lib/db";
@@ -40,7 +40,7 @@ export default function CvPage() {
   const today = useToday();
   const { toast, toastNode } = useToast();
   const [profile, setProfile] = useState<CvProfile | null>(null);
-  const [locale, setLocale] = useState<"en" | "fr">("en");
+  const [locale, setLocale] = useState<CvLocale>("en");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [targetId, setTargetId] = useState("");
   const loaded = useRef(false);
@@ -52,7 +52,7 @@ export default function CvPage() {
     localStore.getMeta("cv").then((raw) => {
       const saved = raw ? (JSON.parse(raw) as CvProfile) : null;
       // what the profile already knows fills the empty CV fields
-      const known = { fullName: pilot.fullName, email: pilot.email || undefined, phone: pilot.phone || undefined, nationality: pilot.nationality ? countryName(pilot.nationality, uiLocale) : undefined };
+      const known = { fullName: pilot.fullName, email: pilot.email || undefined, phone: formatPhoneIntl(pilot.phone, pilot.nationality) || undefined, nationality: pilot.nationality ? countryName(pilot.nationality, uiLocale) : undefined };
       const merged = { ...EMPTY, ...known, ...saved };
       for (const k of Object.keys(known) as (keyof typeof known)[]) if (!merged[k]) merged[k] = known[k] as never;
       setProfile(merged);
@@ -72,8 +72,9 @@ export default function CvPage() {
     if (!profile || !flights || !opening || !licenses || !types) return null;
     const byIcao = new Map(types.map((x) => [x.icao, x]));
     const hours = flightExperience(flights, opening, (i) => byIcao.get(i), today);
-    return { profile, hours, locale, licences: licenses.map((l) => ({ kind: l.kind, code: l.code, authority: l.authority, number: l.number, validUntil: l.validUntil, issuedOn: l.issuedOn })) };
-  }, [profile, flights, opening, licenses, types, today, locale]);
+    // the phone always with its dialling code, even when an older draft kept a national number
+    return { profile: { ...profile, phone: formatPhoneIntl(profile.phone, pilot?.nationality) || undefined }, hours, locale, licences: licenses.map((l) => ({ kind: l.kind, code: l.code, authority: l.authority, number: l.number, validUntil: l.validUntil, issuedOn: l.issuedOn })) };
+  }, [profile, flights, opening, licenses, types, today, locale, pilot?.nationality]);
   const doc: CvDocument | null = useMemo(() => (data ? buildCvDocument(data) : null), [data]);
   const text = useMemo(() => (doc ? cvToText(doc) : ""), [doc]);
   const report = useMemo(() => (data && doc ? atsReport(data, doc, text, today) : null), [data, doc, text, today]);
@@ -87,10 +88,13 @@ export default function CvPage() {
   };
 
   const photoUrl = profile.photo !== false ? pilot?.photoDataUrl : undefined;
+  // Inter, plus the Chinese or Arabic font the CV language needs
   const loadFonts = async () => {
-    const font = async (w: number) => new Uint8Array(await (await fetch(`/fonts/cv/Inter-${w}.ttf`)).arrayBuffer());
-    return Promise.all([font(400), font(600), font(700)])
-      .then(([regular, semibold, bold]) => ({ regular, semibold, bold }))
+    const font = async (name: string, w: number) => new Uint8Array(await (await fetch(`/fonts/cv/${name}-${w}.ttf`)).arrayBuffer());
+    const set = (name: string) => Promise.all([font(name, 400), font(name, 600), font(name, 700)]).then(([regular, semibold, bold]) => ({ regular, semibold, bold }));
+    const script = SCRIPT_FONT[locale];
+    return Promise.all([set("Inter"), script ? set(script === "sc" ? "NotoSansSC" : "NotoSansArabic") : Promise.resolve(undefined)])
+      .then(([inter, s]) => ({ ...inter, script: s }))
       .catch(() => undefined);
   };
   /** CV + flight-hours statement + licences + scans, in one PDF for a recruiter. */
@@ -113,7 +117,7 @@ export default function CvPage() {
       today,
     });
     const slug = (profile.fullName || "pilot").toLowerCase().normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "");
-    downloadBlob(bytes as BlobPart, `${locale === "fr" ? "dossier-candidature" : "application-pack"}-${slug}.pdf`, "application/pdf");
+    downloadBlob(bytes as BlobPart, `application-pack-${slug}.pdf`, "application/pdf");
   };
   const download = async () => {
     const fonts = await loadFonts();
@@ -136,7 +140,11 @@ export default function CvPage() {
         subtitle={t("subtitle")}
         actions={
           <>
-            <Segmented value={locale} onChange={setLocale} options={[{ value: "en", label: t("en") }, { value: "fr", label: t("fr") }]} />
+            <select className="input !w-auto" value={locale} onChange={(e) => setLocale(e.target.value as CvLocale)} aria-label={t("lang")}>
+              {CV_LOCALES.map((l) => (
+                <option key={l} value={l}>{t(l)}</option>
+              ))}
+            </select>
             <button type="button" className="btn btn-secondary btn-sm" onClick={async () => (await navigator.clipboard.writeText(text), toast(t("copied")))}>
               <Copy size={15} aria-hidden /> {t("copy")}
             </button>
@@ -196,7 +204,7 @@ export default function CvPage() {
               <Field label={t("f.fullName")}><input className="input" value={profile.fullName} onChange={(e) => set("fullName", e.target.value)} /></Field>
               <Field label={t("f.headline")}><input className="input" placeholder={t("f.headlinePh")} value={profile.headline ?? ""} onChange={(e) => set("headline", e.target.value)} /></Field>
               <Field label={t("f.email")}><input className="input" type="email" value={profile.email ?? ""} onChange={(e) => set("email", e.target.value)} /></Field>
-              <Field label={t("f.phone")}><input className="input" type="tel" value={profile.phone ?? ""} onChange={(e) => set("phone", e.target.value)} /></Field>
+              <Field label={t("f.phone")}><input className="input" type="tel" placeholder="+33 6 12 34 56 78" value={profile.phone ?? ""} onChange={(e) => set("phone", e.target.value)} onBlur={() => set("phone", formatPhoneIntl(profile.phone, pilot?.nationality))} /></Field>
               <Field label={t("f.location")}><input className="input" value={profile.location ?? ""} onChange={(e) => set("location", e.target.value)} /></Field>
               <Field label={t("f.nationality")}><input className="input" value={profile.nationality ?? ""} onChange={(e) => set("nationality", e.target.value)} /></Field>
               <Field label={t("f.rightToWork")}><input className="input" placeholder={t("f.rightToWorkPh")} value={profile.rightToWork ?? ""} onChange={(e) => set("rightToWork", e.target.value)} /></Field>

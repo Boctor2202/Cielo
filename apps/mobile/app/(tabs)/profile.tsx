@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { AUTHORITIES, RANKS, countryName, type Pilot } from "@cielo/core";
+import { formatPhoneIntl, AUTHORITIES, RANKS, countryName, type Pilot } from "@cielo/core";
 import { CountryField } from "../../src/components/CountryField";
 import { Button, Card, Field, Row, Screen, Txt } from "../../src/components/ui";
 import { SuggestField } from "../../src/components/SuggestField";
@@ -54,7 +54,7 @@ export default function Profile() {
       homeBaseIcao: clean(d.homeBaseIcao)?.toUpperCase(),
       licenceNumber: clean(d.licenceNumber),
       nationality: clean(d.nationality)?.toUpperCase(),
-      phone: clean(d.phone),
+      phone: clean(formatPhoneIntl(d.phone, d.nationality || pilot.nationality)),
       bio: clean(d.bio),
     });
     setSaved(true);
@@ -101,7 +101,7 @@ export default function Profile() {
         {!d.nationality && known.country ? (
           <Button kind="ghost" small title={t("profile.suggestCountry", { country: countryName(known.country, locale) })} onPress={() => set("nationality", known.country)} />
         ) : null}
-        <Field label={t("profile.phone")} value={d.phone ?? ""} onChangeText={(v) => set("phone", v)} keyboardType="phone-pad" />
+        <Field label={t("profile.phone")} value={d.phone ?? ""} onChangeText={(v) => set("phone", v)} onBlur={() => set("phone", formatPhoneIntl(d.phone, d.nationality || pilot.nationality) || undefined)} placeholder="+33 6 12 34 56 78" keyboardType="phone-pad" />
         <Field label={t("profile.bio")} value={d.bio ?? ""} onChangeText={(v) => set("bio", v)} multiline maxLength={600} />
         <Button title={saved ? t("more.saved") : t("common.save")} onPress={save} />
       </Card>

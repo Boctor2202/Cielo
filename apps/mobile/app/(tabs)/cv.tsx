@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, CV_THEMES, cvToText, flightExperience, toJsonResume, type CvData, type CvExperience, type CvFonts, type CvProfile, type CvTheme } from "@cielo/cv";
-import { countryName } from "@cielo/core";
+import { CV_LOCALES, SCRIPT_FONT, type CvLocale, atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, CV_THEMES, cvToText, flightExperience, toJsonResume, type CvData, type CvExperience, type CvFonts, type CvProfile, type CvTheme } from "@cielo/cv";
+import { formatPhoneIntl, countryName } from "@cielo/core";
 import { buildProfile, detectAircraft, matchJob, type Job } from "@cielo/jobs";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
 import { DateField } from "../../src/components/DateField";
@@ -12,22 +12,36 @@ import { shareFile } from "../../src/exporters";
 import { setLetterJob } from "../../src/letterJob";
 import { router } from "expo-router";
 import { todayUtc, useApp } from "../../src/state";
-import { useTheme } from "../../src/theme";
+import { space, useTheme } from "../../src/theme";
 
 const EMPTY: CvProfile = { fullName: "", experience: [], education: [], languages: [], skills: [] };
 
 /** order of the documents in the application pack (insurance stays out) */
 const PACK_ORDER: string[] = ["licence", "type_rating", "rating", "class_rating", "skill_rating", "medical", "language", "radio", "endorsement", "other"];
 
-let fonts: Promise<CvFonts | undefined> | null = null;
-/** The CV font (Inter), downloaded once from the website; without it the PDF uses Helvetica. */
-const loadFonts = () =>
-  (fonts ??= Promise.all([400, 600, 700].map((w) => fetch(`${API_URL}/fonts/cv/Inter-${w}.ttf`).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).then((b) => new Uint8Array(b))))
-    .then(([regular, semibold, bold]): CvFonts => ({ regular: regular!, semibold: semibold!, bold: bold! }))
-    .catch(() => {
-      fonts = null;
-      return undefined;
-    }));
+/** Each CV language named in itself, as pilots look for it. */
+const LANG_NAMES: Record<CvLocale, string> = { en: "English", fr: "Français", es: "Español", ru: "Русский", zh: "中文", ar: "العربية" };
+
+type FontSet = { regular: Uint8Array; semibold: Uint8Array; bold: Uint8Array };
+const cache = new Map<string, Promise<FontSet>>();
+/** A font family in three weights, downloaded once from the website. */
+const fontSet = (name: string) => {
+  let p = cache.get(name);
+  if (!p) {
+    p = Promise.all([400, 600, 700].map((w) => fetch(`${API_URL}/fonts/cv/${name}-${w}.ttf`).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).then((b) => new Uint8Array(b))))
+      .then(([regular, semibold, bold]) => ({ regular: regular!, semibold: semibold!, bold: bold! }));
+    p.catch(() => cache.delete(name));
+    cache.set(name, p);
+  }
+  return p;
+};
+/** The CV fonts: Inter, plus the Chinese or Arabic font the language needs; without them the PDF uses Helvetica. */
+const loadFonts = (lang: CvLocale): Promise<CvFonts | undefined> => {
+  const script = SCRIPT_FONT[lang];
+  return Promise.all([fontSet("Inter"), script ? fontSet(script === "sc" ? "NotoSansSC" : "NotoSansArabic") : Promise.resolve(undefined)])
+    .then(([inter, s]) => ({ ...inter, script: s }))
+    .catch(() => undefined);
+};
 
 /** JPEG or PNG bytes of a data URL (the profile photo comes from the website). */
 function photoBytes(url?: string): Uint8Array | undefined {
@@ -51,7 +65,7 @@ function Cv() {
   const { t, store, pilot, flights, balances, licenses, aircraftTypes, locale: uiLocale } = useApp();
   const c = useTheme();
   const [profile, setProfile] = useState<CvProfile | null>(null);
-  const [locale, setLocale] = useState<"en" | "fr">("en");
+  const [locale, setLocale] = useState<CvLocale>("en");
   const [busy, setBusy] = useState(false);
   const loaded = useRef(false);
 
@@ -62,7 +76,7 @@ function Cv() {
     void store.getMeta("cv").then((raw) => {
       const saved = raw ? (JSON.parse(raw) as CvProfile) : null;
       // what the profile already knows fills the empty CV fields
-      const known = { fullName: pilot.fullName, email: pilot.email || undefined, phone: pilot.phone || undefined, nationality: pilot.nationality ? countryName(pilot.nationality, uiLocale) : undefined };
+      const known = { fullName: pilot.fullName, email: pilot.email || undefined, phone: formatPhoneIntl(pilot.phone, pilot.nationality) || undefined, nationality: pilot.nationality ? countryName(pilot.nationality, uiLocale) : undefined };
       const merged = { ...EMPTY, ...known, ...saved };
       for (const k of Object.keys(known) as (keyof typeof known)[]) if (!merged[k]) merged[k] = known[k] as never;
       setProfile(merged);
@@ -77,8 +91,9 @@ function Cv() {
     if (!profile) return null;
     const byIcao = new Map(aircraftTypes.map((x) => [x.icao, x]));
     const hours = flightExperience(flights, balances, (i) => byIcao.get(i), todayUtc());
-    return { profile, hours, locale, licences: licenses.filter((l) => !l.deletedAt).map((l) => ({ kind: l.kind, code: l.code, authority: l.authority, number: l.number, validUntil: l.validUntil, issuedOn: l.issuedOn })) };
-  }, [profile, flights, balances, licenses, aircraftTypes, locale]);
+    // the phone always with its dialling code, even when an older draft kept a national number
+    return { profile: { ...profile, phone: formatPhoneIntl(profile.phone, pilot.nationality) || undefined }, hours, locale, licences: licenses.filter((l) => !l.deletedAt).map((l) => ({ kind: l.kind, code: l.code, authority: l.authority, number: l.number, validUntil: l.validUntil, issuedOn: l.issuedOn })) };
+  }, [profile, flights, balances, licenses, aircraftTypes, locale, pilot.nationality]);
   const doc = useMemo(() => (data ? buildCvDocument(data) : null), [data]);
   const report = useMemo(() => (data && doc ? atsReport(data, doc, cvToText(doc), todayUtc()) : null), [data, doc]);
   if (!profile || !data || !doc || !report) return <Screen><Txt variant="muted">…</Txt></Screen>;
@@ -89,7 +104,7 @@ function Cv() {
       const opts = { jsonResume: toJsonResume(data), lang: locale, author: profile.fullName, theme: profile.theme, photo: profile.photo !== false ? photoBytes(pilot.photoDataUrl) : undefined };
       let bytes: Uint8Array;
       try {
-        bytes = await buildCvPdf(doc, { ...opts, fonts: await loadFonts() });
+        bytes = await buildCvPdf(doc, { ...opts, fonts: await loadFonts(locale) });
       } catch {
         // the embedded font failed: the standard font still gives a complete CV
         bytes = await buildCvPdf(doc, opts);
@@ -110,7 +125,7 @@ function Cv() {
       const opts = { jsonResume: toJsonResume(data), lang: locale, author: profile.fullName, theme: profile.theme, photo: profile.photo !== false ? photoBytes(pilot.photoDataUrl) : undefined };
       let fonts: Awaited<ReturnType<typeof loadFonts>> | undefined;
       try {
-        fonts = await loadFonts();
+        fonts = await loadFonts(locale);
       } catch {
         fonts = undefined;
       }
@@ -130,7 +145,7 @@ function Cv() {
         today: todayUtc(),
       });
       const slug = (profile.fullName || "pilot").toLowerCase().normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "");
-      await shareFile(`${locale === "fr" ? "dossier-candidature" : "application-pack"}-${slug}.pdf`, bytes, "application/pdf", "com.adobe.pdf");
+      await shareFile(`application-pack-${slug}.pdf`, bytes, "application/pdf", "com.adobe.pdf");
     } catch (e) {
       Alert.alert(t("common.error"), e instanceof Error ? e.message : String(e));
     } finally {
@@ -146,7 +161,11 @@ function Cv() {
     <Screen>
       <Card>
         <Row style={{ justifyContent: "space-between" }}>
-          <Segmented<"en" | "fr"> value={locale} onChange={setLocale} options={[{ value: "en", label: "English" }, { value: "fr", label: "Français" }]} />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.xs }}>
+            {CV_LOCALES.map((l) => (
+              <Chip key={l} label={LANG_NAMES[l]} selected={locale === l} onPress={() => setLocale(l)} />
+            ))}
+          </ScrollView>
         </Row>
         <Button title={t("cv.share")} loading={busy} onPress={() => void share()} />
         <Button kind="secondary" title={t("cv.pack")} loading={busy} onPress={() => void sharePack()} />
@@ -195,7 +214,7 @@ function Cv() {
         <Field label={t("more.fullName")} value={profile.fullName} onChangeText={(v) => set("fullName", v)} autoCapitalize="words" />
         <Field label={t("cv.headline")} value={profile.headline ?? ""} onChangeText={(v) => set("headline", v)} placeholder="First Officer · Citation Latitude" />
         <Field label={t("cv.email")} value={profile.email ?? ""} onChangeText={(v) => set("email", v)} keyboardType="email-address" autoCapitalize="none" />
-        <Field label={t("profile.phone")} value={profile.phone ?? ""} onChangeText={(v) => set("phone", v)} keyboardType="phone-pad" />
+        <Field label={t("profile.phone")} value={profile.phone ?? ""} onChangeText={(v) => set("phone", v)} onBlur={() => set("phone", formatPhoneIntl(profile.phone, pilot.nationality))} placeholder="+33 6 12 34 56 78" keyboardType="phone-pad" />
         <Field label={t("cv.location")} value={profile.location ?? ""} onChangeText={(v) => set("location", v)} />
         <Field label={t("profile.nationality")} value={profile.nationality ?? ""} onChangeText={(v) => set("nationality", v)} />
         <Field label={t("cv.rightToWork")} value={profile.rightToWork ?? ""} onChangeText={(v) => set("rightToWork", v)} placeholder={t("cv.rightToWorkPh")} />

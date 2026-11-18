@@ -90,7 +90,15 @@ export interface CvData {
   profile: CvProfile;
   hours: FlightExperience;
   licences: CvLicence[];
-  locale: "en" | "fr";
+  locale: CvLocale;
 }
+
+/** The CV languages: the six official languages of ICAO. */
+export type CvLocale = "en" | "fr" | "es" | "ru" | "zh" | "ar";
+export const CV_LOCALES: CvLocale[] = ["en", "fr", "es", "ru", "zh", "ar"];
+/** BCP 47 tag of each CV language (PDF metadata, dates and numbers). */
+export const LANG_TAG: Record<CvLocale, string> = { en: "en-GB", fr: "fr-FR", es: "es-ES", ru: "ru-RU", zh: "zh-CN", ar: "ar" };
+/** The second font a CV language needs beside Inter. */
+export const SCRIPT_FONT: Partial<Record<CvLocale, "sc" | "arabic">> = { zh: "sc", ar: "arabic" };
 
 export type CvTheme = "navy" | "burgundy" | "forest" | "graphite";

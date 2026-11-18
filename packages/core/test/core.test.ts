@@ -383,3 +383,13 @@ describe("Subpart Q", () => {
     expect(subpartQMaxFdp(20 * 60, 600, 2)).toBe(13 * 60 - 120); // 20:00–06:00 spans the WOCL: 4 h × 50 %
   });
 });
+
+describe("phone numbers", () => {
+  it("always carry the international dialling code", async () => {
+    const { formatPhoneIntl } = await import("../src/phone");
+    expect(formatPhoneIntl("06 12 34 56 78", "FR")).toBe("+33 6 12 34 56 78");
+    expect(formatPhoneIntl("0033612345678")).toBe("+33 6 12 34 56 78");
+    expect(formatPhoneIntl("+34 612 345 678", "FR")).toBe("+34 612 34 56 78");
+    expect(formatPhoneIntl("call me")).toBe("call me");
+  });
+});

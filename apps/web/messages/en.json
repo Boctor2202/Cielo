@@ -1448,7 +1448,11 @@
         "Japanese"
       ],
       "pack": "Application pack",
-      "packHint": "CV, flight-hours statement from the logbook, licences and document scans, in one PDF."
+      "packHint": "CV, flight-hours statement from the logbook, licences and document scans, in one PDF.",
+      "es": "Spanish",
+      "ru": "Russian",
+      "zh": "Chinese",
+      "ar": "Arabic"
     },
     "profile": {
       "eyebrow": "Pilot profile",

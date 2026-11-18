@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { PDFDocument } from "pdf-lib";
 import type { Flight, OpeningBalance } from "@cielo/core";
 import { atsReport, buildCvDocument, buildCvPdf, cvToText, expandLicence, flightExperience, toJsonResume, type CvData, type TypeInfo } from "../src";
@@ -90,5 +90,19 @@ describe("cv document", () => {
     const fr = buildCvDocument({ ...cv, locale: "fr" });
     writeFileSync("test/out/cv-fr.pdf", await buildCvPdf(fr, { lang: "fr" }));
     expect(cvToText(fr)).toContain("EXPÉRIENCE DE VOL");
+  });
+
+  it("renders the six ICAO languages, Chinese and Arabic with their script font", async () => {
+    const dir = "../../apps/web/public/fonts/cv";
+    const f = (n: string) => new Uint8Array(readFileSync(`${dir}/${n}`));
+    const inter = { regular: f("Inter-400.ttf"), semibold: f("Inter-600.ttf"), bold: f("Inter-700.ttf") };
+    const script = (k: string) => ({ regular: f(`${k}-400.ttf`), semibold: f(`${k}-600.ttf`), bold: f(`${k}-700.ttf`) });
+    for (const lang of ["es", "ru", "zh", "ar"] as const) {
+      const doc = buildCvDocument({ ...cv, locale: lang });
+      const fonts = { ...inter, script: lang === "zh" ? script("NotoSansSC") : lang === "ar" ? script("NotoSansArabic") : undefined };
+      const bytes = await buildCvPdf(doc, { lang, fonts });
+      writeFileSync(`test/out/cv-${lang}.pdf`, bytes);
+      expect((await PDFDocument.load(bytes)).getPageCount()).toBeGreaterThan(0);
+    }
   });
 });

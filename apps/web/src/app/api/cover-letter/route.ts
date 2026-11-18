@@ -8,7 +8,7 @@ export const maxDuration = 120;
 
 /**
  * POST /api/cover-letter — a cover letter written for one job offer from the pilot's own profile.
- * Body: { locale: "fr"|"en", job: { company, title, location?, aircraft?, requirements?, url?, text? },
+ * Body: { locale: "en"|"fr"|"es"|"ru"|"zh"|"ar", job: { company, title, location?, aircraft?, requirements?, url?, text? },
  *         pilot: { name, rank?, employer?, base?, nationality?, licences[], hours{}, types[], experience[], languages[] },
  *         notes?: string }
  * Max subscribers only (each letter is a paid model call). The pilot data comes from their device; the server
@@ -59,7 +59,9 @@ export async function POST(req: Request) {
   if (rateLimited(`letter:${user.id}`, 20)) return Response.json({ error: "rate_limited" }, { status: 429 });
 
   const b = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  const locale = b?.locale === "en" ? "en" : "fr";
+  // the six ICAO languages
+  const LANGS: Record<string, string> = { en: "English", fr: "French", es: "Spanish", ru: "Russian", zh: "Simplified Chinese", ar: "Arabic" };
+  const locale = typeof b?.locale === "string" && LANGS[b.locale] ? b.locale : "fr";
   const job = (b?.job ?? {}) as Record<string, unknown>;
   const company = clip(job.company, 120);
   const title = clip(job.title, 200);
@@ -67,7 +69,7 @@ export async function POST(req: Request) {
   if (!adText && !(company && title)) return Response.json({ error: "bad_request" }, { status: 400 });
 
   const userMessage = [
-    `Language of the letter: ${locale === "fr" ? "French" : "English"}.`,
+    `Language of the letter: ${LANGS[locale]}.`,
     "",
     "<job_offer>",
     `Company: ${company || "(see ad text)"}`,

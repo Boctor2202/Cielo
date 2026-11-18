@@ -1448,7 +1448,11 @@
         "Japonais"
       ],
       "pack": "Dossier de candidature",
-      "packHint": "CV, relevé d'heures du carnet, licences et copies des documents, en un seul PDF."
+      "packHint": "CV, relevé d'heures du carnet, licences et copies des documents, en un seul PDF.",
+      "es": "Espagnol",
+      "ru": "Russe",
+      "zh": "Chinois",
+      "ar": "Arabe"
     },
     "profile": {
       "eyebrow": "Profil pilote",

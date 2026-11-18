@@ -1,7 +1,8 @@
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { CV_THEMES, type CvFonts } from "./pdf";
-import type { CvLicence, CvTheme, FlightExperience } from "./types";
+import type { CvLicence, CvLocale, CvTheme, FlightExperience } from "./types";
+import { hasScript, mixedWidth, runs } from "./script";
 
 /**
  * Application pack: what an airline recruiter asks for, in one PDF. The pilot's CV, then a flight-hours
@@ -22,7 +23,7 @@ export interface PackOptions {
   documents: PackDocument[];
   pilotName: string;
   licenceNumber?: string;
-  locale: "en" | "fr";
+  locale: CvLocale;
   theme?: CvTheme;
   fonts?: CvFonts;
   /** date shown on the statement (YYYY-MM-DD) */
@@ -103,13 +104,69 @@ const L = {
     scans: "Copies des documents",
     hours: "h",
   },
+  es: {
+    statement: "Declaración de experiencia de vuelo",
+    from: "Totales extraídos del libro de vuelo del piloto, incluidas las horas trasladadas de libros anteriores.",
+    asOf: "A fecha de", name: "Piloto", licence: "N.º de licencia", totals: "Totales", byType: "Por tipo", recent: "Actividad reciente",
+    type: "Tipo", total: "Total", pic: "PIC", copilot: "Copiloto", lastFlown: "Último vuelo",
+    rows: {
+      total: "Tiempo de vuelo total", pic: "Piloto al mando", picus: "PIC bajo supervisión", copilot: "Copiloto", dual: "Doble mando recibido",
+      instructor: "Instructor", multiPilot: "Multipiloto", multiEngine: "Multimotor", jet: "Reactor", turboprop: "Turbohélice", night: "Noche",
+      ifr: "IFR", imc: "IMC real", fstd: "Simulador de vuelo (FSTD)", landings: "Aterrizajes", sectors: "Tramos",
+      last12: "Últimos 12 meses", last90: "Últimos 90 días", lastFlight: "Último vuelo",
+    },
+    docs: "Licencias, habilitaciones y certificado médico", doc: "Documento", authority: "Autoridad", number: "Número", validUntil: "Válido hasta", noExpiry: "sin caducidad",
+    declaration: "Certifico que la información anterior es exacta y procede de mi libro de vuelo.", date: "Fecha", signature: "Firma", scans: "Copias de los documentos", hours: "h",
+  },
+  ru: {
+    statement: "Справка о лётном опыте",
+    from: "Итоги по лётной книжке пилота, включая налёт, перенесённый из предыдущих книжек.",
+    asOf: "На дату", name: "Пилот", licence: "№ свидетельства", totals: "Итого", byType: "По типам", recent: "Последняя активность",
+    type: "Тип", total: "Всего", pic: "КВС", copilot: "2-й пилот", lastFlown: "Последний полёт",
+    rows: {
+      total: "Общий налёт", pic: "Командир ВС", picus: "КВС под наблюдением", copilot: "Второй пилот", dual: "Полёты с инструктором",
+      instructor: "Инструктор", multiPilot: "Многочленный экипаж", multiEngine: "Многодвигательные", jet: "Реактивные", turboprop: "Турбовинтовые", night: "Ночь",
+      ifr: "ППП (IFR)", imc: "Фактические ПМУ", fstd: "Тренажёр (FSTD)", landings: "Посадки", sectors: "Рейсы",
+      last12: "За 12 месяцев", last90: "За 90 дней", lastFlight: "Последний полёт",
+    },
+    docs: "Свидетельства, допуски и медицинское заключение", doc: "Документ", authority: "Орган", number: "Номер", validUntil: "Действует до", noExpiry: "бессрочно",
+    declaration: "Подтверждаю, что приведённые сведения верны и взяты из моей лётной книжки.", date: "Дата", signature: "Подпись", scans: "Копии документов", hours: "ч",
+  },
+  zh: {
+    statement: "飞行经历证明",
+    from: "数据取自飞行员飞行记录本，含以往记录本结转的飞行时间。",
+    asOf: "截至", name: "飞行员", licence: "执照编号", totals: "合计", byType: "按机型", recent: "近期飞行",
+    type: "机型", total: "合计", pic: "机长", copilot: "副驾驶", lastFlown: "最近飞行",
+    rows: {
+      total: "总飞行时间", pic: "机长", picus: "监视下机长", copilot: "副驾驶", dual: "带飞",
+      instructor: "教员", multiPilot: "多人制机组", multiEngine: "多发", jet: "喷气式", turboprop: "涡轮螺旋桨", night: "夜间",
+      ifr: "仪表飞行 (IFR)", imc: "实际仪表气象条件", fstd: "模拟机 (FSTD)", landings: "着陆次数", sectors: "航段数",
+      last12: "近12个月", last90: "近90天", lastFlight: "最近飞行",
+    },
+    docs: "执照、等级与体检合格证", doc: "证件", authority: "颁发机构", number: "编号", validUntil: "有效期至", noExpiry: "长期有效",
+    declaration: "本人确认以上信息真实无误，均取自本人飞行记录本。", date: "日期", signature: "签名", scans: "证件副本", hours: "小时",
+  },
+  ar: {
+    statement: "بيان الخبرة في الطيران",
+    from: "المجاميع مأخوذة من سجل طيران الطيار بما في ذلك الساعات المنقولة من السجلات السابقة.",
+    asOf: "حتى تاريخ", name: "الطيار", licence: "رقم الرخصة", totals: "المجاميع", byType: "حسب النوع", recent: "النشاط الأخير",
+    type: "النوع", total: "المجموع", pic: "قائد", copilot: "مساعد", lastFlown: "آخر رحلة",
+    rows: {
+      total: "إجمالي ساعات الطيران", pic: "قائد الطائرة", picus: "قائد تحت الإشراف", copilot: "مساعد الطيار", dual: "تدريب مزدوج",
+      instructor: "مدرب", multiPilot: "طاقم متعدد", multiEngine: "متعددة المحركات", jet: "نفاثة", turboprop: "مروحية توربينية", night: "ليلي",
+      ifr: "طيران آلي", imc: "ظروف آلية فعلية", fstd: "جهاز محاكاة", landings: "عدد الهبوط", sectors: "عدد الرحلات",
+      last12: "آخر 12 شهرا", last90: "آخر 90 يوما", lastFlight: "آخر رحلة",
+    },
+    docs: "الرخص والتأهيلات والشهادة الطبية", doc: "الوثيقة", authority: "الجهة", number: "الرقم", validUntil: "صالح حتى", noExpiry: "بدون انتهاء",
+    declaration: "أقر بأن المعلومات أعلاه صحيحة ومأخوذة من سجل طيراني.", date: "التاريخ", signature: "التوقيع", scans: "نسخ الوثائق", hours: "ساعة",
+  },
 };
 
 const hhmm = (m: number) => `${Math.floor(m / 60).toLocaleString("en-US")}:${String(Math.round(m) % 60).padStart(2, "0")}`;
-const fmtDate = (d: string | null | undefined, locale: "en" | "fr") => {
+const fmtDate = (d: string | null | undefined, locale: CvLocale) => {
   if (!d) return "";
   const [y, mo, da] = d.slice(0, 10).split("-");
-  return locale === "fr" ? `${da}/${mo}/${y}` : `${y}-${mo}-${da}`;
+  return locale === "fr" || locale === "es" || locale === "ru" ? `${da}/${mo}/${y}` : `${y}-${mo}-${da}`;
 };
 
 function dataUrlBytes(url: string): { mime: string; bytes: Uint8Array } | null {
@@ -131,10 +188,26 @@ export async function buildApplicationPack(o: PackOptions): Promise<Uint8Array> 
   let reg: PDFFont;
   let bold: PDFFont;
   let safe = (s: string) => s;
+  // Chinese / Arabic: the script font of each weight
+  const scriptOf = new Map<PDFFont, PDFFont>();
+  const draw = (s: string, x: number, size: number, f: PDFFont, color: ReturnType<typeof rgb>) => {
+    const sf = scriptOf.get(f);
+    if (!sf || !hasScript(s)) return page.drawText(s, { x, y, size, font: f, color });
+    let cx = x;
+    for (const r of runs(s)) {
+      const font = r.script ? sf : f;
+      page.drawText(r.text, { x: cx, y, size, font, color });
+      cx += font.widthOfTextAtSize(r.text, size);
+    }
+  };
   if (o.fonts) {
     pdf.registerFontkit(fontkit);
     reg = await pdf.embedFont(o.fonts.regular, { subset: true });
     bold = await pdf.embedFont(o.fonts.bold, { subset: true });
+    if (o.fonts.script) {
+      scriptOf.set(reg, await pdf.embedFont(o.fonts.script.regular, { subset: true }));
+      scriptOf.set(bold, await pdf.embedFont(o.fonts.script.bold, { subset: true }));
+    }
   } else {
     reg = await pdf.embedFont(StandardFonts.Helvetica);
     bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -148,9 +221,9 @@ export async function buildApplicationPack(o: PackOptions): Promise<Uint8Array> 
   // 2. statement of experience and documents
   let page: PDFPage = pdf.addPage([W, H]);
   let y = H - M;
-  const text = (s: string, x: number, size = 10, f = reg, color = INK) => page.drawText(safe(s), { x, y, size, font: f, color });
+  const text = (s: string, x: number, size = 10, f = reg, color = INK) => draw(safe(s), x, size, f, color);
   const right = (s: string, xRight: number, size = 10, f = reg, color = INK) =>
-    page.drawText(safe(s), { x: xRight - f.widthOfTextAtSize(safe(s), size), y, size, font: f, color });
+    draw(safe(s), xRight - mixedWidth(safe(s), f, scriptOf.get(f), size), size, f, color);
   const rule = (gap = 6) => {
     page.drawLine({ start: { x: M, y: y + gap }, end: { x: W - M, y: y + gap }, thickness: 0.6, color: RULE });
   };

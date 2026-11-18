@@ -1,3 +1,5 @@
+import { hasScript, mixedWidth, runs } from "./script";
+import { LANG_TAG, type CvLocale } from "./types";
 import fontkit from "@pdf-lib/fontkit";
 import {
   PDFDocument, PDFName, PDFString, StandardFonts, appendBezierCurve, clip, closePath, endPath, moveTo, popGraphicsState, pushGraphicsState, rgb,
@@ -46,12 +48,14 @@ export interface CvFonts {
   regular: Uint8Array;
   semibold: Uint8Array;
   bold: Uint8Array;
+  /** a second font for Chinese or Arabic labels (the Latin font draws everything else) */
+  script?: { regular: Uint8Array; semibold: Uint8Array; bold: Uint8Array };
 }
 
 export interface CvPdfOptions {
   jsonResume?: unknown;
   author?: string;
-  lang?: "en" | "fr";
+  lang?: CvLocale;
   theme?: CvTheme;
   /** TrueType fonts to embed (Inter); without them the standard Helvetica is used */
   fonts?: CvFonts;
@@ -67,12 +71,19 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
   const TINT = hex(th.tint);
 
   let reg: PDFFont, semi: PDFFont, bold: PDFFont;
+  // Chinese / Arabic: the script font of each weight
+  const scriptOf = new Map<PDFFont, PDFFont>();
   let safe: (s: string) => string;
   if (opts.fonts) {
     pdf.registerFontkit(fontkit);
     reg = await pdf.embedFont(opts.fonts.regular, { subset: true });
     semi = await pdf.embedFont(opts.fonts.semibold, { subset: true });
     bold = await pdf.embedFont(opts.fonts.bold, { subset: true });
+    if (opts.fonts.script) {
+      scriptOf.set(reg, await pdf.embedFont(opts.fonts.script.regular, { subset: true }));
+      scriptOf.set(semi, await pdf.embedFont(opts.fonts.script.semibold, { subset: true }));
+      scriptOf.set(bold, await pdf.embedFont(opts.fonts.script.bold, { subset: true }));
+    }
     // keep what the font can draw; typographic quotes and dashes are fine
     safe = (s) => s.replace(/[\u0000-\u001F\u200B-\u200F\uFEFF]/g, "").replace(/[\u202F\u2007\u2009]/g, "\u00A0");
   } else {
@@ -88,15 +99,26 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
   pdf.setKeywords(doc.keywords.map(safe));
   pdf.setCreator(safe(opts.author ?? doc.name));
   pdf.setProducer(safe(opts.author ?? doc.name));
-  pdf.setLanguage(opts.lang === "fr" ? "fr-FR" : "en-GB");
+  pdf.setLanguage(LANG_TAG[opts.lang ?? "en"]);
 
-  const width = (s: string, f: PDFFont, size: number) => f.widthOfTextAtSize(safe(s), size);
+  const width = (s: string, f: PDFFont, size: number) => mixedWidth(safe(s), f, scriptOf.get(f), size);
+  /** draws a line, switching to the script font for Chinese / Arabic runs */
+  const draw = (p: PDFPage, s: string, x: number, yy: number, size: number, f: PDFFont, color: RGB) => {
+    const sf = scriptOf.get(f);
+    if (!sf || !hasScript(s)) return p.drawText(s, { x, y: yy, size, font: f, color });
+    let cx = x;
+    for (const r of runs(s)) {
+      const font = r.script ? sf : f;
+      p.drawText(r.text, { x: cx, y: yy, size, font, color });
+      cx += font.widthOfTextAtSize(r.text, size);
+    }
+  };
   const wrap = (s: string, f: PDFFont, size: number, max: number): string[] => {
     const lines: string[] = [];
     let cur = "";
     for (const w of safe(s).split(/\s+/).filter(Boolean)) {
       const t = cur ? `${cur} ${w}` : w;
-      if (f.widthOfTextAtSize(t, size) > max && cur) {
+      if (mixedWidth(t, f, scriptOf.get(f), size) > max && cur) {
         lines.push(cur);
         cur = w;
       } else cur = t;
@@ -110,7 +132,7 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
   let y = 0;
   const Y = (top: number) => H - top;
   const text = (s: string, x: number, top: number, size: number, f: PDFFont, color: RGB = INK) =>
-    page.drawText(safe(s), { x, y: Y(top), size, font: f, color });
+    draw(page, safe(s), x, Y(top), size, f, color);
   const rrect = (x: number, top: number, w: number, h: number, r: number, color: RGB) =>
     page.drawSvgPath(`M${r},0 H${w - r} A${r},${r} 0 0 1 ${w},${r} V${h - r} A${r},${r} 0 0 1 ${w - r},${h} H${r} A${r},${r} 0 0 1 0,${h - r} V${r} A${r},${r} 0 0 1 ${r},0 Z`, {
       x,
@@ -381,7 +403,7 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
   const pages = pdf.getPages();
   pages.forEach((p, i) => {
     const left = safe(`${doc.name} — Curriculum vitae`);
-    p.drawText(left, { x: M, y: 24, size: 7.2, font: reg, color: MUTED });
+    draw(p, left, M, 24, 7.2, reg, MUTED);
     const right = `${i + 1} / ${pages.length}`;
     p.drawText(right, { x: W - M - reg.widthOfTextAtSize(right, 7.2), y: 24, size: 7.2, font: reg, color: MUTED });
   });
@@ -396,7 +418,7 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
     });
   }
   pdf.catalog.set(PDFName.of("MarkInfo"), pdf.context.obj({ Marked: true }));
-  pdf.catalog.set(PDFName.of("Lang"), PDFString.of(opts.lang === "fr" ? "fr-FR" : "en-GB"));
+  pdf.catalog.set(PDFName.of("Lang"), PDFString.of(LANG_TAG[opts.lang ?? "en"]));
   return pdf.save();
 }
 
