@@ -388,20 +388,16 @@ export default function GlassWorkspace({
       nonnegative(point.expenses),
     ]),
   );
-  const chartX = (index: number) =>
-    points.length === 1 ? 300 : (index * 600) / (points.length - 1);
+  // bars: one slot per period, the bar centred in it
+  const slot = 600 / Math.max(1, points.length);
+  const chartX = (index: number) => (index + 0.5) * slot;
   const chartY = (value: number) =>
     180 - (nonnegative(value) / chartMaximum) * 160;
-  const linePoints = (key: "income" | "expenses") =>
-    points
-      .map((point, index) => `${chartX(index)},${chartY(point[key])}`)
-      .join(" ");
+  // every label when they fit, else evenly spaced ones
   const chartLabelIndices = new Set(
-    Array.from({ length: Math.min(points.length, 6) }, (_, index) =>
-      points.length <= 6
-        ? index
-        : Math.round((index * (points.length - 1)) / 5),
-    ),
+    points.length <= 13
+      ? points.map((_, index) => index)
+      : Array.from({ length: 7 }, (_, index) => Math.round((index * (points.length - 1)) / 6)),
   );
   const spendingCategories = Array.from(
     new Set(
@@ -556,9 +552,9 @@ export default function GlassWorkspace({
             .join(". ")}
         </desc>
         <defs>
-          <linearGradient id={`${id}-area`} x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor="var(--gw-accent)" stopOpacity=".23" />
-            <stop offset="1" stopColor="var(--gw-accent)" stopOpacity="0" />
+          <linearGradient id={`${id}-bar`} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0" stopColor="var(--gw-accent)" stopOpacity="1" />
+            <stop offset="1" stopColor="var(--gw-accent)" stopOpacity=".55" />
           </linearGradient>
         </defs>
         {[20, 100, 180].map((y) => (
@@ -570,44 +566,26 @@ export default function GlassWorkspace({
             strokeDasharray="3 5"
           />
         ))}
-        <path
-          d={`M${chartX(0)} 185 ${points.map((point, index) => `L${chartX(index)} ${chartY(point.income)}`).join(" ")} L${chartX(points.length - 1)} 185 Z`}
-          fill={`url(#${id}-area)`}
-        />
-        <polyline
-          points={linePoints("income")}
-          fill="none"
-          stroke="var(--gw-accent)"
-          strokeWidth="2.6"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        <polyline
-          points={linePoints("expenses")}
-          fill="none"
-          stroke="currentColor"
-          strokeOpacity=".45"
-          strokeWidth="2"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        {points.length === 1 && (
-          <>
-            <circle
-              cx="300"
-              cy={chartY(points[0].income)}
-              r="4"
-              fill="var(--gw-accent)"
-            />
-            <circle
-              cx="300"
-              cy={chartY(points[0].expenses)}
-              r="4"
-              fill="currentColor"
-              opacity=".45"
-            />
-          </>
-        )}
+        {points.map((point, index) => {
+          const w = Math.min(46, slot * 0.62);
+          const x = chartX(index) - w / 2;
+          const top = chartY(point.income);
+          const night = chartY(point.expenses);
+          return (
+            <g key={`${point.label}-${index}`} className="gw-bar">
+              <title>{`${point.label} · ${L.moneyIn} ${format(nonnegative(point.income))} · ${L.moneyOut} ${format(nonnegative(point.expenses))}`}</title>
+              {/* the whole slot answers the hover */}
+              <rect x={index * slot} y="0" width={slot} height="185" fill="transparent" />
+              {nonnegative(point.income) > 0 && (
+                <rect x={x} y={top} width={w} height={180 - top} rx="3" fill={`url(#${id}-bar)`} />
+              )}
+              {/* of which night, at the foot of the bar */}
+              {nonnegative(point.expenses) > 0 && (
+                <rect x={x} y={night} width={w} height={180 - night} rx="2" fill="#818CF8" opacity=".9" />
+              )}
+            </g>
+          );
+        })}
       </svg>
       <div className="gw-chart-months">
         {points.map(
@@ -615,15 +593,7 @@ export default function GlassWorkspace({
             chartLabelIndices.has(index) && (
               <span
                 key={`${point.label}-${index}`}
-                style={{
-                  left: `${chartX(index) / 6}%`,
-                  transform:
-                    index === 0 && points.length > 1
-                      ? "none"
-                      : index === points.length - 1 && points.length > 1
-                        ? "translateX(-100%)"
-                        : "translateX(-50%)",
-                }}
+                style={{ left: `${chartX(index) / 6}%`, transform: "translateX(-50%)" }}
               >
                 {point.label}
               </span>
@@ -1910,8 +1880,11 @@ const styles = `
   background: var(--gw-accent);
   border-radius: 50%;
 }
+.gw-bar:hover rect:not([fill="transparent"]) {
+  filter: brightness(1.15);
+}
 .gw-chart-summary > div + div i {
-  background: var(--gw-muted);
+  background: #818CF8;
 }
 .gw-chart-summary strong {
   font-size: 21px;
