@@ -210,11 +210,19 @@ function drawPage(page: PDFPage, columns: Column[], rows: Flight[], c: DrawCtx) 
   });
   page.drawRectangle({ x: marginX, y: tableBottom, width: tableW, height: headerTop - tableBottom, borderColor: INK, borderWidth: 0.8 });
 
-  // Certification
+  // Certification of the page: the holder's name and licence number printed, date and signature to fill in
   page.drawText(safe(c.certify), { x: marginX, y: tableBottom - 14, size: 7, font: c.font, color: INK });
-  const sigLabel = "PILOT'S SIGNATURE";
-  page.drawText(safe(sigLabel), { x: 842 - marginX - 220, y: tableBottom - 14, size: 7, font: c.bold, color: INK });
-  page.drawLine({ start: { x: 842 - marginX - 130, y: tableBottom - 16 }, end: { x: 842 - marginX, y: tableBottom - 16 }, thickness: 0.5, color: GRID });
+  const right = 842 - marginX;
+  const field = (label: string, x: number, y: number, w: number, value?: string) => {
+    page.drawText(safe(label), { x, y, size: 6.4, font: c.bold, color: INK });
+    const lx = x + c.bold.widthOfTextAtSize(safe(label), 6.4) + 4;
+    if (value) page.drawText(fit(value, c.font, 7, right - lx), { x: lx, y, size: 7, font: c.font, color: INK });
+    else page.drawLine({ start: { x: lx, y: y - 2 }, end: { x: x + w, y: y - 2 }, thickness: 0.5, color: GRID });
+  };
+  field("NAME", right - 420, tableBottom - 14, 170, c.opts.pilotName);
+  field("LICENCE NO.", right - 240, tableBottom - 14, 240, c.opts.licenceNumber ?? undefined);
+  field("DATE", right - 420, tableBottom - 30, 150);
+  field("PILOT'S SIGNATURE", right - 240, tableBottom - 30, 240);
 }
 
 function drawWrapped(page: PDFPage, text: string, x: number, y: number, w: number, h: number, font: PDFFont, size: number) {
