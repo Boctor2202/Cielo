@@ -135,6 +135,7 @@ export default function Dashboard() {
           timeDisplay={pilot.timeDisplay}
           t={t as never}
           monthLabel={t("dash.m12")}
+          locale={locale}
         />
 
         <PeriodTiles items={[period(t("dash.d28"), periods.d28, "#38BDF8"), period(t("dash.d90"), periods.d90, "#818CF8"), period(t("dash.m12"), periods.m12, "#22C55E")]} />

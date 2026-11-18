@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Pressable, View } from "react-native";
-import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { formatDuration, type Flight, type GoalProgress, type Totals } from "@cielo/core";
 import { Roll } from "./Roll";
@@ -29,25 +29,38 @@ function Ring({ ratio, size = 92, label, sub }: { ratio: number; size?: number; 
   );
 }
 
-/** Hours of each of the last 12 months, as a soft area line. */
-function Sparkline({ values, width, height = 46 }: { values: number[]; width: number; height?: number }) {
-  const max = Math.max(1, ...values);
-  const step = values.length > 1 ? width / (values.length - 1) : width;
-  const pts = values.map((v, i) => [i * step, height - 4 - (v / max) * (height - 10)] as const);
-  const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
-  const area = `${line} L${width},${height} L0,${height} Z`;
+/** Hours of each of the last 12 months as bars, the night hours at the foot of each bar. */
+function MonthBars({ months, width, height = 70 }: { months: { label: string; total: number; night: number }[]; width: number; height?: number }) {
+  const c = useTheme();
+  const max = Math.max(1, ...months.map((m) => m.total));
+  const slot = width / Math.max(1, months.length);
+  const w = Math.min(18, slot * 0.62);
+  const h = (v: number) => (v / max) * (height - 4);
   return (
-    <Svg width={width} height={height}>
-      <Defs>
-        <LinearGradient id="spark" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={GREEN} stopOpacity={0.35} />
-          <Stop offset="1" stopColor={GREEN} stopOpacity={0} />
-        </LinearGradient>
-      </Defs>
-      <Path d={area} fill="url(#spark)" />
-      <Path d={line} stroke={GREEN} strokeWidth={2} fill="none" strokeLinejoin="round" strokeLinecap="round" />
-      {pts.length ? <Circle cx={pts[pts.length - 1]![0]} cy={pts[pts.length - 1]![1]} r={3.5} fill={GREEN} /> : null}
-    </Svg>
+    <View style={{ gap: 4 }}>
+      <Svg width={width} height={height}>
+        <Defs>
+          <LinearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={GREEN} stopOpacity={1} />
+            <Stop offset="1" stopColor={GREEN} stopOpacity={0.55} />
+          </LinearGradient>
+        </Defs>
+        {months.map((m, i) => {
+          const x = i * slot + (slot - w) / 2;
+          return (
+            <React.Fragment key={i}>
+              {m.total > 0 ? <Rect x={x} y={height - h(m.total)} width={w} height={h(m.total)} rx={3} fill="url(#bar)" /> : <Rect x={x} y={height - 2} width={w} height={2} rx={1} fill={c.muted} opacity={0.3} />}
+              {m.night > 0 ? <Rect x={x} y={height - h(m.night)} width={w} height={h(m.night)} rx={2} fill={INDIGO} /> : null}
+            </React.Fragment>
+          );
+        })}
+      </Svg>
+      <View style={{ flexDirection: "row", width }}>
+        {months.map((m, i) => (
+          <Txt key={i} variant="small" style={{ width: slot, textAlign: "center", fontSize: 10 }}>{m.label}</Txt>
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -69,7 +82,7 @@ function Chip3({ icon, color, label, value, share }: { icon: keyof typeof Ionico
 }
 
 /** The headline: total time rolling in, the next milestone as a ring, PIC / night / IFR, and the last 12 months. */
-export function HeroCard({ all, flights, goal, timeDisplay, t, monthLabel }: { all: Totals; flights: Flight[]; goal?: GoalProgress; timeDisplay: "hhmm" | "decimal"; t: (k: never, v?: Record<string, string | number>) => string; monthLabel: string }) {
+export function HeroCard({ all, flights, goal, timeDisplay, t, monthLabel, locale }: { all: Totals; flights: Flight[]; goal?: GoalProgress; timeDisplay: "hhmm" | "decimal"; t: (k: never, v?: Record<string, string | number>) => string; monthLabel: string; locale: string }) {
   const c = useTheme();
   const fmt = (m: number) => formatDuration(m, timeDisplay);
   const months = useMemo(() => {
@@ -78,10 +91,16 @@ export function HeroCard({ all, flights, goal, timeDisplay, t, monthLabel }: { a
       const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11 + i, 1));
       return d.toISOString().slice(0, 7);
     });
-    const m = new Map(keys.map((k) => [k, 0]));
-    for (const f of flights) if (!f.deletedAt && m.has(f.date.slice(0, 7))) m.set(f.date.slice(0, 7), m.get(f.date.slice(0, 7))! + (f.isFstd ? 0 : f.totalMin));
-    return keys.map((k) => m.get(k)! / 60);
-  }, [flights]);
+    const m = new Map(keys.map((k) => [k, { total: 0, night: 0 }]));
+    for (const f of flights) {
+      const e = m.get(f.date.slice(0, 7));
+      if (!e || f.deletedAt || f.isFstd) continue;
+      e.total += f.totalMin;
+      e.night += f.nightMin;
+    }
+    const fmtM = new Intl.DateTimeFormat(locale, { month: "narrow", timeZone: "UTC" });
+    return keys.map((k) => ({ label: fmtM.format(new Date(`${k}-15T12:00:00Z`)), total: m.get(k)!.total / 60, night: m.get(k)!.night / 60 }));
+  }, [flights, locale]);
   const [w, setW] = React.useState(0);
   const total = Math.max(1, all.totalMin);
   return (
@@ -123,9 +142,9 @@ export function HeroCard({ all, flights, goal, timeDisplay, t, monthLabel }: { a
           <View style={{ gap: 4 }}>
             <Row style={{ justifyContent: "space-between" }}>
               <Txt variant="small">{monthLabel}</Txt>
-              <Txt mono variant="small" color={GREEN}>{`${Math.round(months.reduce((s, x) => s + x, 0))} h`}</Txt>
+              <Txt mono variant="small" color={GREEN}>{`${Math.round(months.reduce((s, x) => s + x.total, 0))} h`}</Txt>
             </Row>
-            <Sparkline values={months} width={w - 36} />
+            <MonthBars months={months} width={w - 36} />
           </View>
         ) : null}
       </View>
