@@ -1394,8 +1394,8 @@
       "ats": {
         "title": "Contrôle avant envoi",
         "subtitle": "Ce que regardent les logiciels de tri",
-        "keywordsFound": "Mots-clés de l'offre présents",
-        "keywordsMissing": "Mots-clés absents",
+        "keywordsFound": "Mots-clés de l'offre dans votre CV",
+        "keywordsMissing": "Exigences de l'offre non remplies (non ajoutées à votre CV)",
         "checks": {
           "name": "Nom renseigné",
           "contact": "E-mail et téléphone",

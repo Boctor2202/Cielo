@@ -122,3 +122,16 @@ describe("type order", () => {
     expect(out[0]!.icao).toBe("C68A");
   });
 });
+
+describe("offer keywords", () => {
+  it("writes only the keywords the logbook and licences back up", async () => {
+    const { targetKeywordsMet } = await import("../src/document");
+    const data = {
+      locale: "en",
+      licences: [{ kind: "licence", code: "CPL(A)", authority: "DGAC France" }],
+      hours: { jetMin: 600, turbineMin: 900, multiPilotMin: 900, picMin: 0, byType: [{ icao: "C68A", name: "Cessna Citation Latitude" }] },
+      profile: { target: { keywords: ["ATPL", "EASA", "Jet", "PIC", "Citation Latitude"], aircraft: ["C68A", "GLEX"] } },
+    } as never;
+    expect(targetKeywordsMet(data)).toEqual(["EASA", "Jet", "Citation Latitude", "C68A"]);
+  });
+});

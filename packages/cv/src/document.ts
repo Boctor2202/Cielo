@@ -47,7 +47,7 @@ const L = {
     instructor: "Instructor", dual: "Dual received", landings: "Landings", last12m: "Last 12 months", last90d: "Last 90 days", sectors: "Sectors flown",
     asOf: "Hours as of", lastFlight: "Last flight", validUntil: "valid until", noExpiry: "no expiry", present: "Present", email: "Email", phone: "Phone",
     location: "Location", nationality: "Nationality", dob: "Date of birth", linkedin: "LinkedIn", rightToWork: "Right to work", onType: "on type",
-    asPic: "PIC", asCopilot: "SIC", lastFlown: "last flown", targetRole: "Target position", icao: "ICAO level", source: "Hours computed from the pilot's logbook.", figTotal: "Total time", figPic: "PIC", figMp: "Multi-pilot", figTurbine: "Turbine", figNight: "Night", fig12m: "Last 12 months",
+    asPic: "PIC", asCopilot: "SIC", lastFlown: "last flown", targetRole: "Target position", icao: "ICAO level", source: "Hours computed from the pilot's logbook.", matchOffer: "Matching the offer", figTotal: "Total time", figPic: "PIC", figMp: "Multi-pilot", figTurbine: "Turbine", figNight: "Night", fig12m: "Last 12 months",
   },
   fr: {
     contact: "Contact", summary: "Profil", hours: "Expérience de vol", types: "Types d'avions", licences: "Licences, qualifications et aptitude médicale",
@@ -59,7 +59,7 @@ const L = {
     asOf: "Heures arrêtées au", lastFlight: "Dernier vol", validUntil: "valide jusqu'au", noExpiry: "sans échéance", present: "Aujourd'hui", email: "E-mail",
     phone: "Téléphone", location: "Lieu", nationality: "Nationalité", dob: "Date de naissance", linkedin: "LinkedIn", rightToWork: "Autorisation de travail",
     onType: "sur type", asPic: "CDB", asCopilot: "OPL", lastFlown: "dernier vol", targetRole: "Poste visé", icao: "niveau OACI",
-    source: "Heures calculées à partir du carnet de vol du pilote.", figTotal: "Temps total", figPic: "CDB (PIC)", figMp: "Multipilote", figTurbine: "Turbine",
+    matchOffer: "Correspondance avec l'offre", source: "Heures calculées à partir du carnet de vol du pilote.", figTotal: "Temps total", figPic: "CDB (PIC)", figMp: "Multipilote", figTurbine: "Turbine",
     figNight: "Nuit", fig12m: "12 derniers mois",
   },
   es: {
@@ -72,7 +72,7 @@ const L = {
     asOf: "Horas a fecha de", lastFlight: "Último vuelo", validUntil: "válido hasta", noExpiry: "sin caducidad", present: "Actualidad", email: "Correo electrónico", phone: "Teléfono",
     location: "Ubicación", nationality: "Nacionalidad", dob: "Fecha de nacimiento", linkedin: "LinkedIn", rightToWork: "Permiso de trabajo", onType: "en el tipo",
     asPic: "PIC", asCopilot: "SIC", lastFlown: "último vuelo", targetRole: "Puesto buscado", icao: "nivel OACI", source: "Horas calculadas a partir del libro de vuelo del piloto.",
-    figTotal: "Tiempo total", figPic: "PIC", figMp: "Multipiloto", figTurbine: "Turbina", figNight: "Noche", fig12m: "Últimos 12 meses",
+    matchOffer: "Coincidencia con la oferta", figTotal: "Tiempo total", figPic: "PIC", figMp: "Multipiloto", figTurbine: "Turbina", figNight: "Noche", fig12m: "Últimos 12 meses",
   },
   ru: {
     contact: "Контакты", summary: "Профессиональный профиль", hours: "Лётный опыт", types: "Типы воздушных судов", licences: "Свидетельства, допуски и медицинское заключение",
@@ -84,7 +84,7 @@ const L = {
     asOf: "Налёт на дату", lastFlight: "Последний полёт", validUntil: "действует до", noExpiry: "бессрочно", present: "по настоящее время", email: "Эл. почта", phone: "Телефон",
     location: "Местоположение", nationality: "Гражданство", dob: "Дата рождения", linkedin: "LinkedIn", rightToWork: "Право на работу", onType: "на типе",
     asPic: "КВС", asCopilot: "2-й пилот", lastFlown: "последний полёт", targetRole: "Желаемая должность", icao: "уровень ИКАО", source: "Налёт рассчитан по лётной книжке пилота.",
-    figTotal: "Общий налёт", figPic: "КВС (PIC)", figMp: "Многочл. экипаж", figTurbine: "Газотурбинные", figNight: "Ночь", fig12m: "За 12 месяцев",
+    matchOffer: "Соответствие вакансии", figTotal: "Общий налёт", figPic: "КВС (PIC)", figMp: "Многочл. экипаж", figTurbine: "Газотурбинные", figNight: "Ночь", fig12m: "За 12 месяцев",
   },
   zh: {
     contact: "联系方式", summary: "职业概述", hours: "飞行经历", types: "机型", licences: "执照、等级与体检合格证",
@@ -96,7 +96,7 @@ const L = {
     asOf: "飞行时间截至", lastFlight: "最近飞行", validUntil: "有效期至", noExpiry: "长期有效", present: "至今", email: "电子邮件", phone: "电话",
     location: "所在地", nationality: "国籍", dob: "出生日期", linkedin: "LinkedIn", rightToWork: "工作许可", onType: "本机型",
     asPic: "机长", asCopilot: "副驾驶", lastFlown: "最近飞行", targetRole: "应聘职位", icao: "ICAO 等级", source: "飞行时间根据飞行员飞行记录本计算。",
-    figTotal: "总时间", figPic: "机长", figMp: "多人制机组", figTurbine: "涡轮", figNight: "夜间", fig12m: "近12个月",
+    matchOffer: "与职位要求匹配", figTotal: "总时间", figPic: "机长", figMp: "多人制机组", figTurbine: "涡轮", figNight: "夜间", fig12m: "近12个月",
   },
   ar: {
     contact: "معلومات الاتصال", summary: "الملخص المهني", hours: "الخبرة في الطيران", types: "أنواع الطائرات", licences: "الرخص والتأهيلات والشهادة الطبية",
@@ -108,7 +108,7 @@ const L = {
     asOf: "الساعات حتى تاريخ", lastFlight: "آخر رحلة", validUntil: "صالح حتى", noExpiry: "بدون انتهاء", present: "حتى الآن", email: "البريد الإلكتروني", phone: "الهاتف",
     location: "الموقع", nationality: "الجنسية", dob: "تاريخ الميلاد", linkedin: "LinkedIn", rightToWork: "تصريح العمل", onType: "على النوع",
     asPic: "قائد", asCopilot: "مساعد", lastFlown: "آخر رحلة", targetRole: "الوظيفة المطلوبة", icao: "مستوى إيكاو", source: "الساعات محسوبة من سجل طيران الطيار.",
-    figTotal: "إجمالي الوقت", figPic: "قائد الطائرة", figMp: "طاقم متعدد", figTurbine: "توربينية", figNight: "ليلي", fig12m: "آخر 12 شهرا",
+    matchOffer: "مطابقة متطلبات الوظيفة", figTotal: "إجمالي الوقت", figPic: "قائد الطائرة", figMp: "طاقم متعدد", figTurbine: "توربينية", figNight: "ليلي", fig12m: "آخر 12 شهرا",
   },
 };
 
@@ -188,6 +188,9 @@ export function buildCvDocument(cv: CvData): CvDocument {
 
   const summary: Line[] = [];
   if (p.target?.title) summary.push({ kind: "pair", label: t.targetRole, value: [p.target.title, p.target.company].filter(Boolean).join(" — ") });
+  // the offer's keywords the logbook and licences back up, written in the CV so screening tools find them
+  const matched = targetKeywordsMet(cv);
+  if (matched.length) summary.push({ kind: "pair", label: t.matchOffer, value: matched.join(" · ") });
   if (p.summary?.trim()) summary.push({ kind: "text", text: p.summary.trim() });
   if (summary.length) sections.push({ id: "summary", heading: t.summary, lines: summary });
 
@@ -294,4 +297,28 @@ export function cvToText(doc: CvDocument): string {
     out.push("");
   }
   return out.join("\n").trim() + "\n";
+}
+
+/**
+ * The keywords of the targeted offer (and its aircraft) that the pilot really meets, from the logbook and the
+ * licences: licence and authority held, types flown, hour categories logged. Nothing is claimed otherwise.
+ */
+export function targetKeywordsMet(data: CvData): string[] {
+  const p = data.profile;
+  const h = data.hours;
+  const want = [...new Set([...(p.target?.keywords ?? []), ...(p.target?.aircraft ?? [])])];
+  const lic = data.licences.map((l) => `${l.code} ${expandLicence(l.code)} ${l.authority ?? ""}`.toLowerCase()).join(" | ");
+  const types = h.byType.map((x) => `${x.icao} ${x.name}`.toLowerCase());
+  const met = (k: string): boolean => {
+    const s = k.toLowerCase().trim();
+    if (!s) return false;
+    if (/^jet$/.test(s)) return h.jetMin > 0;
+    if (/^turbine$/.test(s)) return h.turbineMin > 0;
+    if (/^multi[- ](pilot|crew)$/.test(s)) return h.multiPilotMin > 0;
+    if (/^pic$/.test(s)) return h.picMin > 0;
+    if (/^(atpl|cpl|mpl|ppl|ir|mcc|joc)$/.test(s)) return new RegExp(`\\b${s}\\b`).test(lic);
+    if (/^(easa|faa|uk caa|tcca|casa)$/.test(s)) return lic.includes(s) || (s === "easa" && /\b(fra|deu|esp|ita|bel|nld|irl|prt|aut|che)\.fcl\b|dgac|fcl/.test(lic));
+    return types.some((x) => x.includes(s) || s.split(/\s+/).every((w) => w.length > 1 && x.includes(w))) || lic.includes(s);
+  };
+  return want.filter(met);
 }

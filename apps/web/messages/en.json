@@ -1394,8 +1394,8 @@
       "ats": {
         "title": "Pre-submission check",
         "subtitle": "What screening software looks for",
-        "keywordsFound": "Offer keywords present",
-        "keywordsMissing": "Missing keywords",
+        "keywordsFound": "Offer keywords in your CV",
+        "keywordsMissing": "Offer requirements not met (not added to your CV)",
         "checks": {
           "name": "Name",
           "contact": "Email and phone",
