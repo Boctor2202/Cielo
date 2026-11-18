@@ -1916,17 +1916,40 @@
       "discoveries": "Découvertes",
       "earned": "Obtenu le {date}",
       "d": {
-        "firstNight": "Premier vol de nuit",
+        "firstNight": "Oiseau de nuit",
+        "nightLandings100": "Marcheur de lune",
+        "airports10": "Explorateur",
+        "airports50": "Éclaireur",
+        "airports100": "Collectionneur d'aéroports",
+        "countries5": "Passe-frontières",
+        "countries10": "Globe-trotteur",
+        "countries25": "Citoyen du monde",
+        "earthLap": "Tour du monde",
+        "types3": "Touche-à-tout",
+        "firstSigned": "Signé, tamponné"
+      },
+      "dd": {
+        "firstNight": "Ton premier vol de nuit",
         "nightLandings100": "100 atterrissages de nuit",
-        "airports10": "10 aérodromes",
-        "airports50": "50 aérodromes",
-        "airports100": "100 aérodromes",
-        "countries5": "5 pays",
-        "countries10": "10 pays",
-        "countries25": "25 pays",
-        "earthLap": "Un tour de la Terre",
-        "types3": "3 types d'avion",
-        "firstSigned": "Premier vol signé"
+        "airports10": "10 aérodromes différents",
+        "airports50": "50 aérodromes différents",
+        "airports100": "100 aérodromes différents",
+        "countries5": "Des aérodromes dans 5 pays",
+        "countries10": "Des aérodromes dans 10 pays",
+        "countries25": "Des aérodromes dans 25 pays",
+        "earthLap": "21 639 NM parcourus : un tour de la Terre",
+        "types3": "3 types d'avion pilotés",
+        "firstSigned": "Un vol signé par un commandant ou un instructeur"
+      },
+      "title": {
+        "100": "Jeune ailé",
+        "250": "Navigateur",
+        "500": "Aviateur confirmé",
+        "1000": "As des mille heures",
+        "1500": "Vétéran du ciel",
+        "3000": "Maître aviateur",
+        "5000": "Légende du ciel",
+        "10000": "Club des dix mille"
       }
     }
   },

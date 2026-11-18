@@ -1916,17 +1916,40 @@
       "discoveries": "Discoveries",
       "earned": "Earned on {date}",
       "d": {
-        "firstNight": "First night flight",
-        "nightLandings100": "100 night landings",
-        "airports10": "10 airports",
-        "airports50": "50 airports",
-        "airports100": "100 airports",
-        "countries5": "5 countries",
-        "countries10": "10 countries",
-        "countries25": "25 countries",
-        "earthLap": "Once around the Earth",
-        "types3": "3 aircraft types",
-        "firstSigned": "First signed flight"
+        "firstNight": "Night Owl",
+        "nightLandings100": "Moonwalker",
+        "airports10": "Explorer",
+        "airports50": "Pathfinder",
+        "airports100": "Airport Collector",
+        "countries5": "Border Hopper",
+        "countries10": "Globetrotter",
+        "countries25": "Citizen of the World",
+        "earthLap": "Circumnavigator",
+        "types3": "Shapeshifter",
+        "firstSigned": "Signed & Stamped"
+      },
+      "dd": {
+        "firstNight": "Your first flight at night",
+        "nightLandings100": "100 landings at night",
+        "airports10": "10 different airports",
+        "airports50": "50 different airports",
+        "airports100": "100 different airports",
+        "countries5": "Airports in 5 countries",
+        "countries10": "Airports in 10 countries",
+        "countries25": "Airports in 25 countries",
+        "earthLap": "21,639 NM flown: once around the Earth",
+        "types3": "3 aircraft types flown",
+        "firstSigned": "A flight signed by a captain or instructor"
+      },
+      "title": {
+        "100": "Fledgling",
+        "250": "Navigator",
+        "500": "Seasoned Aviator",
+        "1000": "Thousand-Hour Ace",
+        "1500": "Sky Veteran",
+        "3000": "Master Aviator",
+        "5000": "Legend of the Skies",
+        "10000": "Ten Thousand Club"
       }
     }
   },
