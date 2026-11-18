@@ -209,6 +209,8 @@ export interface Flight extends SyncedRecord {
   purpose?: string;
   /** intermediate stops, ICAO (NZ, Canada) */
   via?: string[];
+  /** augmented crew: share of the block time logged (1/2, 1/3, 2/3, 1/4); absent = all of it */
+  loggedShare?: number;
 }
 
 export interface Signature extends SyncedRecord {

@@ -287,6 +287,7 @@ export async function buildFlight(
     crew: input.crew ?? [],
     remarks: input.remarks?.trim() || undefined,
     ...extraFlightFields(input, d.totalMin),
+    loggedShare: input.loggedShare && input.loggedShare < 1 ? input.loggedShare : undefined,
     signatureId: existing?.signatureId ?? null,
     locked: existing?.locked ?? false,
   };
@@ -393,6 +394,7 @@ export function flightToInput(f: Flight): FlightFormInput {
     safetyPilotName: f.safetyPilotName,
     purpose: f.purpose,
     via: f.via,
+    loggedShare: f.loggedShare,
   };
 }
 

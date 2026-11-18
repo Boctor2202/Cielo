@@ -17,6 +17,8 @@ import {
   type OperationMode,
   type PilotFunction,
   EXTRA_FLIGHT_FIELDS,
+  LOGGED_SHARES,
+  shareLabel,
   extraFieldsFor,
   extraFlightFields,
   frameworkOf,
@@ -81,6 +83,8 @@ interface FormState {
   safetyPilot: string;
   purpose: string;
   via: string;
+  /** augmented crew: share of the block logged */
+  loggedShare: number;
 }
 
 const nowClock = () => formatClock(new Date().toISOString());
@@ -151,6 +155,7 @@ function FlightForm() {
         safetyPilot: f.safetyPilotName ?? "",
         purpose: f.purpose ?? "",
         via: (f.via ?? []).join(" "),
+        loggedShare: f.loggedShare ?? 1,
       };
     }
     const last = flights.find((x) => !x.isFstd);
@@ -196,6 +201,7 @@ function FlightForm() {
       safetyPilot: "",
       purpose: "",
       via: "",
+      loggedShare: 1,
     };
   }
 
@@ -250,6 +256,7 @@ function FlightForm() {
       safetyPilotName: form.safetyPilot || undefined,
       purpose: form.purpose || undefined,
       via: form.via.split(/[\s,;-]+/).filter(Boolean),
+      loggedShare: form.loggedShare < 1 ? form.loggedShare : undefined,
     }),
     [form, selectedAircraft, selectedType],
   );
@@ -304,6 +311,7 @@ function FlightForm() {
         crew: existing?.crew ?? [],
         remarks: input.remarks,
         ...extraFlightFields(input, times.totalMin),
+        loggedShare: input.loggedShare,
         signatureId: existing?.signatureId ?? null,
         locked: existing?.locked ?? false,
       };
@@ -468,6 +476,14 @@ function FlightForm() {
               { value: "multi_pilot", label: t("flight.multiPilot") },
             ]}
           />
+          {(form.operation ?? selectedAircraft?.defaultOperation ?? (selectedType?.multiPilot ? "multi_pilot" : "single_pilot")) === "multi_pilot" ? (
+            <Segmented<string>
+              label={t("flight.loggedShare")}
+              value={shareLabel(form.loggedShare)}
+              onChange={(x) => set("loggedShare", LOGGED_SHARES.find((sh) => shareLabel(sh) === x) ?? 1)}
+              options={LOGGED_SHARES.map((sh) => ({ value: shareLabel(sh), label: sh === 1 ? t("flight.loggedAll") : shareLabel(sh) }))}
+            />
+          ) : null}
           <Txt variant="label">{t("flight.function")}</Txt>
           <Row style={{ flexWrap: "wrap" }}>
             {PILOT_FUNCTIONS.map((fn) => (

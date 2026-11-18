@@ -46,6 +46,8 @@ export interface FlightFormInput {
   safetyPilotName?: string;
   purpose?: string;
   via?: string[];
+  /** augmented crew: share of the block time logged (1/2, 1/3, 2/3, 1/4); undefined = all of it */
+  loggedShare?: number;
 }
 
 export interface DeriveContext {
@@ -90,8 +92,11 @@ export function deriveFlightTimes(input: FlightFormInput, ctx: DeriveContext): D
 
   const blockStart = outUtc ?? offUtc;
   const blockEnd = inUtc ?? onUtc;
-  const totalMin = input.isFstd ? 0 : Math.max(0, minutesBetween(blockStart, blockEnd));
-  const airMin = offUtc && onUtc ? Math.max(0, minutesBetween(offUtc, onUtc)) : totalMin;
+  const blockMin = input.isFstd ? 0 : Math.max(0, minutesBetween(blockStart, blockEnd));
+  // augmented crew: the pilot logs only their share of the block (1/2, 1/3, 2/3, 1/4), every time scaled alike
+  const share = input.loggedShare && input.loggedShare > 0 && input.loggedShare < 1 ? input.loggedShare : 1;
+  const totalMin = Math.round(blockMin * share);
+  const airMin = Math.round((offUtc && onUtc ? Math.max(0, minutesBetween(offUtc, onUtc)) : blockMin) * share);
 
   // Night
   let nightMin = 0;
@@ -107,7 +112,7 @@ export function deriveFlightTimes(input: FlightFormInput, ctx: DeriveContext): D
     if (dep && arr) {
       const r = computeNight({ dep, arr, outUtc, offUtc, onUtc, inUtc });
       if (r) {
-        nightMin = Math.min(r.nightMin, totalMin);
+        nightMin = Math.min(Math.round(r.nightMin * share), totalMin);
         landingAtNight = r.landingAtNight;
         takeoffAtNight = r.takeoffAtNight;
       }
@@ -204,6 +209,7 @@ export function canonicalFlightContent(f: Flight): string {
   ];
   const entries: [string, unknown][] = keys.map((k) => [k, f[k] ?? null]);
   // fields added later count only when filled, so the signatures made before them stay valid
+  if (f.loggedShare && f.loggedShare !== 1) entries.push(["loggedShare", f.loggedShare]);
   for (const k of EXTRA_FLIGHT_FIELDS) {
     const v = f[k];
     if (v !== undefined && v !== null && v !== "" && !(Array.isArray(v) && !v.length)) entries.push([k, v]);
@@ -241,3 +247,7 @@ export function extraFieldsFor(framework: string | undefined, regulator?: string
   if (framework === "CASA") return ["simInstrumentMin", "safetyPilotName"];
   return [];
 }
+
+/** The shares of the block an augmented-crew pilot may log. */
+export const LOGGED_SHARES = [1, 1 / 2, 1 / 3, 2 / 3, 1 / 4] as const;
+export const shareLabel = (x: number) => (x === 1 ? "1/1" : x === 0.5 ? "1/2" : Math.abs(x - 1 / 3) < 1e-6 ? "1/3" : Math.abs(x - 2 / 3) < 1e-6 ? "2/3" : x === 0.25 ? "1/4" : x.toFixed(2));

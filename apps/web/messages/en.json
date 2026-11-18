@@ -655,7 +655,10 @@
         "purpose": "Purpose of flight",
         "via": "Intermediate stops"
       },
-      "approachAirport": "Airport"
+      "approachAirport": "Airport",
+      "loggedShare": "Augmented crew: block time logged",
+      "loggedShareHint": "Your share of the block when the crew is reinforced; every time is scaled alike.",
+      "loggedAll": "All"
     },
     "signature": {
       "title": "Flight signature",

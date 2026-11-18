@@ -1,4 +1,4 @@
-import { formatClock, formatDateShort, type Flight, type Totals } from "@cielo/core";
+import { formatClock, formatDateShort, shareLabel, type Flight, type Totals } from "@cielo/core";
 
 export type LayoutId = "EASA" | "UK" | "FAA" | "CASA" | "TCCA" | "SACAA" | "HKCAD";
 
@@ -33,6 +33,7 @@ const remarks = (f: Flight) => {
   if (f.flightNumber) parts.push(f.flightNumber);
   if (f.approaches?.length) parts.push(f.approaches.map((a) => `${a.count}x${a.type}${a.airport ? ` ${a.airport}` : ""}`).join(" "));
   if (f.via?.length) parts.push(`Via ${f.via.join(" ")}`);
+  if (f.loggedShare && f.loggedShare < 1) parts.push(`Augmented crew ${shareLabel(f.loggedShare)}`);
   if (f.safetyPilotName) parts.push(`Safety pilot/instr. ${f.safetyPilotName}`);
   if (f.purpose) parts.push(f.purpose);
   if (f.signatureId) parts.push("Signed");

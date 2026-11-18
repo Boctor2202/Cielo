@@ -655,7 +655,10 @@
         "purpose": "Objet du vol",
         "via": "Escales"
       },
-      "approachAirport": "Aéroport"
+      "approachAirport": "Aéroport",
+      "loggedShare": "Équipage renforcé : temps bloc journalisé",
+      "loggedShareHint": "Votre part du temps bloc quand l'équipage est renforcé ; tous les temps sont calculés sur cette part.",
+      "loggedAll": "Tout"
     },
     "signature": {
       "title": "Signature du vol",

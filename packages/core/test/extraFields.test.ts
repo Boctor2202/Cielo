@@ -20,3 +20,14 @@ describe("extra logbook entries", () => {
     expect(extraFieldsFor("CASA", "NZCAA")).toContain("purpose");
   });
 });
+
+describe("augmented crew", () => {
+  it("logs the chosen share of the block", async () => {
+    const { deriveFlightTimes } = await import("../src");
+    const input = { date: "2026-11-10", depIcao: "LFPG", arrIcao: "KJFK", out: "10:00", in: "18:00", function: "SIC", ifr: true, pilotFlying: false, isFstd: false, loggedShare: 0.5 } as never;
+    const d = deriveFlightTimes(input, { airports: () => undefined });
+    expect(d.totalMin).toBe(240);
+    expect(d.copilotMin).toBe(240);
+    expect(d.ifrMin).toBe(240);
+  });
+});

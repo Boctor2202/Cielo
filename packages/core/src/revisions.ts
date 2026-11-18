@@ -65,7 +65,7 @@ const LABELS: Record<"fr" | "en", Record<string, string>> = {
     pilotFlying: "PF", approaches: "Approches", isFstd: "Simulateur", fstdType: "Type de simulateur", fstdQualification: "Qualification FSTD",
     fstdMin: "Temps simulateur", crew: "Équipage", remarks: "Remarques",
     simInstrumentMin: "Instrument simulé", holdings: "Attentes", groundTrainingMin: "Instruction au sol", soloMin: "Solo",
-    safetyPilotName: "Pilote de sécurité / instructeur", purpose: "Objet du vol", via: "Escales",
+    safetyPilotName: "Pilote de sécurité / instructeur", purpose: "Objet du vol", via: "Escales", loggedShare: "Part du temps bloc (équipage renforcé)",
   },
   en: {
     date: "Date", flightNumber: "Flight no.", depIcao: "From", arrIcao: "To", outUtc: "Off-block", offUtc: "Take-off", onUtc: "Landing",
@@ -77,7 +77,7 @@ const LABELS: Record<"fr" | "en", Record<string, string>> = {
     pilotFlying: "PF", approaches: "Approaches", isFstd: "Simulator", fstdType: "Simulator type", fstdQualification: "FSTD qualification",
     fstdMin: "Simulator time", crew: "Crew", remarks: "Remarks",
     simInstrumentMin: "Simulated instrument", holdings: "Holds", groundTrainingMin: "Ground training", soloMin: "Solo",
-    safetyPilotName: "Safety pilot / instructor", purpose: "Purpose of flight", via: "Stops",
+    safetyPilotName: "Safety pilot / instructor", purpose: "Purpose of flight", via: "Stops", loggedShare: "Logged share of block (augmented crew)",
   },
 };
 export const revisionFieldLabel = (field: string, locale: string) => LABELS[locale === "fr" ? "fr" : "en"][field] ?? field;

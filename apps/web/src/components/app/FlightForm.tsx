@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   defaultIfrFor, deriveFlightTimes, isoDate, PILOT_FUNCTIONS, type Aircraft, type Approach, type Flight, type FlightFormInput, type Pilot,
-  APPROACH_TYPES, EXTRA_FLIGHT_FIELDS, extraFieldsFor, frameworkOf,
+  APPROACH_TYPES, EXTRA_FLIGHT_FIELDS, extraFieldsFor, frameworkOf, LOGGED_SHARES, shareLabel,
 } from "@cielo/core";
 import { useRouter } from "@/i18n/navigation";
 import { useAirports } from "@/lib/airports";
@@ -246,6 +246,15 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                     ]}
                   />
                 </Field>
+                {(v.operation ?? aircraft?.defaultOperation ?? (type?.multiPilot ? "multi_pilot" : "single_pilot")) === "multi_pilot" && (
+                  <Field label={t("loggedShare")} hint={t("loggedShareHint")}>
+                    <Segmented
+                      value={shareLabel(v.loggedShare ?? 1)}
+                      onChange={(x) => set("loggedShare", LOGGED_SHARES.find((sh) => shareLabel(sh) === x) === 1 ? undefined : LOGGED_SHARES.find((sh) => shareLabel(sh) === x))}
+                      options={LOGGED_SHARES.map((sh) => ({ value: shareLabel(sh), label: sh === 1 ? t("loggedAll") : shareLabel(sh) }))}
+                    />
+                  </Field>
+                )}
               </div>
               <AircraftPhoto registration={v.registration} hex={aircraft?.icaoHex} showEmpty className="mt-4 max-w-md" />
             </Card>
