@@ -1,7 +1,7 @@
 "use client";
 
 import { Roll } from "@/components/ui/Roll";
-import { BadgeCheck, Camera, Check, Pencil, Plane, Trash2, X } from "lucide-react";
+import { Settings2, BadgeCheck, Camera, Check, Pencil, Plane, Trash2, X } from "lucide-react";
 import { CountryInput } from "@/components/app/CountryInput";
 import { AirportInput } from "@/components/app/AirportInput";
 import { motion } from "motion/react";
@@ -224,8 +224,8 @@ export default function ProfilePage() {
       <Card
         title={t("licences")}
         action={
-          <Link href="/app/documents" className="text-sm font-semibold text-accent">
-            {t("manage")}
+          <Link href="/app/documents" className="btn btn-primary btn-sm">
+            <Settings2 size={14} aria-hidden /> {t("manage")}
           </Link>
         }
         pad={docs.length > 0 ? false : true}
