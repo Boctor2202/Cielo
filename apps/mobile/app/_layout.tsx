@@ -15,8 +15,11 @@ import { Backdrop, Txt } from "../src/components/ui";
 import { glass } from "../src/theme";
 import { Splash, SplashOverlay } from "../src/components/Splash";
 import { ThreeGreensO } from "../src/components/Logo";
+import { applyUpdateAtLaunch } from "../src/updates";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
+// a newer update is fetched during the opening screen and applied at once
+void applyUpdateAtLaunch();
 // dark by default; applied before the first render so the app never flashes light
 applyThemePref(loadThemePref());
 

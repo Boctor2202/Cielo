@@ -6,6 +6,7 @@ import { PILOT_FUNCTIONS, REGULATORS, frameworkOf, regulatorById, type IfrDefaul
 import { Button, Card, Chip, Field, MenuGroup, MenuRow, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
 import { WIDGETS_IN_BUILD, liveActivityEnabled, setLiveActivityEnabled } from "../../src/widgets/sync";
 import { useCrewInbox } from "../../src/crew";
+import { runningVersion } from "../../src/updates";
 import { layoutForAuthority } from "@cielo/export";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf, exportLogbookXlsx } from "../../src/exporters";
@@ -255,6 +256,8 @@ export default function More() {
 
       <Txt variant="small" style={{ textAlign: "center" }} color={c.muted}>
         Geardown · {t("more.version", { v: Constants.expoConfig?.version ?? "0.0.0" })}
+        {"\n"}
+        {runningVersion()}
       </Txt>
     </Screen>
   );
