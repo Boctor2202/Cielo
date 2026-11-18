@@ -11,6 +11,9 @@ import { useApp } from "../../src/state";
 import { useSyncStatus } from "../../src/syncStatus";
 import { font, glass, space, useTheme } from "../../src/theme";
 
+/** Function badges: command green, co-pilot blue, supervised command teal, instruction amber / violet. */
+const FN_TONE: Record<string, string> = { PIC: "#34D399", SIC: "#38BDF8", PICUS: "#2DD4BF", DUAL: "#FBBF24", FI: "#A78BFA", FE: "#E879F9" };
+
 interface Section {
   key: string;
   title: string;
@@ -156,7 +159,9 @@ export default function Logbook() {
                 transform: [{ scale: pressed ? 0.99 : 1 }],
               })}
             >
-              <Row gap={14}>
+              <Row gap={12}>
+                {/* a coloured edge: night flights indigo, IFR sky, VFR green, simulator violet (as on the website) */}
+                <View style={{ width: 3, alignSelf: "stretch", borderRadius: 2, backgroundColor: f.isFstd ? "#A78BFA" : f.nightMin > 0 ? "#818CF8" : f.ifrMin > 0 ? "#38BDF8" : "#34D399" }} />
                 {/* date block: day of month, short weekday */}
                 <View style={{ width: 44, alignItems: "center", paddingVertical: 4, borderRadius: 10, backgroundColor: glass(c).input }}>
                   <Txt style={{ fontSize: 20, fontWeight: "700", lineHeight: 23 }}>{d.getUTCDate()}</Txt>
@@ -164,14 +169,31 @@ export default function Logbook() {
                     {d.toLocaleDateString(locale === "fr" ? "fr-FR" : "en-GB", { weekday: "short", timeZone: "UTC" }).replace(".", "")}
                   </Txt>
                 </View>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Txt style={{ fontSize: 17, fontWeight: "600", letterSpacing: 0.3 }} numberOfLines={1}>
-                    {f.isFstd ? `${t("log.fstd")} ${f.fstdType ?? ""}` : `${f.depIcao}  →  ${f.arrIcao}`}
-                  </Txt>
-                  <Txt variant="small" numberOfLines={1}>
-                    {!f.isFstd && f.outUtc ? `${formatClock(f.outUtc)} – ${formatClock(f.inUtc)} UTC · ` : ""}
-                    {[f.registration, f.aircraftTypeIcao, f.function, f.flightNumber].filter(Boolean).join(" · ")}
-                  </Txt>
+                <View style={{ flex: 1, gap: 4 }}>
+                  <Row gap={6} style={{ alignItems: "center" }}>
+                    {f.isFstd ? (
+                      <Txt style={{ fontSize: 17, fontWeight: "600" }} color="#A78BFA" numberOfLines={1}>{`${t("log.fstd")} ${f.fstdType ?? ""}`}</Txt>
+                    ) : (
+                      <>
+                        <Txt style={{ fontSize: 17, fontWeight: "600", letterSpacing: 0.3 }}>{f.depIcao}</Txt>
+                        <Ionicons name="airplane" size={13} color={c.accent} />
+                        <Txt style={{ fontSize: 17, fontWeight: "600", letterSpacing: 0.3 }}>{f.arrIcao}</Txt>
+                      </>
+                    )}
+                  </Row>
+                  <Row gap={6} style={{ alignItems: "center", flexWrap: "wrap" }}>
+                    <View style={{ paddingHorizontal: 7, paddingVertical: 1, borderRadius: 999, backgroundColor: (FN_TONE[f.function] ?? "#94A3B8") + "26" }}>
+                      <Txt mono style={{ fontSize: 11.5, fontWeight: "700" }} color={FN_TONE[f.function] ?? c.muted}>{f.function}</Txt>
+                    </View>
+                    {f.registration ? (
+                      <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, borderWidth: StyleSheet.hairlineWidth, borderColor: glass(c).edge, backgroundColor: glass(c).input }}>
+                        <Txt mono style={{ fontSize: 11.5, fontWeight: "600" }}>{f.registration}</Txt>
+                      </View>
+                    ) : null}
+                    <Txt variant="small" numberOfLines={1} style={{ flexShrink: 1 }}>
+                      {[f.aircraftTypeIcao, !f.isFstd && f.outUtc ? `${formatClock(f.outUtc)}–${formatClock(f.inUtc)}` : "", f.flightNumber].filter(Boolean).join(" · ")}
+                    </Txt>
+                  </Row>
                   {pendingIds.has(f.id) ? (
                     <Row gap={4} style={{ alignItems: "center" }}>
                       <Ionicons name="cloud-upload-outline" size={12} color={c.scheme === "dark" ? "#FBBF24" : "#B45309"} />
@@ -185,13 +207,17 @@ export default function Logbook() {
                       {fmt(f.isFstd ? f.fstdMin : f.totalMin)}
                     </Txt>
                   </View>
-                  {f.nightMin > 0 ? (
-                    <Txt mono variant="small" style={{ fontSize: 12 }}>
-                      ☾ {fmt(f.nightMin)}
-                    </Txt>
-                  ) : f.signatureId ? (
-                    <Txt variant="small" style={{ fontSize: 12 }} color={c.success}>✓ {t("log.signed")}</Txt>
-                  ) : null}
+                  <Row gap={6} style={{ alignItems: "center" }}>
+                    {f.nightMin > 0 ? (
+                      <Txt mono variant="small" style={{ fontSize: 12 }} color="#818CF8">
+                        ☾ {fmt(f.nightMin)}
+                      </Txt>
+                    ) : null}
+                    {f.ifrMin > 0 && !f.isFstd ? (
+                      <Txt mono variant="small" style={{ fontSize: 11, fontWeight: "700" }} color="#38BDF8">IFR</Txt>
+                    ) : null}
+                    {f.signatureId ? <Ionicons name="shield-checkmark" size={13} color={c.success} /> : null}
+                  </Row>
                 </View>
               </Row>
             </Pressable>
