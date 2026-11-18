@@ -1,6 +1,6 @@
 "use client";
 
-import { Sun, BedDouble, CalendarDays, ChevronRight, Globe2, Hotel, MapPin, Plus, Users } from "lucide-react";
+import { PauseCircle, BedDouble, CalendarDays, ChevronRight, Globe2, Hotel, MapPin, Plus, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { countryName, rosterLayovers, unsavedRosterLayovers } from "@cielo/core";
@@ -73,7 +73,7 @@ export default function LayoversPage() {
     const w = when(l);
     const n = nightsOf(l);
     const a = day(l.arrivalUtc);
-    // arriving and leaving the same day (a day stop): the hours there instead of "0 nights"
+    // arriving and leaving the same day: a split duty (a break, not a night): the hours there instead of "0 nights"
     const sameDay = !!l.departureUtc && l.departureUtc.slice(0, 10) === l.arrivalUtc?.slice(0, 10);
     const hours = sameDay ? Math.round((Date.parse(l.departureUtc!) - Date.parse(l.arrivalUtc!)) / 3_600_000) : 0;
     const b = sameDay ? null : day(l.departureUtc);
@@ -118,7 +118,7 @@ export default function LayoversPage() {
             {b || hours > 0 ? (
               <>
                 <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${b ? "bg-indigo-400/15 text-indigo-300" : "bg-amber-400/15 text-amber-300"}`}>
-                  {b ? <><BedDouble size={13} /> {t("nights", { n })}</> : <><Sun size={13} /> {t("dayStop", { h: hours })}</>}
+                  {b ? <><BedDouble size={13} /> {t("nights", { n })}</> : <><PauseCircle size={13} /> {t("dayStop", { h: hours })}</>}
                 </span>
                 <span className="h-px flex-1 border-t border-dashed border-muted/60" />
               </>

@@ -210,7 +210,7 @@ function LayoversScreen() {
                   <>
                     <View style={{ flex: 1, borderTopWidth: 1, borderStyle: "dashed", borderColor: c.muted }} />
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, backgroundColor: AMBER + "26" }}>
-                      <Ionicons name="sunny" size={12} color={AMBER} />
+                      <Ionicons name="pause-circle" size={12} color={AMBER} />
                       <Txt variant="small" color={AMBER} style={{ fontWeight: "700", fontSize: 12 }}>{t("lay.dayStop", { h: hours })}</Txt>
                     </View>
                     <View style={{ flex: 1, borderTopWidth: 1, borderStyle: "dashed", borderColor: c.muted }} />

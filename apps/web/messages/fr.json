@@ -1532,7 +1532,7 @@
       "statCities": "Aéroports",
       "statCountries": "Pays",
       "fromRoster": "Depuis votre planning",
-      "dayStop": "Escale de jour · {h} h"
+      "dayStop": "Split duty · pause de {h} h"
     },
     "radar": {
       "title": "Radar",

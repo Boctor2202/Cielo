@@ -1532,7 +1532,7 @@
       "statCities": "Airports",
       "statCountries": "Countries",
       "fromRoster": "From your roster",
-      "dayStop": "{h} h day stop"
+      "dayStop": "Split duty · {h} h break"
     },
     "radar": {
       "title": "Radar",
