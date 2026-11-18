@@ -16,6 +16,7 @@ import {
   type ReminderPrefs,
 } from "../../src/notifications";
 import { statusLabel } from "../../src/licenseLabel";
+import { logRemindersOn, scheduleLogReminders, setLogRemindersOn } from "../../src/logReminders";
 import { todayUtc, useApp } from "../../src/state";
 import { space, useTheme } from "../../src/theme";
 
@@ -26,7 +27,8 @@ const HOURS = [7, 8, 9, 12, 18];
  * followed and the next reminders planned on this phone.
  */
 export default function Reminders() {
-  const { t, licenses, locale } = useApp();
+  const { t, licenses, locale, rosterEvents, flights } = useApp();
+  const [logOn, setLogOn] = useState(logRemindersOn);
   const c = useTheme();
   const [prefs, setPrefs] = useState<ReminderPrefs>(DEFAULT_REMINDER_PREFS);
   const [perm, setPerm] = useState<"granted" | "denied" | "undetermined">("undetermined");
@@ -75,6 +77,16 @@ export default function Reminders() {
     <Screen>
       <Card>
         <ToggleRow label={t("rem.enabled")} hint={t("rem.enabledHint")} value={prefs.enabled} onChange={(v) => void apply({ ...prefs, enabled: v })} />
+        <ToggleRow
+          label={t("logRem.toggle")}
+          hint={t("logRem.hint")}
+          value={logOn}
+          onChange={(v) => {
+            setLogOn(v);
+            setLogRemindersOn(v);
+            void scheduleLogReminders(rosterEvents, flights, t);
+          }}
+        />
         {prefs.enabled ? (
           <>
             <Txt variant="label">{t("rem.hour")}</Txt>

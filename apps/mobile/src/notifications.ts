@@ -8,7 +8,7 @@ import type { Locale } from "@cielo/core";
 const PREFIX = "lic:";
 const CHANNEL = "documents";
 /** iOS keeps at most 64 pending local notifications per app. */
-const MAX_PENDING = 60;
+const MAX_PENDING = 50;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false }),

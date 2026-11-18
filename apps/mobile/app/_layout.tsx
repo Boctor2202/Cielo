@@ -16,6 +16,7 @@ import { glass } from "../src/theme";
 import { Splash, SplashOverlay } from "../src/components/Splash";
 import { ThreeGreensO } from "../src/components/Logo";
 import { applyUpdateAtLaunch } from "../src/updates";
+import { LogReminderSync } from "../src/logReminders";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 // a newer update is fetched during the opening screen and applied at once
@@ -42,8 +43,10 @@ function Navigator() {
   // a tap on an expiry reminder opens the document it is about (also when it launched the app)
   useEffect(() => {
     const open = (r: Notifications.NotificationResponse | null) => {
-      const data = r?.notification.request.content.data as { licenseId?: string; route?: string } | undefined;
+      const data = r?.notification.request.content.data as { licenseId?: string; route?: string; rosterEventId?: string } | undefined;
       if (data?.licenseId) router.push({ pathname: "/document/[id]", params: { id: data.licenseId } });
+      // "flight over, log it?": the form filled from the roster
+      else if (data?.rosterEventId) router.push({ pathname: "/flight/[id]", params: { id: "new", rosterEventId: data.rosterEventId } });
       else if (data?.route === "/crew") router.navigate("/crew");
     };
     Notifications.getLastNotificationResponseAsync().then(open).catch(() => undefined);
@@ -62,6 +65,7 @@ function Navigator() {
       <Backdrop />
       <WidgetSync />
       <CrewInboxWatcher />
+      <LogReminderSync />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: glass(c).strong },
