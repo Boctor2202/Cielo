@@ -101,7 +101,7 @@ export default function Goals() {
   }
 
   return (
-    <Screen>
+    <Screen columns>
       {!pilot.goals?.length ? <Txt variant="small">{t("goals.auto")}</Txt> : null}
       {progress.map((p) => (
         <Card key={p.goal.id}>

@@ -3,7 +3,7 @@ import { FlatList, View } from "react-native";
 import { router } from "expo-router";
 import { licenseStatus } from "@cielo/core";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Appear, Card, Dot, EmptyState, Fab, Glass, Row, Txt, statusColor } from "../../src/components/ui";
+import { useWide, Appear, Card, Dot, EmptyState, Fab, Glass, Row, Txt, statusColor } from "../../src/components/ui";
 import { Track } from "../../src/components/Bars";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { statusLabel } from "../../src/licenseLabel";
@@ -15,6 +15,7 @@ const ICON = { licence: ["card", "#0A84FF"], medical: ["medkit", "#FF453A"], rat
 
 export default function Documents() {
   const { access, t, locale, licenses } = useApp();
+  const wide = useWide();
   const c = useTheme();
   const today = todayUtc();
   const items = useMemo(
@@ -30,7 +31,7 @@ export default function Documents() {
       <FlatList
         data={items}
         keyExtractor={(x) => x.l.id}
-        contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: 140, flexGrow: 1 }}
+        contentContainerStyle={[{ padding: space.lg, gap: space.md, paddingBottom: 140, flexGrow: 1 }, wide ? { width: "100%", maxWidth: 760, alignSelf: "center" } : null]}
         ListEmptyComponent={<EmptyState title={t("docs.empty")} hint={t("docs.emptyHint")} />}
         ListHeaderComponent={
           items.length ? (

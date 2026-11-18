@@ -3,7 +3,7 @@ import { Alert, Pressable, SectionList, StyleSheet, TextInput, View } from "reac
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { formatClock, formatDuration, sumFlights, type Flight } from "@cielo/core";
-import { EmptyState, Fab, Row, Segmented, Txt, tap } from "../../src/components/ui";
+import { useWide, EmptyState, Fab, Row, Segmented, Txt, tap } from "../../src/components/ui";
 import { LogbookCalendar } from "../../src/components/LogbookCalendar";
 import Storage from "expo-sqlite/kv-store";
 import { formatDate, formatMonth } from "../../src/i18n";
@@ -20,6 +20,7 @@ interface Section {
 
 export default function Logbook() {
   const { access, t, locale, flights, pilot, remove, session } = useApp();
+  const wide = useWide();
   const sync = useSyncStatus();
   // flights changed on this phone and not yet on the server (none to show when not signed in)
   const pendingIds = session ? sync.pendingFlightIds : new Set<string>();
@@ -76,7 +77,7 @@ export default function Logbook() {
         sections={view === "calendar" ? [] : sections}
         keyExtractor={(f) => f.id}
         stickySectionHeadersEnabled={false}
-        contentContainerStyle={{ paddingBottom: 140, paddingTop: space.sm, flexGrow: 1 }}
+        contentContainerStyle={[{ paddingBottom: 140, paddingTop: space.sm, flexGrow: 1 }, wide ? { width: "100%", maxWidth: 760, alignSelf: "center" } : null]}
         ListHeaderComponent={
           flights.length ? (
             <View style={{ marginHorizontal: space.md, marginTop: space.sm, gap: space.sm }}>

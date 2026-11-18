@@ -51,7 +51,7 @@ export default function Currency() {
   };
 
   return (
-    <Screen>
+    <Screen columns>
       <Card>
         <Txt variant="small">
           {t(`cur.rules.${pilot.regulatoryFramework === "FAA" ? "faa" : "easa"}` as I18nKey)}

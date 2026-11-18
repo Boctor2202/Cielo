@@ -33,7 +33,7 @@ function Ftl() {
   const hm = (iso: string) => iso.slice(11, 16);
 
   return (
-    <Screen>
+    <Screen columns>
       <Card>
         <Txt variant="h2">{t("dash.ftl")}</Txt>
         {KEYS.filter((k) => limitApplies(k, settings.regime)).map((k) => {

@@ -56,7 +56,7 @@ export default function Stats() {
     ) : null;
 
   return (
-    <Screen>
+    <Screen columns>
       <Segmented<Range>
         value={range}
         onChange={setRange}

@@ -12,6 +12,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
   type TextInputProps,
   type StyleProp,
   type TextStyle,
@@ -24,9 +25,12 @@ import { font, glass, mono, radius, space, useTheme, type Palette } from "../the
 /** The photo behind every screen (as on the web app), with the theme's shade over it. */
 export function Backdrop() {
   const c = useTheme();
+  // portrait phone: the portrait framing; iPad, the unfolded iPhone Duo, landscape: the wide frame
+  const { width, height } = useWindowDimensions();
+  const wide = width > height * 0.8;
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <ImageBackground source={require("../../assets/backdrop.jpg")} resizeMode="cover" style={StyleSheet.absoluteFill} />
+      <ImageBackground source={wide ? require("../../assets/backdrop-wide.jpg") : require("../../assets/backdrop.jpg")} resizeMode="cover" style={StyleSheet.absoluteFill} />
       <View style={[StyleSheet.absoluteFill, { backgroundColor: glass(c).shade }]} />
     </View>
   );
@@ -79,7 +83,12 @@ export function Txt({
   );
 }
 
-export function Screen({ children, scroll = true, style, backdrop }: { children: React.ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle>; backdrop?: boolean }) {
+/** Large screens (iPad, the unfolded iPhone Duo, landscape): content in two columns or kept to a readable width. */
+export const WIDE = 700;
+export const useWide = () => useWindowDimensions().width >= WIDE;
+
+export function Screen({ children, scroll = true, style, backdrop, columns }: { children: React.ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle>; backdrop?: boolean; columns?: boolean }) {
+  const wide = useWide();
   if (!scroll)
     return (
       <View style={[{ flex: 1, backgroundColor: "transparent" }, style]}>
@@ -91,22 +100,46 @@ export function Screen({ children, scroll = true, style, backdrop }: { children:
     return (
       <View style={{ flex: 1 }}>
         <Backdrop />
-        <Screen style={style}>{children}</Screen>
+        <Screen style={style} columns={columns}>{children}</Screen>
       </View>
     );
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: "transparent" }}
-      contentContainerStyle={[{ padding: space.lg, gap: space.lg, paddingBottom: 130 }, style]}
+      contentContainerStyle={[
+        { padding: space.lg, gap: space.lg, paddingBottom: 130 },
+        // a readable width on a large screen (two columns get more room)
+        wide ? { width: "100%", maxWidth: columns ? 1180 : 760, alignSelf: "center" } : null,
+        style,
+      ]}
       keyboardShouldPersistTaps="handled"
       contentInsetAdjustmentBehavior="automatic"
     >
-      {/* each block of the screen comes in a little after the previous one */}
-      {React.Children.toArray(children).map((child, i) => (
-        <Order.Provider key={i} value={i}>
-          {child}
-        </Order.Provider>
-      ))}
+      {wide && columns ? (
+        // two columns, blocks dealt left and right in screen order
+        <View style={{ flexDirection: "row", gap: space.lg, alignItems: "flex-start" }}>
+          {[0, 1].map((col) => (
+            <View key={col} style={{ flex: 1, gap: space.lg }}>
+              {React.Children.toArray(children)
+                .filter(Boolean)
+                .map((child, i) =>
+                  i % 2 === col ? (
+                    <Order.Provider key={i} value={i}>
+                      {child}
+                    </Order.Provider>
+                  ) : null,
+                )}
+            </View>
+          ))}
+        </View>
+      ) : (
+        /* each block of the screen comes in a little after the previous one */
+        React.Children.toArray(children).map((child, i) => (
+          <Order.Provider key={i} value={i}>
+            {child}
+          </Order.Provider>
+        ))
+      )}
     </ScrollView>
   );
 }

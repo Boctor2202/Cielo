@@ -90,7 +90,7 @@ export default function Dashboard() {
 
   return (
     <View style={{ flex: 1 }}>
-      <Screen>
+      <Screen columns>
         <View style={{ gap: 2, marginTop: 4 }}>
           <Txt variant="muted">{locale === "fr" ? "Bonjour" : "Hello"} {pilot.fullName?.split(" ")[0] ?? ""}</Txt>
           <Txt variant="title">{locale === "fr" ? "Vue d'ensemble" : "Overview"}</Txt>

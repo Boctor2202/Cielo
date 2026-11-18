@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Alert, Pressable, SectionList, View } from "react-native";
 import { router } from "expo-router";
 import { formatClock, formatDuration, minutesBetween } from "@cielo/core";
-import { Button, EmptyState, Fab, Glass, Row, Segmented, Txt } from "../../src/components/ui";
+import { useWide, Button, EmptyState, Fab, Glass, Row, Segmented, Txt } from "../../src/components/ui";
 import { type I18nKey } from "../../src/i18n";
 import { useApp } from "../../src/state";
 import { RosterPdfError, pickAndImportRoster } from "../../src/rosterImport";
@@ -19,6 +19,7 @@ export default function Roster() {
 
 function RosterScreen() {
   const { t, locale, rosterEvents, access, store, pilot, reload, session } = useApp();
+  const wide = useWide();
   const c = useTheme();
   const [importing, setImporting] = useState(false);
   // upcoming duties by default; "past" shows the last 90 days, newest first, so earlier events can be corrected
@@ -74,7 +75,7 @@ function RosterScreen() {
         sections={days}
         keyExtractor={(e) => e.id}
         stickySectionHeadersEnabled={false}
-        contentContainerStyle={{ padding: space.lg, paddingBottom: 140, flexGrow: 1 }}
+        contentContainerStyle={[{ padding: space.lg, paddingBottom: 140, flexGrow: 1 }, wide ? { width: "100%", maxWidth: 760, alignSelf: "center" } : null]}
         ListHeaderComponent={
           <View style={{ gap: 4 }}>
             <Segmented<"next" | "past">
