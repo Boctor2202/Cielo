@@ -437,15 +437,26 @@ select.input {
 .roll .roll-col { display: flex !important; flex-direction: column !important; transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform; }
 .roll .roll-col > span { display: block !important; height: 1.15em !important; line-height: 1.15em !important; text-align: center; }
 
-/* Logo: the three greens of the O light up one after the other, then hold, in a loop */
-@keyframes gear-light {
-  0%, 8% { opacity: 0.22; }
-  16%, 78% { opacity: 1; }
-  90%, 100% { opacity: 0.22; }
+/* Logo: the three greens of the O light up one after the other, hold, then all dim together, in a loop.
+   One cycle for the three (no delays), so the dimming stays simultaneous. */
+@keyframes gear-light-1 {
+  0%, 6% { opacity: 0.22; }
+  13%, 80% { opacity: 1; }
+  92%, 100% { opacity: 0.22; }
 }
-.gear-light { animation: gear-light 3.2s ease-in-out infinite; }
-.gear-light-2 { animation-delay: 0.22s; }
-.gear-light-3 { animation-delay: 0.44s; }
+@keyframes gear-light-2 {
+  0%, 13% { opacity: 0.22; }
+  20%, 80% { opacity: 1; }
+  92%, 100% { opacity: 0.22; }
+}
+@keyframes gear-light-3 {
+  0%, 20% { opacity: 0.22; }
+  27%, 80% { opacity: 1; }
+  92%, 100% { opacity: 0.22; }
+}
+.gear-light { animation: gear-light-1 3.2s ease-in-out infinite; }
+.gear-light-2 { animation-name: gear-light-2; }
+.gear-light-3 { animation-name: gear-light-3; }
 @media (prefers-reduced-motion: reduce) {
   .gear-light { animation: none; }
 }
