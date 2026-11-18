@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { Alert, Pressable, SectionList, StyleSheet, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, SectionList, StyleSheet, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { formatClock, formatDuration, sumFlights, type Flight } from "@cielo/core";
-import { useWide, EmptyState, Fab, Row, Segmented, Txt, tap } from "../../src/components/ui";
+import { useWide, Chip, EmptyState, Fab, Row, Segmented, Txt, tap } from "../../src/components/ui";
 import { LogbookCalendar } from "../../src/components/LogbookCalendar";
 import Storage from "expo-sqlite/kv-store";
 import { formatDate, formatMonth } from "../../src/i18n";
@@ -47,15 +47,31 @@ export default function Logbook() {
       /* not kept */
     }
   };
-  /** Words all found in the flight: airports, registration, type, flight number, crew, remarks, date. */
+  // filters: year, aircraft type, function, conditions (each "" = all)
+  const [showFilters, setShowFilters] = useState(false);
+  const [fYear, setFYear] = useState("");
+  const [fType, setFType] = useState("");
+  const [fFn, setFFn] = useState("");
+  const [fCond, setFCond] = useState<"" | "night" | "ifr" | "fstd">("");
+  const filtersOn = !!(fYear || fType || fFn || fCond);
+  const years = useMemo(() => [...new Set(flights.map((f) => f.date.slice(0, 4)))].sort().reverse(), [flights]);
+  const typesFlown = useMemo(() => [...new Set(flights.filter((f) => !f.isFstd && f.aircraftTypeIcao).map((f) => f.aircraftTypeIcao!))].sort(), [flights]);
+  const fns = useMemo(() => [...new Set(flights.map((f) => f.function))].sort(), [flights]);
+  /** Words all found in the flight (airports, registration, type, flight number, crew, remarks, date), then the filters. */
   const shown = useMemo(() => {
     const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
-    if (!words.length) return flights;
     return flights.filter((f) => {
+      if (fYear && !f.date.startsWith(fYear)) return false;
+      if (fType && f.aircraftTypeIcao !== fType) return false;
+      if (fFn && f.function !== fFn) return false;
+      if (fCond === "night" && !(f.nightMin > 0)) return false;
+      if (fCond === "ifr" && !(f.ifrMin > 0 && !f.isFstd)) return false;
+      if (fCond === "fstd" && !f.isFstd) return false;
+      if (!words.length) return true;
       const hay = [f.depIcao, f.arrIcao, f.registration, f.aircraftTypeIcao, f.flightNumber, f.picName, f.remarks, f.function, f.date].filter(Boolean).join(" ").toLowerCase();
       return words.every((w) => hay.includes(w));
     });
-  }, [flights, q]);
+  }, [flights, q, fYear, fType, fFn, fCond]);
 
   const sections = useMemo<Section[]>(() => {
     const byMonth = new Map<string, Flight[]>();
@@ -106,8 +122,41 @@ export default function Logbook() {
                   returnKeyType="search"
                 />
               </Row>
+              <Pressable onPress={() => (tap(), setShowFilters((x) => !x))} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", marginLeft: 4 }}>
+                <Ionicons name="options-outline" size={15} color={filtersOn ? c.accent : c.muted} />
+                <Txt variant="small" color={filtersOn ? c.accent : c.muted}>{filtersOn ? t("log.filtersOn") : t("log.filters")}</Txt>
+              </Pressable>
+              {showFilters ? (
+                <View style={{ gap: 6 }}>
+                  {[
+                    { label: t("log.f.year"), value: fYear, set: setFYear, opts: years },
+                    { label: t("log.f.type"), value: fType, set: setFType, opts: typesFlown },
+                    { label: t("log.f.function"), value: fFn, set: setFFn, opts: fns },
+                  ].map((g) => (
+                    <ScrollView key={g.label} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, alignItems: "center" }}>
+                      <Txt variant="small" style={{ width: 62 }}>{g.label}</Txt>
+                      <Chip label={t("log.f.all")} selected={!g.value} onPress={() => g.set("")} />
+                      {g.opts.map((o) => (
+                        <Chip key={o} label={o} selected={g.value === o} onPress={() => g.set(g.value === o ? "" : o)} />
+                      ))}
+                    </ScrollView>
+                  ))}
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, alignItems: "center" }}>
+                    <Txt variant="small" style={{ width: 62 }}>{t("log.f.cond")}</Txt>
+                    <Chip label={t("log.f.all")} selected={!fCond} onPress={() => setFCond("")} />
+                    {(["night", "ifr", "fstd"] as const).map((k) => (
+                      <Chip key={k} label={t(`log.f.${k}`)} selected={fCond === k} onPress={() => setFCond(fCond === k ? "" : k)} />
+                    ))}
+                  </ScrollView>
+                  {filtersOn ? (
+                    <Pressable onPress={() => (setFYear(""), setFType(""), setFFn(""), setFCond(""))} hitSlop={6} style={{ alignSelf: "flex-start", marginLeft: 4 }}>
+                      <Txt variant="small" color={c.accent}>{t("log.f.reset")}</Txt>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
               {view === "calendar" ? <View style={{ marginHorizontal: -space.md }}><LogbookCalendar flights={shown} /></View> : null}
-              {view === "list" && q.trim() ? (
+              {view === "list" && (q.trim() || filtersOn) ? (
                 <Txt variant="small" style={{ marginTop: 6, marginLeft: 4 }}>
                   {t("log.found", { n: shown.length, time: fmt(sumFlights(shown).totalMin) })}
                 </Txt>
@@ -115,7 +164,7 @@ export default function Logbook() {
             </View>
           ) : undefined
         }
-        ListEmptyComponent={view === "calendar" && flights.length ? undefined : q.trim() ? <EmptyState title={t("log.noMatch")} /> : <EmptyState title={t("log.empty")} hint={t("log.emptyHint")} />}
+        ListEmptyComponent={view === "calendar" && flights.length ? undefined : q.trim() || filtersOn ? <EmptyState title={t("log.noMatch")} /> : <EmptyState title={t("log.empty")} hint={t("log.emptyHint")} />}
         renderSectionHeader={({ section }) => (
           <Row style={{ justifyContent: "space-between", marginHorizontal: space.md + 4, marginTop: space.lg, paddingHorizontal: 4, paddingVertical: 6 }}>
             <Txt variant="h2" style={{ fontSize: 20, fontWeight: "700", textTransform: "capitalize" }}>
