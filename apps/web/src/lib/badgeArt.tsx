@@ -43,7 +43,7 @@ ${stars}
 }
 
 /** The round hour medal as an SVG document. */
-export function medalSvg(hours: number, tier: Tier): string {
+export function medalSvg(hours: number, tier: Tier, withLabel = true): string {
   const [a, b] = TIER_COLORS[tier];
   const label = hours >= 1000 ? `${hours / 1000}k` : String(hours);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="560" height="560">
@@ -51,7 +51,7 @@ export function medalSvg(hours: number, tier: Tier): string {
 <circle cx="28" cy="28" r="26" fill="url(#m)"/>
 <circle cx="28" cy="28" r="21" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.2" stroke-dasharray="2 2.5"/>
 <path d="M28 17c-2 0-3 1.4-3 1.4H13.5c1 1.8 3 2.6 5 2.6h6.3s1.2 1 3.2 1 3.2-1 3.2-1h6.3c2 0 4-.8 5-2.6H31S30 17 28 17z" fill="rgba(10,22,38,.55)"/>
-<text x="28" y="38" text-anchor="middle" font-size="${hours >= 10000 ? 10 : 12}" font-weight="800" font-family="Inter" fill="rgba(10,22,38,.8)">${label}</text>
+${withLabel ? `<text x="28" y="38" text-anchor="middle" font-size="${hours >= 10000 ? 10 : 12}" font-weight="800" font-family="Inter" fill="rgba(10,22,38,.8)">${label}</text>` : ""}
 </svg>`;
 }
 

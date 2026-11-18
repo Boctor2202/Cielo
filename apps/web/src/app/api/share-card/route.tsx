@@ -45,6 +45,8 @@ export async function GET(req: Request) {
 
   // what is shown big: a badge, or an hour level
   let art: string;
+  // the medal's figure, written over it (an SVG text has no font on the server)
+  let medalLabel: string | undefined;
   let glow: string;
   let kicker: string;
   let title: string;
@@ -52,10 +54,11 @@ export async function GET(req: Request) {
   if (q.get("type") === "level") {
     const level = HOUR_LEVELS.find((l) => l.hours === num(q.get("h")));
     if (!level) return new Response("level", { status: 400 });
-    art = uri(medalSvg(level.hours, level.tier));
+    art = uri(medalSvg(level.hours, level.tier, false));
+    medalLabel = level.hours >= 1000 ? `${level.hours / 1000}k` : String(level.hours);
     glow = TIER_COLORS[level.tier][0];
     kicker = B.title[String(level.hours)] ?? "";
-    title = B.club.replace("{n}", level.hours.toLocaleString(lang === "fr" ? "fr-FR" : "en-GB"));
+    title = B.club.replace("{n}", level.hours.toLocaleString(lang === "fr" ? "fr-FR" : "en-GB").replace(/[\u202f\u00a0]/g, " "));
     sub = "";
   } else {
     const id = q.get("id") as DiscoveryId;
@@ -73,7 +76,8 @@ export async function GET(req: Request) {
   const name = clip(q.get("name"), 40);
   const rank = clip(q.get("rank"), 40);
   const stripes = rankStripes(rank);
-  const nf = (n: number) => n.toLocaleString(lang === "fr" ? "fr-FR" : "en-GB");
+  // French groups thousands with a narrow no-break space, which Inter does not have here
+  const nf = (n: number) => n.toLocaleString(lang === "fr" ? "fr-FR" : "en-GB").replace(/[\u202f\u00a0]/g, " ");
   const stats = [
     { v: num(q.get("hrs")), l: lang === "fr" ? "heures de vol" : "flight hours" },
     { v: num(q.get("ap")), l: lang === "fr" ? "aérodromes" : "airports" },
@@ -96,9 +100,12 @@ export async function GET(req: Request) {
           </svg>
           <div style={{ fontSize: 34, fontWeight: 600, letterSpacing: 10 }}>GEARDOWN</div>
         </div>
-        <div style={{ display: "flex", marginTop: square ? 18 : 40 }}>
+        <div style={{ display: "flex", marginTop: square ? 18 : 40, position: "relative" }}>
           {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
           <img src={art} width={artSize} height={q.get("type") === "level" ? artSize : (artSize * 68) / 64} />
+          {medalLabel ? (
+            <div style={{ position: "absolute", left: 0, right: 0, top: artSize * 0.5, display: "flex", justifyContent: "center", fontSize: artSize * 0.2, fontWeight: 700, color: "rgba(10,22,38,.8)" }}>{medalLabel}</div>
+          ) : null}
         </div>
         <div style={{ display: "flex", fontSize: 26, fontWeight: 700, letterSpacing: 6, color: glow, marginTop: 18, textTransform: "uppercase" }}>{kicker}</div>
         <div style={{ display: "flex", fontSize: 76, fontWeight: 700, marginTop: 8, textAlign: "center", maxWidth: 940, lineHeight: 1.05 }}>{title}</div>
