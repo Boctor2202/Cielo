@@ -794,7 +794,17 @@
       "generate": "Generate",
       "generating": "Generating…",
       "count": "{count, plural, one {# entry} other {# entries}} in the period",
-      "notice": "The PDF export follows columns (1) to (13) of the EASA format, with page totals, total from previous pages and grand total."
+      "notice": "The PDF export follows columns (1) to (13) of the EASA format, with page totals, total from previous pages and grand total.",
+      "pdf": {
+        "EASA": "EASA logbook PDF (AMC1 FCL.050)",
+        "UK": "UK CAA logbook PDF (UK Part-FCL)",
+        "FAA": "FAA logbook PDF (14 CFR 61.51)",
+        "CASA": "CASA logbook PDF (CASR 61.345)",
+        "TCCA": "Transport Canada logbook PDF (CAR 401.08)",
+        "SACAA": "SACAA logbook PDF (SA-CATS 61)",
+        "HKCAD": "Hong Kong CAD logbook PDF (CAD 54)"
+      },
+      "pdfMine": "your authority"
     },
     "carry": {
       "title": "Carry forward totals",

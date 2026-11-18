@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Alert, Platform } from "react-native";
 import { router } from "expo-router";
 import Constants from "expo-constants";
-import { PILOT_FUNCTIONS, REGULATORS, regulatorById, type IfrDefault, type Locale, type PilotFunction, type TimeDisplay } from "@cielo/core";
+import { PILOT_FUNCTIONS, REGULATORS, frameworkOf, regulatorById, type IfrDefault, type Locale, type PilotFunction, type TimeDisplay } from "@cielo/core";
 import { Button, Card, Chip, Field, MenuGroup, MenuRow, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
 import { WIDGETS_IN_BUILD, liveActivityEnabled, setLiveActivityEnabled } from "../../src/widgets/sync";
 import { useCrewInbox } from "../../src/crew";
+import { layoutForAuthority } from "@cielo/export";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf, exportLogbookXlsx } from "../../src/exporters";
 import { isCloudEnabled } from "../../src/auth";
@@ -192,7 +193,7 @@ export default function More() {
         <Txt variant="h2">{t("more.export")}</Txt>
         <Button
           kind="secondary"
-          title={busy === "pdf" ? t("more.exporting") : t("more.exportPdf", { layout: pilot.regulatoryFramework })}
+          title={busy === "pdf" ? t("more.exporting") : t("more.exportPdf", { layout: layoutForAuthority(pilot.authority, frameworkOf(pilot)).replace("TCCA", "Transport Canada").replace("HKCAD", "CAD Hong Kong").replace("UK", "UK CAA") })}
           loading={busy === "pdf"}
           onPress={() => run("pdf", () => exportLogbookPdf(flights, balances, pilot))}
         />

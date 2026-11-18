@@ -1,6 +1,6 @@
 import { formatClock, formatDateShort, type Flight, type Totals } from "@cielo/core";
 
-export type LayoutId = "EASA" | "FAA" | "CASA";
+export type LayoutId = "EASA" | "UK" | "FAA" | "CASA" | "TCCA" | "SACAA" | "HKCAD";
 
 export interface Column {
   group?: string;
@@ -142,4 +142,109 @@ const CASA: Layout = {
   ],
 };
 
-export const LAYOUTS: Record<LayoutId, Layout> = { EASA, FAA, CASA };
+/** UK CAA: the UK Part-FCL logbook follows AMC1 FCL.050, as EASA's. */
+const UK: Layout = {
+  ...EASA,
+  id: "UK",
+  title: "PILOT LOGBOOK — UK Part-FCL (AMC1 FCL.050)",
+  reference: "Format per UK Part-FCL AMC1 FCL.050 (UK CAA). Times in hours:minutes, UTC.",
+};
+
+/**
+ * Transport Canada, CAR 401.08: position held, flight time by day/night and VFR/IFR, take-offs and landings
+ * (intermediate ones included), stops. Solo is logged as PIC and marked in the remarks.
+ */
+const TCCA: Layout = {
+  id: "TCCA",
+  title: "PILOT LOGBOOK — Transport Canada CAR 401.08",
+  reference: "Records the particulars required by CAR 401.08: position held, day/night, VFR/IFR, take-offs and landings. Times in decimal hours, UTC.",
+  certify: "I certify that the entries in this personal log are true and correct.",
+  decimal: true,
+  rowsPerPage: 20,
+  columns: [
+    { sub: "DATE", w: 4.6, align: "center", value: (f) => formatDateShort(f.date) },
+    { group: "AIRCRAFT", sub: "TYPE", w: 4.6, align: "left", value: (f) => (f.isFstd ? (f.fstdType ?? "FSTD") : (f.aircraftTypeIcao ?? "")) },
+    { group: "AIRCRAFT", sub: "REGISTRATION", w: 4.6, align: "center", value: (f) => (fl(f) ? (f.registration ?? "") : "") },
+    { sub: "PILOT-IN-COMMAND", w: 6, align: "left", value: (f) => (fl(f) ? (f.function === "PIC" ? "SELF" : (f.picName ?? "")) : "") },
+    { group: "ROUTE", sub: "FROM", w: 3.6, align: "center", value: (f) => (fl(f) ? f.depIcao : "") },
+    { group: "ROUTE", sub: "STOPS", w: 4.6, align: "left", value: (f) => (f.via ?? []).join(" ") },
+    { group: "ROUTE", sub: "TO", w: 3.6, align: "center", value: (f) => (fl(f) ? f.arrIcao : "") },
+    { group: "POSITION / TIME", sub: "DUAL", w: 3, align: "right", value: (f, fmt) => t(f.dualMin, fmt), sum: (x) => x.dualMin },
+    { group: "POSITION / TIME", sub: "PIC", w: 3, align: "right", value: (f, fmt) => t(f.picMin + f.picusMin, fmt), sum: (x) => x.picMin + x.picusMin },
+    { group: "POSITION / TIME", sub: "CO-PILOT", w: 3, align: "right", value: (f, fmt) => t(f.copilotMin, fmt), sum: (x) => x.copilotMin },
+    { group: "POSITION / TIME", sub: "INSTR.", w: 3, align: "right", value: (f, fmt) => t(f.instructorMin + f.examinerMin, fmt), sum: (x) => x.instructorMin + x.examinerMin },
+    { group: "CONDITIONS", sub: "NIGHT", w: 3, align: "right", value: (f, fmt) => t(f.nightMin, fmt), sum: (x) => x.nightMin },
+    { group: "CONDITIONS", sub: "IFR", w: 3, align: "right", value: (f, fmt) => t(f.ifrMin, fmt), sum: (x) => x.ifrMin },
+    { group: "INSTRUMENT", sub: "ACTUAL", w: 3, align: "right", value: (f, fmt) => t(f.actualImcMin, fmt), sum: (x) => x.actualImcMin },
+    { group: "INSTRUMENT", sub: "HOOD", w: 3, align: "right", value: (f, fmt) => t(f.simInstrumentMin ?? 0, fmt), sum: (x) => x.simInstrumentMin },
+    { group: "INSTRUMENT", sub: "FSTD", w: 3, align: "right", value: (f, fmt) => (f.isFstd ? t(f.fstdMin, fmt) : ""), sum: (x) => x.fstdMin },
+    { sub: "X-COUNTRY", w: 3, align: "right", value: (f, fmt) => t(f.xcMin, fmt), sum: (x) => x.xcMin },
+    { group: "TAKE-OFFS", sub: "DAY", w: 2.4, align: "right", value: (f) => n(f.takeoffsDay), sum: (x) => x.takeoffsDay, sumKind: "count" },
+    { group: "TAKE-OFFS", sub: "NIGHT", w: 2.4, align: "right", value: (f) => n(f.takeoffsNight), sum: (x) => x.takeoffsNight, sumKind: "count" },
+    { group: "LANDINGS", sub: "DAY", w: 2.4, align: "right", value: (f) => n(f.landingsDay), sum: (x) => x.landingsDay, sumKind: "count" },
+    { group: "LANDINGS", sub: "NIGHT", w: 2.4, align: "right", value: (f) => n(f.landingsNight), sum: (x) => x.landingsNight, sumKind: "count" },
+    { sub: "TOTAL", w: 3.2, align: "right", value: (f, fmt) => t(f.totalMin, fmt), sum: (x) => x.totalMin },
+    { sub: "REMARKS", w: 8, align: "left", value: (f) => [f.soloMin ? `Solo ${(f.soloMin / 60).toFixed(1)}` : "", remarks(f)].filter(Boolean).join(" / ") },
+  ],
+};
+
+/** The remarks of a South African logbook: PICUS / SPIC / SAFETY PILOT written as SA-CATS 61 asks. */
+const remarksZA = (f: Flight) => {
+  const parts: string[] = [];
+  if (f.function === "PICUS") parts.push(`PICUS${f.picName ? ` — certified by ${f.picName}` : ""}`);
+  if (f.safetyPilotName) parts.push(`SAFETY PILOT ${f.safetyPilotName}`);
+  if (f.isFstd) parts.push("SIMULATED — FSTD session, to be certified by the instructor");
+  const rest = remarks({ ...f, function: f.function === "PICUS" ? "PIC" : f.function, safetyPilotName: undefined });
+  if (rest) parts.push(rest);
+  return parts.join(" / ");
+};
+
+/**
+ * South African CAA, CAR 61.01.8 and SA-CATS 61 Appendix A: the ICAO columns plus instrument time; PICUS, SPIC
+ * and safety pilot in the remarks with a certification; an electronic log must be printed at least every 90 days.
+ */
+const SACAA: Layout = {
+  id: "SACAA",
+  title: "PILOT LOGBOOK — SACAA Part 61 (CAR 61.01.8, SA-CATS 61)",
+  reference: "Records the particulars of CAR 61.01.8 / SA-CATS 61. An electronic logbook must be printed at least every 90 days and kept in order. Times in hours:minutes, UTC.",
+  certify: "I certify that the entries in this logbook are true and correct.",
+  decimal: false,
+  rowsPerPage: 20,
+  columns: [
+    ...EASA.columns.filter((c) => !/^1[23] /.test(c.group ?? c.sub ?? "")),
+    { group: "INSTRUMENT", sub: "ACTUAL", w: 3.4, align: "right", value: (f, fmt) => t(f.actualImcMin, fmt), sum: (x) => x.actualImcMin },
+    { group: "INSTRUMENT", sub: "SIMULATED", w: 3.4, align: "right", value: (f, fmt) => t((f.simInstrumentMin ?? 0) + (f.isFstd ? f.fstdMin : 0), fmt), sum: (x) => x.simInstrumentMin + x.fstdMin },
+    { sub: "REMARKS AND ENDORSEMENTS", w: 10, align: "left", value: (f) => remarksZA(f) },
+  ],
+};
+
+/**
+ * Hong Kong CAD, Air Navigation (HK) Order art. 22 and CAD 54 chapter 5: the ICAO columns plus the capacity in
+ * which the holder flew and the tests and checks (in the remarks); the holder's particulars on the cover.
+ */
+const HKCAD: Layout = {
+  id: "HKCAD",
+  title: "PILOT LOGBOOK — Hong Kong CAD (AN(HK)O art. 22, CAD 54)",
+  reference: "Records the particulars of the Air Navigation (Hong Kong) Order 1995, art. 22, and CAD 54 chapter 5. Times in hours:minutes, UTC.",
+  certify: "I certify that the entries in this logbook are true and correct.",
+  decimal: false,
+  rowsPerPage: 20,
+  columns: [
+    ...EASA.columns.filter((c) => !/^13 /.test(c.sub ?? "")),
+    { sub: "CAPACITY", w: 4, align: "center", value: (f) => (f.isFstd ? "" : f.function) },
+    { sub: "REMARKS, TESTS AND CHECKS", w: 9, align: "left", value: (f) => remarks(f) },
+  ],
+};
+
+/** The logbook layout an authority asks for (the 19 authorities map onto these layouts). */
+export function layoutForAuthority(authority: string | null | undefined, framework: "EASA" | "FAA" | "CASA"): LayoutId {
+  switch (authority) {
+    case "UKCAA": return "UK";
+    case "TCCA": return "TCCA";
+    case "SACAA": return "SACAA";
+    case "HKCAD": return "HKCAD";
+    default: return framework;
+  }
+}
+
+export const LAYOUTS: Record<LayoutId, Layout> = { EASA, UK, FAA, CASA, TCCA, SACAA, HKCAD };

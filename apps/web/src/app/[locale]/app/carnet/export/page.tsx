@@ -4,19 +4,23 @@ import { FileDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { openingTotals } from "@cielo/core";
-import { buildLogbookPdf, flightsToCsv, flightsToRows, TABULAR_HEADERS, type LayoutId } from "@cielo/export";
+import { frameworkOf } from "@cielo/core";
+import { buildLogbookPdf, flightsToCsv, flightsToRows, layoutForAuthority, TABULAR_HEADERS, type LayoutId } from "@cielo/export";
 import { Card, Field, PageTitle, Toggle } from "@/components/app/ui";
 import { useFlights, usePilot, useTable } from "@/lib/hooks";
 import { downloadBlob } from "@/lib/download";
 
-type Format = "EASA" | "FAA" | "CASA" | "csv" | "xlsx";
+type Format = LayoutId | "csv" | "xlsx";
 
 export default function ExportPage() {
   const t = useTranslations("app.export");
   const flights = useFlights();
   const balances = useTable("opening_balances");
   const pilot = usePilot();
-  const [format, setFormat] = useState<Format>("EASA");
+  // the logbook layout of the pilot's authority comes first and is chosen by default
+  const mine: LayoutId = pilot ? layoutForAuthority(pilot.authority, frameworkOf(pilot)) : "EASA";
+  const [picked, setFormat] = useState<Format | null>(null);
+  const format: Format = picked ?? mine;
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [opening, setOpening] = useState(true);
@@ -52,6 +56,7 @@ export default function ExportPage() {
           periodLabel: from || to ? `${from || "…"} → ${to || "…"}` : t("allTime"),
           opening: sumFlights(before, base),
           locale: pilot?.locale ?? "fr",
+          holderDetails: format === "HKCAD" && pilot?.employer ? [[pilot.locale === "en" ? "Employer" : "Employeur", pilot.employer]] : undefined,
         });
         downloadBlob(bytes as BlobPart, `${name}-${format}.pdf`, "application/pdf");
       }
@@ -60,10 +65,9 @@ export default function ExportPage() {
     }
   }
 
+  const LAYOUT_ORDER: LayoutId[] = ["EASA", "UK", "FAA", "CASA", "TCCA", "SACAA", "HKCAD"];
   const formats: { v: Format; label: string }[] = [
-    { v: "EASA", label: t("pdfEasa") },
-    { v: "FAA", label: t("pdfFaa") },
-    { v: "CASA", label: t("pdfCasa") },
+    ...[mine, ...LAYOUT_ORDER.filter((l) => l !== mine)].map((l) => ({ v: l as Format, label: t(`pdf.${l}`) + (l === mine ? ` · ${t("pdfMine")}` : "") })),
     { v: "csv", label: t("csv") },
     { v: "xlsx", label: t("xlsx") },
   ];

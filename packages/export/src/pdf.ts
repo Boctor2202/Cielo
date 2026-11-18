@@ -13,6 +13,8 @@ export interface LogbookPdfOptions {
   locale?: "fr" | "en";
   appName?: string;
   generatedAt?: Date;
+  /** more particulars of the holder for the cover (employer, address… as some authorities ask) */
+  holderDetails?: [string, string][];
 }
 
 const INK = rgb(0.04, 0.09, 0.15);
@@ -58,6 +60,7 @@ export async function buildLogbookPdf(flights: Flight[], opts: LogbookPdfOptions
     const lines: [string, string][] = [
       [opts.locale === "en" ? "Pilot" : "Pilote", opts.pilotName],
       [opts.locale === "en" ? "Licence number" : "N° de licence", opts.licenceNumber ?? "—"],
+      ...(opts.holderDetails ?? []),
       [opts.locale === "en" ? "Period" : "Période", opts.periodLabel ?? "—"],
       [opts.locale === "en" ? "Entries" : "Entrées", `${sorted.length}`],
       [opts.locale === "en" ? "Total time (incl. brought forward)" : "Temps total (report inclus)", fmt(all.totalMin)],

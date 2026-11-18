@@ -794,7 +794,17 @@
       "generate": "Générer",
       "generating": "Génération…",
       "count": "{count, plural, one {# entrée} other {# entrées}} dans la période",
-      "notice": "L'export PDF reprend les colonnes (1) à (13) du format EASA, avec totaux par page, total des pages précédentes et total général."
+      "notice": "L'export PDF reprend les colonnes (1) à (13) du format EASA, avec totaux par page, total des pages précédentes et total général.",
+      "pdf": {
+        "EASA": "PDF officiel EASA (AMC1 FCL.050)",
+        "UK": "PDF UK CAA (UK Part-FCL)",
+        "FAA": "PDF FAA (14 CFR 61.51)",
+        "CASA": "PDF CASA (CASR 61.345)",
+        "TCCA": "PDF Transport Canada (CAR 401.08)",
+        "SACAA": "PDF SACAA Afrique du Sud (SA-CATS 61)",
+        "HKCAD": "PDF CAD Hong Kong (CAD 54)"
+      },
+      "pdfMine": "votre autorité"
     },
     "carry": {
       "title": "Report des totaux",

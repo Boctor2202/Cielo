@@ -19,7 +19,7 @@ describe("pdf export", () => {
   it("renders every layout with page totals", async () => {
     const flights = Array.from({ length: 40 }, (_, i) => base(i));
     mkdirSync("test/out", { recursive: true });
-    for (const layout of ["EASA", "FAA", "CASA"] as const) {
+    for (const layout of ["EASA", "UK", "FAA", "CASA", "TCCA", "SACAA", "HKCAD"] as const) {
       const bytes = await buildLogbookPdf(flights, { layout, pilotName: "Camille Martin", licenceNumber: "FRA.FCL.PA.12345", periodLabel: "2026" });
       const doc = await PDFDocument.load(bytes);
       expect(doc.getPageCount()).toBe(1 + Math.ceil(40 / 20));
