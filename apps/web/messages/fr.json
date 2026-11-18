@@ -1530,7 +1530,8 @@
       "statLayovers": "Escales",
       "statNights": "Nuits en escale",
       "statCities": "Aéroports",
-      "statCountries": "Pays"
+      "statCountries": "Pays",
+      "fromRoster": "Depuis votre planning"
     },
     "radar": {
       "title": "Radar",

@@ -3,14 +3,14 @@
 import { BedDouble, CalendarDays, ChevronRight, Globe2, Hotel, MapPin, Plus, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { countryName } from "@cielo/core";
+import { countryName, rosterLayovers, unsavedRosterLayovers } from "@cielo/core";
 import { Flag } from "@/components/app/LayoverNights";
 import { Roll } from "@/components/ui/Roll";
 import { AirportInput } from "@/components/app/AirportInput";
 import { Card, Empty, Field, Modal, PageTitle } from "@/components/app/ui";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAirports } from "@/lib/airports";
-import { useFormatDate, useTable, useToday } from "@/lib/hooks";
+import { useFormatDate, usePilot, useTable, useToday } from "@/lib/hooks";
 import { saveLayover } from "@/lib/repo";
 
 /**
@@ -20,6 +20,8 @@ import { saveLayover } from "@/lib/repo";
 export default function LayoversPage() {
   const t = useTranslations("app.layovers");
   const layovers = useTable("layovers");
+  const events = useTable("roster_events");
+  const pilot = usePilot();
   const airports = useAirports();
   const today = useToday();
   const fd = useFormatDate();
@@ -31,12 +33,19 @@ export default function LayoversPage() {
   const [departure, setDeparture] = useState("");
 
   const { upcoming, past } = useMemo(() => {
-    const live = (layovers ?? []).filter((l) => !l.deletedAt);
+    // the roster's layovers not saved yet are listed too: opening one saves it, the pilot adds the hotel
+    const fromRoster = unsavedRosterLayovers(events ?? [], layovers ?? [], pilot?.homeBaseIcao).map(
+      (r) => ({ id: `roster:${r.rosterEventId}`, pilotId: pilot?.id ?? "", airportIcao: r.airportIcao, arrivalUtc: r.arrivalUtc, departureUtc: r.departureUtc, rosterEventId: r.rosterEventId, contacts: [], createdAt: r.arrivalUtc, updatedAt: r.arrivalUtc }) as unknown as NonNullable<typeof layovers>[number],
+    );
+    // a layover saved from the roster without its departure: the roster has it
+    const stays = new Map(rosterLayovers(events ?? [], pilot?.homeBaseIcao).map((r) => [r.rosterEventId, r]));
+    const saved = (layovers ?? []).filter((l) => !l.deletedAt).map((l) => (!l.departureUtc && l.rosterEventId && stays.get(l.rosterEventId) ? { ...l, departureUtc: stays.get(l.rosterEventId)!.departureUtc } : l));
+    const live = [...saved, ...fromRoster];
     const day = (l: (typeof live)[number]) => (l.departureUtc ?? l.arrivalUtc ?? l.createdAt).slice(0, 10);
     const up = live.filter((l) => day(l) >= today).sort((a, b) => (a.arrivalUtc ?? "").localeCompare(b.arrivalUtc ?? ""));
     const old = live.filter((l) => day(l) < today).sort((a, b) => (b.arrivalUtc ?? "").localeCompare(a.arrivalUtc ?? ""));
     return { upcoming: up, past: old };
-  }, [layovers, today]);
+  }, [layovers, events, pilot?.homeBaseIcao, pilot?.id, today]);
 
   type L = NonNullable<typeof layovers>[number];
   const nightsOf = (l: L) => (l.arrivalUtc && l.departureUtc ? Math.max(0, Math.round((Date.parse(l.departureUtc.slice(0, 10)) - Date.parse(l.arrivalUtc.slice(0, 10))) / 86_400_000)) : 0);
@@ -68,6 +77,7 @@ export default function LayoversPage() {
     return (
       <Link
         href={{ pathname: "/app/escales/[id]", params: { id: l.id } }}
+        onClick={(ev) => openRoster(ev, l)}
         className="group relative block overflow-hidden rounded-2xl border border-border bg-surface/70 p-5 backdrop-blur transition hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-[0_12px_40px_-12px_rgba(34,197,94,0.35)]"
       >
         <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-accent/15 blur-3xl transition group-hover:bg-accent/25" />
@@ -80,6 +90,11 @@ export default function LayoversPage() {
                 <span className="num font-semibold text-fg/80">{l.airportIcao}</span>
                 {cc ? ` · ${countryName(cc, locale) ?? cc}` : ""}
               </div>
+              {l.rosterEventId ? (
+                <div className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-sky-400">
+                  <CalendarDays size={12} /> {t("fromRoster")}
+                </div>
+              ) : null}
             </div>
           </div>
           <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${w.live ? "bg-accent text-black" : "bg-accent/15 text-accent"}`}>
@@ -95,7 +110,7 @@ export default function LayoversPage() {
               <div className="num py-1 text-xl font-bold">{a.d}</div>
             </div>
           )}
-          <div className="flex flex-1 items-center gap-2">
+          {b ? <div className="flex flex-1 items-center gap-2">
             <span className="h-px flex-1 border-t border-dashed border-muted/60" />
             {b ? (
               <>
@@ -105,7 +120,7 @@ export default function LayoversPage() {
                 <span className="h-px flex-1 border-t border-dashed border-muted/60" />
               </>
             ) : null}
-          </div>
+          </div> : null}
           {b && (
             <div className="w-14 overflow-hidden rounded-xl border border-border text-center">
               <div className="bg-sky-400/80 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black">{b.m}</div>
@@ -129,6 +144,14 @@ export default function LayoversPage() {
     );
   };
 
+  // a layover from the roster is saved when the pilot opens it
+  const openRoster = async (ev: React.MouseEvent, l: L) => {
+    if (!l.id.startsWith("roster:")) return;
+    ev.preventDefault();
+    const saved = await saveLayover({ airportIcao: l.airportIcao, rosterEventId: l.rosterEventId, arrivalUtc: l.arrivalUtc, departureUtc: l.departureUtc, contacts: [] });
+    router.push({ pathname: "/app/escales/[id]", params: { id: saved.id } });
+  };
+
   const create = async () => {
     if (!airports?.get(airport)) return;
     const l = await saveLayover({
@@ -146,7 +169,7 @@ export default function LayoversPage() {
     const dates = [fd(l.arrivalUtc), fd(l.departureUtc)].filter(Boolean).join(" → ");
     return (
       <li>
-        <Link href={{ pathname: "/app/escales/[id]", params: { id: l.id } }} className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2">
+        <Link href={{ pathname: "/app/escales/[id]", params: { id: l.id } }} onClick={(ev) => openRoster(ev, l)} className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-2">
           {ap?.country ? <Flag code={ap.country} /> : <MapPin size={18} className="shrink-0 text-muted" />}
           <span className="num w-14 shrink-0 text-lg font-semibold">{l.airportIcao}</span>
           <span className="min-w-0 flex-1">

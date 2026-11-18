@@ -1530,7 +1530,8 @@
       "statLayovers": "Layovers",
       "statNights": "Nights away",
       "statCities": "Airports",
-      "statCountries": "Countries"
+      "statCountries": "Countries",
+      "fromRoster": "From your roster"
     },
     "radar": {
       "title": "Radar",

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Alert, Pressable, View } from "react-native";
-import { countryName } from "@cielo/core";
+import { countryName, rosterLayovers, unsavedRosterLayovers } from "@cielo/core";
 import { Flag } from "../../src/components/Flag";
 import { Roll } from "../../src/components/Roll";
 import { router } from "expo-router";
@@ -46,7 +46,7 @@ export default function Layovers() {
 }
 
 function LayoversScreen() {
-  const { t, layovers, put, pilot, locale } = useApp();
+  const { t, layovers, put, pilot, locale, rosterEvents } = useApp();
   const c = useTheme();
   const [adding, setAdding] = useState(false);
   const [icao, setIcao] = useState("");
@@ -61,7 +61,14 @@ function LayoversScreen() {
   type L = (typeof layovers)[number];
   const nightsOf = (l: L) => (l.arrivalUtc && l.departureUtc ? Math.max(0, Math.round((Date.parse(l.departureUtc.slice(0, 10)) - Date.parse(l.arrivalUtc.slice(0, 10))) / 86_400_000)) : 0);
   const { upcoming, past, stats } = useMemo(() => {
-    const live = layovers.filter((l) => !l.deletedAt);
+    // the roster's layovers not saved yet are listed too: opening one saves it, the pilot adds the hotel
+    const fromRoster = unsavedRosterLayovers(rosterEvents, layovers, pilot.homeBaseIcao).map(
+      (r) => ({ id: `roster:${r.rosterEventId}`, pilotId: pilot.id, airportIcao: r.airportIcao, arrivalUtc: r.arrivalUtc, departureUtc: r.departureUtc, rosterEventId: r.rosterEventId, contacts: [], createdAt: r.arrivalUtc, updatedAt: r.arrivalUtc }) as L,
+    );
+    // a layover saved from the roster without its departure: the roster has it
+    const stays = new Map(rosterLayovers(rosterEvents, pilot.homeBaseIcao).map((r) => [r.rosterEventId, r]));
+    const saved = layovers.filter((l) => !l.deletedAt).map((l) => (!l.departureUtc && l.rosterEventId && stays.get(l.rosterEventId) ? { ...l, departureUtc: stays.get(l.rosterEventId)!.departureUtc } : l));
+    const live = [...saved, ...fromRoster];
     const end = (l: L) => (l.departureUtc ?? l.arrivalUtc ?? l.createdAt).slice(0, 10);
     return {
       upcoming: live.filter((l) => end(l) >= today).sort((a, b) => (a.arrivalUtc ?? "").localeCompare(b.arrivalUtc ?? "")),
@@ -73,7 +80,7 @@ function LayoversScreen() {
         countries: new Set(live.map((l) => lookupAirport(l.airportIcao)?.country).filter(Boolean)).size,
       },
     };
-  }, [layovers, today]);
+  }, [layovers, rosterEvents, pilot.homeBaseIcao, pilot.id, today]);
   const when = (l: L) => {
     const a = (l.arrivalUtc ?? "").slice(0, 10);
     if (!a || a <= today) return { text: t("lay.now"), live: true };
@@ -81,6 +88,15 @@ function LayoversScreen() {
     return { text: d === 1 ? t("lay.tomorrow") : t("dash.inDays", { n: d }), live: false };
   };
   const day = (iso?: string | null) => (iso ? { d: iso.slice(8, 10), m: new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" }).format(new Date(iso)).replace(".", "").toUpperCase() } : null);
+
+  // a roster layover is saved when the pilot opens it
+  const open = async (l: L) => {
+    tap();
+    if (!l.id.startsWith("roster:")) return router.push(`/layover/${l.id}` as never);
+    const { id: _virtual, createdAt: _c, updatedAt: _u, ...rest } = l;
+    const rec = await put("layovers", rest as never);
+    router.push(`/layover/${rec.id}` as never);
+  };
 
   const create = async () => {
     if (!airport) return Alert.alert(t("lay.unknownAirport"));
@@ -152,7 +168,7 @@ function LayoversScreen() {
         const d1 = day(l.arrivalUtc);
         const d2 = l.departureUtc && l.departureUtc.slice(0, 10) !== l.arrivalUtc?.slice(0, 10) ? day(l.departureUtc) : null;
         return (
-          <Pressable key={l.id} onPress={() => (tap(), router.push(`/layover/${l.id}` as never))} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
+          <Pressable key={l.id} onPress={() => void open(l)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
             <View style={{ borderRadius: 22, padding: 16, gap: 14, backgroundColor: glass, borderWidth: 1, borderColor: GREEN + "40", overflow: "hidden" }}>
               <View style={{ position: "absolute", right: -50, top: -50, width: 150, height: 150, borderRadius: 75, backgroundColor: GREEN, opacity: 0.12 }} />
               <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -164,6 +180,12 @@ function LayoversScreen() {
                       <Txt mono variant="small" style={{ fontWeight: "700" }}>{l.airportIcao}</Txt>
                       {cc ? ` · ${countryName(cc, locale) ?? cc}` : ""}
                     </Txt>
+                    {l.rosterEventId ? (
+                      <Row gap={4} style={{ alignItems: "center", marginTop: 2 }}>
+                        <Ionicons name="calendar-outline" size={11} color={SKY} />
+                        <Txt variant="small" color={SKY} style={{ fontSize: 11, fontWeight: "600" }}>{t("lay.fromRoster")}</Txt>
+                      </Row>
+                    ) : null}
                   </View>
                 </Row>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: w.live ? GREEN : GREEN + "26" }}>
@@ -211,7 +233,7 @@ function LayoversScreen() {
             const a = lookupAirport(l.airportIcao);
             const n = nightsOf(l);
             return (
-              <Pressable key={l.id} onPress={() => (tap(), router.push(`/layover/${l.id}` as never))}>
+              <Pressable key={l.id} onPress={() => void open(l)}>
                 <Row gap={10} style={{ alignItems: "center", paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderColor: edge }}>
                   {a?.country ? <Flag code={a.country} size={22} /> : <Ionicons name="location-outline" size={20} color={c.muted} />}
                   <View style={{ flex: 1, gap: 1 }}>

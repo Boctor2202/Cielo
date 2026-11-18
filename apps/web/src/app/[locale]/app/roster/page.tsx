@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight, Hotel, NotebookPen, Plus, Trash2, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ROSTER_KINDS, printedDutiesToEvents, type PrintedDuty, combineUtc, detectMapping, icalToRosterEvent, isoDate, parseCsv, parseFlexibleDate, parseIcal, stamp, type RosterEvent, type RosterEventKind } from "@cielo/core";
+import { ROSTER_KINDS, printedDutiesToEvents, type PrintedDuty, combineUtc, detectMapping, icalToRosterEvent, isoDate, parseCsv, parseFlexibleDate, parseIcal, stamp, type RosterEvent, type RosterEventKind, rosterLayovers } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { DropZone } from "@/components/app/DropZone";
@@ -153,7 +153,9 @@ export default function RosterPage() {
 
   async function openLayover(e: RosterEvent) {
     const existing = layovers?.find((l) => l.rosterEventId === e.id);
-    const l = existing ?? (await saveLayover({ airportIcao: e.arrIcao ?? "", rosterEventId: e.id, arrivalUtc: e.endUtc, contacts: [] }));
+    // the departure: the next duty leaving that airport, when the roster has it
+    const stay = rosterLayovers(events ?? [], pilot?.homeBaseIcao).find((r) => r.rosterEventId === e.id);
+    const l = existing ?? (await saveLayover({ airportIcao: e.arrIcao ?? "", rosterEventId: e.id, arrivalUtc: e.endUtc, departureUtc: stay?.departureUtc ?? null, contacts: [] }));
     router.push({ pathname: "/app/escales/[id]", params: { id: l.id } });
   }
 
