@@ -59,10 +59,16 @@ export type WorkspaceTransaction = {
   date: string;
   amount: number;
   status: "Completed" | "Pending";
+  /** a colour for the icon (the pilot's function on the flight, for example) */
+  tone?: string;
+  /** a short badge next to the name */
+  badge?: string;
 };
 export type WorkspaceGoal = {
   id: string;
   name: string;
+  /** the goal's icon (by default, alternately a target and an aircraft) */
+  icon?: ReactNode;
   saved: number;
   target: number;
   color?: string;
@@ -90,6 +96,10 @@ export interface GlassWorkspaceProps {
   backgroundImage?: string;
   balance?: number;
   balanceChange?: WorkspaceBalanceChange;
+  /** shown beside the headline value (a progress ring, for example) */
+  balanceAside?: ReactNode;
+  /** shown under the headline value */
+  balanceExtra?: ReactNode;
   account?: WorkspaceAccount;
   periodLabel?: string;
   cashFlowPeriods?: WorkspaceCashFlowPeriod[];
@@ -262,6 +272,8 @@ export default function GlassWorkspace({
   backgroundImage,
   balance = 0,
   balanceChange,
+  balanceAside,
+  balanceExtra,
   account,
   periodLabel,
   cashFlowPeriods = [],
@@ -632,12 +644,20 @@ export default function GlassWorkspace({
         visibleTransactions.slice(0, limit).map((t) => (
           <div className="gw-transaction" key={t.id}>
             <span
-              className={`gw-transaction-icon ${t.amount > 0 ? "is-income" : ""}`}
+              className={`gw-transaction-icon ${t.amount > 0 && !t.tone ? "is-income" : ""}`}
+              style={t.tone ? { background: `color-mix(in srgb, ${t.tone} 16%, transparent)`, color: t.tone } : undefined}
             >
               <IconFor category={t.category} override={categoryIcon} />
             </span>
             <div className="gw-transaction-name">
-              <strong>{t.name}</strong>
+              <strong>
+                {t.name}
+                {t.badge ? (
+                  <em className="gw-badge" style={t.tone ? { color: t.tone, background: `color-mix(in srgb, ${t.tone} 15%, transparent)` } : undefined}>
+                    {t.badge}
+                  </em>
+                ) : null}
+              </strong>
               <span>
                 {t.category} · {t.date}
               </span>
@@ -681,11 +701,11 @@ export default function GlassWorkspace({
           <div className="gw-goal" key={g.id}>
             <div className="gw-goal-top">
               <span className="gw-goal-icon">
-                {i % 2 ? (
+                {g.icon ?? (i % 2 ? (
                   <Plane size={18} aria-hidden="true" />
                 ) : (
                   <Target size={18} aria-hidden="true" />
-                )}
+                ))}
               </span>
               <strong>{g.name}</strong>
               <span>{Math.round(goalProgress(g))}%</span>
@@ -880,9 +900,12 @@ export default function GlassWorkspace({
                         <h2>{L.availableBalance}</h2>
                         <Wallet size={17} aria-hidden="true" />
                       </div>
-                      <strong className="gw-balance-value">
-                        <CountUp value={balance} format={format} />
-                      </strong>
+                      <div className="gw-balance-head">
+                        <strong className="gw-balance-value">
+                          <CountUp value={balance} format={format} />
+                        </strong>
+                        {balanceAside}
+                      </div>
                       {balanceChange &&
                         Number.isFinite(balanceChange.percent) && (
                           <p className="gw-balance-meta">
@@ -899,6 +922,7 @@ export default function GlassWorkspace({
                             {balanceChange.label}
                           </p>
                         )}
+                      {balanceExtra}
                       {account && (
                         <div className="gw-account">
                           <span className="gw-account-icon">
@@ -1785,6 +1809,23 @@ const styles = `
 .gw-balance {
   display: flex;
   flex-direction: column;
+}
+.gw-balance-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.gw-badge {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 999px;
+  margin-left: 8px;
+  vertical-align: 2px;
+  background: var(--gw-goal-surface);
 }
 .gw-balance-value {
   font-size: clamp(29px, 3.15vw, 43px);

@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Plane, Plus, SlidersHorizontal, Sun } from "lucide-react";
+import { Award, Clock, Cloud, Moon, Plane, Plus, SlidersHorizontal, Sun, Target, Users } from "lucide-react";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocale, useMessages } from "next-intl";
 import { addDays, computeRecency, defaultGoals, goalProgress, isHourGoal, licenseStatus, type Flight, type License, type OpeningBalance, type Pilot } from "@cielo/core";
@@ -47,6 +47,51 @@ const HOST_TOKENS = {
  * The pilot dashboard in the adjustable glass workspace: total time instead of a balance, flight and night
  * hours instead of cash flow, recent flights instead of transactions, and career and recency targets as goals.
  */
+const GREEN = "#22C55E";
+const INDIGO = "#818CF8";
+const SKY = "#38BDF8";
+const FN_TONE: Record<string, string> = { PIC: "#22C55E", SIC: SKY, PICUS: "#2DD4BF", DUAL: "#F59E0B", FI: "#A78BFA", FE: "#E879F9" };
+const GOAL_TONES = [GREEN, SKY, INDIGO, "#F59E0B", "#2DD4BF", "#E879F9"];
+
+/** The next milestone as a ring, beside the total time. */
+function Ring({ ratio, label, sub }: { ratio: number; label: string; sub: string }) {
+  const r = 34;
+  const len = 2 * Math.PI * r;
+  return (
+    <div style={{ position: "relative", width: 84, height: 84, flex: "none" }} title={sub}>
+      <svg width="84" height="84" viewBox="0 0 84 84" style={{ transform: "rotate(-90deg)" }} aria-hidden="true">
+        <circle cx="42" cy="42" r={r} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="7" />
+        <circle cx="42" cy="42" r={r} fill="none" stroke={GREEN} strokeWidth="7" strokeLinecap="round" strokeDasharray={`${len * Math.min(1, ratio)} ${len}`} style={{ transition: "stroke-dasharray 1.2s cubic-bezier(.2,.8,.2,1)", filter: "drop-shadow(0 0 6px rgba(34,197,94,.45))" }} />
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", lineHeight: 1.1 }}>
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>{label}</div>
+          <div style={{ fontSize: 9.5, opacity: 0.65 }}>{sub}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** PIC / night / IFR, coloured, with their share of the total. */
+function Chips({ items }: { items: { icon: typeof Plane; color: string; label: string; value: string; share: number }[] }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 16 }}>
+      {items.map(({ icon: Icon, color, label, value, share }) => (
+        <div key={label} style={{ padding: "9px 10px", borderRadius: 12, background: `color-mix(in srgb, ${color} 13%, transparent)`, display: "grid", gap: 4, minWidth: 0 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: `color-mix(in srgb, ${color} 70%, currentColor)` }}>
+            <Icon size={12} aria-hidden="true" /> {label}
+          </span>
+          <strong style={{ fontSize: 15, fontWeight: 700, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{value}</strong>
+          <span style={{ height: 3, borderRadius: 2, background: "color-mix(in srgb, currentColor 12%, transparent)", overflow: "hidden" }}>
+            <i style={{ display: "block", height: 3, width: `${Math.min(100, Math.round(share * 100))}%`, background: color, borderRadius: 2 }} />
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIssues = 0, auditHref }: { flights: Flight[]; opening: OpeningBalance[]; licenses: License[]; pilot?: Pilot; today: string; auditIssues?: number; auditHref?: string }) {
   const locale = useLocale();
   const m = useMessages() as unknown as { app: { dashboard: { glass: Partial<WorkspaceLabels> & Record<string, string> } } };
@@ -72,6 +117,8 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
     const openingPic = opening.filter((o) => !o.deletedAt).reduce((s, o) => s + o.picMin, 0);
     const total = sum(realFlights, "totalMin") + openingTotal;
     const pic = realFlights.reduce((s, f) => s + f.picMin + f.picusMin, 0) + openingPic;
+    const night = sum(realFlights, "nightMin") + opening.filter((o) => !o.deletedAt).reduce((s, o) => s + (o.nightMin ?? 0), 0);
+    const ifr = realFlights.reduce((s, f) => s + (f.ifrMin ?? 0), 0) + opening.filter((o) => !o.deletedAt).reduce((s, o) => s + (o.ifrMin ?? 0), 0);
 
     // last 28 days compared with the 28 before
     const cur = sum(inRange(addDays(today, -27), today), "totalMin");
@@ -144,6 +191,8 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
       date: fd(f.date),
       amount: f.totalMin || f.fstdMin || 0,
       status: f.date > today ? "Pending" : "Completed",
+      tone: f.isFstd ? "#94A3B8" : FN_TONE[f.function] ?? GREEN,
+      badge: f.isFstd ? undefined : f.function,
     }));
 
     // hours by aircraft type since the start of the logbook (carried-forward totals included)
@@ -192,12 +241,16 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
           saved: Math.min(p.done, goal.target),
           target: goal.target,
           savedLabel: hours ? dur(p.done) : String(p.done),
+          color: GOAL_TONES[mine.indexOf(goal) % GOAL_TONES.length],
+          icon: goal.kind === "total" ? <Clock size={18} aria-hidden="true" /> : goal.kind === "pic" ? <Award size={18} aria-hidden="true" /> : goal.kind === "night" ? <Moon size={18} aria-hidden="true" /> : goal.kind === "ifr" ? <Cloud size={18} aria-hidden="true" /> : goal.kind === "landings" ? <Plane size={18} aria-hidden="true" /> : <Target size={18} aria-hidden="true" />,
           targetLabel: `${(g.goalOf ?? "of {v}").replace("{v}", hours ? dur(goal.target) : goal.target.toLocaleString(locale))}${deadline}${eta}`,
         };
       }),
       {
         id: "recency",
         name: g.goalRecency ?? "Passenger recency (90 days)",
+        icon: <Users size={18} aria-hidden="true" />,
+        color: "#F59E0B",
         saved: Math.min(rec.passengers.landings, 3),
         target: 3,
         savedLabel: String(rec.passengers.landings),
@@ -206,6 +259,8 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
       {
         id: "night",
         name: g.goalNight ?? "Night recency (90 days)",
+        icon: <Moon size={18} aria-hidden="true" />,
+        color: INDIGO,
         saved: Math.min(rec.night.landings, 1),
         target: 1,
         savedLabel: String(rec.night.landings),
@@ -225,8 +280,16 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
         detail: s.state === "expired" ? g.expired ?? "expired" : (g.daysLeft ?? "{n} days left").replace("{n}", String(s.daysLeft ?? 0)),
       }))];
 
+    // the ring: the total-time goal, else the next round milestone
+    const totalGoal = mine.find((x) => x.kind === "total") ?? defaultGoals(live, opening)[0];
+    const ring = totalGoal ? goalProgress(totalGoal, live, opening, today, jet) : undefined;
+
     return {
       total,
+      pic,
+      night,
+      ifr,
+      ring,
       change,
       periods,
       transactions,
@@ -255,6 +318,16 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
       avatarUrl={pilot?.photoDataUrl}
       balance={data.total}
       balanceChange={data.change !== undefined ? { percent: data.change, label: g.changeLabel ?? "" } : undefined}
+      balanceAside={data.ring ? <Ring ratio={data.ring.ratio} label={`${Math.round(data.ring.ratio * 100)}%`} sub={`→ ${Math.round(data.ring.goal.target / 60).toLocaleString(locale)} h`} /> : undefined}
+      balanceExtra={
+        <Chips
+          items={[
+            { icon: Award, color: GREEN, label: "PIC", value: dur(data.pic), share: data.total ? data.pic / data.total : 0 },
+            { icon: Moon, color: INDIGO, label: g.night ?? "Night", value: dur(data.night), share: data.total ? data.night / data.total : 0 },
+            { icon: Cloud, color: SKY, label: "IFR", value: dur(data.ifr), share: data.total ? data.ifr / data.total : 0 },
+          ]}
+        />
+      }
       account={data.account}
       periodLabel={fd(today, { weekday: "long", day: "numeric", month: "long" })}
       headingAction={

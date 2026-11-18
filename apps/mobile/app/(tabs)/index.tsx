@@ -10,11 +10,14 @@ import {
   computeRecency,
   cumulativeLevel,
   dashboardPeriods,
+  defaultGoals,
   formatDuration,
+  goalProgress,
   licenseStatus,
   type Totals,
 } from "@cielo/core";
-import { Button, Card, Dot, Fab, Row, Screen, Stat, Txt, statusColor } from "../../src/components/ui";
+import { Button, Card, Dot, Fab, Row, Screen, Txt, statusColor } from "../../src/components/ui";
+import { DutyCard, HeroCard, LastFlightCard, PeriodTiles } from "../../src/components/Overview";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { isCloudEnabled } from "../../src/auth";
 import { AccessBanner } from "../../src/components/Access";
@@ -63,14 +66,17 @@ export default function Dashboard() {
     () => flights.filter((f) => !f.deletedAt && !f.isFstd).sort((a, b) => (b.outUtc ?? b.date).localeCompare(a.outUtc ?? a.date))[0],
     [flights],
   );
+  // the ring: the pilot's total-time goal, else the next round milestone
+  const goal = useMemo(() => {
+    const g = (pilot.goals ?? []).find((x) => x.kind === "total") ?? defaultGoals(flights, balances)[0];
+    return g ? goalProgress(g, flights, balances, today) : undefined;
+  }, [pilot.goals, flights, balances, today]);
   const inWords = (iso: string) => {
     const h = Math.round((Date.parse(iso) - Date.now()) / 3_600_000);
     return h < 24 ? t("dash.inHours", { n: Math.max(0, h) }) : t("dash.inDays", { n: Math.round(h / 24) });
   };
 
-  const period = (label: string, p: Totals) => (
-    <Stat label={label} value={fmt(p.totalMin)} sub={t("dash.flights", { n: p.flights })} />
-  );
+  const period = (label: string, p: Totals, color: string) => ({ label, value: fmt(p.totalMin), sub: t("dash.flights", { n: p.flights }), color });
 
   const recencyRow = (label: string, r: { valid: boolean; validUntil?: string; takeoffs: number; landings: number; key?: string }) => (
     <Row key={r.key ?? label} style={{ alignItems: "flex-start" }}>
@@ -121,58 +127,43 @@ export default function Dashboard() {
           </Card>
         ) : null}
 
-        <Card>
-          <Txt variant="label">{t("dash.totalHours")}</Txt>
-          <Roll text={fmt(periods.all.totalMin)} size={56} style={{ fontWeight: "200", letterSpacing: -1.5 }} />
-          <Row gap={space.lg}>
-            <Stat label={t("dash.pic")} value={fmt(periods.all.picMin)} />
-            <Stat label={t("dash.night")} value={fmt(periods.all.nightMin)} />
-            <Stat label={t("dash.ifr")} value={fmt(periods.all.ifrMin)} />
-          </Row>
-          <Txt variant="small">
-            {t("dash.flights", { n: periods.all.flights })} · {t("dash.landings")}{" "}
-            {periods.all.landingsDay + periods.all.landingsNight}
-          </Txt>
-        </Card>
+        <HeroCard
+          all={periods.all}
+          flights={flights}
+          goal={goal}
+          timeDisplay={pilot.timeDisplay}
+          t={t as never}
+          monthLabel={t("dash.m12")}
+        />
+
+        <PeriodTiles items={[period(t("dash.d28"), periods.d28, "#38BDF8"), period(t("dash.d90"), periods.d90, "#818CF8"), period(t("dash.m12"), periods.m12, "#22C55E")]} />
 
         {nextDuty ? (
-          <Card onPress={() => router.navigate("/roster")}>
-            <Row style={{ justifyContent: "space-between" }}>
-              <Txt variant="label">{t("dash.nextDuty")}</Txt>
-              <Txt variant="small" color={c.accent} style={{ fontWeight: "600" }}>{inWords(nextDuty.reportUtc ?? nextDuty.startUtc)}</Txt>
-            </Row>
-            <Txt style={{ fontSize: 22, fontWeight: "700", letterSpacing: 0.3 }}>
-              {nextDuty.depIcao && nextDuty.arrIcao ? `${nextDuty.depIcao}  →  ${nextDuty.arrIcao}` : nextDuty.title || t(`roster.kind.${nextDuty.kind}` as I18nKey)}
-            </Txt>
-            <Txt variant="small" mono>
-              {formatDate(nextDuty.startUtc.slice(0, 10), locale)} · {nextDuty.startUtc.slice(11, 16)} UTC
-              {nextDuty.reportUtc ? ` · ${t("dash.report")} ${nextDuty.reportUtc.slice(11, 16)}` : ""}
-              {nextDuty.flightNumber ? ` · ${nextDuty.flightNumber}` : ""}
-            </Txt>
-          </Card>
+          <DutyCard
+            title={t("dash.nextDuty")}
+            from={nextDuty.depIcao ?? undefined}
+            to={nextDuty.arrIcao ?? undefined}
+            label={nextDuty.title || t(`roster.kind.${nextDuty.kind}` as I18nKey)}
+            countdown={inWords(nextDuty.reportUtc ?? nextDuty.startUtc)}
+            chips={[
+              formatDate(nextDuty.startUtc.slice(0, 10), locale),
+              `${nextDuty.startUtc.slice(11, 16)} UTC`,
+              ...(nextDuty.reportUtc ? [`${t("dash.report")} ${nextDuty.reportUtc.slice(11, 16)}`] : []),
+              ...(nextDuty.flightNumber ? [nextDuty.flightNumber] : []),
+            ]}
+            onPress={() => router.navigate("/roster")}
+          />
         ) : null}
 
         {lastFlight ? (
-          <Card onPress={() => router.push({ pathname: "/flight/[id]", params: { id: lastFlight.id } })}>
-            <Txt variant="label">{t("dash.lastFlightTitle")}</Txt>
-            <Row style={{ justifyContent: "space-between" }}>
-              <Txt style={{ fontSize: 20, fontWeight: "700", letterSpacing: 0.3 }}>{lastFlight.depIcao}  →  {lastFlight.arrIcao}</Txt>
-              <Txt mono style={{ fontSize: 18, fontWeight: "600" }} color={c.accent}>{fmt(lastFlight.totalMin)}</Txt>
-            </Row>
-            <Txt variant="small">
-              {formatDate(lastFlight.date, locale)}
-              {[lastFlight.registration, lastFlight.aircraftTypeIcao].filter(Boolean).length ? ` · ${[lastFlight.registration, lastFlight.aircraftTypeIcao].filter(Boolean).join(" · ")}` : ""}
-            </Txt>
-          </Card>
+          <LastFlightCard
+            title={t("dash.lastFlightTitle")}
+            f={lastFlight}
+            time={fmt(lastFlight.totalMin)}
+            date={formatDate(lastFlight.date, locale)}
+            onPress={() => router.push({ pathname: "/flight/[id]", params: { id: lastFlight.id } })}
+          />
         ) : null}
-
-        <Card>
-          <Row gap={space.md}>
-            {period(t("dash.d28"), periods.d28)}
-            {period(t("dash.d90"), periods.d90)}
-            {period(t("dash.m12"), periods.m12)}
-          </Row>
-        </Card>
 
         <Card onPress={() => router.navigate("/currency")}>
           <Row style={{ justifyContent: "space-between", alignItems: "baseline" }}>
