@@ -125,3 +125,15 @@ export function matchFlight(flights: FoundFlight[], outUtc: string, inUtc: strin
   }
   return best?.f;
 }
+
+/**
+ * How long a stored answer stands: a day that ended over a day ago is final; a recent one is asked again only
+ * while some of its flights are not finished (no block-in yet), and not more than every 20 min.
+ */
+export function stillGood(day: string, fetchedAt: string, flights: FoundFlight[]): boolean {
+  const dayEnd = Date.parse(`${day}T23:59:59Z`);
+  if (Date.parse(fetchedAt) - dayEnd > 24 * 3600_000) return true;
+  const open = flights.some((f) => !f.in && !f.on);
+  if (!open && flights.length && Date.parse(fetchedAt) > dayEnd) return true;
+  return Date.now() - Date.parse(fetchedAt) < 20 * 60_000;
+}

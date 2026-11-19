@@ -1,11 +1,12 @@
-import { FlightAwareError, flightsForRegistration, type FoundFlight } from "@/lib/flightaware";
+import { FlightAwareError, flightsForRegistration, stillGood, type FoundFlight } from "@/lib/flightaware";
 import { rateLimited } from "@/lib/places";
-import { userFrom } from "@/lib/server/admin";
+import { adminDb, userFrom } from "@/lib/server/admin";
 
 export const dynamic = "force-dynamic";
 
-/** Answers already paid for: a past day does not change, today's flights are kept a short while. */
+/** Answers already paid for, in memory on this instance (the database keeps them for good). */
 const cache = new Map<string, { at: number; ttl: number; flights: FoundFlight[] }>();
+
 
 /**
  * GET /api/flight-lookup?reg=F-HBXA&date=2026-11-09 — actual times of that aircraft's flights that day.
@@ -22,13 +23,25 @@ export async function GET(req: Request) {
   const user = await userFrom(req).catch(() => null);
   if (!user) return Response.json({ error: "signin" }, { status: 401 });
 
-  const key = `${reg.replace(/[^A-Z0-9]/g, "")}|${date}`;
+  const ident = reg.replace(/[^A-Z0-9]/g, "");
+  const key = `${ident}|${date}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < hit.ttl) return Response.json({ flights: hit.flights, cached: true }, { headers: { "Cache-Control": "no-store" } });
+  // stored answers first: a query paid once is never paid again
+  const db = adminDb();
+  if (db) {
+    const { data } = await db.from("fa_lookups").select("flights, fetched_at").eq("key", key).maybeSingle();
+    if (data && stillGood(date, data.fetched_at, data.flights as FoundFlight[])) {
+      cache.set(key, { at: Date.now(), ttl: 10 * 60_000, flights: data.flights as FoundFlight[] });
+      return Response.json({ flights: data.flights, cached: true }, { headers: { "Cache-Control": "no-store" } });
+    }
+  }
   if (rateLimited(`fa:${user.id}`, 40, 86_400_000)) return Response.json({ error: "rate_limited" }, { status: 429 });
   try {
     const flights = await flightsForRegistration(reg, date);
-    cache.set(key, { at: Date.now(), ttl: date < today ? 7 * 86_400_000 : 20 * 60_000, flights });
+    const fetchedAt = new Date().toISOString();
+    if (db) await db.from("fa_lookups").upsert({ key, registration: ident, day: date, flights, fetched_at: fetchedAt });
+    cache.set(key, { at: Date.now(), ttl: 10 * 60_000, flights });
     if (cache.size > 2000) cache.delete(cache.keys().next().value!);
     return Response.json({ flights }, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
