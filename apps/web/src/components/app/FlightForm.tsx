@@ -1,12 +1,12 @@
 "use client";
 
 import { Roll } from "@/components/ui/Roll";
-import { Copy, CornerUpLeft, Lock, PenLine, Plus, Trash2, X } from "lucide-react";
+import { Clock, CloudSun, Copy, CornerUpLeft, Lock, MonitorPlay, NotebookPen, PenLine, Plane, PlaneLanding, Plus, Radar, Trash2, Users, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   defaultIfrFor, deriveFlightTimes, isoDate, PILOT_FUNCTIONS, type Aircraft, type Approach, type Flight, type FlightFormInput, type Pilot,
-  APPROACH_TYPES, EXTRA_FLIGHT_FIELDS, isPilot, extraFieldsFor, frameworkOf, LOGGED_SHARES, shareLabel,
+  APPROACH_TYPES, EXTRA_FLIGHT_FIELDS, distanceNm, isPilot, extraFieldsFor, frameworkOf, LOGGED_SHARES, shareLabel,
 } from "@cielo/core";
 import { useRouter } from "@/i18n/navigation";
 import { useAirports } from "@/lib/airports";
@@ -18,7 +18,7 @@ import { AircraftPhoto } from "./AircraftPhoto";
 import { AirportInput } from "./AirportInput";
 import { FlightAwareFill } from "./FlightAwareFill";
 import { ReportPaste } from "./ReportPaste";
-import { Card, ClockInput, DurationInput, Field, Segmented, Toggle, useToast } from "./ui";
+import { Card, ClockInput, DurationInput, Field, Meter, Segmented, Toggle, useToast } from "./ui";
 import { SignatureModal, SignatureStatus } from "./Signature";
 import { FlightHistory } from "./FlightHistory";
 
@@ -116,6 +116,18 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
   }
 
   const unknownAirport = !v.isFstd && airports && ((v.depIcao.length >= 3 && !airports.get(v.depIcao)) || (v.arrIcao.length >= 3 && !airports.get(v.arrIcao)));
+  // the great-circle distance of the leg, and the time between each pair of clocks (taxi out, air, taxi in)
+  const routeNm = (() => {
+    const a = airports?.get(v.depIcao);
+    const b = airports?.get(v.arrIcao);
+    return a && b && a.icao !== b.icao ? Math.round(distanceNm(a, b)) : 0;
+  })();
+  const mins = (x?: string) => (x && /^\d{2}:\d{2}$/.test(x) ? +x.slice(0, 2) * 60 + +x.slice(3) : null);
+  const legs = (["out", "off", "on", "in"] as const).slice(0, 3).map((k, i) => {
+    const a = mins(v[k]);
+    const b = mins(v[(["off", "on", "in"] as const)[i]!]);
+    return a === null || b === null ? null : (b - a + 1440) % 1440;
+  });
 
   return (
     <form
@@ -133,9 +145,16 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
         )}
         {source === "roster" && <p className="rounded-lg bg-accent/10 px-4 py-2 text-sm text-accent">{t("fromRoster")}</p>}
 
-        <Card
-          title={t("general")}
-          action={
+        <section className="flight-hero card overflow-hidden">
+          <header className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4">
+            <Segmented
+              value={v.isFstd ? "fstd" : "flight"}
+              onChange={(x) => set("isFstd", x === "fstd")}
+              options={[
+                { value: "flight", label: <span className="inline-flex items-center gap-1.5"><Plane size={14} /> {t("kindFlight")}</span> },
+                { value: "fstd", label: <span className="inline-flex items-center gap-1.5"><MonitorPlay size={14} /> {t("kindFstd")}</span> },
+              ]}
+            />
             <ReportPaste
               onApply={(rep) => {
                 const icao = (c?: string) => (c ? airports?.get(c)?.icao : undefined);
@@ -163,30 +182,32 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                 }));
               }}
             />
-          }
-        >
-          <div className="mb-4">
-            <Toggle checked={v.isFstd} onChange={(x) => set("isFstd", x)} label={t("isFstd")} />
-          </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Field label={t("date")} className="col-span-1">
+          </header>
+          {!v.isFstd && (
+            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 px-5 pt-5 sm:gap-4">
+              <AirportInput big label={t("dep")} value={v.depIcao} onChange={(x) => set("depIcao", x)} required />
+              <div className="flex min-w-16 flex-col items-center pt-7 sm:min-w-40">
+                <div className="route-line relative h-px w-full">
+                  <Plane size={18} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 text-accent drop-shadow-[0_0_8px_var(--accent)]" />
+                </div>
+                {routeNm ? <p className="num mt-3 text-xs font-semibold text-muted">{routeNm.toLocaleString()} NM</p> : null}
+              </div>
+              <AirportInput big align="right" label={t("arr")} value={v.arrIcao} onChange={(x) => set("arrIcao", x)} required />
+            </div>
+          )}
+          {unknownAirport && <p className="px-5 text-xs text-caution">{t("unknownAirport")}</p>}
+          <div className="mt-4 grid grid-cols-2 gap-4 border-t border-dashed border-border bg-surface-2/40 px-5 py-4">
+            <Field label={t("date")}>
               <input type="date" className="input num" required value={v.date} onChange={(e) => set("date", e.target.value)} />
             </Field>
             <Field label={t("flightNumber")}>
-              <input className="input num uppercase" value={v.flightNumber ?? ""} onChange={(e) => set("flightNumber", e.target.value.toUpperCase())} />
+              <input className="input num uppercase" placeholder="AF1234" value={v.flightNumber ?? ""} onChange={(e) => set("flightNumber", e.target.value.toUpperCase())} />
             </Field>
-            {!v.isFstd && (
-              <>
-                <AirportInput label={t("dep")} value={v.depIcao} onChange={(x) => set("depIcao", x)} required />
-                <AirportInput label={t("arr")} value={v.arrIcao} onChange={(x) => set("arrIcao", x)} required />
-              </>
-            )}
           </div>
-          {unknownAirport && <p className="mt-1 text-xs text-caution">{t("unknownAirport")}</p>}
-        </Card>
+        </section>
 
         {v.isFstd ? (
-          <Card title={t("fstdTitle")}>
+          <Card title={<SectionTitle icon={MonitorPlay}>{t("fstdTitle")}</SectionTitle>}>
             <div className="grid gap-4 sm:grid-cols-3">
               <Field label={t("fstdType")}>
                 <input className="input" placeholder="A320 FFS" value={v.fstdType ?? ""} onChange={(e) => set("fstdType", e.target.value)} />
@@ -202,7 +223,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
         ) : (
           <>
             <Card
-              title={t("timesTitle")}
+              title={<SectionTitle icon={Clock}>{t("timesTitle")}</SectionTitle>}
               action={
                 <FlightAwareFill
                   registration={v.registration}
@@ -221,16 +242,25 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                 />
               }
             >
-              <div className="grid grid-cols-4 gap-2 sm:gap-4">
-                {(["out", "off", "on", "in"] as const).map((k) => (
-                  <Field key={k} label={t(k)}>
-                    <ClockInput value={v[k]} onChange={(x) => set(k, x)} aria-label={t(k)} />
-                  </Field>
+              <div className="timeline relative grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+                {(["out", "off", "on", "in"] as const).map((k, i) => (
+                  <div key={k} className="relative">
+                    <p className="mb-2 flex items-center gap-1.5 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+                      <span className={`timeline-dot ${v[k] ? "on" : ""}`} />
+                      {t(k)}
+                    </p>
+                    <ClockInput value={v[k]} onChange={(x) => set(k, x)} aria-label={t(k)} className="!text-lg font-semibold" />
+                    {i < 3 && legs[i] !== null && (
+                      <span className="num pointer-events-none absolute -right-1 top-[3.05rem] hidden sm:block z-10 translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/40 bg-surface px-1.5 py-px text-[10px] font-semibold text-accent shadow-sm sm:-right-2">
+                        {dur(legs[i]!)}
+                      </span>
+                    )}
+                  </div>
                 ))}
               </div>
             </Card>
 
-            <Card title={t("aircraftTitle")}>
+            <Card title={<SectionTitle icon={Plane}>{t("aircraftTitle")}</SectionTitle>}>
               <div className="grid gap-4 sm:grid-cols-3">
                 <Field label={t("aircraft")}>
                   <input
@@ -293,7 +323,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
           </>
         )}
 
-        <Card title={t("crewTitle")}>
+        <Card title={<SectionTitle icon={Users}>{t("crewTitle")}</SectionTitle>}>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={t("function")}>
               <select className="input" value={v.function} onChange={(e) => set("function", e.target.value as FlightFormInput["function"])}>
@@ -314,7 +344,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
         </Card>
 
         {!v.isFstd && (
-          <Card title={t("conditionsTitle")}>
+          <Card title={<SectionTitle icon={CloudSun}>{t("conditionsTitle")}</SectionTitle>}>
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="space-y-3">
                 <Toggle checked={v.ifr} onChange={(x) => set("ifr", x)} label={t("ifr")} />
@@ -340,7 +370,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
         )}
 
         {!v.isFstd && (
-          <Card title={t("landingsTitle")}>
+          <Card title={<SectionTitle icon={PlaneLanding}>{t("landingsTitle")}</SectionTitle>}>
             <Toggle checked={!!v.autoLandings} onChange={(x) => set("autoLandings", x)} label={t("autoLandings")} />
             {!v.autoLandings && (
               <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -356,11 +386,11 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
 
         <ExtraEntries v={v} set={set} pilot={pilot} />
 
-        <Card title={t("approachesTitle")}>
+        <Card title={<SectionTitle icon={Radar}>{t("approachesTitle")}</SectionTitle>}>
           <ApproachList value={v.approaches ?? []} onChange={(a) => set("approaches", a)} />
         </Card>
 
-        <Card title={t("remarks")}>
+        <Card title={<SectionTitle icon={NotebookPen}>{t("remarks")}</SectionTitle>}>
           <textarea className="input" rows={3} value={v.remarks ?? ""} onChange={(e) => set("remarks", e.target.value)} />
         </Card>
       </div>
@@ -368,21 +398,32 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
       {/* Live computed panel */}
       <aside className="lg:sticky lg:top-6 lg:self-start">
         <div className="card overflow-hidden">
-          <div className="border-b border-border bg-brand px-5 py-3 text-white">
+          <div className="computed-head relative overflow-hidden px-5 pb-5 pt-4 text-white">
             <p className="label-caps !text-white/60">{t("computed")}</p>
-            <p className="num mt-1 text-3xl font-semibold"><Roll>{v.isFstd ? dur(v.fstdMin ?? 0) : dur(preview?.totalMin ?? 0)}</Roll></p>
-            <p className="text-xs text-white/60">{v.isFstd ? "FSTD" : t("block")}</p>
+            {!v.isFstd && (v.depIcao || v.arrIcao) ? (
+              <p className="num mt-1 text-sm font-semibold tracking-wider text-white/85">
+                {v.depIcao || "····"} <span className="text-white/40">→</span> {v.arrIcao || "····"}
+              </p>
+            ) : null}
+            <p className="num mt-1 text-5xl font-bold tracking-tight"><Roll>{v.isFstd ? dur(v.fstdMin ?? 0) : dur(preview?.totalMin ?? 0)}</Roll></p>
+            <p className="text-xs uppercase tracking-[0.14em] text-white/60">{v.isFstd ? "FSTD" : t("block")}</p>
+            {!v.isFstd && preview && preview.totalMin > 0 && (
+              <div className="mt-3">
+                <Meter value={preview.airMin} max={preview.totalMin} level="ok" />
+                <p className="num mt-1 text-[11px] text-white/60">{t("air")} {dur(preview.airMin)}</p>
+              </div>
+            )}
           </div>
           {!v.isFstd && preview && (
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 p-5 text-sm">
-              <Stat k={t("air")} v={dur(preview.airMin)} />
-              <Stat k={t("night")} v={dur(preview.nightMin)} accent={preview.nightMin > 0} />
-              <Stat k={t("ifrShort")} v={dur(preview.ifrMin)} />
-              <Stat k={tfn(v.function).split(" (")[0]!} v={dur(preview.picMin + preview.picusMin + preview.copilotMin + preview.dualMin + preview.instructorMin + preview.examinerMin)} />
-              <Stat k={t("sePilot")} v={dur(preview.singlePilotSeMin)} />
-              <Stat k={t("mePilot")} v={dur(preview.singlePilotMeMin)} />
-              <Stat k={t("mpPilot")} v={dur(preview.multiPilotMin)} />
-              <Stat k={t("ldg")} v={`${preview.landingsDay} / ${preview.landingsNight}`} />
+            <dl className="grid grid-cols-2 gap-2 p-4 text-sm">
+              <Stat k={t("air")} v={preview.airMin} />
+              <Stat k={t("night")} v={preview.nightMin} accent />
+              <Stat k={t("ifrShort")} v={preview.ifrMin} />
+              <Stat k={tfn(v.function).split(" (")[0]!} v={preview.picMin + preview.picusMin + preview.copilotMin + preview.dualMin + preview.instructorMin + preview.examinerMin} />
+              <Stat k={t("sePilot")} v={preview.singlePilotSeMin} />
+              <Stat k={t("mePilot")} v={preview.singlePilotMeMin} />
+              <Stat k={t("mpPilot")} v={preview.multiPilotMin} />
+              <Stat k={t("ldg")} text={`${preview.landingsDay} / ${preview.landingsNight}`} on={preview.landingsDay + preview.landingsNight > 0} />
             </dl>
           )}
           <div className="space-y-2 border-t border-border p-4">
@@ -438,12 +479,26 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
   );
 }
 
-function Stat({ k, v, accent }: { k: string; v: string; accent?: boolean }) {
+function Stat({ k, v, text, accent, on }: { k: string; v?: number; text?: string; accent?: boolean; on?: boolean }) {
+  const dur = useDuration();
+  const lit = on ?? (v ?? 0) > 0;
   return (
-    <div>
-      <dt className="text-xs text-muted">{k}</dt>
-      <dd className={`num text-base font-semibold ${accent ? "text-accent" : ""}`}>{v}</dd>
+    <div className={`rounded-lg border px-3 py-2 transition-colors ${lit ? "border-accent/30 bg-accent/[0.06]" : "border-border bg-surface-2/40"}`}>
+      <dt className="truncate text-[11px] text-muted">{k}</dt>
+      <dd className={`num text-base font-semibold ${lit ? (accent ? "text-accent" : "") : "opacity-40"}`}>{text ?? dur(v ?? 0)}</dd>
     </div>
+  );
+}
+
+/** A section title with its icon. */
+function SectionTitle({ icon: Icon, children }: { icon: typeof Plane; children: React.ReactNode }) {
+  return (
+    <span className="flex items-center gap-2.5">
+      <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent/12 text-accent">
+        <Icon size={15} aria-hidden />
+      </span>
+      {children}
+    </span>
   );
 }
 

@@ -680,7 +680,9 @@
           "takeoff": "Take-off by",
           "landing": "Landing by"
         }
-      }
+      },
+      "kindFlight": "Flight",
+      "kindFstd": "Simulator"
     },
     "signature": {
       "title": "Flight signature",
