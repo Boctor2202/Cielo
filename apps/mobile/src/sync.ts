@@ -7,7 +7,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { AppState as RNAppState } from "react-native";
 import { SYNC_TABLES, type LocalStore } from "@cielo/core";
 import { createSupabaseSync, lastPushKey } from "@cielo/sync";
-import { PILOT_ID_KEY } from "./db/seed";
+import { ensureLocalPilot, PILOT_ID_KEY, seedReferenceData } from "./db/seed";
 import { isNetworkError, setSyncRequester, setSyncStatus } from "./syncStatus";
 
 /** Rows changed on this phone since the last successful push, per the sync watermarks. */
@@ -40,6 +40,35 @@ export interface StartSyncArgs {
   onChange?: () => void;
 }
 
+/** The account the logbook on this phone belongs to (set once a sync with it has gone through). */
+const OWNER_KEY = "sync.accountOwner";
+
+/** When this phone last pushed to an account (none for a phone used only offline). */
+async function lastPushed(store: LocalStore): Promise<string | null> {
+  let last: string | null = null;
+  // the logbook itself (the pilot's row may have been pushed under the new account already)
+  for (const table of SYNC_TABLES) {
+    if (table === "pilots") continue;
+    const at = await store.getMeta(lastPushKey(table));
+    if (at && (!last || Date.parse(at) > Date.parse(last))) last = at;
+  }
+  return last;
+}
+
+/**
+ * Which account the phone's logbook belongs to. Recorded since this version; before, it is inferred: a phone that
+ * has pushed belongs to the local pilot, unless every push predates the signed-in account (they were another
+ * account's: the logbook was re-keyed to this one by mistake by an earlier version).
+ */
+async function ownerOf(store: LocalStore, pilotId: string, accountCreatedAt: string | undefined): Promise<string | null> {
+  const recorded = await store.getMeta(OWNER_KEY);
+  if (recorded) return recorded;
+  const pushed = await lastPushed(store);
+  if (!pushed) return null;
+  if (accountCreatedAt && Date.parse(pushed) < Date.parse(accountCreatedAt)) return "another-account";
+  return pilotId;
+}
+
 /** First sign-in after using the app offline: re-key local rows to the account id. */
 async function adoptAccountId(store: LocalStore, localId: string, accountId: string): Promise<boolean> {
   if (localId === accountId) return false;
@@ -59,6 +88,20 @@ export async function startSync({ supabase, store, pilotId, onChange }: StartSyn
   const { data } = await supabase.auth.getUser();
   const accountId = data.user?.id;
   if (!accountId) return { async syncNow() {}, async refresh() {}, stop() {} };
+  // Another account's logbook on this phone (someone signed in with a different account): it is already on the
+  // server under its own account, so the phone starts clean for this one, then pulls this account's own data.
+  // Never re-key it to this account: that would mix two pilots' logbooks.
+  const owner = await ownerOf(store, pilotId, data.user?.created_at);
+  if (owner && owner !== accountId) {
+    await store.clear();
+    await seedReferenceData(store);
+    const fresh = await ensureLocalPilot(store);
+    await adoptAccountId(store, fresh.id, accountId);
+    await store.setMeta(OWNER_KEY, accountId);
+    setSyncStatus({ pending: 0, pendingFlightIds: new Set() });
+    onChange?.();
+    return { async syncNow() {}, async refresh() {}, stop() {} };
+  }
   if (await adoptAccountId(store, pilotId, accountId)) {
     // The pilot id changed: AppProvider reloads and calls startSync again with the account id.
     onChange?.();
@@ -85,6 +128,7 @@ export async function startSync({ supabase, store, pilotId, onChange }: StartSyn
       if (Object.values(r.pulled).some((n) => (n ?? 0) > 0)) onChange?.();
       if (r.ok) {
         failures = 0;
+        void store.setMeta(OWNER_KEY, accountId).catch(() => undefined);
         setSyncStatus({ mode: "idle", lastOkAt: r.finishedAt });
       } else {
         failures++;
