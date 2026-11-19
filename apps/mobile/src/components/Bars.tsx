@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { Row, Txt } from "./ui";
@@ -18,8 +18,14 @@ export function Track({ ratio, color, height = 10 }: { ratio: number; color?: st
   }, [pct, grow]);
   const id = useRef(`tg${Math.random().toString(36).slice(2, 8)}`).current;
   const r = height / 2;
+  // the gradient is drawn across the whole track and uncovered as the fill grows: an SVG sized in percent inside
+  // the growing view keeps its first (tiny) width on iOS
+  const [w, setW] = useState(0);
   return (
-    <View style={{ height, borderRadius: r, backgroundColor: c.scheme === "dark" ? "rgba(255,255,255,0.09)" : "rgba(10,22,38,0.08)", overflow: "visible" }}>
+    <View
+      onLayout={(e) => setW(e.nativeEvent.layout.width)}
+      style={{ height, borderRadius: r, backgroundColor: c.scheme === "dark" ? "rgba(255,255,255,0.09)" : "rgba(10,22,38,0.08)", overflow: "visible" }}
+    >
       <Animated.View
         style={{
           height,
@@ -31,9 +37,12 @@ export function Track({ ratio, color, height = 10 }: { ratio: number; color?: st
           shadowRadius: 6,
           shadowOffset: { width: 0, height: 0 },
           overflow: "hidden",
+          // plain colour underneath, in case the gradient is not drawn
+          backgroundColor: tone,
         }}
       >
-        <Svg width="100%" height={height} style={{ position: "absolute" }}>
+        {w > 0 ? (
+        <Svg width={w} height={height} style={{ position: "absolute", left: 0, top: 0 }}>
           <Defs>
             <LinearGradient id={id} x1="0" y1="0" x2="1" y2="0">
               <Stop offset="0" stopColor={tone} stopOpacity={0.55} />
@@ -45,9 +54,10 @@ export function Track({ ratio, color, height = 10 }: { ratio: number; color?: st
               <Stop offset="0.55" stopColor="#fff" stopOpacity={0} />
             </LinearGradient>
           </Defs>
-          <Rect x="0" y="0" width="100%" height={height} rx={r} fill={`url(#${id})`} />
-          <Rect x="0" y="0" width="100%" height={height} rx={r} fill={`url(#${id}s)`} />
+          <Rect x="0" y="0" width={w} height={height} fill={`url(#${id})`} />
+          <Rect x="0" y="0" width={w} height={height} fill={`url(#${id}s)`} />
         </Svg>
+        ) : null}
         {/* the bright tip */}
         <View style={{ position: "absolute", right: 2, top: height / 2 - Math.max(2, height * 0.3), width: Math.max(4, height * 0.6), height: Math.max(4, height * 0.6), borderRadius: height, backgroundColor: "#fff", opacity: 0.85 }} />
       </Animated.View>
