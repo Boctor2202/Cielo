@@ -6,7 +6,8 @@ import { useApp } from "./state";
  * The end date of a cancelled card subscription (taken on geardown.app): it still runs until then.
  * Null when there is none, or it is not cancelled. The pilot reads only their own rows.
  */
-export function useCancelledUntil(): string | null {
+/** @param tick change it to read again (e.g. after a visit to the Stripe space) */
+export function useCancelledUntil(tick = 0): string | null {
   const { session } = useApp();
   const [endsAt, setEndsAt] = useState<string | null>(null);
   useEffect(() => {
@@ -23,6 +24,6 @@ export function useCancelledUntil(): string | null {
         if (!d || d.status === "canceled" || !(d.cancel_at || d.cape === "true")) return setEndsAt(null);
         setEndsAt(d.cancel_at ? new Date(Number(d.cancel_at) * 1000).toISOString() : d.current_period_end);
       });
-  }, [session]);
+  }, [session, tick]);
   return endsAt;
 }

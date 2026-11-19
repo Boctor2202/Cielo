@@ -16,7 +16,7 @@ import { CancelledNotice } from "../src/components/CancelledNotice";
  * or cancelled where it was taken (App Store, Google Play, or the Stripe space for a card subscription).
  */
 export default function Account() {
-  const { t, session, pilot } = useApp();
+  const { t, session, pilot, locale } = useApp();
   const c = useTheme();
   const email = session?.user.email ?? pilot.email;
   const [newEmail, setNewEmail] = useState("");
@@ -48,18 +48,21 @@ export default function Account() {
     Alert.alert(t("account.pwTitle"), t("account.pwDone"));
   };
 
-  const endsAt = useCancelledUntil();
+  const [tick, setTick] = useState(0);
+  const endsAt = useCancelledUntil(tick);
 
   const source = pilot.subscriptionTier && pilot.subscriptionTier !== "free" ? pilot.subscriptionSource : null;
   /** The Stripe space for a card subscription (taken on the website). */
   const openStripe = async () => {
     if (!supabase) return;
     setBusy("sub");
-    const { data, error } = await supabase.functions.invoke<{ url: string }>("create-portal-session", { body: { returnPath: "/app/parametres" } });
+    const { data, error } = await supabase.functions.invoke<{ url: string }>("create-portal-session", { body: { returnPath: `/${locale}/retour-app` } });
     setBusy(null);
     const status = (error as { context?: { status?: number } } | null)?.context?.status;
     if (error || !data?.url) return Alert.alert(t("account.subTitle"), status === 404 ? t("account.subNone") : t("account.subUnavailable"));
-    await WebBrowser.openBrowserAsync(data.url);
+    // Stripe's "back to Geardown" lands on a page that reopens the app, which closes this browser
+    await WebBrowser.openAuthSessionAsync(data.url, "geardown://account");
+    setTick((n) => n + 1);
   };
 
   if (!session) {
