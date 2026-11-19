@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { CV_LOCALES, SCRIPT_FONT, type CvLocale, atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, CV_THEMES, cvToText, flightExperience, toJsonResume, type CvData, type CvExperience, type CvFonts, type CvProfile, type CvTheme } from "@cielo/cv";
-import { countryCodeOf, formatPhoneIntl, countryName } from "@cielo/core";
+import { experienceFromLogbook, CV_LOCALES, SCRIPT_FONT, type CvLocale, atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, CV_THEMES, cvToText, flightExperience, toJsonResume, type CvData, type CvExperience, type CvFonts, type CvProfile, type CvTheme } from "@cielo/cv";
+import { countryCodeOf, formatPhoneIntl, countryName, operatorIndex } from "@cielo/core";
+import { airlines } from "../../src/airlines";
+import { airports } from "../../src/airports";
 import { buildProfile, detectAircraft, matchJob, type Job } from "@cielo/jobs";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
 import { CountryField } from "../../src/components/CountryField";
@@ -63,7 +65,10 @@ export default function CvScreen() {
 }
 
 function Cv() {
-  const { t, store, pilot, flights, balances, licenses, aircraftTypes, locale: uiLocale } = useApp();
+  const { t, store, pilot, flights, balances, licenses, aircraftTypes, aircraft, locale: uiLocale } = useApp();
+  // the operators of the logbook, ready to become experiences
+  const ops = useMemo(() => operatorIndex(flights, aircraft, airlines()), [flights, aircraft]);
+  const unassigned = useMemo(() => flights.filter((f) => !f.deletedAt && !f.isFstd && !ops.of(f)).length, [flights, ops]);
   const c = useTheme();
   const [profile, setProfile] = useState<CvProfile | null>(null);
   const [locale, setLocale] = useState<CvLocale>("en");
@@ -233,6 +238,49 @@ function Cv() {
 
       <Card>
         <Txt variant="h2">{t("cv.experience")}</Txt>
+        {(() => {
+          const sug = experienceFromLogbook(flights, ops, profile.experience, todayUtc());
+          if (!sug.length && !unassigned) return null;
+          const hours = (m: number) => Math.round(m / 60).toLocaleString();
+          return (
+            <View style={{ gap: 8, padding: 10, borderRadius: 14, borderWidth: 1, borderColor: c.accent + "55", backgroundColor: c.accent + "12" }}>
+              {sug.length ? (
+                <Row style={{ alignItems: "center", gap: 6 }}>
+                  <Ionicons name="sparkles" size={15} color={c.accent} />
+                  <Txt style={{ fontWeight: "700" }}>{t("cv.suggest.title")}</Txt>
+                </Row>
+              ) : null}
+              {sug.map((x) => (
+                <View key={x.employer} style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 10, borderRadius: 12, backgroundColor: c.surface ?? "rgba(127,127,127,0.08)" }}>
+                  <Ionicons name="business-outline" size={18} color={c.accent} />
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Txt style={{ fontWeight: "700" }} numberOfLines={1}>{x.employer} · <Txt style={{ fontWeight: "400" }}>{x.role}</Txt></Txt>
+                    <Txt variant="small" numberOfLines={2}>
+                      {x.start} → {x.end ?? t("cv.present")} · {(x.aircraft ?? []).join(", ")} · {t("cv.suggest.hours", { h: hours(x.totalMin), n: x.flights })}
+                      {x.baseIcao ? ` · ${airports().shortName(x.baseIcao)}` : ""}
+                    </Txt>
+                  </View>
+                  <Button
+                    small
+                    title={t("cv.suggest.add")}
+                    onPress={() => {
+                      const { flights: n, totalMin, baseIcao, ...exp } = x;
+                      const city = baseIcao ? airports().get(baseIcao)?.city?.split(/[(,/]/)[0]?.trim() : undefined;
+                      set("experience", [...profile.experience, { ...exp, location: city, bullets: [t("cv.suggest.bullet", { h: hours(totalMin), n, types: (exp.aircraft ?? []).join(", ") })] }]);
+                    }}
+                  />
+                </View>
+              ))}
+              {unassigned ? (
+                <Pressable onPress={() => router.push("/(tabs)/logbook")} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Ionicons name="alert-circle-outline" size={15} color={c.caution} />
+                  <Txt variant="small" color={c.caution} style={{ flex: 1 }}>{t("cv.suggest.unassigned", { n: unassigned })}</Txt>
+                  <Ionicons name="chevron-forward" size={14} color={c.caution} />
+                </Pressable>
+              ) : null}
+            </View>
+          );
+        })()}
         {profile.experience.map((x, i) => (
           <View key={i} style={{ gap: 6, borderTopWidth: i ? 1 : 0, borderColor: c.border, paddingTop: i ? 10 : 0 }}>
             <Field label={t("cv.role")} value={x.role} onChangeText={(v) => updExp(i, { role: v })} />

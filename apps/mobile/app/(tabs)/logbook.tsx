@@ -72,7 +72,7 @@ export default function Logbook() {
       if (fCond === "night" && !(f.nightMin > 0)) return false;
       if (fCond === "ifr" && !(f.ifrMin > 0 && !f.isFstd)) return false;
       if (fCond === "fstd" && !f.isFstd) return false;
-      if (fOp && ops.of(f) !== fOp) return false;
+      if (fOp && (fOp === "-" ? !!ops.of(f) || f.isFstd : ops.of(f) !== fOp)) return false;
       if (!words.length) return true;
       const hay = [f.depIcao, f.arrIcao, f.registration, f.aircraftTypeIcao, f.flightNumber, f.picName, f.remarks, f.function, f.date, ops.of(f)].filter(Boolean).join(" ").toLowerCase();
       return words.every((w) => hay.includes(w));
@@ -102,6 +102,8 @@ export default function Logbook() {
     stopSelecting();
   };
   const sum = useMemo(() => sumFlights(shown), [shown]);
+  /** flights the CV cannot place: no operator typed or recognised */
+  const unassigned = useMemo(() => flights.filter((f) => !f.deletedAt && !f.isFstd && !ops.of(f)).length, [flights, ops]);
   const airportCount = useMemo(() => new Set(shown.filter((f) => !f.isFstd).flatMap((f) => [f.depIcao, f.arrIcao])).size, [shown]);
   const short = (icao: string) => (airports().get(icao) ? airports().shortName(icao) : "");
 
@@ -156,6 +158,19 @@ export default function Logbook() {
                   returnKeyType="search"
                 />
               </Row>
+              {unassigned > 0 && fOp !== "-" && access.canWrite ? (
+                <Pressable
+                  onPress={() => (tap(), setFOp("-"), setSelecting(true))}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: 14, borderWidth: 1, borderColor: c.caution + "66", backgroundColor: c.caution + "1a" }}
+                >
+                  <Ionicons name="business-outline" size={18} color={c.caution} />
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Txt style={{ fontWeight: "700" }}>{t("log.unassigned.title", { n: unassigned })}</Txt>
+                    <Txt variant="small">{t("log.unassigned.why")}</Txt>
+                  </View>
+                  <Txt variant="small" color={c.caution} style={{ fontWeight: "700" }}>{t("log.assign.go")}</Txt>
+                </Pressable>
+              ) : null}
               {/* what the selection adds up to */}
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
                 {[
