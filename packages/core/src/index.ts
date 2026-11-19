@@ -29,5 +29,6 @@ export * from "./layoverNights";
 export * from "./rosterLayovers";
 export * from "./profile";
 export * from "./achievements";
+export * from "./art";
 export * from "./revisions";
 export * from "./phone";

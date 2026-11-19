@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
-import Svg, { Circle, Defs, LinearGradient, Path, Stop, Text as SvgText } from "react-native-svg";
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, View } from "react-native";
+import Svg, { Defs, LinearGradient, Path, Stop, SvgXml } from "react-native-svg";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { distanceNm, discoveryBadges, HOUR_LEVELS, hourLevel, loggingStreak, type DiscoveryId, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
+import { distanceNm, discoveryBadges, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type DiscoverySeries, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
 import { lookupAirport } from "../airports";
 import { API_URL } from "../api";
 import { shareFile } from "../exporters";
@@ -12,38 +12,42 @@ import { useTheme } from "../theme";
 import type { I18nKey } from "../i18n";
 
 const TIER: Record<Tier, [string, string]> = {
-  bronze: ["#E7A46B", "#9A5B2C"],
-  silver: ["#E6EBF2", "#8C99AB"],
-  gold: ["#F6D77A", "#B8871F"],
-  platinum: ["#C7F0FF", "#5B8DB8"],
+  bronze: ["#F0B37E", "#8A4B1F"],
+  silver: ["#F1F5F9", "#7B8794"],
+  gold: ["#FDE68A", "#B7791F"],
+  platinum: ["#CFFAFE", "#3B82B8"],
+  diamond: ["#E9D5FF", "#7C3AED"],
+  legend: ["#FDA4AF", "#9F1239"],
 };
 
-const DISCOVERY: Record<DiscoveryId, { icon: keyof typeof Ionicons.glyphMap; from: string; to: string; stars?: number }> = {
-  firstNight: { icon: "moon", from: "#A5B4FC", to: "#3730A3" },
-  nightLandings100: { icon: "moon-outline", from: "#C4B5FD", to: "#4C1D95" },
-  airports10: { icon: "compass", from: "#7DD3FC", to: "#0369A1", stars: 1 },
-  airports50: { icon: "compass", from: "#67E8F9", to: "#0E7490", stars: 2 },
-  airports100: { icon: "map", from: "#5EEAD4", to: "#115E59", stars: 3 },
-  countries5: { icon: "flag", from: "#FCD34D", to: "#B45309", stars: 1 },
-  countries10: { icon: "globe", from: "#FDBA74", to: "#C2410C", stars: 2 },
-  countries25: { icon: "globe", from: "#FCA5A5", to: "#B91C1C", stars: 3 },
-  earthLap: { icon: "earth", from: "#86EFAC", to: "#15803D" },
-  types3: { icon: "airplane", from: "#F9A8D4", to: "#9D174D" },
-  firstSigned: { icon: "ribbon", from: "#F0ABFC", to: "#86198F" },
+/** Each series' symbol. */
+const SERIES_ICON: Record<DiscoverySeries, keyof typeof Ionicons.glyphMap> = {
+  night: "moon",
+  nightLandings: "moon-outline",
+  landings: "airplane-outline",
+  airports: "compass",
+  countries: "globe",
+  distance: "earth",
+  longest: "trail-sign",
+  types: "airplane",
+  signed: "ribbon",
 };
+const iconFor = (b: Pick<DiscoveryBadge, "id" | "series">): keyof typeof Ionicons.glyphMap => (b.id === "toTheMoon" || b.id === "moonAndBack" ? "rocket" : SERIES_ICON[b.series]);
+const starX = (i: number, n: number) => 32 + (i - (n - 1) / 2) * 7.2;
 
-/** A hexagonal emblem: glossy when earned, a dark silhouette with a lock while it is still to earn. */
-function Emblem({ id, locked, size = 56 }: { id: DiscoveryId; locked?: boolean; size?: number }) {
-  const look = DISCOVERY[id];
-  const g = `e${id}${locked ? "l" : "u"}`;
+/** A hexagonal emblem in the metal of its rank, one star per rank; a dark silhouette with a lock while still to earn. */
+function Emblem({ badge, locked, size = 56 }: { badge: DiscoveryBadge; locked?: boolean; size?: number }) {
+  const [from, to] = TIER[badge.tier];
+  const n = locked || badge.of < 2 ? 0 : badge.rank;
+  const g = `e${badge.id}${locked ? "l" : "u"}`;
   const h = (size * 68) / 64;
   return (
     <View style={{ width: size, height: h }}>
       <Svg width={size} height={h} viewBox="0 0 64 68">
         <Defs>
           <LinearGradient id={g} x1="0" y1="0" x2="0.6" y2="1">
-            <Stop offset="0" stopColor={locked ? "#3B4657" : look.from} />
-            <Stop offset="1" stopColor={locked ? "#151C27" : look.to} />
+            <Stop offset="0" stopColor={locked ? "#3B4657" : from} />
+            <Stop offset="1" stopColor={locked ? "#151C27" : to} />
           </LinearGradient>
           <LinearGradient id={`${g}s`} x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor="#fff" stopOpacity={locked ? 0.08 : 0.45} />
@@ -53,15 +57,12 @@ function Emblem({ id, locked, size = 56 }: { id: DiscoveryId; locked?: boolean; 
         <Path d="M32 2 L59 17.5 V50.5 L32 66 L5 50.5 V17.5 Z" fill={`url(#${g})`} stroke={locked ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.55)"} strokeWidth={1.5} />
         <Path d="M32 8 L54 20.7 V47.3 L32 60 L10 47.3 V20.7 Z" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={1} strokeDasharray={locked ? "2 3" : undefined} />
         <Path d="M5 17.5 L32 2 L59 17.5 V30 C44 24 20 24 5 30 Z" fill={`url(#${g}s)`} />
-        {look.stars && !locked
-          ? Array.from({ length: look.stars }, (_, i) => {
-              const cx = 32 + (i - (look.stars! - 1) / 2) * 8;
-              return <Path key={i} d={`M${cx} 47 l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z`} fill="#FFF7D6" />;
-            })
-          : null}
+        {Array.from({ length: n }, (_, i) => (
+          <Path key={i} d={`M${starX(i, n)} 47 l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z`} fill="#FFF7D6" scale={0.85} origin={`${starX(i, n)}, 50`} />
+        ))}
       </Svg>
-      <View style={{ position: "absolute", left: 0, right: 0, top: h * (look.stars && !locked ? 0.22 : 0.29), alignItems: "center" }}>
-        <Ionicons name={look.icon} size={size * 0.38} color={locked ? "rgba(255,255,255,0.28)" : "#fff"} />
+      <View style={{ position: "absolute", left: 0, right: 0, top: h * (n ? 0.22 : 0.29), alignItems: "center" }}>
+        <Ionicons name={iconFor(badge)} size={size * 0.38} color={locked ? "rgba(255,255,255,0.28)" : "#fff"} />
       </View>
       {locked ? (
         <View style={{ position: "absolute", right: -2, bottom: -2, width: 20, height: 20, borderRadius: 10, backgroundColor: "#0b1526", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" }}>
@@ -72,34 +73,27 @@ function Emblem({ id, locked, size = 56 }: { id: DiscoveryId; locked?: boolean; 
   );
 }
 
-function Medal({ hours, tier, locked, size = 56 }: { hours: number; tier: Tier; locked?: boolean; size?: number }) {
-  const [a, b] = locked ? ["#3A4658", "#1E2836"] : TIER[tier];
-  const id = `m${hours}${locked ? "l" : "u"}`;
-  return (
-    <Svg width={size} height={size} viewBox="0 0 56 56" opacity={locked ? 0.45 : 1}>
-      <Defs>
-        <LinearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={a} />
-          <Stop offset="1" stopColor={b} />
-        </LinearGradient>
-      </Defs>
-      <Circle cx={28} cy={28} r={26} fill={`url(#${id})`} />
-      <Circle cx={28} cy={28} r={21} fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth={1.2} strokeDasharray="2 2.5" />
-      <Path d="M28 17c-2 0-3 1.4-3 1.4H13.5c1 1.8 3 2.6 5 2.6h6.3s1.2 1 3.2 1 3.2-1 3.2-1h6.3c2 0 4-.8 5-2.6H31S30 17 28 17z" fill="rgba(10,22,38,0.55)" />
-      <SvgText x={28} y={38} textAnchor="middle" fontSize={hours >= 10000 ? 10 : 12} fontWeight="800" fill="rgba(10,22,38,0.8)">
-        {hours >= 1000 ? `${hours / 1000}k` : String(hours)}
-      </SvgText>
-    </Svg>
-  );
+/** Pilot wings for an hour level, in its metal; grey while locked. */
+function Wings({ hours, tier, locked, width = 120 }: { hours: number; tier: Tier; locked?: boolean; width?: number }) {
+  const [from, to] = TIER[tier];
+  const xml = useMemo(() => wingsSvg({ from, to, label: hoursLabel(hours), locked, id: `w${hours}${locked ? "l" : ""}` }), [from, to, hours, locked]);
+  return <SvgXml xml={xml} width={width} height={(width * 56) / 120} opacity={locked ? 0.55 : 1} />;
 }
 
-/** Hour levels and the logging streak (computed from the logbook). */
 export function Achievements({ flights, opening, t, locale, pilot }: { flights: Flight[]; opening: OpeningBalance[]; t: (k: I18nKey, v?: Record<string, string | number>) => string; locale: Parameters<typeof formatDate>[1]; pilot?: { fullName?: string; rank?: string } }) {
   const c = useTheme();
   const level = useMemo(() => hourLevel(flights, opening), [flights, opening]);
   const streak = useMemo(() => loggingStreak(flights), [flights]);
   const h = Math.floor(level.totalMin / 60);
   const discoveries = useMemo(() => discoveryBadges(flights, lookupAirport), [flights]);
+  // grouped by series: the highest badge held, and the next one to earn
+  const series = useMemo(() => {
+    const by = new Map<string, DiscoveryBadge[]>();
+    for (const b of discoveries) by.set(b.series, [...(by.get(b.series) ?? []), b]);
+    return [...by.entries()].map(([key, steps]) => ({ key, steps, held: [...steps].reverse().find((x) => x.unlocked), next: steps.find((x) => !x.unlocked) }));
+  }, [discoveries]);
+  const fmt = (b: DiscoveryBadge) => `${Math.floor(b.value).toLocaleString()} / ${b.target.toLocaleString()}${b.series === "distance" || b.series === "longest" ? " NM" : ""}`;
+  const [openSeries, setOpenSeries] = useState<string | null>(null);
   // the figures printed on a share image (the whole logbook)
   const totals = useMemo(() => {
     const aps = new Set<string>();
@@ -144,7 +138,7 @@ export function Achievements({ flights, opening, t, locale, pilot }: { flights: 
       <Card>
         <Txt variant="h2">{t("badges.levels")}</Txt>
         <Row gap={14} style={{ alignItems: "center" }}>
-          <Medal hours={level.current?.hours ?? 100} tier={level.current?.tier ?? "bronze"} locked={!level.current} size={68} />
+          <Wings hours={level.current?.hours ?? 100} tier={level.current?.tier ?? "bronze"} locked={!level.current} width={110} />
           <View style={{ flex: 1, gap: 4 }}>
             {level.current ? <Txt style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1 }} color={TIER[level.current.tier][1]}>{t(`badges.title.${level.current.hours}` as I18nKey).toUpperCase()}</Txt> : null}
             <Txt style={{ fontSize: 17, fontWeight: "800" }}>{level.current ? t("badges.club", { n: level.current.hours.toLocaleString() }) : t("badges.noLevel")}</Txt>
@@ -161,11 +155,14 @@ export function Achievements({ flights, opening, t, locale, pilot }: { flights: 
             )}
           </View>
         </Row>
-        <Row gap={6} style={{ flexWrap: "wrap" }}>
-          {HOUR_LEVELS.map((l) => (
-            <Medal key={l.hours} hours={l.hours} tier={l.tier} locked={h < l.hours} size={34} />
-          ))}
-        </Row>
+        <Pressable onPress={() => setOpenSeries("levels")}>
+          <Row gap={4} style={{ flexWrap: "wrap" }}>
+            {HOUR_LEVELS.map((l) => (
+              <Wings key={l.hours} hours={l.hours} tier={l.tier} locked={h < l.hours} width={52} />
+            ))}
+          </Row>
+          <Txt variant="small" style={{ fontWeight: "700", marginTop: 6 }} color={c.accent}>{t("badges.seeLevels", { n: HOUR_LEVELS.length })} ›</Txt>
+        </Pressable>
       </Card>
       <Card>
         <Txt variant="h2">{t("badges.streak")}</Txt>
@@ -190,35 +187,90 @@ export function Achievements({ flights, opening, t, locale, pilot }: { flights: 
       </Card>
       <Card>
         <Txt variant="h2">{`${t("badges.discoveries")} · ${discoveries.filter((b) => b.unlocked).length}/${discoveries.length}`}</Txt>
-        <Row gap={8} style={{ flexWrap: "wrap" }}>
-          {discoveries.map((b) => {
-            const look = DISCOVERY[b.id];
-            return (
-              <View key={b.id} style={{ flexBasis: "47%", flexGrow: 1, padding: 12, gap: 4, alignItems: "center", borderRadius: 16, overflow: "hidden", borderWidth: 1, borderStyle: b.unlocked ? "solid" : "dashed", borderColor: c.scheme === "dark" ? "rgba(255,255,255,0.10)" : "rgba(10,22,38,0.12)" }}>
-                {b.unlocked ? <View style={{ position: "absolute", top: -40, width: 90, height: 90, borderRadius: 45, backgroundColor: look.from, opacity: 0.18 }} /> : null}
-                <Emblem id={b.id} locked={!b.unlocked} size={52} />
-                <Txt style={{ fontWeight: "800", fontSize: 14, textAlign: "center", marginTop: 4 }}>{t(`badges.d.${b.id}` as I18nKey)}</Txt>
-                <Txt variant="small" style={{ fontSize: 11.5, textAlign: "center" }}>{t(`badges.dd.${b.id}` as I18nKey)}</Txt>
-                {b.unlocked ? (
-                  <>
-                    <View style={{ marginTop: 2, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: look.from + "33" }}>
-                      <Txt variant="small" style={{ fontSize: 11, fontWeight: "700" }} color={c.scheme === "dark" ? look.from : look.to}>{t("badges.earned", { date: formatDate(b.on!, locale) })}</Txt>
-                    </View>
-                    <ShareButton k={b.id} what={`type=badge&id=${b.id}&on=${b.on}`} />
-                  </>
-                ) : (
-                  <View style={{ alignSelf: "stretch", gap: 3, marginTop: 2 }}>
+        {series.map(({ key, steps, held, next }) => {
+          const shown = held ?? steps[0]!;
+          return (
+            <Pressable key={key} onPress={() => setOpenSeries(key)} style={{ flexDirection: "row", gap: 12, padding: 12, borderRadius: 16, overflow: "hidden", borderWidth: 1, borderStyle: held ? "solid" : "dashed", borderColor: c.scheme === "dark" ? "rgba(255,255,255,0.10)" : "rgba(10,22,38,0.12)" }}>
+              {held ? <View style={{ position: "absolute", left: -30, top: -30, width: 100, height: 100, borderRadius: 50, backgroundColor: TIER[held.tier][0], opacity: 0.16 }} /> : null}
+              <Emblem badge={shown} locked={!held} size={54} />
+              <View style={{ flex: 1, gap: 3 }}>
+                <Txt variant="small" style={{ fontSize: 10.5, fontWeight: "700", letterSpacing: 0.8 }}>{t(`badges.series.${key}` as I18nKey).toUpperCase()}</Txt>
+                <Txt style={{ fontWeight: "800", fontSize: 15 }}>{t(`badges.d.${shown.id}` as I18nKey)}</Txt>
+                <Txt variant="small" style={{ fontSize: 11.5 }}>{held ? t("badges.earned", { date: formatDate(held.on!, locale) }) : t(`badges.dd.${shown.id}` as I18nKey)}</Txt>
+                {steps.length > 1 ? (
+                  <Row gap={3}>
+                    {steps.map((x) => (
+                      <View key={x.id} style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: x.unlocked ? TIER[x.tier][1] : track }} />
+                    ))}
+                  </Row>
+                ) : null}
+                {next ? (
+                  <View style={{ gap: 3, marginTop: 2 }}>
+                    {held ? <Txt variant="small" style={{ fontSize: 11.5 }}>{`${t("badges.nextBadge")} ${t(`badges.d.${next.id}` as I18nKey)} · ${t(`badges.dd.${next.id}` as I18nKey)}`}</Txt> : null}
                     <View style={{ height: 4, borderRadius: 2, backgroundColor: track, overflow: "hidden" }}>
-                      <View style={{ height: 4, width: `${Math.max(3, (b.value / b.target) * 100)}%`, backgroundColor: look.to }} />
+                      <View style={{ height: 4, width: `${Math.max(3, (next.value / next.target) * 100)}%`, backgroundColor: TIER[next.tier][1] }} />
                     </View>
-                    <Txt mono variant="small" style={{ fontSize: 11, textAlign: "center" }}>{`${Math.floor(b.value).toLocaleString()} / ${b.target.toLocaleString()}${b.id === "earthLap" ? " NM" : ""}`}</Txt>
+                    <Txt mono variant="small" style={{ fontSize: 11 }}>{fmt(next)}</Txt>
                   </View>
+                ) : (
+                  <Txt variant="small" style={{ fontWeight: "700" }} color={TIER[shown.tier][1]}>{t("badges.seriesDone")}</Txt>
                 )}
+                <Row gap={8} style={{ flexWrap: "wrap" }}>
+                  {held ? <ShareButton k={held.id} what={`type=badge&id=${held.id}&on=${held.on}`} /> : null}
+                  {steps.length > 1 ? <Txt variant="small" style={{ fontWeight: "700", marginTop: 8 }} color={c.accent}>{t("badges.seeSeries", { n: steps.length })} ›</Txt> : null}
+                </Row>
               </View>
-            );
-          })}
-        </Row>
+            </Pressable>
+          );
+        })}
       </Card>
+      <Modal visible={!!openSeries} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setOpenSeries(null)}>
+        <View style={{ flex: 1, backgroundColor: c.scheme === "dark" ? "#0A1626" : "#F3F6F9" }}>
+          <Row style={{ justifyContent: "space-between", alignItems: "center", padding: 18 }}>
+            <Txt variant="h2">{openSeries === "levels" ? t("badges.levels") : openSeries ? t(`badges.series.${openSeries}` as I18nKey) : ""}</Txt>
+            <Pressable onPress={() => setOpenSeries(null)} hitSlop={12}>
+              <Ionicons name="close-circle" size={28} color={c.muted} />
+            </Pressable>
+          </Row>
+          <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 0, gap: 10, paddingBottom: 60 }}>
+            {openSeries === "levels"
+              ? HOUR_LEVELS.map((l) => {
+                  const got = h >= l.hours;
+                  return (
+                    <Row key={l.hours} gap={12} style={{ alignItems: "center", padding: 12, borderRadius: 14, borderWidth: 1, borderStyle: got ? "solid" : "dashed", borderColor: c.scheme === "dark" ? "rgba(255,255,255,0.10)" : "rgba(10,22,38,0.12)" }}>
+                      <Wings hours={l.hours} tier={l.tier} locked={!got} width={84} />
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <Txt variant="small" style={{ fontSize: 10.5, fontWeight: "800", letterSpacing: 0.8 }} color={TIER[l.tier][1]}>{t(`badges.title.${l.hours}` as I18nKey).toUpperCase()}</Txt>
+                        <Txt style={{ fontWeight: "700" }}>{t("badges.club", { n: l.hours.toLocaleString() })}</Txt>
+                        <Txt variant="small">{got ? t("badges.reached") : t("badges.hoursLeft", { n: (l.hours - h).toLocaleString() })}</Txt>
+                      </View>
+                    </Row>
+                  );
+                })
+              : series
+                  .find((x) => x.key === openSeries)
+                  ?.steps.map((b) => (
+                    <Row key={b.id} gap={12} style={{ alignItems: "center", padding: 12, borderRadius: 14, borderWidth: 1, borderStyle: b.unlocked ? "solid" : "dashed", borderColor: c.scheme === "dark" ? "rgba(255,255,255,0.10)" : "rgba(10,22,38,0.12)" }}>
+                      <Emblem badge={b} locked={!b.unlocked} size={46} />
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <Txt style={{ fontWeight: "700" }}>{t(`badges.d.${b.id}` as I18nKey)}</Txt>
+                        <Txt variant="small">{t(`badges.dd.${b.id}` as I18nKey)}</Txt>
+                        {b.unlocked ? (
+                          <Txt variant="small" style={{ fontWeight: "700" }} color={TIER[b.tier][1]}>{t("badges.earned", { date: formatDate(b.on!, locale) })}</Txt>
+                        ) : (
+                          <>
+                            <View style={{ height: 4, borderRadius: 2, backgroundColor: track, overflow: "hidden", marginTop: 2 }}>
+                              <View style={{ height: 4, width: `${Math.max(3, (b.value / b.target) * 100)}%`, backgroundColor: TIER[b.tier][1] }} />
+                            </View>
+                            <Txt mono variant="small" style={{ fontSize: 11 }}>{fmt(b)}</Txt>
+                          </>
+                        )}
+                      </View>
+                    </Row>
+                  ))}
+          </ScrollView>
+        </View>
+      </Modal>
     </>
   );
 }

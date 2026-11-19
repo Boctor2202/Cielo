@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { ImageResponse } from "next/og";
-import { HOUR_LEVELS, rankStripes, type DiscoveryId } from "@cielo/core";
-import { DISCOVERY_ICON_SVG, DISCOVERY_LOOK, TIER_COLORS, emblemSvg, epauletteSvg, medalSvg } from "@/lib/badgeArt";
+import { DISCOVERY_SERIES, HOUR_LEVELS, hoursLabel, rankStripes, tierOfRank, wingsSvg } from "@cielo/core";
+import { TIER_COLORS, emblemSvg, epauletteSvg, iconSvgFor, starsOf } from "@/lib/badgeArt";
 import en from "../../../../messages/en.json";
 import fr from "../../../../messages/fr.json";
 
@@ -51,22 +51,31 @@ export async function GET(req: Request) {
   let kicker: string;
   let title: string;
   let sub: string;
+  let artW: number;
+  let artH: number;
+  const big = square ? 420 : 520;
   if (q.get("type") === "level") {
     const level = HOUR_LEVELS.find((l) => l.hours === num(q.get("h")));
     if (!level) return new Response("level", { status: 400 });
-    art = uri(medalSvg(level.hours, level.tier, false));
-    medalLabel = level.hours >= 1000 ? `${level.hours / 1000}k` : String(level.hours);
-    glow = TIER_COLORS[level.tier][0];
+    const [from, to] = TIER_COLORS[level.tier];
+    art = uri(wingsSvg({ from, to }));
+    artW = square ? 760 : 880;
+    artH = (artW * 56) / 120;
+    medalLabel = hoursLabel(level.hours);
+    glow = from;
     kicker = B.title[String(level.hours)] ?? "";
     title = B.club.replace("{n}", level.hours.toLocaleString(lang === "fr" ? "fr-FR" : "en-GB").replace(/[\u202f\u00a0]/g, " "));
     sub = "";
   } else {
-    const id = q.get("id") as DiscoveryId;
-    const look = DISCOVERY_LOOK[id];
-    if (!look) return new Response("badge", { status: 400 });
-    const icon = DISCOVERY_ICON_SVG[id];
-    art = uri(emblemSvg(id, `<g fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${icon}</g>`));
-    glow = look.from;
+    const id = q.get("id");
+    const s = DISCOVERY_SERIES.find((x) => x.steps.some((st) => st.id === id));
+    const rank = s ? s.steps.findIndex((st) => st.id === id) + 1 : 0;
+    if (!s || !id) return new Response("badge", { status: 400 });
+    const tier = tierOfRank(rank, s.steps.length);
+    art = uri(emblemSvg(tier, starsOf(rank, s.steps.length), iconSvgFor(id as never, s.series)));
+    artW = big;
+    artH = (big * 68) / 64;
+    glow = TIER_COLORS[tier][0];
     kicker = lang === "fr" ? "Badge débloqué" : "Badge unlocked";
     title = B.d[id] ?? id;
     sub = B.dd[id] ?? "";
@@ -84,7 +93,6 @@ export async function GET(req: Request) {
     { v: num(q.get("ct")), l: lang === "fr" ? "pays" : "countries" },
     { v: num(q.get("nm")), l: "NM" },
   ].filter((s) => s.v !== undefined && s.v > 0);
-  const artSize = square ? 420 : 520;
 
   return new ImageResponse(
     (
@@ -102,9 +110,9 @@ export async function GET(req: Request) {
         </div>
         <div style={{ display: "flex", marginTop: square ? 18 : 40, position: "relative" }}>
           {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
-          <img src={art} width={artSize} height={q.get("type") === "level" ? artSize : (artSize * 68) / 64} />
+          <img src={art} width={artW} height={artH} />
           {medalLabel ? (
-            <div style={{ position: "absolute", left: 0, right: 0, top: artSize * 0.5, display: "flex", justifyContent: "center", fontSize: artSize * 0.2, fontWeight: 700, color: "rgba(10,22,38,.8)" }}>{medalLabel}</div>
+            <div style={{ position: "absolute", left: 0, right: 0, top: (artH * 27) / 56 - artW * 0.045, height: artW * 0.09, display: "flex", alignItems: "center", justifyContent: "center", fontSize: artW * (medalLabel.length > 3 ? 0.062 : 0.075), fontWeight: 700, color: "rgba(10,22,38,.82)" }}>{medalLabel}</div>
           ) : null}
         </div>
         <div style={{ display: "flex", fontSize: 26, fontWeight: 700, letterSpacing: 6, color: glow, marginTop: 18, textTransform: "uppercase" }}>{kicker}</div>
