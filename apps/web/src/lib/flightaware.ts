@@ -84,3 +84,44 @@ export async function flightsForRegistration(registration: string, date: string)
     .filter((f) => (f.out ?? f.off ?? "").slice(0, 10) === date)
     .sort((a, b) => (a.out ?? a.off ?? "").localeCompare(b.out ?? b.off ?? ""));
 }
+
+interface FaPosition {
+  timestamp: string;
+  latitude: number;
+  longitude: number;
+  /** hundreds of feet */
+  altitude?: number | null;
+  groundspeed?: number | null;
+}
+
+/**
+ * The recorded positions of one FlightAware flight, as [unix s, lat, lon, alt ft, gs kt]. Recent flights come
+ * from /flights/{id}/track, older ones from /history/flights/{id}/track.
+ */
+export async function trackForFlight(faFlightId: string, recent: boolean): Promise<[number, number, number, number | null, number | null][]> {
+  const key = process.env.FLIGHTAWARE_API_KEY;
+  if (!key) throw new FlightAwareError("not_configured", "FLIGHTAWARE_API_KEY is not set", 503);
+  const path = `${recent ? "" : "/history"}/flights/${encodeURIComponent(faFlightId)}/track`;
+  const r = await fetch(`https://aeroapi.flightaware.com/aeroapi${path}`, { headers: { "x-apikey": key, Accept: "application/json" }, cache: "no-store" });
+  if (r.status === 404) throw new FlightAwareError("not_found", "no track", 404);
+  if (!r.ok) throw new FlightAwareError("upstream", `AeroAPI ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  const d = (await r.json()) as { positions?: FaPosition[] };
+  return (d.positions ?? [])
+    .filter((p) => Number.isFinite(p.latitude) && Number.isFinite(p.longitude))
+    .map((p) => [Math.round(Date.parse(p.timestamp) / 1000), p.latitude, p.longitude, p.altitude != null ? p.altitude * 100 : null, p.groundspeed ?? null]);
+}
+
+/** The flight of that aircraft whose block (or runway) times are closest to the logged ones, within 45 min. */
+export function matchFlight(flights: FoundFlight[], outUtc: string, inUtc: string): FoundFlight | undefined {
+  const t0 = Date.parse(outUtc);
+  const t1 = Date.parse(inUtc);
+  let best: { f: FoundFlight; d: number } | undefined;
+  for (const f of flights) {
+    const a = Date.parse(f.out ?? f.off ?? "");
+    const b = Date.parse(f.in ?? f.on ?? "");
+    if (Number.isNaN(a) || Number.isNaN(b)) continue;
+    const d = Math.abs(a - t0) + Math.abs(b - t1);
+    if (d <= 90 * 60_000 && (!best || d < best.d)) best = { f, d };
+  }
+  return best?.f;
+}

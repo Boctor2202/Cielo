@@ -642,7 +642,9 @@
         "notConfigured": "FlightAware lookup isn't switched on yet.",
         "close": "Close",
         "diverted": "diverted",
-        "attribution": "Actual UTC times (block / runway) from FlightAware. Check them before saving."
+        "attribution": "Actual UTC times (block / runway) from FlightAware. Check them before saving.",
+        "signin": "Sign in to use FlightAware.",
+        "limit": "Daily FlightAware limit reached, try again tomorrow."
       },
       "extra": {
         "title": "Other entries",
@@ -1595,8 +1597,12 @@
         "no_hex": "{reg} is not transmitting right now: its transponder code will be learned as soon as it flies. Will retry automatically.",
         "no_match": "No track of {reg} matches this flight's block times (check they are in UTC).",
         "quota": "Data quota reached, will retry later.",
-        "error": "Track unavailable right now."
-      }
+        "error": "Track unavailable right now.",
+        "signin": "Sign in to fetch tracks from FlightAware.",
+        "fa_off": "FlightAware is not switched on yet."
+      },
+      "sourceFa": "Track recorded by",
+      "fromFa": "Fetch this flight's actual track from FlightAware (any date)."
     },
     "access": {
       "demo": "Demo: {days, plural, one {# day} other {# days}} left to try everything. Create your account to continue with a 7-day trial.",

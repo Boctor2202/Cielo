@@ -642,7 +642,9 @@
         "notConfigured": "La recherche FlightAware n'est pas encore activée.",
         "close": "Fermer",
         "diverted": "dérouté",
-        "attribution": "Heures réelles UTC (cales / piste) fournies par FlightAware. Vérifiez-les avant d'enregistrer."
+        "attribution": "Heures réelles UTC (cales / piste) fournies par FlightAware. Vérifiez-les avant d'enregistrer.",
+        "signin": "Connecte-toi pour utiliser FlightAware.",
+        "limit": "Limite quotidienne FlightAware atteinte, réessaie demain."
       },
       "extra": {
         "title": "Autres informations",
@@ -1595,8 +1597,12 @@
         "no_hex": "{reg} n'émet pas en ce moment : son code transpondeur sera appris dès qu'il volera. Nouvel essai automatique.",
         "no_match": "Aucune trace de {reg} ne correspond aux heures bloc de ce vol (vérifiez qu'elles sont en UTC).",
         "quota": "Quota de données atteint, nouvel essai plus tard.",
-        "error": "Trace indisponible pour le moment."
-      }
+        "error": "Trace indisponible pour le moment.",
+        "signin": "Connecte-toi pour récupérer les traces depuis FlightAware.",
+        "fa_off": "FlightAware n'est pas encore activé."
+      },
+      "sourceFa": "Trace enregistrée par",
+      "fromFa": "Récupère la trace réelle de ce vol depuis FlightAware (à n'importe quelle date)."
     },
     "access": {
       "demo": "Démo : {days, plural, one {encore # jour} other {encore # jours}} pour tout essayer. Créez votre compte pour continuer avec 7 jours d'essai.",

@@ -34,15 +34,21 @@ export function FlightTrackCard({ flight }: { flight: Flight }) {
         <>
           <TrackMap points={pts} />
           <Profile points={pts} />
-          <p className="mt-2 text-[11px] text-muted">
-            {t("source", { hex: track!.hex.toUpperCase() })}{" "}
-            <a className="underline" href="https://www.adsb.lol" target="_blank" rel="noreferrer">adsb.lol</a> · ODbL 1.0
-          </p>
+          {track!.source === "flightaware" ? (
+            <p className="mt-2 text-[11px] text-muted">
+              {t("sourceFa")} <a className="underline" href="https://www.flightaware.com" target="_blank" rel="noreferrer">FlightAware</a>
+            </p>
+          ) : (
+            <p className="mt-2 text-[11px] text-muted">
+              {t("source", { hex: track!.hex.toUpperCase() })}{" "}
+              <a className="underline" href="https://www.adsb.lol" target="_blank" rel="noreferrer">adsb.lol</a> · ODbL 1.0
+            </p>
+          )}
         </>
       ) : (
         <div className="space-y-3 text-sm">
-          <p className="text-muted">{recent ? t("pending") : !flight.registration || !inn ? t("needData") : t("tooOld")}</p>
-          {recent && flight.registration && (
+          <p className="text-muted">{recent ? t("pending") : !flight.registration || !inn ? t("needData") : t("fromFa")}</p>
+          {flight.registration && inn && (
             <button
               type="button"
               className="btn btn-secondary btn-sm"
