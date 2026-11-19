@@ -33,6 +33,7 @@ export default function SettingsPage() {
   const airports = useAirports();
   const cloud = useCloud();
   const { toast, toastNode } = useToast();
+  const [interval, setInterval] = useState<"monthly" | "yearly">("yearly");
   const [v, setV] = useState<Pilot | null>(null);
   const [delOpen, setDelOpen] = useState(false);
   const [word, setWord] = useState("");
@@ -58,9 +59,9 @@ export default function SettingsPage() {
     }
   }
 
-  async function checkout(plan: "basic" | "premium") {
+  async function checkout(plan: "basic" | "premium", interval: "monthly" | "yearly" = "monthly") {
     try {
-      const { url } = await cloud.invoke<{ url: string }>("create-checkout-session", { plan, interval: "monthly", returnPath: `/${locale}/app/parametres` });
+      const { url } = await cloud.invoke<{ url: string }>("create-checkout-session", { plan, interval, returnPath: `/${locale}/app/parametres` });
       window.location.assign(url);
     } catch (e) {
       // payments not open yet (Stripe not configured) or temporarily unreachable
@@ -185,10 +186,18 @@ export default function SettingsPage() {
                 </div>
               ) : null}
               <p className="text-xs text-muted">{tpr("trialNote")}</p>
+              <Segmented
+                value={interval}
+                onChange={(x) => setInterval(x)}
+                options={[
+                  { value: "monthly", label: tpr("monthly") },
+                  { value: "yearly", label: `${tpr("yearly")} · ${tpr("twoMonthsFree")}` },
+                ]}
+              />
               <div className="grid gap-2 sm:grid-cols-2">
                 {(["basic", "premium"] as const).map((p) => (
-                  <button key={p} type="button" className={`btn ${p === "premium" ? "btn-primary" : "btn-secondary"}`} disabled={v.subscriptionTier === p} onClick={() => checkout(p)}>
-                    {tp(p)} · {SITE.pricing[p].monthly.toLocaleString(locale, { minimumFractionDigits: 2 })} €{tpr("perMonth")}
+                  <button key={p} type="button" className={`btn ${p === "premium" ? "btn-primary" : "btn-secondary"}`} disabled={v.subscriptionTier === p} onClick={() => checkout(p, interval)}>
+                    {tp(p)} · {SITE.pricing[p][interval].toLocaleString(locale, { minimumFractionDigits: 2 })} €{interval === "yearly" ? tpr("perYear") : tpr("perMonth")}
                   </button>
                 ))}
               </div>

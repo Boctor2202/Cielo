@@ -44,6 +44,7 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
     if (mode === "signup" && (plan === "basic" || plan === "premium")) {
       try {
         localStorage.setItem("geardown-plan", plan);
+        localStorage.setItem("geardown-interval", search.get("interval") === "yearly" ? "yearly" : "monthly");
       } catch {}
     }
   }, [mode, search]);

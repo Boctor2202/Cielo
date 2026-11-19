@@ -141,7 +141,7 @@
   },
   "pricing": {
     "title": "Des tarifs simples",
-    "subtitle": "7 jours d'essai sur l'offre de votre choix, puis un abonnement mensuel sans engagement.",
+    "subtitle": "7 jours d'essai sur l'offre de votre choix, puis un abonnement mensuel ou annuel (2 mois offerts), sans engagement.",
     "monthly": "Mensuel",
     "yearly": "Annuel",
     "perMonth": "/mois",
@@ -207,7 +207,10 @@
       "oneDevice": "1 appareil"
     },
     "vat": "Prix TTC, facturés chaque mois. Sans engagement. Sans abonnement, votre carnet reste consultable et exportable.",
-    "trialNote": "Carte bancaire demandée à l'inscription. Aucun prélèvement pendant 7 jours, annulable en un clic avant la fin de l'essai."
+    "trialNote": "Carte bancaire demandée à l'inscription. Aucun prélèvement pendant 7 jours, annulable en un clic avant la fin de l'essai.",
+    "twoMonthsFree": "2 mois offerts",
+    "perMonthEquiv": "soit {price}/mois",
+    "orYearly": "ou {price}/an, 2 mois offerts"
   },
   "testimonials": {
     "title": "Ils volent avec Geardown",
@@ -1722,9 +1725,9 @@
       "upgrade": "Passer à Max",
       "readOnlyShort": "Lecture seule : abonnez-vous pour enregistrer.",
       "readOnlyTitle": "Abonnement nécessaire",
-      "readOnlyText": "Sans abonnement actif, votre carnet reste consultable et exportable, mais la saisie est désactivée. Basic à 6,99 €/mois, Max à 9,99 €/mois.",
+      "readOnlyText": "Sans abonnement actif, votre carnet reste consultable et exportable, mais la saisie est désactivée. Basic à 4,99 €/mois, Max à 8,99 €/mois.",
       "maxTitle": "Fonction réservée à Max",
-      "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces réelles, audit, signatures et scan sont inclus dans Max (9,99 €/mois).",
+      "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces réelles, audit, signatures et scan sont inclus dans Max (8,99 €/mois).",
       "haveAccount": "Déjà abonné ? Se connecter"
     },
     "photo": {
@@ -2338,8 +2341,8 @@
       "description": "Toutes les colonnes AMC1 FCL.050, import de roster, audit du carnet, suivi des licences et du médical, limites FTL, statistiques, signature, mode hors ligne, offres d'emploi et CV pilote."
     },
     "pricing": {
-      "title": "Tarifs — carnet de vol électronique dès 6,99 €/mois",
-      "description": "Basic à 6,99 €/mois pour les pilotes privés et élèves, Max à 9,99 €/mois pour les pilotes professionnels (roster, FTL, escales, radar). 7 jours d'essai, sans engagement."
+      "title": "Tarifs — carnet de vol électronique dès 4,99 €/mois",
+      "description": "Basic à 4,99 €/mois pour les pilotes privés et élèves, Max à 8,99 €/mois pour les pilotes professionnels (roster, FTL, escales, radar). 7 jours d'essai, sans engagement."
     },
     "airlines": {
       "title": "Carnet de vol électronique pour compagnies et écoles",

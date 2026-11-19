@@ -141,7 +141,7 @@
   },
   "pricing": {
     "title": "Simple pricing",
-    "subtitle": "7-day trial on the plan of your choice, then a monthly subscription, cancel anytime.",
+    "subtitle": "A 7-day trial on the plan of your choice, then a monthly or yearly subscription (2 months free), no commitment.",
     "monthly": "Monthly",
     "yearly": "Yearly",
     "perMonth": "/month",
@@ -207,7 +207,10 @@
       "oneDevice": "1 device"
     },
     "vat": "Prices incl. VAT, billed monthly. No commitment. Without a subscription your logbook stays viewable and exportable.",
-    "trialNote": "Card required at sign-up. Nothing is charged for 7 days; cancel in one click before the trial ends."
+    "trialNote": "Card required at sign-up. Nothing is charged for 7 days; cancel in one click before the trial ends.",
+    "twoMonthsFree": "2 months free",
+    "perMonthEquiv": "that is {price}/month",
+    "orYearly": "or {price}/year, 2 months free"
   },
   "testimonials": {
     "title": "They fly with Geardown",
@@ -1722,9 +1725,9 @@
       "upgrade": "Upgrade to Max",
       "readOnlyShort": "Read-only: subscribe to save.",
       "readOnlyTitle": "Subscription required",
-      "readOnlyText": "Without an active subscription your logbook stays viewable and exportable, but logging is off. Basic €6.99/month, Max €9.99/month.",
+      "readOnlyText": "Without an active subscription your logbook stays viewable and exportable, but logging is off. Basic €4.99/month, Max €8.99/month.",
       "maxTitle": "Max feature",
-      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, real tracks, audit, signatures and scan are included in Max (€9.99/month).",
+      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, real tracks, audit, signatures and scan are included in Max (€8.99/month).",
       "haveAccount": "Already subscribed? Sign in"
     },
     "photo": {
@@ -2338,8 +2341,8 @@
       "description": "Every AMC1 FCL.050 column, roster import, logbook audit, licence and medical tracking, FTL limits, statistics, signatures, offline mode, pilot jobs and pilot CV."
     },
     "pricing": {
-      "title": "Pricing — electronic pilot logbook from €6.99/month",
-      "description": "Basic at €6.99/month for private and student pilots, Max at €9.99/month for professional pilots (roster, FTL, layovers, radar). 7-day trial, no commitment."
+      "title": "Pricing — electronic pilot logbook from €4.99/month",
+      "description": "Basic at €4.99/month for private and student pilots, Max at €8.99/month for professional pilots (roster, FTL, layovers, radar). 7-day trial, no commitment."
     },
     "airlines": {
       "title": "Electronic logbook for airlines and flight schools",

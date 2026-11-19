@@ -57,7 +57,7 @@ export function organizationLd() {
 
 export function softwareLd(locale: string, description: string) {
   const p = SITE.pricing;
-  const offer = (name: string, price: number, unit: "MON") => ({
+  const offer = (name: string, price: number, unit: "MON" | "ANN") => ({
     "@type": "Offer",
     name,
     price: price.toFixed(2),
@@ -79,6 +79,8 @@ export function softwareLd(locale: string, description: string) {
     offers: [
       offer("Basic", p.basic.monthly, "MON"),
       offer("Max", p.premium.monthly, "MON"),
+      offer("Basic (yearly)", p.basic.yearly, "ANN"),
+      offer("Max (yearly)", p.premium.yearly, "ANN"),
     ],
   };
 }

@@ -6,7 +6,9 @@ import type { Pilot } from "./types";
  * readable and exportable (GDPR portability) but nothing new can be written.
  */
 export const TRIAL_DAYS = 7;
-export const PRICES_EUR = { basic: 6.99, premium: 9.99 } as const;
+export const PRICES_EUR = { basic: 4.99, premium: 8.99 } as const;
+/** The yearly prices: two months free (10 months paid). */
+export const YEARLY_PRICES_EUR = { basic: 49.9, premium: 89.9 } as const;
 
 /** Features reserved to Max (internal key "premium"). Everything else is in Basic. */
 export const MAX_FEATURES = ["roster", "ftl", "audit", "signature", "scan", "radar", "tracks", "layovers", "jobs", "cv"] as const;

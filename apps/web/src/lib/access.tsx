@@ -80,13 +80,16 @@ export function usePendingCheckout() {
   useEffect(() => {
     if (!cloud.session || !pilot || pilot.subscriptionTier !== "free") return;
     let plan: string | null = null;
+    let interval = "monthly";
     try {
       plan = localStorage.getItem("geardown-plan");
+      interval = localStorage.getItem("geardown-interval") === "yearly" ? "yearly" : "monthly";
       localStorage.removeItem("geardown-plan");
+      localStorage.removeItem("geardown-interval");
     } catch {}
     if (plan !== "basic" && plan !== "premium") return;
     cloud
-      .invoke<{ url: string }>("create-checkout-session", { plan, interval: "monthly", returnPath: `/${locale}/app` })
+      .invoke<{ url: string }>("create-checkout-session", { plan, interval, returnPath: `/${locale}/app` })
       .then(({ url }) => window.location.assign(url))
       .catch(() => {});
   }, [cloud, pilot, locale]);
