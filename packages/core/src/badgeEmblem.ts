@@ -84,29 +84,33 @@ export function badgeEmblemSvg(o: { series: DiscoverySeries; id: DiscoveryId; ti
   const frame = FRAME[o.series];
   const n = o.locked ? 0 : starsOf(o.rank, o.of);
   const size = o.size ?? 640;
-  // the diamond narrows at the bottom: its stars sit higher and closer
-  const diamond = o.series === "countries";
-  const sy = diamond ? 47 : 52.5;
-  const gap = diamond ? 5.2 : 6.6;
-  const stars = Array.from({ length: n }, (_, i) => star(CX + (i - (n - 1) / 2) * gap, sy, diamond ? 2.6 : 3.1))
-    .map((d) => `<path d="${d}" fill="#FFF7D6" stroke="rgba(0,0,0,.25)" stroke-width=".4"/>`)
+  // a series of ranks: the outline is drawn a little smaller, and its stars sit in a row above it, as on a champion's jersey, in the badge's metal with a dark rim
+  const gap = 8.6;
+  const stars = Array.from({ length: n }, (_, i) => {
+    const off = i - (n - 1) / 2;
+    return star(CX + off * gap, 5.2 + off * off * 0.35, 3.9);
+  })
+    .map((d) => `<path d="${d}" fill="url(#${k}t)" stroke="${to}" stroke-width="1" stroke-linejoin="round"/>`)
     .join("");
-  const gy = n ? (diamond ? 28 : 29) : 34;
+  const gy = 34;
   const glyph = glyphFor(o.id, o.series);
   const ink = o.locked ? "rgba(255,255,255,.3)" : "#ffffff";
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 68" width="${size}" height="${(size * 68) / 64}">
 <defs>
 <linearGradient id="${k}g" x1="0" y1="0" x2=".55" y2="1"><stop offset="0" stop-color="${from}"/><stop offset=".55" stop-color="${to}"/><stop offset="1" stop-color="${to}"/></linearGradient>
 <linearGradient id="${k}d" x1="0" y1="0" x2="0" y2="1"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${o.locked ? 0 : 0.22}"/></linearGradient>
+<linearGradient id="${k}t" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="${from}"/><stop offset="1" stop-color="${from}"/></linearGradient>
 <radialGradient id="${k}r" cx=".32" cy=".22" r=".75"><stop offset="0" stop-color="#fff" stop-opacity="${o.locked ? 0.06 : 0.42}"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></radialGradient>
 <clipPath id="${k}c"><path d="${frame}"/></clipPath>
 </defs>
+<g transform="${o.of > 1 ? "translate(4.8 10.4) scale(.85)" : ""}">
 <path d="${frame}" fill="url(#${k}g)"/>
 <g clip-path="url(#${k}c)"><path d="${frame}" fill="url(#${k}r)"/><rect x="0" y="0" width="64" height="68" fill="url(#${k}d)"/></g>
 <path d="${frame}" fill="none" stroke="rgba(255,255,255,${o.locked ? 0.14 : 0.7})" stroke-width="1.6" stroke-linejoin="round"/>
 <path d="${frame}" fill="none" stroke="rgba(255,255,255,${o.locked ? 0.12 : 0.32})" stroke-width="1.1" stroke-linejoin="round" ${o.locked ? 'stroke-dasharray="2 3"' : ""} transform="translate(${CX} ${CY}) scale(.82) translate(${-CX} ${-CY})"/>
 ${o.locked ? "" : `<g transform="translate(${CX - 12.5} ${gy - 12.5 + 1}) scale(${25 / 24})" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${glyph}</g>`}
 <g transform="translate(${CX - 12.5} ${gy - 12.5}) scale(${25 / 24})" fill="none" stroke="${ink}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${glyph}</g>
+</g>
 ${stars}
 </svg>`;
 }
