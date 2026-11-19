@@ -4,6 +4,7 @@ import Svg, { Defs, LinearGradient, Path, Stop, SvgXml } from "react-native-svg"
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { distanceNm, discoveryBadges, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type DiscoverySeries, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
 import { lookupAirport } from "../airports";
+import { Track } from "./Bars";
 import { API_URL } from "../api";
 import { shareFile } from "../exporters";
 import { formatDate } from "../i18n";
@@ -146,9 +147,7 @@ export function Achievements({ flights, opening, t, locale, pilot }: { flights: 
             {level.next ? (
               <>
                 <Txt variant="small">{t("badges.toNext", { left: (level.next.hours - h).toLocaleString(), n: level.next.hours.toLocaleString() })}</Txt>
-                <View style={{ height: 6, borderRadius: 3, backgroundColor: track, overflow: "hidden" }}>
-                  <View style={{ height: 6, width: `${Math.max(2, level.ratio * 100)}%`, backgroundColor: TIER[level.next.tier][1] }} />
-                </View>
+                <Track ratio={level.ratio} color={TIER[level.next.tier][1]} />
               </>
             ) : (
               <Txt variant="small">{t("badges.allLevels")}</Txt>
@@ -207,9 +206,7 @@ export function Achievements({ flights, opening, t, locale, pilot }: { flights: 
                 {next ? (
                   <View style={{ gap: 3, marginTop: 2 }}>
                     {held ? <Txt variant="small" style={{ fontSize: 11.5 }}>{`${t("badges.nextBadge")} ${t(`badges.d.${next.id}` as I18nKey)} · ${t(`badges.dd.${next.id}` as I18nKey)}`}</Txt> : null}
-                    <View style={{ height: 4, borderRadius: 2, backgroundColor: track, overflow: "hidden" }}>
-                      <View style={{ height: 4, width: `${Math.max(3, (next.value / next.target) * 100)}%`, backgroundColor: TIER[next.tier][1] }} />
-                    </View>
+                    <Track ratio={next.value / next.target} color={TIER[next.tier][1]} height={6} />
                     <Txt mono variant="small" style={{ fontSize: 11 }}>{fmt(next)}</Txt>
                   </View>
                 ) : (
@@ -259,9 +256,7 @@ export function Achievements({ flights, opening, t, locale, pilot }: { flights: 
                           <Txt variant="small" style={{ fontWeight: "700" }} color={TIER[b.tier][1]}>{t("badges.earned", { date: formatDate(b.on!, locale) })}</Txt>
                         ) : (
                           <>
-                            <View style={{ height: 4, borderRadius: 2, backgroundColor: track, overflow: "hidden", marginTop: 2 }}>
-                              <View style={{ height: 4, width: `${Math.max(3, (b.value / b.target) * 100)}%`, backgroundColor: TIER[b.tier][1] }} />
-                            </View>
+                            <Track ratio={b.value / b.target} color={TIER[b.tier][1]} height={6} />
                             <Txt mono variant="small" style={{ fontSize: 11 }}>{fmt(b)}</Txt>
                           </>
                         )}

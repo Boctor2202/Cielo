@@ -4,6 +4,7 @@ import Svg, { Circle, Defs, LinearGradient, Rect, Stop, Text as SvgText } from "
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { formatDuration, type Flight, type GoalProgress, type Totals } from "@cielo/core";
 import { Roll } from "./Roll";
+import { Track } from "./Bars";
 import { Row, Txt, tap } from "./ui";
 import { useTheme } from "../theme";
 
@@ -80,9 +81,7 @@ function Chip3({ icon, color, label, value, share }: { icon: keyof typeof Ionico
         <Txt variant="small" style={{ fontSize: 12 }} color={color}>{label}</Txt>
       </Row>
       <Txt mono style={{ fontSize: 18, fontWeight: "700" }}>{value}</Txt>
-      <View style={{ height: 3, borderRadius: 2, backgroundColor: c.scheme === "dark" ? "rgba(255,255,255,0.10)" : "rgba(10,22,38,0.08)" }}>
-        <View style={{ height: 3, borderRadius: 2, width: `${Math.min(100, Math.round(share * 100))}%`, backgroundColor: color }} />
-      </View>
+      <Track ratio={share} color={color} height={5} />
     </View>
   );
 }

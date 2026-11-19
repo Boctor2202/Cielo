@@ -19,6 +19,7 @@ import {
   type Totals,
 } from "@cielo/core";
 import { Button, Card, Dot, Fab, Row, Screen, Txt, statusColor } from "../../src/components/ui";
+import { Track } from "../../src/components/Bars";
 import { DutyCard, HeroCard, LastFlightCard, PeriodTiles } from "../../src/components/Overview";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { isCloudEnabled } from "../../src/auth";
@@ -228,9 +229,7 @@ export default function Dashboard() {
                     {formatDuration(actual)} / {formatDuration(limit)}
                   </Txt>
                 </Row>
-                <View style={{ height: 6, borderRadius: 3, backgroundColor: c.scheme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(10,22,38,0.10)" }}>
-                  <View style={{ height: 6, borderRadius: 3, width: `${pct * 100}%`, backgroundColor: statusColor(c, level) }} />
-                </View>
+                <Track ratio={pct} color={statusColor(c, level)} />
               </View>
             );
           })}
