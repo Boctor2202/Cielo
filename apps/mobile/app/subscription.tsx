@@ -42,7 +42,7 @@ export default function Subscription() {
     const s = tierOf(ci);
     if (!s.tier || s.tier === pilot.subscriptionTier) return;
     await savePilot({ subscriptionTier: s.tier, subscriptionSource: s.store === "PLAY_STORE" ? "google" : "apple", subscriptionExpiresAt: s.expires ?? null });
-    if (announce) Alert.alert(t("sub.purchased"));
+    if (announce) Alert.alert(t("sub.purchased", { plan: t(s.tier === "premium" ? "sub.max" : "sub.basic") }));
   };
 
   const run = async (key: string, fn: () => Promise<CustomerInfo | null>) => {
