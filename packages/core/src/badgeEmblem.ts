@@ -46,7 +46,8 @@ const FRAME: Record<DiscoverySeries, string> = {
   signed: poly(around(48, (i) => 29.5 + Math.cos((i / 48) * 12 * 2 * Math.PI) * 1.8)),
 };
 
-/** The symbols (24 × 24, stroked; lucide's where one fits, ISC licence). */
+/** The symbols (24 × 24, stroked; lucide's where one fits, ISC licence), placed with a transform: a nested <svg>
+ * is not positioned by the app's SVG renderer on iOS. */
 const GLYPH: Record<DiscoverySeries | "rocket", string> = {
   night: '<path d="M18 5h4"/><path d="M20 3v4"/><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/>',
   // a runway at night: its edges, centre line and a crescent
@@ -104,8 +105,8 @@ export function badgeEmblemSvg(o: { series: DiscoverySeries; id: DiscoveryId; ti
 <g clip-path="url(#${k}c)"><path d="${frame}" fill="url(#${k}r)"/><rect x="0" y="0" width="64" height="68" fill="url(#${k}d)"/></g>
 <path d="${frame}" fill="none" stroke="rgba(255,255,255,${o.locked ? 0.14 : 0.7})" stroke-width="1.6" stroke-linejoin="round"/>
 <path d="${frame}" fill="none" stroke="rgba(255,255,255,${o.locked ? 0.12 : 0.32})" stroke-width="1.1" stroke-linejoin="round" ${o.locked ? 'stroke-dasharray="2 3"' : ""} transform="translate(${CX} ${CY}) scale(.82) translate(${-CX} ${-CY})"/>
-${o.locked ? "" : `<svg x="${CX - 12.5}" y="${gy - 12.5 + 1}" width="25" height="25" viewBox="0 0 24 24"><g fill="none" stroke="rgba(0,0,0,.28)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${glyph}</g></svg>`}
-<svg x="${CX - 12.5}" y="${gy - 12.5}" width="25" height="25" viewBox="0 0 24 24"><g fill="none" stroke="${ink}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${glyph}</g></svg>
+${o.locked ? "" : `<g transform="translate(${CX - 12.5} ${gy - 12.5 + 1}) scale(${25 / 24})" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${glyph}</g>`}
+<g transform="translate(${CX - 12.5} ${gy - 12.5}) scale(${25 / 24})" fill="none" stroke="${ink}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${glyph}</g>
 ${stars}
 </svg>`;
 }
