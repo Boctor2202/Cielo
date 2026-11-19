@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
-import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { formatPhoneIntl, AUTHORITIES, RANKS, ageOn, countryName, flagEmoji, licenseStatus, pilotCredentials, rankStripes, regulatorById, suggestedCurrentTypes, type License, type Pilot } from "@cielo/core";
+import { formatPhoneIntl, AUTHORITIES, RANKS, ageOn, countryName, flagEmoji, licenseStatus, pilotCredentials, regulatorById, suggestedCurrentTypes, type License, type Pilot } from "@cielo/core";
 import { DateField, isValidDate } from "../../src/components/DateField";
-import { Epaulette } from "../../src/components/Epaulette";
 import { CountryField } from "../../src/components/CountryField";
 import { Badge, Button, Card, Chip, Field, Row, Screen, Txt } from "../../src/components/ui";
 import { SuggestField } from "../../src/components/SuggestField";
 import { AirportField } from "../../src/components/AirportField";
 import { useApp } from "../../src/state";
+import { CrewHero, Honours } from "../../src/components/Honours";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "../../src/theme";
 
 type Draft = Pick<Pilot, "fullName" | "rank" | "employer" | "homeBaseIcao" | "licenceNumber" | "nationality" | "phone" | "bio"> & { birthDate: string; types: string };
@@ -50,17 +50,21 @@ export default function Profile() {
     const st = licenseStatus(l, today);
     return { text: st.state === "expired" ? t("profile.expired") : l.validUntil ? t("profile.validUntil", { date: l.validUntil }) : t("profile.noExpiry"), color: st.state === "expired" ? c.warning : st.state === "expiring" ? c.caution : c.success };
   };
-  const Detail = ({ label, value, sub, badge }: { label: string; value?: string; sub?: string; badge?: { text: string; color: string } }) => (
-    <View style={{ gap: 2, paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: `${c.text}14` }}>
-      <Txt variant="small">{label}</Txt>
-      <Row style={{ alignItems: "center", flexWrap: "wrap" }} gap={8}>
-        <Txt style={{ fontWeight: "700", fontSize: 16 }}>{value || "—"}</Txt>
-        {badge && value ? <Badge text={badge.text} color={badge.color} /> : null}
-      </Row>
-      {sub ? <Txt variant="small" numberOfLines={1}>{sub}</Txt> : null}
-    </View>
+  const Detail = ({ icon, label, value, sub, badge }: { icon: keyof typeof Ionicons.glyphMap; label: string; value?: string; sub?: string; badge?: { text: string; color: string } }) => (
+    <Row style={{ alignItems: "center", gap: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: `${c.text}12` }}>
+      <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: `${c.accent}1f`, alignItems: "center", justifyContent: "center" }}>
+        <Ionicons name={icon} size={18} color={c.accent} />
+      </View>
+      <View style={{ flex: 1, gap: 1 }}>
+        <Txt variant="small" style={{ fontSize: 11, letterSpacing: 0.6, textTransform: "uppercase" }}>{label}</Txt>
+        <Row style={{ alignItems: "center", flexWrap: "wrap" }} gap={8}>
+          <Txt style={{ fontWeight: "700", fontSize: 16 }} color={value ? undefined : c.muted}>{value || "—"}</Txt>
+          {badge && value ? <Badge text={badge.text} color={badge.color} /> : null}
+        </Row>
+        {sub ? <Txt variant="small" numberOfLines={1}>{sub}</Txt> : null}
+      </View>
+    </Row>
   );
-  const initials = (d.fullName || "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   /** Square photo, compressed JPEG so it stays light to sync. */
   const pickPhoto = async (camera: boolean) => {
@@ -94,36 +98,22 @@ export default function Profile() {
 
   return (
     <Screen>
-      <Card>
-        <Row style={{ alignItems: "center", gap: 14 }}>
-          {pilot.photoDataUrl ? (
-            <Image source={{ uri: pilot.photoDataUrl }} style={{ width: 72, height: 72, borderRadius: 36 }} contentFit="cover" />
-          ) : (
-            <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: c.accent, alignItems: "center", justifyContent: "center" }}>
-              <Txt style={{ fontSize: 26, fontWeight: "700" }} color="#fff">{initials}</Txt>
-            </View>
-          )}
-          <View style={{ flex: 1, gap: 2 }}>
-            <Txt variant="h2">{pilot.fullName || "—"}</Txt>
-            <Txt variant="muted">{[pilot.rank, pilot.employer, pilot.homeBaseIcao].filter(Boolean).join(" · ")}</Txt>
-            {rankStripes(pilot.rank) ? <View style={{ marginTop: 4 }}><Epaulette stripes={rankStripes(pilot.rank)!} /></View> : null}
-          </View>
-        </Row>
-        {!pilot.photoDataUrl ? <Txt variant="small">{t("profile.photoHint")}</Txt> : null}
-        <Row style={{ flexWrap: "wrap" }} gap={8}>
-          <Button kind="secondary" small title={t("profile.pickPhoto")} onPress={() => void pickPhoto(false)} />
-          <Button kind="secondary" small title={t("profile.takePhoto")} onPress={() => void pickPhoto(true)} />
-          {pilot.photoDataUrl ? <Button kind="ghost" small title={t("profile.removePhoto")} onPress={() => void app.savePilot({ photoDataUrl: undefined })} /> : null}
-        </Row>
-      </Card>
+      <CrewHero pilot={pilot} />
+      <Row style={{ flexWrap: "wrap" }} gap={8}>
+        <Button kind="secondary" small title={t("profile.pickPhoto")} onPress={() => void pickPhoto(false)} />
+        <Button kind="secondary" small title={t("profile.takePhoto")} onPress={() => void pickPhoto(true)} />
+        {pilot.photoDataUrl ? <Button kind="ghost" small title={t("profile.removePhoto")} onPress={() => void app.savePilot({ photoDataUrl: undefined })} /> : null}
+      </Row>
+      {!pilot.photoDataUrl ? <Txt variant="small">{t("profile.photoHint")}</Txt> : null}
+      <Honours flights={flights} opening={app.balances} />
       <Card>
         <Txt variant="label">{t("profile.details")}</Txt>
-        <Detail label={t("profile.birthDate")} value={pilot.birthDate ? `${pilot.birthDate} · ${t("profile.age", { n: ageOn(pilot.birthDate, today) })}` : undefined} />
-        <Detail label={t("profile.nationality")} value={pilot.nationality ? `${flagEmoji(pilot.nationality)}  ${countryName(pilot.nationality, locale)}` : undefined} />
-        <Detail label={t("profile.authority")} value={regulatorById(pilot.authority ?? pilot.regulatoryFramework)?.short} sub={regulatorById(pilot.authority ?? pilot.regulatoryFramework)?.name} />
-        <Detail label={t("profile.licence")} value={creds.licence?.code} sub={pilot.licenceNumber || creds.licence?.number} />
-        <Detail label={t("profile.medical")} value={creds.medical?.code} badge={creds.medical ? validity(creds.medical) : undefined} />
-        <Detail label={t("profile.language")} value={creds.language?.code} badge={creds.language ? validity(creds.language) : undefined} />
+        <Detail icon="gift-outline" label={t("profile.birthDate")} value={pilot.birthDate ? `${pilot.birthDate} · ${t("profile.age", { n: ageOn(pilot.birthDate, today) })}` : undefined} />
+        <Detail icon="flag-outline" label={t("profile.nationality")} value={pilot.nationality ? `${flagEmoji(pilot.nationality)}  ${countryName(pilot.nationality, locale)}` : undefined} />
+        <Detail icon="business-outline" label={t("profile.authority")} value={regulatorById(pilot.authority ?? pilot.regulatoryFramework)?.short} sub={regulatorById(pilot.authority ?? pilot.regulatoryFramework)?.name} />
+        <Detail icon="card-outline" label={t("profile.licence")} value={creds.licence?.code} sub={pilot.licenceNumber || creds.licence?.number} />
+        <Detail icon="pulse-outline" label={t("profile.medical")} value={creds.medical?.code} badge={creds.medical ? validity(creds.medical) : undefined} />
+        <Detail icon="language-outline" label={t("profile.language")} value={creds.language?.code} badge={creds.language ? validity(creds.language) : undefined} />
         <View style={{ gap: 6 }}>
           <Txt variant="small">{t("profile.currentTypes")}</Txt>
           {(pilot.currentTypes?.length ? pilot.currentTypes : suggested).length ? (

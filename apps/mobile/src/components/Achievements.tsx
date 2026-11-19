@@ -12,7 +12,7 @@ import { Card, Row, Txt } from "./ui";
 import { useTheme } from "../theme";
 import type { I18nKey } from "../i18n";
 
-const TIER: Record<Tier, [string, string]> = {
+export const TIER: Record<Tier, [string, string]> = {
   bronze: ["#F0B37E", "#8A4B1F"],
   silver: ["#F1F5F9", "#7B8794"],
   gold: ["#FDE68A", "#B7791F"],
@@ -37,7 +37,7 @@ const iconFor = (b: Pick<DiscoveryBadge, "id" | "series">): keyof typeof Ionicon
 const starX = (i: number, n: number) => 32 + (i - (n - 1) / 2) * 7.2;
 
 /** A hexagonal emblem in the metal of its rank, one star per rank; a dark silhouette with a lock while still to earn. */
-function Emblem({ badge, locked, size = 56 }: { badge: DiscoveryBadge; locked?: boolean; size?: number }) {
+export function Emblem({ badge, locked, size = 56 }: { badge: DiscoveryBadge; locked?: boolean; size?: number }) {
   const [from, to] = TIER[badge.tier];
   const n = locked || badge.of < 2 ? 0 : badge.rank;
   const g = `e${badge.id}${locked ? "l" : "u"}`;
@@ -75,7 +75,7 @@ function Emblem({ badge, locked, size = 56 }: { badge: DiscoveryBadge; locked?: 
 }
 
 /** Pilot wings for an hour level, in its metal; grey while locked. */
-function Wings({ hours, tier, locked, width = 120 }: { hours: number; tier: Tier; locked?: boolean; width?: number }) {
+export function Wings({ hours, tier, locked, width = 120 }: { hours: number; tier: Tier; locked?: boolean; width?: number }) {
   const [from, to] = TIER[tier];
   const xml = useMemo(() => wingsSvg({ from, to, label: hoursLabel(hours), locked, id: `w${hours}${locked ? "l" : ""}` }), [from, to, hours, locked]);
   return <SvgXml xml={xml} width={width} height={(width * 56) / 120} opacity={locked ? 0.55 : 1} />;
