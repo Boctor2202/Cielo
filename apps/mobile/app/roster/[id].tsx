@@ -149,6 +149,16 @@ function RosterEventForm() {
 
         {error ? <Txt color={c.warning}>{t("roster.invalid")}</Txt> : null}
         <Button title={t("common.save")} onPress={save} />
+        {existing?.tentative ? (
+          <Button
+            kind="secondary"
+            title={t("roster.confirmOption")}
+            onPress={async () => {
+              await put("roster_events", { ...existing, tentative: false });
+              router.back();
+            }}
+          />
+        ) : null}
         {existing ? <Button kind="danger" title={t("roster.deleteEvent")} onPress={del} /> : null}
       </Screen>
     </KeyboardAvoidingView>

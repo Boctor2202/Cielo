@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Alert, Pressable, SectionList, View } from "react-native";
 import { router } from "expo-router";
-import { formatClock, formatDuration, minutesBetween, stamp, type RosterEvent } from "@cielo/core";
+import { formatClock, formatDuration, minutesBetween } from "@cielo/core";
 import { useWide, Button, EmptyState, Fab, Glass, Row, Segmented, Txt } from "../../src/components/ui";
 import { type I18nKey } from "../../src/i18n";
 import { useApp } from "../../src/state";
@@ -27,18 +27,6 @@ function RosterScreen() {
 
   // read-only without a live subscription: the roster stays visible, adding / importing opens the plans
   const addEvent = () => (access.canWrite ? router.push({ pathname: "/roster/[id]", params: { id: "new" } }) : router.push("/subscription"));
-  /** An option (planned, not confirmed): confirmed by hand when the operator confirms it before a new print. */
-  const confirmOption = (e: RosterEvent) =>
-    Alert.alert(t("roster.option"), t("roster.optionHint"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("roster.confirmOption"),
-        onPress: async () => {
-          await store.bulkPut("roster_events", [stamp({ ...e, tentative: false })]);
-          await reload();
-        },
-      },
-    ]);
   const importRoster = async () => {
     if (!access.canWrite) return router.push("/subscription");
     setImporting(true);
@@ -118,13 +106,11 @@ function RosterScreen() {
         renderItem={({ item: e }) => {
           const color = kindColor(e.kind);
           const rest = e.kind === "OFF" || e.kind === "REST" || e.kind === "LEAVE";
-          // events typed on the phone or the web (no roster file behind them) can be edited and deleted
-          const manual = !e.rosterId;
           const option = !!e.tentative;
           return (
             <Pressable
-              disabled={(!manual && !option) || !access.canWrite}
-              onPress={() => (option ? confirmOption(e) : router.push({ pathname: "/roster/[id]", params: { id: e.id } }))}
+              disabled={!access.canWrite}
+              onPress={() => router.push({ pathname: "/roster/[id]", params: { id: e.id } })}
               style={({ pressed }) => ({ opacity: pressed ? 0.7 : option ? 0.6 : 1 })}
             >
               <Glass>
