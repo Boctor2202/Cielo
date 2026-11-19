@@ -3,10 +3,12 @@
  * Picks a file, maps the columns, derives every time with deriveFlightTimes and stores the flights at once.
  */
 import { announceGains } from "./gains";
+import { airlines } from "./airlines";
 import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import {
   deriveFlightTimes,
+  operatorIndex,
   analyseTable,
   newId,
   parseCsv,
@@ -46,6 +48,8 @@ export async function saveImportedRows(store: SqliteStore, pilot: Pilot, types: 
   const now = new Date().toISOString();
   const key = (f: Pick<Flight, "date" | "depIcao" | "arrIcao" | "outUtc" | "totalMin">) => `${f.date}|${f.depIcao}|${f.arrIcao}|${f.outUtc ?? ""}|${f.totalMin}`;
   const seen = new Set(existing.map(key));
+  // the operator of each imported flight, as the logbook recognises it (call sign, aircraft, what it learned)
+  const ops = operatorIndex(existing, await store.all("aircraft"), airlines());
   const out: Flight[] = [];
   let skipped = 0;
   let duplicates = 0;
@@ -126,6 +130,7 @@ export async function saveImportedRows(store: SqliteStore, pilot: Pilot, types: 
       signatureId: null,
       locked: false,
     };
+    if (!f.operator && !f.isFstd) f.operator = ops.of(f);
     if (seen.has(key(f))) {
       duplicates++;
       continue;

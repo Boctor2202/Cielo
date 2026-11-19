@@ -14,6 +14,8 @@ import { useAirports } from "@/lib/airports";
 import { logImported, buildFlight, flightKey } from "@/lib/repo";
 import { db } from "@/lib/db";
 import { announceGains } from "@/lib/gains";
+import { useAirlineDirectory } from "@/lib/airlines";
+import { operatorIndex } from "@cielo/core";
 import { DropZone } from "@/components/app/DropZone";
 import { Paywall, useAccess } from "@/lib/access";
 
@@ -104,6 +106,7 @@ async function readTable(file: File): Promise<string[][]> {
 function FileImport({ photos = false }: { photos?: boolean }) {
   const t = useTranslations("app.import");
   const airports = useAirports();
+  const airlines = useAirlineDirectory();
   const { toast, toastNode } = useToast();
   const [rows, setRows] = useState<string[][] | null>(null);
   const [mapping, setMapping] = useState<Record<ImportField, number> | null>(null);
@@ -213,11 +216,15 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     if (!airports) return;
     setBusy(true);
     // flights already in the logbook (or twice in the file) are skipped: importing the same file again adds nothing
-    const seen = new Set((await db().t("flights").toArray()).filter((f) => !f.deletedAt).map(flightKey));
+    const existing = (await db().t("flights").toArray()).filter((f) => !f.deletedAt);
+    const seen = new Set(existing.map(flightKey));
+    // the operator of each imported flight, as the logbook recognises it (call sign, aircraft, what it learned)
+    const ops = operatorIndex(existing, await db().t("aircraft").toArray(), airlines);
     const built = [];
     let skipped = 0;
     for (const r of ok) {
       const f = await buildFlight(r.input!, airports, { source: "import", explicit: r.explicit });
+      if (!f.operator && !f.isFstd) f.operator = ops.of(f);
       if (seen.has(flightKey(f))) skipped++;
       else {
         seen.add(flightKey(f));
