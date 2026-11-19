@@ -2,21 +2,26 @@ import React, { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { formatPhoneIntl, AUTHORITIES, RANKS, countryName, rankStripes, type Pilot } from "@cielo/core";
+import { formatPhoneIntl, AUTHORITIES, RANKS, ageOn, countryName, flagEmoji, licenseStatus, pilotCredentials, rankStripes, regulatorById, suggestedCurrentTypes, type License, type Pilot } from "@cielo/core";
+import { DateField, isValidDate } from "../../src/components/DateField";
 import { Epaulette } from "../../src/components/Epaulette";
 import { CountryField } from "../../src/components/CountryField";
-import { Button, Card, Field, Row, Screen, Txt } from "../../src/components/ui";
+import { Badge, Button, Card, Chip, Field, Row, Screen, Txt } from "../../src/components/ui";
 import { SuggestField } from "../../src/components/SuggestField";
 import { AirportField } from "../../src/components/AirportField";
 import { useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
 
-type Draft = Pick<Pilot, "fullName" | "rank" | "employer" | "homeBaseIcao" | "licenceNumber" | "nationality" | "phone" | "bio">;
-const draftOf = (p: Pilot): Draft => ({ fullName: p.fullName, rank: p.rank, employer: p.employer, homeBaseIcao: p.homeBaseIcao, licenceNumber: p.licenceNumber, nationality: p.nationality, phone: p.phone, bio: p.bio });
+type Draft = Pick<Pilot, "fullName" | "rank" | "employer" | "homeBaseIcao" | "licenceNumber" | "nationality" | "phone" | "bio"> & { birthDate: string; types: string };
+const draftOf = (p: Pilot): Draft => ({ fullName: p.fullName, rank: p.rank, employer: p.employer, homeBaseIcao: p.homeBaseIcao, licenceNumber: p.licenceNumber, nationality: p.nationality, phone: p.phone, bio: p.bio, birthDate: p.birthDate ?? "", types: (p.currentTypes ?? []).join(" ") });
+const typesOf = (s: string) => [...new Set(s.toUpperCase().split(/[^A-Z0-9]+/).filter((x) => x && x.length <= 6))].slice(0, 12);
 
 export default function Profile() {
   const app = useApp();
-  const { t, pilot, licenses, store, locale } = app;
+  const { t, pilot, licenses, store, locale, flights } = app;
+  const today = new Date().toISOString().slice(0, 10);
+  const creds = useMemo(() => pilotCredentials(licenses, today), [licenses, today]);
+  const suggested = useMemo(() => suggestedCurrentTypes(licenses, flights, today), [licenses, flights, today]);
   // what the app already knows elsewhere: the licence document, its authority's country, the CV draft
   const [cvPhone, setCvPhone] = useState<string | undefined>();
   useEffect(() => {
@@ -41,6 +46,20 @@ export default function Profile() {
     setTouched(true);
     setD((x) => ({ ...x, [k]: v }));
   };
+  const validity = (l: License) => {
+    const st = licenseStatus(l, today);
+    return { text: st.state === "expired" ? t("profile.expired") : l.validUntil ? t("profile.validUntil", { date: l.validUntil }) : t("profile.noExpiry"), color: st.state === "expired" ? c.warning : st.state === "expiring" ? c.caution : c.success };
+  };
+  const Detail = ({ label, value, sub, badge }: { label: string; value?: string; sub?: string; badge?: { text: string; color: string } }) => (
+    <View style={{ gap: 2, paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: `${c.text}14` }}>
+      <Txt variant="small">{label}</Txt>
+      <Row style={{ alignItems: "center", flexWrap: "wrap" }} gap={8}>
+        <Txt style={{ fontWeight: "700", fontSize: 16 }}>{value || "—"}</Txt>
+        {badge && value ? <Badge text={badge.text} color={badge.color} /> : null}
+      </Row>
+      {sub ? <Txt variant="small" numberOfLines={1}>{sub}</Txt> : null}
+    </View>
+  );
   const initials = (d.fullName || "?").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   /** Square photo, compressed JPEG so it stays light to sync. */
@@ -65,6 +84,8 @@ export default function Profile() {
       nationality: clean(d.nationality)?.toUpperCase(),
       phone: clean(formatPhoneIntl(d.phone, d.nationality || pilot.nationality)),
       bio: clean(d.bio),
+      birthDate: isValidDate(d.birthDate) ? d.birthDate : null,
+      currentTypes: typesOf(d.types).length ? typesOf(d.types) : null,
     });
     setTouched(false);
     setSaved(true);
@@ -96,6 +117,30 @@ export default function Profile() {
         </Row>
       </Card>
       <Card>
+        <Txt variant="label">{t("profile.details")}</Txt>
+        <Detail label={t("profile.birthDate")} value={pilot.birthDate ? `${pilot.birthDate} · ${t("profile.age", { n: ageOn(pilot.birthDate, today) })}` : undefined} />
+        <Detail label={t("profile.nationality")} value={pilot.nationality ? `${flagEmoji(pilot.nationality)}  ${countryName(pilot.nationality, locale)}` : undefined} />
+        <Detail label={t("profile.authority")} value={regulatorById(pilot.authority ?? pilot.regulatoryFramework)?.short} sub={regulatorById(pilot.authority ?? pilot.regulatoryFramework)?.name} />
+        <Detail label={t("profile.licence")} value={creds.licence?.code} sub={pilot.licenceNumber || creds.licence?.number} />
+        <Detail label={t("profile.medical")} value={creds.medical?.code} badge={creds.medical ? validity(creds.medical) : undefined} />
+        <Detail label={t("profile.language")} value={creds.language?.code} badge={creds.language ? validity(creds.language) : undefined} />
+        <View style={{ gap: 6 }}>
+          <Txt variant="small">{t("profile.currentTypes")}</Txt>
+          {(pilot.currentTypes?.length ? pilot.currentTypes : suggested).length ? (
+            <Row style={{ flexWrap: "wrap" }} gap={6}>
+              {(pilot.currentTypes?.length ? pilot.currentTypes : suggested).map((x) => (
+                <View key={x} style={{ borderRadius: 999, borderWidth: 1, borderColor: c.accent, backgroundColor: `${c.accent}22`, paddingHorizontal: 12, paddingVertical: 4 }}>
+                  <Txt mono color={c.accent} style={{ fontWeight: "700" }}>✈ {x}</Txt>
+                </View>
+              ))}
+            </Row>
+          ) : (
+            <Txt variant="muted">—</Txt>
+          )}
+          {!pilot.currentTypes?.length && suggested.length ? <Txt variant="small">{t("profile.typesAuto")}</Txt> : null}
+        </View>
+      </Card>
+      <Card>
         <Field label={t("more.fullName")} value={d.fullName} onChangeText={(v) => set("fullName", v)} autoCapitalize="words" />
         <SuggestField label={t("profile.rank")} value={d.rank ?? ""} onChange={(v) => set("rank", v)} options={RANKS} placeholder={t("profile.rankPh")} />
         <Field label={t("profile.employer")} value={d.employer ?? ""} onChangeText={(v) => set("employer", v)} />
@@ -111,6 +156,17 @@ export default function Profile() {
         <CountryField label={t("profile.nationality")} value={d.nationality} onChange={(v) => set("nationality", v)} />
         {!d.nationality && known.country ? (
           <Button kind="ghost" small title={t("profile.suggestCountry", { country: countryName(known.country, locale) })} onPress={() => set("nationality", known.country)} />
+        ) : null}
+        <DateField label={t("profile.birthDate")} value={d.birthDate} onChange={(v) => set("birthDate", v)} />
+        <Field label={t("profile.currentTypes")} value={d.types} onChangeText={(v) => set("types", v.toUpperCase())} autoCapitalize="characters" monoValue placeholder="A320 C68A" hint={t("profile.currentTypesHint")} />
+        {suggested.filter((x) => !typesOf(d.types).includes(x)).length ? (
+          <Row style={{ flexWrap: "wrap" }} gap={6}>
+            {suggested
+              .filter((x) => !typesOf(d.types).includes(x))
+              .map((x) => (
+                <Chip key={x} label={`+ ${x}`} onPress={() => set("types", [...typesOf(d.types), x].join(" "))} />
+              ))}
+          </Row>
         ) : null}
         <Field label={t("profile.phone")} value={d.phone ?? ""} onChangeText={(v) => set("phone", v)} onBlur={() => set("phone", formatPhoneIntl(d.phone, d.nationality || pilot.nationality) || undefined)} placeholder="+33 6 12 34 56 78" keyboardType="phone-pad" />
         <Field label={t("profile.bio")} value={d.bio ?? ""} onChangeText={(v) => set("bio", v)} multiline maxLength={600} />

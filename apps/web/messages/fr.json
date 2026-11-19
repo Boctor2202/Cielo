@@ -1563,8 +1563,21 @@
         "bio": "Présentation (600 caractères max.)",
         "suggestCountry": "Suggestion : {country} (d'après votre licence)",
         "fromLicence": "Repris de votre licence",
-        "fromCv": "Repris de votre CV"
-      }
+        "fromCv": "Repris de votre CV",
+        "birthDate": "Date de naissance",
+        "authority": "Autorité de la licence",
+        "currentTypes": "Types actuels",
+        "currentTypesHint": "Les avions que vous pilotez en ce moment (codes OACI). Appuyez sur Entrée après chacun."
+      },
+      "details": "Fiche pilote",
+      "addInfo": "Ajouter",
+      "age": "{n} ans",
+      "licence": "Licence",
+      "medical": "Aptitude médicale",
+      "language": "Niveau d'anglais",
+      "typesAuto": "suggérés d'après vos qualifications de type et vos vols récents",
+      "suggested": "Suggestions :",
+      "remove": "Retirer {x}"
     },
     "layovers": {
       "title": "Escales",
@@ -1876,7 +1889,8 @@
       "exportReport": "Exporter le rapport (CSV)",
       "exportFlights": "Exporter les {n} vols (CSV)",
       "empty": "Aucun vol ne correspond à ces filtres.",
-      "airportNote": "Un vol compte pour son aéroport de départ et pour son aéroport d'arrivée : le total des lignes dépasse le total général."
+      "airportNote": "Un vol compte pour son aéroport de départ et pour son aéroport d'arrivée : le total des lignes dépasse le total général.",
+      "best": "Record"
     },
     "mapTheme": {
       "label": "Fond de carte",

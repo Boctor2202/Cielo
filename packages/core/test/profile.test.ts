@@ -32,3 +32,27 @@ describe("rankStripes", () => {
     expect(rankStripes("Private Pilot")).toBeUndefined();
   });
 });
+
+import { ageOn, flagEmoji, pilotCredentials, suggestedCurrentTypes } from "../src";
+
+describe("pilot details", () => {
+  it("age, flag", () => {
+    expect(ageOn("1990-11-20", "2026-11-19")).toBe(35);
+    expect(ageOn("1990-11-19", "2026-11-19")).toBe(36);
+    expect(flagEmoji("fr")).toBe("🇫🇷");
+  });
+  it("credentials and current types", () => {
+    const docs = [
+      { kind: "licence", code: "CPL(A)", validUntil: null },
+      { kind: "licence", code: "ATPL(A)", validUntil: null, number: "X1" },
+      { kind: "medical", code: "CLASS1", validUntil: "2026-01-01" },
+      { kind: "medical", code: "CLASS1", validUntil: "2027-05-01" },
+      { kind: "type_rating", code: "TR C68A", validUntil: "2027-03-01" },
+      { kind: "type_rating", code: "TR A320", validUntil: "2020-03-01" },
+    ];
+    const c = pilotCredentials(docs, "2026-11-19");
+    expect(c.licence?.code).toBe("ATPL(A)");
+    expect(c.medical?.validUntil).toBe("2027-05-01");
+    expect(suggestedCurrentTypes(docs, [{ date: "2026-11-15", aircraftTypeIcao: "c68a" }, { date: "2026-01-01", aircraftTypeIcao: "PC12" }], "2026-11-19")).toEqual(["C68A"]);
+  });
+});

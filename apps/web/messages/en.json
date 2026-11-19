@@ -1563,8 +1563,21 @@
         "bio": "About you (600 characters max.)",
         "suggestCountry": "Suggestion: {country} (from your licence)",
         "fromLicence": "Taken from your licence",
-        "fromCv": "Taken from your CV"
-      }
+        "fromCv": "Taken from your CV",
+        "birthDate": "Date of birth",
+        "authority": "Licensing authority",
+        "currentTypes": "Current types",
+        "currentTypesHint": "The aircraft you fly now (ICAO designators). Press Enter after each one."
+      },
+      "details": "Pilot details",
+      "addInfo": "Add",
+      "age": "{n} years",
+      "licence": "Licence",
+      "medical": "Medical",
+      "language": "English proficiency",
+      "typesAuto": "suggested from your type ratings and recent flights",
+      "suggested": "Suggested:",
+      "remove": "Remove {x}"
     },
     "layovers": {
       "title": "Layovers",
@@ -1876,7 +1889,8 @@
       "exportReport": "Export the report (CSV)",
       "exportFlights": "Export the {n} flights (CSV)",
       "empty": "No flight matches these filters.",
-      "airportNote": "A flight counts for both its departure and its arrival airport: the rows add up to more than the total."
+      "airportNote": "A flight counts for both its departure and its arrival airport: the rows add up to more than the total.",
+      "best": "Best"
     },
     "mapTheme": {
       "label": "Map style",

@@ -60,6 +60,9 @@ export interface Pilot extends SyncedRecord {
   employer?: string;
   /** ISO 3166-1 alpha-2 */
   nationality?: string;
+  birthDate?: ISODate | null;
+  /** aircraft types the pilot currently flies (ICAO designators), chosen by the pilot */
+  currentTypes?: string[] | null;
   phone?: string;
   bio?: string;
   subscriptionTier: SubscriptionTier;

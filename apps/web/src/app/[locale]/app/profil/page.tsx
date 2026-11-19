@@ -7,7 +7,7 @@ import { AirportInput } from "@/components/app/AirportInput";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { formatPhoneIntl, AUTHORITIES, RANKS, countryName, licenseStatus, type Pilot } from "@cielo/core";
+import { formatPhoneIntl, AUTHORITIES, RANKS, REGULATORS, ageOn, countryName, flagEmoji, licenseStatus, pilotCredentials, regulatorById, suggestedCurrentTypes, type Pilot } from "@cielo/core";
 import { flightExperience } from "@cielo/cv";
 import { Badge, Card, Field, useToast, type Level } from "@/components/app/ui";
 import { Link } from "@/i18n/navigation";
@@ -16,10 +16,11 @@ import { updatePilot } from "@/lib/repo";
 import { localStore } from "@/lib/db";
 import { PilotEntrance } from "./PilotEntrance";
 import { Honours } from "@/components/app/Honours";
+import { PilotDetails, TypesInput } from "./PilotDetails";
 import { useAirports } from "@/lib/airports";
 
 
-type Draft = Pick<Pilot, "fullName" | "rank" | "employer" | "homeBaseIcao" | "nationality" | "licenceNumber" | "phone" | "bio" | "photoDataUrl">;
+type Draft = Pick<Pilot, "fullName" | "rank" | "employer" | "homeBaseIcao" | "nationality" | "licenceNumber" | "phone" | "bio" | "photoDataUrl" | "birthDate" | "currentTypes" | "authority" | "regulatoryFramework">;
 
 /** Square, centre-cropped JPEG small enough to sync with the profile (≈ 30–60 kB). */
 async function photoFromFile(file: File): Promise<string> {
@@ -64,7 +65,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     // empty fields start from what the app already knows (licence document, CV draft); nothing is saved until "Save"
-    if (pilot && !editing) setDraft({ fullName: pilot.fullName, rank: pilot.rank, employer: pilot.employer, homeBaseIcao: pilot.homeBaseIcao, nationality: pilot.nationality, licenceNumber: pilot.licenceNumber || known.licenceNumber, phone: pilot.phone || known.phone, bio: pilot.bio, photoDataUrl: pilot.photoDataUrl });
+    if (pilot && !editing) setDraft({ fullName: pilot.fullName, rank: pilot.rank, employer: pilot.employer, homeBaseIcao: pilot.homeBaseIcao, nationality: pilot.nationality, licenceNumber: pilot.licenceNumber || known.licenceNumber, phone: pilot.phone || known.phone, bio: pilot.bio, photoDataUrl: pilot.photoDataUrl, birthDate: pilot.birthDate, currentTypes: pilot.currentTypes, authority: pilot.authority, regulatoryFramework: pilot.regulatoryFramework });
   }, [pilot, editing, known]);
 
   const hours = useMemo(() => {
@@ -82,11 +83,14 @@ export default function ProfilePage() {
     [licenses, today],
   );
 
+  const creds = useMemo(() => pilotCredentials(licenses ?? [], today), [licenses, today]);
+  const suggestedTypes = useMemo(() => suggestedCurrentTypes(licenses ?? [], flights ?? [], today), [licenses, flights, today]);
+
   if (!pilot || !draft) return <p className="text-muted">…</p>;
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => (d ? { ...d, [k]: v } : d));
   const save = async () => {
-    await updatePilot({ ...draft, fullName: draft.fullName.trim(), homeBaseIcao: draft.homeBaseIcao?.trim().toUpperCase() || undefined, nationality: draft.nationality?.trim().toUpperCase() || undefined, licenceNumber: draft.licenceNumber?.trim() || undefined, phone: formatPhoneIntl(draft.phone, draft.nationality?.trim() || pilot?.nationality) || undefined });
+    await updatePilot({ ...draft, fullName: draft.fullName.trim(), homeBaseIcao: draft.homeBaseIcao?.trim().toUpperCase() || undefined, nationality: draft.nationality?.trim().toUpperCase() || undefined, licenceNumber: draft.licenceNumber?.trim() || undefined, birthDate: draft.birthDate || null, currentTypes: draft.currentTypes?.length ? draft.currentTypes : null, phone: formatPhoneIntl(draft.phone, draft.nationality?.trim() || pilot?.nationality) || undefined });
     setEditing(false);
     toast(t("saved"));
   };
@@ -184,13 +188,49 @@ export default function ProfilePage() {
                   ) : undefined
                 }
               />
+              <Field label={t("f.birthDate")}>
+                <input id="p-birth" className="input num" type="date" max={today} value={draft.birthDate ?? ""} onChange={(e) => set("birthDate", e.target.value || null)} />
+              </Field>
+              <Field label={t("f.authority")}>
+                <select
+                  id="p-authority"
+                  className="input"
+                  value={draft.authority ?? draft.regulatoryFramework}
+                  onChange={(e) => {
+                    const r = regulatorById(e.target.value);
+                    if (r) setDraft((d) => (d ? { ...d, authority: r.id, regulatoryFramework: r.framework } : d));
+                  }}
+                >
+                  {REGULATORS.map((r) => (
+                    <option key={r.id} value={r.id}>{`${r.short} · ${r.name}`}</option>
+                  ))}
+                </select>
+              </Field>
               <Field label={t("f.licenceNumber")} hint={known.licenceNumber && draft.licenceNumber === known.licenceNumber ? t("f.fromLicence") : undefined}><input id="p-lic" className="input num" value={draft.licenceNumber ?? ""} onChange={(e) => set("licenceNumber", e.target.value || undefined)} /></Field>
               <Field label={t("f.phone")} hint={known.phone && draft.phone === known.phone && !pilot.phone ? t("f.fromCv") : undefined}><input id="p-phone" className="input" type="tel" value={draft.phone ?? ""} onChange={(e) => set("phone", e.target.value || undefined)} onBlur={() => set("phone", formatPhoneIntl(draft.phone, draft.nationality || pilot?.nationality) || undefined)} placeholder="+33 6 12 34 56 78" /></Field>
+              <Field label={t("f.currentTypes")} className="sm:col-span-2" hint={t("f.currentTypesHint")}>
+                <TypesInput value={draft.currentTypes ?? []} suggestions={suggestedTypes} onChange={(v) => set("currentTypes", v)} />
+              </Field>
               <Field label={t("f.email")}><input id="p-email" className="input" value={pilot.email} disabled /></Field>
               <Field label={t("f.bio")} className="sm:col-span-2"><textarea id="p-bio" className="input min-h-28" maxLength={600} value={draft.bio ?? ""} onChange={(e) => set("bio", e.target.value || undefined)} /></Field>
             </div>
           </div>
         </Card>
+      )}
+
+      {!editing && (
+        <PilotDetails
+          pilot={pilot}
+          age={pilot.birthDate ? ageOn(pilot.birthDate, today) : undefined}
+          flag={flagEmoji(pilot.nationality)}
+          country={pilot.nationality ? countryName(pilot.nationality, locale) : undefined}
+          regulator={regulatorById(pilot.authority ?? pilot.regulatoryFramework)}
+          creds={creds}
+          types={pilot.currentTypes?.length ? pilot.currentTypes : suggestedTypes}
+          typesAuto={!pilot.currentTypes?.length && suggestedTypes.length > 0}
+          today={today}
+          onEdit={() => setEditing(true)}
+        />
       )}
 
       {pilot.bio && !editing && (

@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { PILOT_FUNCTIONS, sumFlights, type Flight, type Totals } from "@cielo/core";
 import { downloadBlob } from "@/lib/download";
+import { Meter } from "./ui";
 import { useDuration, useFormatDate } from "@/lib/hooks";
 
 type Preset = "month" | "m3" | "year" | "lastYear" | "m12" | "all" | "custom";
@@ -221,32 +222,43 @@ export function LogbookReport({ flights, today }: { flights: Flight[]; today: st
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
-                  <tr key={r.key} className="num border-t border-[var(--border)] [&>td]:px-2 [&>td]:py-2">
-                    <td className="min-w-40">
-                      <span className="font-medium">{label(r.key)}</span>
-                      <span className="mt-1 block h-1 rounded-full bg-[var(--surface-2)]">
-                        <span className="block h-1 rounded-full bg-[var(--accent)]" style={{ width: `${((r.t.totalMin + r.t.fstdMin) / max) * 100}%` }} />
-                      </span>
-                    </td>
-                    <td className="text-right">{r.t.flights + r.t.fstdSessions}</td>
-                    <td className="text-right font-semibold">{dur(r.t.totalMin + r.t.fstdMin)}</td>
-                    <td className="text-right">{dur(r.t.picMin)}</td>
-                    <td className="text-right">{dur(r.t.copilotMin)}</td>
-                    <td className="text-right">{dur(r.t.nightMin)}</td>
-                    <td className="text-right">{dur(r.t.ifrMin)}</td>
-                    <td className="text-right">{ldg(r.t)}</td>
-                  </tr>
-                ))}
-                <tr className="num border-t-2 border-[var(--border)] font-semibold [&>td]:px-2 [&>td]:py-2">
-                  <td>{t("total")}</td>
+                {rows.map((r, i) => {
+                  const v = r.t.totalMin + r.t.fstdMin;
+                  const best = v === max && rows.length > 1;
+                  const all = totals.totalMin + totals.fstdMin;
+                  // a zero is noise in a column: shown faint
+                  const z = (m: number) => <span className={m ? undefined : "opacity-35"}>{dur(m)}</span>;
+                  return (
+                    <tr key={r.key} className="report-row num border-t border-[var(--border)] transition-colors [&>td]:px-2 [&>td]:py-2.5" style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}>
+                      <td className="min-w-48">
+                        <span className="flex items-center gap-2">
+                          <span className="font-semibold">{label(r.key)}</span>
+                          {best && <span className="rounded-full border border-[var(--accent)]/50 bg-[var(--accent)]/12 px-1.5 py-px text-[10px] font-bold uppercase tracking-wider text-[var(--accent)]">{t("best")}</span>}
+                        </span>
+                        <span className="mt-1.5 flex items-center gap-2">
+                          <span className="min-w-0 flex-1"><Meter value={v} max={max} level="ok" /></span>
+                          <span className="w-9 shrink-0 text-right text-[11px] text-muted">{all ? Math.round((v / all) * 100) : 0}%</span>
+                        </span>
+                      </td>
+                      <td className="text-right">{r.t.flights + r.t.fstdSessions}</td>
+                      <td className="text-right text-base font-bold">{dur(v)}</td>
+                      <td className="text-right">{z(r.t.picMin)}</td>
+                      <td className="text-right">{z(r.t.copilotMin)}</td>
+                      <td className="text-right">{z(r.t.nightMin)}</td>
+                      <td className="text-right">{z(r.t.ifrMin)}</td>
+                      <td className="text-right">{ldg(r.t)}</td>
+                    </tr>
+                  );
+                })}
+                <tr className="num border-t-2 border-[var(--accent)]/40 bg-[var(--accent)]/[0.07] font-bold [&>td]:px-2 [&>td]:py-3">
+                  <td className="rounded-l-xl uppercase tracking-wider text-[var(--accent)]">{t("total")}</td>
                   <td className="text-right">{totals.flights + totals.fstdSessions}</td>
-                  <td className="text-right">{dur(totals.totalMin + totals.fstdMin)}</td>
+                  <td className="text-right text-base">{dur(totals.totalMin + totals.fstdMin)}</td>
                   <td className="text-right">{dur(totals.picMin)}</td>
                   <td className="text-right">{dur(totals.copilotMin)}</td>
                   <td className="text-right">{dur(totals.nightMin)}</td>
                   <td className="text-right">{dur(totals.ifrMin)}</td>
-                  <td className="text-right">{ldg(totals)}</td>
+                  <td className="rounded-r-xl text-right">{ldg(totals)}</td>
                 </tr>
               </tbody>
             </table>
