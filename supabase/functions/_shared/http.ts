@@ -1,8 +1,11 @@
 // HTTP helpers shared by every Geardown edge function.
 
+// Any origin: the functions are protected by the pilot's sign-in token (a bearer header, no cookies), not by the
+// calling site, and the site lives on several addresses (geardown.app, www., Vercel previews, local dev).
+// CORS_ALLOW_ORIGIN, once set to a single old address, blocked geardown.app.
 export const corsHeaders: Record<string, string> = {
-  "Access-Control-Allow-Origin": Deno.env.get("CORS_ALLOW_ORIGIN") ?? "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-region, x-supabase-api-version",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
 };
 
