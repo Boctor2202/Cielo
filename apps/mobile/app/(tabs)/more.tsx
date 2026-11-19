@@ -94,6 +94,7 @@ export default function More() {
 
       <MenuGroup title={t("more.g.logbook")}>
         <MenuRow icon={<Ionicons name="checkmark-done" size={17} color="#fff" />} color="#34C759" label={t("more.audit")} onPress={() => router.navigate("/audit")} />
+        <MenuRow icon={<Ionicons name="sparkles" size={17} color="#fff" />} color="#22C55E" label={t("uimp.title")} onPress={() => router.push("/import" as never)} />
         <MenuRow icon={<Ionicons name="download" size={17} color="#fff" />} color="#8E8E93" label={t("more.import")} loading={busy === "import"} onPress={importCsv} />
         <MenuRow icon={<Ionicons name="albums" size={17} color="#fff" />} color="#BF5AF2" label={t("more.opening")} onPress={() => router.navigate("/opening")} />
       </MenuGroup>

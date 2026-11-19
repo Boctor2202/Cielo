@@ -16,6 +16,7 @@ import {
   flightRevision,
   stamp,
   type FlightRevision,
+  type ImportedRow,
   type SyncedRecord,
 } from "@cielo/core";
 import { lookupAirport, toIcao } from "./airports";
@@ -36,7 +37,11 @@ export async function pickAndImportCsv(store: SqliteStore, pilot: Pilot, types: 
   // header row, two-row headers, columns (names + values) and date order detected automatically
   const a = analyseTable(table);
   const parsed = rowsToFlights(a.rows, a.mapping, { dateOrder: a.dateOrder, defaultFunction: pilot.defaultFunction });
+  return saveImportedRows(store, pilot, types, existing, parsed, "import");
+}
 
+/** Stores reviewed import rows as flights (times derived, the file's totals kept, duplicates skipped). */
+export async function saveImportedRows(store: SqliteStore, pilot: Pilot, types: AircraftType[], existing: Flight[], parsed: ImportedRow[], source: Flight["source"]): Promise<ImportResult> {
   const now = new Date().toISOString();
   const key = (f: Pick<Flight, "date" | "depIcao" | "arrIcao" | "outUtc" | "totalMin">) => `${f.date}|${f.depIcao}|${f.arrIcao}|${f.outUtc ?? ""}|${f.totalMin}`;
   const seen = new Set(existing.map(key));
@@ -66,6 +71,8 @@ export async function pickAndImportCsv(store: SqliteStore, pilot: Pilot, types: 
     if (ex.ifr !== undefined) d.ifrMin = Math.min(ex.ifr, d.totalMin);
     if (ex.pic !== undefined) d.picMin = ex.pic;
     if (ex.copilot !== undefined) d.copilotMin = ex.copilot;
+    if (ex.dual !== undefined) d.dualMin = ex.dual;
+    if (ex.instructor !== undefined) d.instructorMin = ex.instructor;
     const f: Flight = {
       id: newId(),
       createdAt: now,
@@ -74,7 +81,7 @@ export async function pickAndImportCsv(store: SqliteStore, pilot: Pilot, types: 
       pilotId: pilot.id,
       date: input.date,
       flightNumber: input.flightNumber || undefined,
-      source: "import",
+      source,
       rosterEventId: null,
       depIcao: input.depIcao,
       arrIcao: input.arrIcao,

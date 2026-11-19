@@ -139,15 +139,38 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     setSource(null);
     setPdfState("reading");
     try {
-      const d = await importAny({ ...body, share });
+      // photos go in batches: a request stays under the server's 4.5 MB limit
+      const images = body.kind === "images" ? (body.images as { data: string; type: string }[]) : null;
+      let d: Awaited<ReturnType<typeof importAny>>;
+      if (images) {
+        const legs: LogbookLeg[] = [];
+        let batch: typeof images = [];
+        let size = 0;
+        let last: typeof d = {};
+        const flush = async () => {
+          if (!batch.length) return;
+          last = await importAny({ ...body, images: batch, share });
+          if (last.error) throw new Error(last.error);
+          legs.push(...(last.legs ?? []));
+          batch = [];
+          size = 0;
+        };
+        for (const im of images) {
+          if (size + im.data.length > 3_300_000) await flush();
+          batch.push(im);
+          size += im.data.length;
+        }
+        await flush();
+        d = { ...last, legs };
+      } else d = await importAny({ ...body, share });
       if (d.error || !d.legs) return setPdfState(d.error ?? "error");
       const role = d.role === "CDB" || d.role === "CDT" ? "PIC" : "SIC";
       setPdfRows(legsToRows(d.legs, (c) => airports?.get(c)?.icao, { function: role, pilotFlying: false }));
       setApp(d.reader === "airfrance-ep5" ? "Air France · Carnet de vol EP5" : undefined);
       setSource(d.reader === "ai" ? d.source ?? "?" : d.reader === "report" ? "report" : null);
       setPdfState(d.legs.length ? null : "none");
-    } catch {
-      setPdfState("error");
+    } catch (e) {
+      setPdfState((e as Error).message || "error");
     }
   }
   const onPdf = async (file: File) => fromServer({ kind: "pdf", pdf: await b64(file), fileName: file.name });

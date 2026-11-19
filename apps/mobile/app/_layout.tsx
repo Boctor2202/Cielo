@@ -86,6 +86,7 @@ function Navigator() {
         <Stack.Screen name="layover/[id]" options={{ contentStyle: { backgroundColor: c.bg }, title: t("lay.title") }} />
         <Stack.Screen name="auth" options={{ contentStyle: { backgroundColor: c.bg }, title: t("auth.title"), presentation: "modal" }} />
         <Stack.Screen name="auth-callback" options={{ title: t("auth.title") }} />
+        <Stack.Screen name="import" options={{ contentStyle: { backgroundColor: c.bg }, title: t("uimp.title"), presentation: "modal" }} />
         <Stack.Screen name="letter" options={{ contentStyle: { backgroundColor: c.bg }, title: t("letter.title"), presentation: "modal" }} />
         <Stack.Screen name="subscription" options={{ contentStyle: { backgroundColor: c.bg }, title: t("sub.title"), presentation: "modal" }} />
       </Stack>
