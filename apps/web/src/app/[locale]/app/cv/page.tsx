@@ -1,11 +1,14 @@
 "use client";
 
 import { CountryInput } from "@/components/app/CountryInput";
-import { AlertTriangle, Check, Copy, FileDown, FileJson, Plus, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Building2, Check, Copy, FileDown, FileJson, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { countryCodeOf, formatPhoneIntl, countryName } from "@cielo/core";
-import { CV_LOCALES, SCRIPT_FONT, type CvLocale, atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, cvToText, CV_THEMES, flightExperience, toJsonResume, type CvData, type CvDocument, type CvProfile, type CvTheme } from "@cielo/cv";
+import { countryCodeOf, formatPhoneIntl, countryName, operatorIndex } from "@cielo/core";
+import { useAirlineDirectory } from "@/lib/airlines";
+import { useAirports } from "@/lib/airports";
+import { Link } from "@/i18n/navigation";
+import { experienceFromLogbook, CV_LOCALES, SCRIPT_FONT, type CvLocale, atsReport, buildApplicationPack, buildCvDocument, buildCvPdf, cvToText, CV_THEMES, flightExperience, toJsonResume, type CvData, type CvDocument, type CvProfile, type CvTheme } from "@cielo/cv";
 import type { Job } from "@cielo/jobs";
 import { Card, Field, PageTitle, Segmented, useToast, type Level } from "@/components/app/ui";
 import { localStore } from "@/lib/db";
@@ -39,6 +42,12 @@ export default function CvPage() {
   const pilot = usePilot();
   const today = useToday();
   const { toast, toastNode } = useToast();
+  const aircraftList = useTable("aircraft");
+  const airlines = useAirlineDirectory();
+  const airports = useAirports();
+  const ops = useMemo(() => operatorIndex(flights ?? [], aircraftList ?? [], airlines), [flights, aircraftList, airlines]);
+  /** flights the CV cannot place: no operator typed or recognised */
+  const unassigned = useMemo(() => (flights ?? []).filter((f) => !f.deletedAt && !f.isFstd && !ops.of(f)).length, [flights, ops]);
   const [profile, setProfile] = useState<CvProfile | null>(null);
   const [locale, setLocale] = useState<CvLocale>("en");
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -219,6 +228,50 @@ export default function CvPage() {
           </Card>
 
           <Card title={t("sections.experience")} action={<AddBtn onClick={() => set("experience", [...profile.experience, { role: "", employer: "", start: "", bullets: [] }])} />}>
+            {/* the operators of the logbook, ready to become experiences */}
+            {(() => {
+              const sug = experienceFromLogbook(flights ?? [], ops, profile.experience, today);
+              const hours = (m: number) => Math.round(m / 60).toLocaleString();
+              return sug.length || unassigned ? (
+                <div className="mb-4 rounded-xl border border-accent/30 bg-accent/[0.06] p-3">
+                  {sug.length > 0 && (
+                    <>
+                      <p className="flex items-center gap-2 text-sm font-semibold"><Sparkles size={15} className="text-accent" /> {t("suggest.title")}</p>
+                      <ul className="mt-2 space-y-2">
+                        {sug.map((x) => (
+                          <li key={x.employer} className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface/70 px-3 py-2">
+                            <Building2 size={16} className="shrink-0 text-accent" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate font-semibold">{x.employer} · <span className="font-normal">{x.role}</span></span>
+                              <span className="num block truncate text-xs text-muted">
+                                {x.start} → {x.end ?? t("suggest.now")} · {(x.aircraft ?? []).join(", ")} · {t("suggest.hours", { h: hours(x.totalMin), n: x.flights })}
+                                {x.baseIcao ? ` · ${airports?.shortName(x.baseIcao) ?? x.baseIcao}` : ""}
+                              </span>
+                            </span>
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm"
+                              onClick={() => {
+                                const { flights: n, totalMin, baseIcao, ...exp } = x;
+                                const city = baseIcao ? airports?.get(baseIcao)?.city?.split(/[(,/]/)[0]?.trim() : undefined;
+                                set("experience", [...profile.experience, { ...exp, location: city, bullets: [t("suggest.bullet", { h: hours(totalMin), n, types: (exp.aircraft ?? []).join(", ") })] }]);
+                              }}
+                            >
+                              <Plus size={14} /> {t("suggest.add")}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                  {unassigned > 0 && (
+                    <Link href={{ pathname: "/app/carnet", query: { operator: "-" } }} className={`flex items-center gap-2 text-sm text-caution hover:underline ${sug.length ? "mt-3" : ""}`}>
+                      <AlertTriangle size={15} /> {t("suggest.unassigned", { n: unassigned })} <ArrowRight size={14} />
+                    </Link>
+                  )}
+                </div>
+              ) : null;
+            })()}
             <div className="space-y-4">
               {profile.experience.map((x, i) => {
                 const upd = (patch: Partial<typeof x>) => set("experience", profile.experience.map((e, j) => (j === i ? { ...e, ...patch } : e)));

@@ -135,3 +135,4 @@ describe("offer keywords", () => {
     expect(targetKeywordsMet(data)).toEqual(["EASA", "Jet", "Citation Latitude", "C68A"]);
   });
 });
+

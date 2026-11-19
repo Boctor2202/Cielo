@@ -2,7 +2,7 @@
 
 import { BookCopy, Building2, CalendarRange, Check, ListChecks, Clock, CloudFog, FileDown, MapPin, Moon, NotebookPen, Plane, PlaneLanding, Plus, ScanSearch, ShieldCheck, Upload } from "lucide-react";
 import { useAirports } from "@/lib/airports";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { operatorIndex, sumFlights } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -34,6 +34,14 @@ export default function Logbook() {
   const [year, setYear] = useState("");
   const [type, setType] = useState("");
   const [operator, setOperator] = useState("");
+  // a link from the CV opens the logbook on the flights without an operator, ready to assign
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("operator");
+    if (q) {
+      setOperator(q);
+      setSelecting(true);
+    }
+  }, []);
   const aircraft = useTable("aircraft");
   const airlines = useAirlineDirectory();
   const ops = useMemo(() => operatorIndex(flights ?? [], aircraft ?? [], airlines), [flights, aircraft, airlines]);
@@ -75,6 +83,7 @@ export default function Logbook() {
     toast(assignTo ? t("assign.done", { count: n, operator: assignTo }) : t("assign.cleared", { count: n }));
     stopSelecting();
   };
+  const unassigned = useMemo(() => (flights ?? []).filter((f) => !f.deletedAt && !f.isFstd && !ops.of(f)).length, [flights, ops]);
   const airportCount = useMemo(() => new Set(filtered.filter((f) => !f.isFstd).flatMap((f) => [f.depIcao, f.arrIcao])).size, [filtered]);
   // the shown flights, month by month
   const months = useMemo(() => {
@@ -128,6 +137,22 @@ export default function Logbook() {
         </button>
       </div>
 
+      {/* flights without an operator: the CV cannot place them */}
+      {unassigned > 0 && operator !== "-" && (
+        <button
+          type="button"
+          onClick={() => (setOperator("-"), setSelecting(true))}
+          className="mb-4 flex w-full items-center gap-3 rounded-2xl border border-caution/40 bg-caution/10 px-4 py-3 text-left transition hover:bg-caution/15"
+        >
+          <Building2 size={18} className="shrink-0 text-caution" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">{t("unassigned.title", { n: unassigned })}</span>
+            <span className="block text-xs text-muted">{t("unassigned.why")}</span>
+          </span>
+          <span className="btn btn-sm shrink-0 border border-caution/50 text-caution">{t("unassigned.go")}</span>
+        </button>
+      )}
+
       {/* what the selection adds up to */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
@@ -155,7 +180,7 @@ export default function Logbook() {
               {months.map((m) => (
                 <section key={m.key} className="logbook-month">
                   <header className="sticky top-0 z-10 flex items-baseline justify-between gap-3 border-b border-border bg-surface/90 px-5 py-2.5 backdrop-blur">
-                    <h2 className="font-display text-lg font-semibold capitalize">{m.label}</h2>
+                    <h2 className="text-[17px] font-bold capitalize tracking-tight">{m.label}</h2>
                     <p className="num flex items-center gap-4 text-xs text-muted">
                       <span>{t("flightCount", { count: m.flights.length })}</span>
                       {m.night > 0 && <span className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-300"><Moon size={11} /> {d(m.night)}</span>}

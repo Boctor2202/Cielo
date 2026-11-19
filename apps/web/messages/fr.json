@@ -584,7 +584,12 @@
         "to": "Au",
         "range": "Sélectionner ces dates"
       },
-      "flightCount": "{count, plural, =0 {Aucun vol} one {# vol} other {# vols}}"
+      "flightCount": "{count, plural, =0 {Aucun vol} one {# vol} other {# vols}}",
+      "unassigned": {
+        "title": "{n, plural, one {# vol n'a} other {# vols n'ont}} pas d'opérateur",
+        "why": "Attribuez-les pour que votre CV liste chaque compagnie où vous avez volé, avec ses heures et ses avions.",
+        "go": "Attribuer"
+      }
     },
     "form": {
       "newTitle": "Nouveau vol",
@@ -1540,7 +1545,15 @@
       "es": "Espagnol",
       "ru": "Russe",
       "zh": "Chinois",
-      "ar": "Arabe"
+      "ar": "Arabe",
+      "suggest": {
+        "title": "D'après votre carnet",
+        "now": "aujourd'hui",
+        "hours": "{h} h · {n} vols",
+        "add": "Ajouter",
+        "bullet": "{h} heures de vol sur {n} vols en {types}",
+        "unassigned": "{n} vols n'ont pas d'opérateur : attribuez-les pour qu'ils comptent dans votre expérience"
+      }
     },
     "profile": {
       "eyebrow": "Profil pilote",

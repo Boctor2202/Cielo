@@ -584,7 +584,12 @@
         "to": "To",
         "range": "Select these dates"
       },
-      "flightCount": "{count, plural, =0 {No flights} one {# flight} other {# flights}}"
+      "flightCount": "{count, plural, =0 {No flights} one {# flight} other {# flights}}",
+      "unassigned": {
+        "title": "{n, plural, one {# flight has} other {# flights have}} no operator",
+        "why": "Assign them so your CV lists every company you flew for, with its hours and aircraft.",
+        "go": "Assign"
+      }
     },
     "form": {
       "newTitle": "New flight",
@@ -1540,7 +1545,15 @@
       "es": "Spanish",
       "ru": "Russian",
       "zh": "Chinese",
-      "ar": "Arabic"
+      "ar": "Arabic",
+      "suggest": {
+        "title": "From your logbook",
+        "now": "present",
+        "hours": "{h} h · {n} flights",
+        "add": "Add",
+        "bullet": "{h} flight hours over {n} flights on {types}",
+        "unassigned": "{n} flights have no operator: assign them so they count in your experience"
+      }
     },
     "profile": {
       "eyebrow": "Pilot profile",

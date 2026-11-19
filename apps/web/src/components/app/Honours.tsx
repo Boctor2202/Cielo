@@ -49,7 +49,7 @@ export function Honours({ flights, opening, airport }: { flights: Flight[]; open
         <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: level.current ? from : "rgba(255,255,255,.55)" }}>
           {level.current ? t(`title.${level.current.hours}`) : t("noWings")}
         </p>
-        <p className="num mt-0.5 font-display text-2xl font-semibold">
+        <p className="num mt-0.5 text-2xl font-bold">
           {h.toLocaleString()} <span className="text-base font-normal text-white/60">h</span>
         </p>
         {level.next && (

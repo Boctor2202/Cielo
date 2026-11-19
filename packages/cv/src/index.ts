@@ -6,3 +6,4 @@ export * from "./ats";
 export * from "./jsonresume";
 export * from "./pack";
 export * from "./letter";
+export * from "./suggest";
