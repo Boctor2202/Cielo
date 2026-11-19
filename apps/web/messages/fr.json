@@ -588,7 +588,8 @@
       "unassigned": {
         "title": "{n, plural, one {# vol n'a} other {# vols n'ont}} pas d'opérateur",
         "why": "Attribuez-les pour que votre CV liste chaque compagnie où vous avez volé, avec ses heures et ses avions.",
-        "go": "Attribuer"
+        "go": "Attribuer",
+        "dismiss": "Masquer (vols privés ou de formation)"
       }
     },
     "form": {

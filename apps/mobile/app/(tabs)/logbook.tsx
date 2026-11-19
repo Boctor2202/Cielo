@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, SectionList, StyleSheet, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
@@ -104,6 +104,15 @@ export default function Logbook() {
   const sum = useMemo(() => sumFlights(shown), [shown]);
   /** flights the CV cannot place: no operator typed or recognised */
   const unassigned = useMemo(() => flights.filter((f) => !f.deletedAt && !f.isFstd && !ops.of(f)).length, [flights, ops]);
+  // dismissed: hidden until more flights without an operator come in (private, training… stay as they are)
+  const [dismissedAt, setDismissedAt] = useState(0);
+  useEffect(() => {
+    void Storage.getItem("unassigned-dismissed").then((v) => setDismissedAt(Number(v) || 0)).catch(() => undefined);
+  }, []);
+  const dismiss = () => {
+    setDismissedAt(unassigned);
+    void Storage.setItem("unassigned-dismissed", String(unassigned)).catch(() => undefined);
+  };
   const airportCount = useMemo(() => new Set(shown.filter((f) => !f.isFstd).flatMap((f) => [f.depIcao, f.arrIcao])).size, [shown]);
   const short = (icao: string) => (airports().get(icao) ? airports().shortName(icao) : "");
 
@@ -158,7 +167,7 @@ export default function Logbook() {
                   returnKeyType="search"
                 />
               </Row>
-              {unassigned > 0 && fOp !== "-" && access.canWrite ? (
+              {unassigned > dismissedAt && fOp !== "-" && access.canWrite ? (
                 <Pressable
                   onPress={() => (tap(), setFOp("-"), setSelecting(true))}
                   style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: 14, borderWidth: 1, borderColor: c.caution + "66", backgroundColor: c.caution + "1a" }}
@@ -169,6 +178,9 @@ export default function Logbook() {
                     <Txt variant="small">{t("log.unassigned.why")}</Txt>
                   </View>
                   <Txt variant="small" color={c.caution} style={{ fontWeight: "700" }}>{t("log.assign.go")}</Txt>
+                  <Pressable onPress={() => (tap(), dismiss())} hitSlop={10} accessibilityLabel={t("log.unassigned.dismiss")}>
+                    <Ionicons name="close" size={18} color={c.muted} />
+                  </Pressable>
                 </Pressable>
               ) : null}
               {/* what the selection adds up to */}

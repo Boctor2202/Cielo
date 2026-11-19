@@ -1,6 +1,6 @@
 "use client";
 
-import { BookCopy, Building2, CalendarRange, Check, ListChecks, Clock, CloudFog, FileDown, MapPin, Moon, NotebookPen, Plane, PlaneLanding, Plus, ScanSearch, ShieldCheck, Upload } from "lucide-react";
+import { X, BookCopy, Building2, CalendarRange, Check, ListChecks, Clock, CloudFog, FileDown, MapPin, Moon, NotebookPen, Plane, PlaneLanding, Plus, ScanSearch, ShieldCheck, Upload } from "lucide-react";
 import { useAirports } from "@/lib/airports";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -84,6 +84,19 @@ export default function Logbook() {
     stopSelecting();
   };
   const unassigned = useMemo(() => (flights ?? []).filter((f) => !f.deletedAt && !f.isFstd && !ops.of(f)).length, [flights, ops]);
+  // dismissed: hidden until more flights without an operator come in (private, training… stay as they are)
+  const [dismissedAt, setDismissedAt] = useState(0);
+  useEffect(() => {
+    try {
+      setDismissedAt(Number(localStorage.getItem("gd:unassigned-dismissed")) || 0);
+    } catch {}
+  }, []);
+  const dismiss = () => {
+    setDismissedAt(unassigned);
+    try {
+      localStorage.setItem("gd:unassigned-dismissed", String(unassigned));
+    } catch {}
+  };
   const airportCount = useMemo(() => new Set(filtered.filter((f) => !f.isFstd).flatMap((f) => [f.depIcao, f.arrIcao])).size, [filtered]);
   // the shown flights, month by month
   const months = useMemo(() => {
@@ -138,11 +151,12 @@ export default function Logbook() {
       </div>
 
       {/* flights without an operator: the CV cannot place them */}
-      {unassigned > 0 && operator !== "-" && (
+      {unassigned > dismissedAt && operator !== "-" && (
+        <div className="relative mb-4">
         <button
           type="button"
           onClick={() => (setOperator("-"), setSelecting(true))}
-          className="mb-4 flex w-full items-center gap-3 rounded-2xl border border-caution/40 bg-caution/10 px-4 py-3 text-left transition hover:bg-caution/15"
+          className="flex w-full items-center gap-3 rounded-2xl border border-caution/40 bg-caution/10 py-3 pl-4 pr-12 text-left transition hover:bg-caution/15"
         >
           <Building2 size={18} className="shrink-0 text-caution" />
           <span className="min-w-0 flex-1">
@@ -151,6 +165,10 @@ export default function Logbook() {
           </span>
           <span className="btn btn-sm shrink-0 border border-caution/50 text-caution">{t("unassigned.go")}</span>
         </button>
+        <button type="button" onClick={dismiss} aria-label={t("unassigned.dismiss")} title={t("unassigned.dismiss")} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted hover:bg-caution/15 hover:text-text">
+          <X size={16} />
+        </button>
+        </div>
       )}
 
       {/* what the selection adds up to */}

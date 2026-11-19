@@ -588,7 +588,8 @@
       "unassigned": {
         "title": "{n, plural, one {# flight has} other {# flights have}} no operator",
         "why": "Assign them so your CV lists every company you flew for, with its hours and aircraft.",
-        "go": "Assign"
+        "go": "Assign",
+        "dismiss": "Hide (private or training flights)"
       }
     },
     "form": {
