@@ -67,7 +67,8 @@ export function Honours({ flights, opening }: { flights: Flight[]; opening: Open
   const h = Math.floor(level.totalMin / 60);
   const tier = level.current?.tier ?? "bronze";
   const [from, to] = TIER[tier];
-  const shown = held.slice(0, 5);
+  // one row: five badges, or four and a "+n" disc that opens them all
+  const shown = held.length > 5 ? held.slice(0, 4) : held;
 
   return (
     <View style={{ borderRadius: 22, overflow: "hidden", borderWidth: 1, borderColor: EDGE, backgroundColor: "#060b16" }}>
@@ -106,11 +107,15 @@ export function Honours({ flights, opening }: { flights: Flight[]; opening: Open
             <Txt mono variant="small" color="rgba(255,255,255,0.5)">{earned} / {badges.length}</Txt>
           </Row>
           {shown.length ? (
-            <Row style={{ flexWrap: "wrap", alignItems: "center" }} gap={8}>
+            <Row style={{ alignItems: "flex-end" }} gap={8}>
               {shown.map((b) => (
                 <Emblem key={b.id} badge={b} size={50} />
               ))}
-              {held.length > shown.length ? <Txt color="rgba(255,255,255,0.6)" style={{ fontWeight: "700" }}>+{held.length - shown.length}</Txt> : null}
+              {held.length > shown.length ? (
+                <Pressable onPress={() => router.push("/(tabs)/stats")} style={{ width: 42, height: 42, marginBottom: 3, borderRadius: 21, borderWidth: 1, borderColor: "rgba(255,255,255,0.2)", backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center" }}>
+                  <Txt mono color="rgba(255,255,255,0.8)" style={{ fontWeight: "700" }}>+{held.length - shown.length}</Txt>
+                </Pressable>
+              ) : null}
             </Row>
           ) : (
             <Txt variant="small" color="rgba(255,255,255,0.55)">{t("profile.noDistinction")}</Txt>
