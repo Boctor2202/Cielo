@@ -25,7 +25,8 @@ export function Honours({ flights, opening, airport }: { flights: Flight[]; open
   const h = Math.floor(level.totalMin / 60);
   const tier = level.current?.tier ?? "bronze";
   const [from, to] = TIER[tier];
-  const shown = held.slice(0, 6);
+  // one row: six badges, or five and a "+n" disc that opens them all
+  const shown = held.length > 6 ? held.slice(0, 5) : held;
 
   return (
     <motion.aside
@@ -74,7 +75,7 @@ export function Honours({ flights, opening, airport }: { flights: Flight[]; open
           <p className="num text-xs text-white/50">{earned} / {badges.length}</p>
         </div>
         {shown.length ? (
-          <ul className="mt-2.5 flex flex-wrap gap-2">
+          <ul className="mt-2.5 flex flex-nowrap items-end gap-2.5">
             {shown.map((b, i) => (
               <motion.li
                 key={b.id}
@@ -87,7 +88,15 @@ export function Honours({ flights, opening, airport }: { flights: Flight[]; open
               </motion.li>
             ))}
             {held.length > shown.length && (
-              <li className="grid h-[49px] w-[46px] place-items-center text-xs font-semibold text-white/60">+{held.length - shown.length}</li>
+              <li className="mb-[3px]">
+                <Link
+                  href="/app/statistiques"
+                  title={t("allBadges")}
+                  className="num grid h-[42px] w-[42px] place-items-center rounded-full border border-white/20 bg-white/[0.06] text-sm font-bold text-white/80 transition hover:border-white/50 hover:text-white"
+                >
+                  +{held.length - shown.length}
+                </Link>
+              </li>
             )}
           </ul>
         ) : (
