@@ -34,3 +34,8 @@ if (!fs.existsSync(globeDst) || fs.statSync(globeDst).mtimeMs < fs.statSync(src)
 const rwySrc = path.resolve("../../packages/reference-data/data/runways.json");
 const rwyDst = path.resolve("public/data/runways.json");
 if (!fs.existsSync(rwyDst) || fs.statSync(rwyDst).mtimeMs < fs.statSync(rwySrc).mtimeMs) fs.copyFileSync(rwySrc, rwyDst);
+
+// Airlines of the world (OpenFlights), for the operator search.
+const alSrc = path.resolve("../../packages/reference-data/data/airlines.json");
+const alDst = path.resolve("public/data/airlines.json");
+if (!fs.existsSync(alDst) || fs.statSync(alDst).mtimeMs < fs.statSync(alSrc).mtimeMs) fs.copyFileSync(alSrc, alDst);

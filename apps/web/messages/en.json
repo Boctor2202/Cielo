@@ -2160,6 +2160,9 @@
       "unlocked": "{count, plural, one {Badge unlocked} other {# badges unlocked}}",
       "next": "Next badge:",
       "close": "Close"
+    },
+    "operatorSearch": {
+      "known": "In your logbook"
     }
   },
   "why": {

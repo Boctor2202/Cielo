@@ -23,7 +23,8 @@ describe("operators", () => {
     expect(idx.of(flights[2]!)).toBe("Air France");
     expect(idx.of(flights[3]!)).toBe("Astonjet");
     expect(idx.of(flights[4]!)).toBeUndefined();
-    expect(operatorIndex([f({ flightNumber: "AJD214K" })]).of({ flightNumber: "AJD214K" })).toBe("Astonjet");
+    expect(operatorIndex([f({ flightNumber: "AJD214K" })]).of({ flightNumber: "AJD214K" })).toBe("Astonjet Ltd");
+    expect(operatorIndex([]).of({ flightNumber: "ASJ12" })).toBe("Astonjet SAS");
     expect(idx.all[0]).toBe("Astonjet");
   });
 });
@@ -40,5 +41,43 @@ describe("logbookGains", () => {
     expect(g.newAirports).toEqual(["LIML"]);
     expect(g.newCountries).toEqual(["IT"]);
     expect(g.newTypes).toEqual(["C68A"]);
+  });
+});
+
+import { searchOperators } from "../src";
+describe("searchOperators", () => {
+  it("finds by name, code and letters in order, logbook first", () => {
+    expect(searchOperators("astonjet").map((h) => h.name)).toEqual(expect.arrayContaining(["Astonjet SAS", "Astonjet Ltd"]));
+    expect(searchOperators("AFR")[0]?.name).toBe("Air France");
+    expect(searchOperators("U2")[0]?.name).toBe("easyJet");
+    expect(searchOperators("netj").map((h) => h.name)).toContain("NetJets Europe");
+    expect(searchOperators("", ["Aéroclub de Paris"])[0]).toMatchObject({ name: "Aéroclub de Paris", known: true });
+    expect(searchOperators("aero", ["Aéroclub de Paris"])[0]?.name).toBe("Aéroclub de Paris");
+  });
+});
+
+import { readFileSync } from "node:fs";
+import { airlineDirectory } from "../src";
+describe("world airline directory", () => {
+  const file = JSON.parse(readFileSync(new URL("../../reference-data/data/airlines.json", import.meta.url), "utf8"));
+  const dir = airlineDirectory(file.rows);
+  it("knows the airlines of the world, our table on top", () => {
+    expect(dir.all.length).toBeGreaterThan(5000);
+    expect(dir.byIcao("AJD")?.name).toBe("Astonjet Ltd");
+    expect(dir.byIcao("ASJ")?.country).toBe("France");
+    expect(dir.byIcao("LXJ")?.name).toBe("Flexjet");
+    expect(dir.byIcao("QFA")?.name).toBe("Qantas");
+    expect(dir.byIcao("SAA")?.name).toBe("South African Airways");
+  });
+  it("searches by name, code and call sign", () => {
+    expect(searchOperators("ryanair", [], 8, dir)[0]?.name).toBe("Ryanair");
+    expect(searchOperators("EXECJET", [], 8, dir)[0]?.name).toBe("NetJets");
+    expect(searchOperators("CATCH ME", [], 8, dir)[0]?.name).toBe("Astonjet Ltd");
+    expect(searchOperators("luxair", [], 8, dir)[0]?.name).toBe("Luxair");
+    expect(searchOperators("qantas", [], 8, dir).map((h) => h.name)).toContain("Qantas");
+  });
+  it("recognises a flight number of any airline", () => {
+    expect(operatorIndex([], [], dir).of({ flightNumber: "QTR15" })).toBe("Qatar Airways");
+    expect(operatorIndex([], [], dir).of({ flightNumber: "SVA123" })).toBeTruthy();
   });
 });

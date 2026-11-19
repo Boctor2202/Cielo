@@ -12,6 +12,8 @@ import { useRouter } from "@/i18n/navigation";
 import { useAirports } from "@/lib/airports";
 import { useDuration, useFlights, useTable, useTypes } from "@/lib/hooks";
 import { announceGains } from "@/lib/gains";
+import { useAirlineDirectory } from "@/lib/airlines";
+import { OperatorInput } from "./OperatorInput";
 import { findType, flightToInput, saveFlight, softDelete } from "@/lib/repo";
 import { db } from "@/lib/db";
 import { useAccess } from "@/lib/access";
@@ -50,7 +52,8 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
   const aircraftList = useTable("aircraft");
   const allFlights = useFlights();
   // the operator recognised from the aircraft, the call sign and the logbook (shown until one is typed)
-  const operators = useMemo(() => operatorIndex(allFlights ?? [], aircraftList ?? []), [allFlights, aircraftList]);
+  const airlines = useAirlineDirectory();
+  const operators = useMemo(() => operatorIndex(allFlights ?? [], aircraftList ?? [], airlines), [allFlights, aircraftList, airlines]);
   const types = useTypes();
   const dur = useDuration();
   const { toast, toastNode } = useToast();
@@ -307,18 +310,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                   </datalist>
                 </Field>
                 <Field label={t("operator")} hint={!v.operator && recognisedOperator ? t("operatorRecognised") : undefined}>
-                  <input
-                    className="input"
-                    list="geardown-operators"
-                    value={v.operator ?? ""}
-                    placeholder={recognisedOperator ?? t("operatorPh")}
-                    onChange={(e) => set("operator", e.target.value || undefined)}
-                  />
-                  <datalist id="geardown-operators">
-                    {operators.all.map((o) => (
-                      <option key={o} value={o} />
-                    ))}
-                  </datalist>
+                  <OperatorInput value={v.operator ?? ""} onChange={(x) => set("operator", x || undefined)} known={operators.all} placeholder={recognisedOperator ?? t("operatorPh")} />
                 </Field>
                 <Field label={t("operation")}>
                   <Segmented

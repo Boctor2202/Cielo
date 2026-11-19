@@ -27,6 +27,8 @@ import {
   operatorIndex,
 } from "@cielo/core";
 import { announceGains } from "../../src/gains";
+import { airlines } from "../../src/airlines";
+import { OperatorField } from "../../src/components/OperatorField";
 import { AirportField } from "../../src/components/AirportField";
 import { AircraftTypeField } from "../../src/components/AircraftTypeField";
 import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPicker";
@@ -304,7 +306,7 @@ function FlightForm() {
     [input, selectedType, selectedAircraft],
   );
   const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
-  const operators = useMemo(() => operatorIndex(flights, aircraft), [flights, aircraft]);
+  const operators = useMemo(() => operatorIndex(flights, aircraft, airlines()), [flights, aircraft]);
   const recognisedOperator = form.isFstd ? undefined : operators.of({ flightNumber: form.flightNumber, registration: selectedAircraft?.registration });
   const locked = !!existing?.locked;
   // what the collapsed "advanced times" header shows: only the values the pilot entered
@@ -464,13 +466,11 @@ function FlightForm() {
             placeholder="AFR1234"
           />
           {!form.isFstd ? (
-            <Field
-              label={t("flight.operator")}
-              value={form.operator}
-              onChangeText={(s) => set("operator", s)}
-              placeholder={recognisedOperator ?? t("flight.operatorPh")}
-              hint={!form.operator && recognisedOperator ? t("flight.operatorRecognised") : undefined}
-            />
+            <View style={{ gap: 4 }}>
+              <Txt variant="label">{t("flight.operator")}</Txt>
+              <OperatorField value={form.operator} onChange={(s) => set("operator", s)} known={operators.all} placeholder={recognisedOperator ?? t("flight.operatorPh")} />
+              {!form.operator && recognisedOperator ? <Txt variant="small">{t("flight.operatorRecognised")}</Txt> : null}
+            </View>
           ) : null}
         </Card>
 

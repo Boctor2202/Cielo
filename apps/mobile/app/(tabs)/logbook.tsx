@@ -9,6 +9,8 @@ import Storage from "expo-sqlite/kv-store";
 import { formatDate, formatMonth } from "../../src/i18n";
 import { useApp } from "../../src/state";
 import { airports } from "../../src/airports";
+import { airlines } from "../../src/airlines";
+import { OperatorField } from "../../src/components/OperatorField";
 import { useSyncStatus } from "../../src/syncStatus";
 import { font, glass, mono, space, useTheme } from "../../src/theme";
 
@@ -56,7 +58,7 @@ export default function Logbook() {
   const [fCond, setFCond] = useState<"" | "night" | "ifr" | "fstd">("");
   const [fOp, setFOp] = useState("");
   const filtersOn = !!(fYear || fType || fFn || fCond || fOp);
-  const ops = useMemo(() => operatorIndex(flights, aircraft), [flights, aircraft]);
+  const ops = useMemo(() => operatorIndex(flights, aircraft, airlines()), [flights, aircraft]);
   const years = useMemo(() => [...new Set(flights.map((f) => f.date.slice(0, 4)))].sort().reverse(), [flights]);
   const typesFlown = useMemo(() => [...new Set(flights.filter((f) => !f.isFstd && f.aircraftTypeIcao).map((f) => f.aircraftTypeIcao!))].sort(), [flights]);
   const fns = useMemo(() => [...new Set(flights.map((f) => f.function))].sort(), [flights]);
@@ -384,13 +386,7 @@ export default function Logbook() {
               <Ionicons name="calendar" size={16} color={c.accent} />
             </Pressable>
           </Row>
-          <TextInput
-            style={{ color: "#fff", ...font.regular, fontSize: 15, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.1)" }}
-            placeholder={t("log.assign.placeholder")}
-            placeholderTextColor="rgba(255,255,255,0.45)"
-            value={assignTo}
-            onChangeText={setAssignTo}
-          />
+          <OperatorField value={assignTo} onChange={setAssignTo} known={ops.all} placeholder={t("log.assign.placeholder")} dark />
           {ops.all.length ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }} keyboardShouldPersistTaps="handled">
               {ops.all.slice(0, 8).map((o) => (

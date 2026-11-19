@@ -2160,6 +2160,9 @@
       "unlocked": "{count, plural, one {Badge débloqué} other {# badges débloqués}}",
       "next": "Prochain badge :",
       "close": "Fermer"
+    },
+    "operatorSearch": {
+      "known": "Dans votre carnet"
     }
   },
   "why": {

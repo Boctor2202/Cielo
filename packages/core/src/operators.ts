@@ -12,6 +12,8 @@ import type { Aircraft, Flight } from "./types";
 export interface AirlineInfo {
   name: string;
   iata?: string;
+  country?: string;
+  callsign?: string;
 }
 
 /** ICAO airline designators of common airlines and business-aviation operators. */
@@ -123,10 +125,50 @@ export const AIRLINES: Record<string, AirlineInfo> = {
   AHO: { name: "Air Hamburg" },
   GAC: { name: "GlobeAir" },
   PJS: { name: "Jet Aviation" },
-  AJD: { name: "Astonjet" },
+  // FAA JO 7340.2 / ICAO Doc 8585: SAS Astonjet (French AOC, telephony ASTONJET), Astonjet Limited (Maltese AOC, telephony CATCH ME)
+  ASJ: { name: "Astonjet SAS", country: "France", callsign: "ASTONJET" },
+  AJD: { name: "Astonjet Ltd", country: "Malta", callsign: "CATCH ME" },
 };
 
-const IATA = new Map(Object.entries(AIRLINES).flatMap(([icao, a]) => (a.iata ? [[a.iata, icao] as const] : [])));
+/** An airline of the world directory. */
+export interface Airline {
+  icao: string;
+  iata?: string;
+  name: string;
+  callsign?: string;
+  country?: string;
+  active?: boolean;
+}
+
+/** Every airline known: the world list (OpenFlights, in @cielo/reference-data) with the table above on top. */
+export interface AirlineDirectory {
+  all: Airline[];
+  byIcao: (code: string) => Airline | undefined;
+  byIata: (code: string) => Airline | undefined;
+}
+
+/** A directory from the world list's rows ([icao, iata, name, callsign, country, active]); the table above wins. */
+export function airlineDirectory(rows: [string, string, string, string, string, number][] = []): AirlineDirectory {
+  const byIcao = new Map<string, Airline>();
+  const byIata = new Map<string, Airline>();
+  const all: Airline[] = [];
+  const add = (a: Airline, override: boolean) => {
+    if (a.icao && byIcao.has(a.icao) && !override) return;
+    if (a.icao) {
+      const prev = byIcao.get(a.icao);
+      if (prev) all.splice(all.indexOf(prev), 1, a);
+      else all.push(a);
+      byIcao.set(a.icao, a);
+    } else all.push(a);
+    if (a.iata && (override || !byIata.has(a.iata) || (a.active && !byIata.get(a.iata)!.active))) byIata.set(a.iata, a);
+  };
+  for (const [icao, iata, name, callsign, country, active] of rows) add({ icao, iata: iata || undefined, name, callsign: callsign || undefined, country: country || undefined, active: !!active }, false);
+  for (const [icao, a] of Object.entries(AIRLINES)) add({ ...byIcao.get(icao), icao, iata: a.iata ?? byIcao.get(icao)?.iata, name: a.name, country: a.country ?? byIcao.get(icao)?.country, callsign: a.callsign ?? byIcao.get(icao)?.callsign, active: true }, true);
+  return { all, byIcao: (c) => byIcao.get(c.toUpperCase()), byIata: (c) => byIata.get(c.toUpperCase()) };
+}
+
+let curated: AirlineDirectory | undefined;
+const defaultDirectory = () => (curated ??= airlineDirectory());
 
 /** The airline designator a flight number or call sign starts with: ICAO (AFR123, NJE7HA) or IATA (AF123). */
 export function callsignPrefix(flightNumber?: string | null): { icao?: string; iata?: string } {
@@ -154,7 +196,11 @@ export interface OperatorIndex {
 }
 
 /** What the logbook and the aircraft list teach about operators, to recognise them on every flight. */
-export function operatorIndex(flights: Pick<Flight, "operator" | "flightNumber" | "registration" | "deletedAt">[], aircraft: Pick<Aircraft, "registration" | "operator" | "deletedAt">[] = []): OperatorIndex {
+export function operatorIndex(
+  flights: Pick<Flight, "operator" | "flightNumber" | "registration" | "deletedAt">[],
+  aircraft: Pick<Aircraft, "registration" | "operator" | "deletedAt">[] = [],
+  directory: AirlineDirectory = defaultDirectory(),
+): OperatorIndex {
   const byReg = new Map<string, string>();
   for (const a of aircraft) if (!a.deletedAt && a.operator?.trim()) byReg.set(norm(a.registration), a.operator.trim());
   const prefixSeen = new Map<string, string[]>();
@@ -179,8 +225,7 @@ export function operatorIndex(flights: Pick<Flight, "operator" | "flightNumber" 
     const key = p.icao ?? p.iata;
     if (key && learnedPrefix.has(key)) return learnedPrefix.get(key);
     if (reg && learnedReg.has(reg)) return learnedReg.get(reg);
-    const icao = p.icao ?? (p.iata ? IATA.get(p.iata) : undefined);
-    return icao ? AIRLINES[icao]?.name : undefined;
+    return (p.icao ? directory.byIcao(p.icao) : p.iata ? directory.byIata(p.iata) : undefined)?.name;
   };
   const count = new Map<string, number>();
   for (const f of alive) {
@@ -188,4 +233,65 @@ export function operatorIndex(flights: Pick<Flight, "operator" | "flightNumber" 
     if (o) count.set(o, (count.get(o) ?? 0) + 1);
   }
   return { of, all: [...count.entries()].sort((a, b) => b[1] - a[1]).map(([o]) => o) };
+}
+
+const fold = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+export interface OperatorHit {
+  name: string;
+  /** ICAO designator (and IATA) when the operator is in the table */
+  icao?: string;
+  iata?: string;
+  country?: string;
+  /** already in the pilot's logbook */
+  known?: boolean;
+}
+
+
+/**
+ * Operators matching what is typed: the ones already in the logbook first, then the table, by name, ICAO or
+ * IATA code ("astj", "AFR", "netj", "U2").
+ */
+export function searchOperators(query: string, known: string[] = [], limit = 8, directory: AirlineDirectory = defaultDirectory()): OperatorHit[] {
+  const q = fold(query.trim());
+  const hits: (OperatorHit & { score: number })[] = [];
+  const seen = new Set<string>();
+  const add = (h: OperatorHit, score: number) => {
+    const k = fold(h.name);
+    if (seen.has(k)) return;
+    seen.add(k);
+    hits.push({ ...h, score });
+  };
+  const rank = (name: string, codes: (string | undefined)[]) => {
+    if (!q) return 1;
+    const n = fold(name);
+    if (codes.some((c) => c && fold(c) === q)) return 0;
+    if (n.startsWith(q)) return 1;
+    if (n.split(/[\s-]+/).some((w) => w.startsWith(q))) return 2;
+    if (q.length >= 3 && n.includes(q)) return 3;
+    // letters in order ("astj" → "Astonjet"), only for a few letters typed
+    if (q.length < 3) return -1;
+    let i = 0;
+    for (const ch of n) if (ch === q[i]) i++;
+    return i === q.length ? 4 : -1;
+  };
+  const byName = new Map(directory.all.map((a) => [fold(a.name), a]));
+  for (const name of known) {
+    const t = byName.get(fold(name));
+    const r = rank(name, t ? [t.icao, t.iata, t.callsign] : []);
+    if (r >= 0) add({ name, icao: t?.icao || undefined, iata: t?.iata, known: true }, r - 0.5);
+  }
+  if (q)
+    for (const a of directory.all) {
+      const r = rank(a.name, [a.icao, a.iata, a.callsign]);
+      // an airline still flying comes before a defunct one at the same rank
+      if (r >= 0) add({ name: a.name, icao: a.icao || undefined, iata: a.iata, country: a.country }, r + (a.active ? 0 : 0.3));
+    }
+  // letters in order only help when nothing matches better
+  const good = hits.some((h) => h.score < 3.5);
+  return hits
+    .filter((h) => !good || h.score < 3.5)
+    .sort((a, b) => a.score - b.score || a.name.localeCompare(b.name))
+    .slice(0, limit)
+    .map(({ score: _s, ...h }) => h);
 }

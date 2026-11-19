@@ -15,7 +15,7 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
         { h: "Éditeur", p: [`${c.legalName}, ${c.address}. ${c.registration}.`, `Directeur de la publication : ${c.publisher}.`, `Contact : ${SITE.contactEmail}.`] },
         { h: "Hébergement", p: [`${c.host}. Les données de l'application sont hébergées dans l'Union européenne.`] },
         { h: "Propriété intellectuelle", p: ["Le nom Geardown, le logo, les textes, interfaces et le code sont la propriété de l'éditeur. Toute reproduction sans autorisation est interdite."] },
-        { h: "Données aéronautiques", p: ["La base d'aérodromes provient d'OurAirports (domaine public). Les désignateurs de types d'aéronefs suivent le Doc 8643 de l'OACI."] },
+        { h: "Données aéronautiques", p: ["La base d'aérodromes provient d'OurAirports (domaine public). Les désignateurs de types d'aéronefs suivent le Doc 8643 de l'OACI. La liste des compagnies aériennes provient d'OpenFlights (openflights.org), sous licence Open Database License (ODbL)."] },
       ],
     },
     privacy: {
@@ -56,7 +56,7 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
         { h: "Publisher", p: [`${c.legalName}, ${c.address}. ${c.registration}.`, `Publication director: ${c.publisher}.`, `Contact: ${SITE.contactEmail}.`] },
         { h: "Hosting", p: [`${c.host}. Application data is hosted in the European Union.`] },
         { h: "Intellectual property", p: ["The Geardown name, logo, texts, interfaces and code belong to the publisher. Any reproduction without permission is prohibited."] },
-        { h: "Aeronautical data", p: ["The aerodrome database comes from OurAirports (public domain). Aircraft type designators follow ICAO Doc 8643."] },
+        { h: "Aeronautical data", p: ["The aerodrome database comes from OurAirports (public domain). Aircraft type designators follow ICAO Doc 8643. The airline list comes from OpenFlights (openflights.org), under the Open Database License (ODbL)."] },
       ],
     },
     privacy: {

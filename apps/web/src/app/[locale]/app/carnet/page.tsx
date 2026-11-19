@@ -8,6 +8,8 @@ import { operatorIndex, sumFlights } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, Overlay, PageTitle, useToast } from "@/components/app/ui";
 import { setOperator as assignOperator } from "@/lib/repo";
+import { useAirlineDirectory } from "@/lib/airlines";
+import { OperatorInput } from "@/components/app/OperatorInput";
 import { useDuration, useFlights, useFormatDate, useTable } from "@/lib/hooks";
 
 /** Function badges: command green, co-pilot blue, supervised command teal, instruction amber / violet. */
@@ -33,7 +35,8 @@ export default function Logbook() {
   const [type, setType] = useState("");
   const [operator, setOperator] = useState("");
   const aircraft = useTable("aircraft");
-  const ops = useMemo(() => operatorIndex(flights ?? [], aircraft ?? []), [flights, aircraft]);
+  const airlines = useAirlineDirectory();
+  const ops = useMemo(() => operatorIndex(flights ?? [], aircraft ?? [], airlines), [flights, aircraft, airlines]);
 
   const years = useMemo(() => [...new Set((flights ?? []).map((f) => f.date.slice(0, 4)))].sort().reverse(), [flights]);
   const types = useMemo(() => [...new Set((flights ?? []).map((f) => (f.isFstd ? "FSTD" : f.aircraftTypeIcao ?? "")).filter(Boolean))].sort(), [flights]);
@@ -284,8 +287,7 @@ export default function Logbook() {
           </span>
           <span className="flex min-w-48 flex-1 items-center gap-2">
             <Building2 size={15} className="shrink-0 text-white/60" />
-            <input className="input h-9 flex-1 !bg-white/10 !text-white" list="logbook-operators" placeholder={t("assign.placeholder")} value={assignTo} onChange={(e) => setAssignTo(e.target.value)} />
-            <datalist id="logbook-operators">{ops.all.map((o) => <option key={o} value={o} />)}</datalist>
+            <OperatorInput value={assignTo} onChange={setAssignTo} known={ops.all} placeholder={t("assign.placeholder")} className="h-9 !bg-white/10 !text-white" up dark />
           </span>
           <button type="button" className="btn btn-primary btn-sm" disabled={!picked.size} onClick={() => void assign()}>
             {assignTo ? t("assign.go") : t("assign.clear")}
