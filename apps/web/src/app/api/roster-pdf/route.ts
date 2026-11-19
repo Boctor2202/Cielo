@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { accessFor, parseLeonRoster, type PdfTextItem } from "@cielo/core";
-import { getDocumentProxy } from "unpdf";
+import { accessFor, parseLeonRoster } from "@cielo/core";
+import { pdfText } from "@/lib/server/pdf";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { rateLimited } from "@/lib/places";
 
@@ -15,20 +15,6 @@ export const maxDuration = 300;
  * Known layouts (Leon) are read from the PDF's text without any AI; other layouts go to Claude.
  */
 
-/** Positioned text of every page (empty for a scanned PDF). */
-async function pdfText(bytes: Uint8Array): Promise<PdfTextItem[][]> {
-  const pdf = await getDocumentProxy(bytes);
-  const pages: PdfTextItem[][] = [];
-  for (let p = 1; p <= Math.min(pdf.numPages, 20); p++) {
-    const tc = await (await pdf.getPage(p)).getTextContent();
-    pages.push(
-      (tc.items as { str?: string; transform?: number[] }[])
-        .filter((i) => i.str?.trim() && i.transform)
-        .map((i) => ({ x: i.transform![4]!, y: i.transform![5]!, s: i.str! })),
-    );
-  }
-  return pages;
-}
 
 const KINDS = ["FLIGHT", "DEADHEAD", "STANDBY", "SIM", "GROUND", "OFF", "REST", "LEAVE", "OTHER"];
 const hhmm = { type: ["string", "null"], pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" };

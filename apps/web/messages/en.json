@@ -664,7 +664,23 @@
       "approachAirport": "Airport",
       "loggedShare": "Augmented crew: block time logged",
       "loggedShareHint": "Your share of the block when the crew is reinforced; every time is scaled alike.",
-      "loggedAll": "All"
+      "loggedAll": "All",
+      "report": {
+        "button": "Paste a flight report",
+        "title": "Paste a flight report",
+        "hint": "Paste the e-mail or summary your airline sends after the flight (e.g. Ryanair's \"Flights for…\"). Geardown reads the fields by their names; check them before saving.",
+        "notFound": "No flight found in this text: it needs at least three fields such as flight number, registration, route or block times.",
+        "utc": "Times are taken as printed (UTC on most airline reports).",
+        "apply": "Fill the flight",
+        "f": {
+          "date": "Date",
+          "flightNumber": "Flight",
+          "registration": "Registration",
+          "route": "Route",
+          "takeoff": "Take-off by",
+          "landing": "Landing by"
+        }
+      }
     },
     "signature": {
       "title": "Flight signature",
@@ -702,7 +718,7 @@
         "roster": "Airline roster",
         "scan": "Paper logbook scan"
       },
-      "drop": "Drop a CSV, XLSX or TXT file, or click to choose",
+      "drop": "Drop a CSV, XLSX, TXT or PDF file (airline logbook statement), or click to choose",
       "mapping": "Column mapping",
       "mappingHelp": "Geardown recognised the columns below. Fix them if needed.",
       "ignore": "— ignore —",
@@ -759,7 +775,14 @@
       },
       "unused": "Unused columns: {cols}.",
       "fromApps": "Moving from another logbook? Export from LogTen Pro, ForeFlight, mccPILOTLOG, CrewLounge, Flylog, MyFlightbook, Logbook Pro, APDL or Safelog (CSV, tab-separated text or Excel) and drop the file here: the format is recognised and the columns matched for you.",
-      "appRecognised": "{app} export recognised"
+      "appRecognised": "{app} export recognised",
+      "pdf": {
+        "reading": "Reading the PDF…",
+        "plan": "This PDF layout is read by AI, included in the Max plan. Air France EP5 statements are read on every plan.",
+        "unauthorized": "Sign in to import a PDF.",
+        "rate_limited": "Too many PDFs in a short time, try again in a minute.",
+        "error": "This PDF could not be read. Send it to us from \"Report a problem\" and we'll add its layout."
+      }
     },
     "audit": {
       "title": "Logbook audit",

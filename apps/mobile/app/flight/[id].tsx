@@ -22,6 +22,8 @@ import {
   extraFieldsFor,
   extraFlightFields,
   frameworkOf,
+  isPilot,
+  parseFlightReport,
 } from "@cielo/core";
 import { AirportField } from "../../src/components/AirportField";
 import { AircraftTypeField } from "../../src/components/AircraftTypeField";
@@ -29,6 +31,8 @@ import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPick
 import { AircraftPhoto } from "../../src/components/AircraftPhoto";
 import { FlightTrackCard } from "../../src/components/FlightTrack";
 import { FlightAwareFill } from "../../src/components/FlightAwareFill";
+import * as Clipboard from "expo-clipboard";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { FlightSignature } from "../../src/components/FlightSignature";
 import { FlightHistory } from "../../src/components/FlightHistory";
 import { DurationField, normDuration } from "../../src/components/DurationField";
@@ -209,6 +213,33 @@ function FlightForm() {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm((s) => ({ ...s, [k]: v }));
 
   const selectedAircraft = aircraft.find((a) => a.id === form.aircraftId);
+
+  /** "Paste a flight report": the airline's post-flight e-mail copied to the clipboard fills the form. */
+  const pasteReport = async () => {
+    tap();
+    const rep = parseFlightReport(await Clipboard.getStringAsync().catch(() => ""));
+    if (!rep) return Alert.alert(t("report.paste"), t("report.notFound"));
+    const icao = (code?: string) => (code ? lookupAirport(code)?.icao : undefined);
+    const plain = (x: string) => x.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const plane = rep.registration ? aircraft.find((a) => !a.deletedAt && plain(a.registration) === plain(rep.registration!)) : undefined;
+    const named = !!(rep.takeoffBy || rep.landingBy || rep.pilotFlying);
+    const tookOff = isPilot(rep.takeoffBy ?? rep.pilotFlying, pilot.fullName);
+    const landed = isPilot(rep.landingBy ?? rep.pilotFlying, pilot.fullName);
+    setForm((s) => ({
+      ...s,
+      date: rep.date ?? s.date,
+      flightNumber: rep.flightNumber ?? s.flightNumber,
+      depIcao: icao(rep.from) ?? s.depIcao,
+      arrIcao: icao(rep.to) ?? s.arrIcao,
+      out: rep.out ?? s.out,
+      off: rep.off ?? s.off,
+      on: rep.on ?? s.on,
+      in: rep.in ?? s.in,
+      aircraftId: plane?.id ?? s.aircraftId,
+      ...(named ? { pilotFlying: tookOff || landed, takeoffsDay: tookOff ? 1 : 0, takeoffsNight: 0, landingsDay: landed ? 1 : 0, landingsNight: 0, autoLandings: landed } : {}),
+    }));
+    if (rep.registration && !plane) Alert.alert(t("report.paste"), t("report.unknownAircraft", { reg: rep.registration }));
+  };
   const selectedType = selectedAircraft
     ? aircraftTypes.find((x) => x.id === selectedAircraft.aircraftTypeId)
     : form.typeIcao
@@ -384,6 +415,13 @@ function FlightForm() {
             </Txt>
           ))}
         </Card>
+
+        {!existing ? (
+          <Pressable onPress={() => void pasteReport()} style={{ flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: c.accent }}>
+            <Ionicons name="clipboard-outline" size={15} color={c.accent} />
+            <Txt style={{ fontWeight: "700", fontSize: 13.5 }} color={c.accent}>{t("report.paste")}</Txt>
+          </Pressable>
+        ) : null}
 
         <Card>
           <ToggleRow label={t("flight.fstd")} value={form.isFstd} onChange={(v) => set("isFstd", v)} />

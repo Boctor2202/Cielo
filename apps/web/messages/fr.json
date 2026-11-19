@@ -664,7 +664,23 @@
       "approachAirport": "Aéroport",
       "loggedShare": "Équipage renforcé : temps bloc journalisé",
       "loggedShareHint": "Votre part du temps bloc quand l'équipage est renforcé ; tous les temps sont calculés sur cette part.",
-      "loggedAll": "Tout"
+      "loggedAll": "Tout",
+      "report": {
+        "button": "Coller un compte rendu",
+        "title": "Coller un compte rendu de vol",
+        "hint": "Colle l'e-mail ou le résumé que ta compagnie envoie après le vol (par exemple « Flights for… » chez Ryanair). Geardown lit les champs par leur nom ; vérifie-les avant d'enregistrer.",
+        "notFound": "Aucun vol trouvé dans ce texte : il faut au moins trois champs comme le numéro de vol, l'immatriculation, la route ou les heures bloc.",
+        "utc": "Les heures sont reprises telles quelles (UTC sur la plupart des comptes rendus).",
+        "apply": "Remplir le vol",
+        "f": {
+          "date": "Date",
+          "flightNumber": "Vol",
+          "registration": "Immatriculation",
+          "route": "Route",
+          "takeoff": "Décollage par",
+          "landing": "Atterrissage par"
+        }
+      }
     },
     "signature": {
       "title": "Signature du vol",
@@ -702,7 +718,7 @@
         "roster": "Roster compagnie",
         "scan": "Scan du carnet papier"
       },
-      "drop": "Déposez un fichier CSV, XLSX ou TXT, ou cliquez pour choisir",
+      "drop": "Déposez un fichier CSV, XLSX, TXT ou PDF (relevé de vol de compagnie), ou cliquez pour choisir",
       "mapping": "Correspondance des colonnes",
       "mappingHelp": "Geardown a reconnu les colonnes ci-dessous. Corrigez-les si besoin.",
       "ignore": "— ignorer —",
@@ -759,7 +775,14 @@
       },
       "unused": "Colonnes non utilisées : {cols}.",
       "fromApps": "Vous venez d'un autre carnet ? Exportez depuis LogTen Pro, ForeFlight, mccPILOTLOG, CrewLounge, Flylog, MyFlightbook, Logbook Pro, APDL ou Safelog (CSV, texte tabulé ou Excel) et déposez le fichier ici : le format est reconnu et les colonnes associées pour vous.",
-      "appRecognised": "Export {app} reconnu"
+      "appRecognised": "Export {app} reconnu",
+      "pdf": {
+        "reading": "Lecture du PDF…",
+        "plan": "Ce format de PDF est lu par IA, inclus dans l'offre Max. Les relevés Air France EP5 sont lus avec toutes les offres.",
+        "unauthorized": "Connecte-toi pour importer un PDF.",
+        "rate_limited": "Trop de PDF en peu de temps, réessaie dans une minute.",
+        "error": "Ce PDF n'a pas pu être lu. Envoie-le-nous via « Signaler un problème » et on ajoutera son format."
+      }
     },
     "audit": {
       "title": "Audit du carnet",

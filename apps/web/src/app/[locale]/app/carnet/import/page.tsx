@@ -4,8 +4,9 @@ import { CalendarDays, Camera, FileSpreadsheet, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  analyseTable, checkMapping, IMPORT_FIELDS, parseCsv, rowsToFlights, type DateOrder, type ImportField, type ImportedRow,
+  analyseTable, checkMapping, IMPORT_FIELDS, legsToRows, parseCsv, rowsToFlights, type DateOrder, type ImportField, type ImportedRow, type LogbookLeg,
 } from "@cielo/core";
+import { apiFetch } from "@/lib/report";
 import { Link } from "@/i18n/navigation";
 import { Card, Field, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { useAirports } from "@/lib/airports";
@@ -74,7 +75,11 @@ function FileImport() {
   const [app, setApp] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
 
-  const parsed = useMemo<ImportedRow[]>(() => (rows && mapping ? rowsToFlights(rows.slice(1), mapping, { dateOrder: order }) : []), [rows, mapping, order]);
+  // a logbook statement in PDF (Air France EP5…): legs read on the server
+  const [pdfRows, setPdfRows] = useState<ImportedRow[] | null>(null);
+  const [pdfState, setPdfState] = useState<string | null>(null);
+  const tableRows = useMemo<ImportedRow[]>(() => (rows && mapping ? rowsToFlights(rows.slice(1), mapping, { dateOrder: order }) : []), [rows, mapping, order]);
+  const parsed = pdfRows ?? tableRows;
   const recognised = mapping ? Object.values(mapping).filter((i) => i >= 0).length : 0;
   // cross-checks on the data itself, recomputed whenever a column is changed by hand
   const checks = useMemo(() => (rows && mapping ? checkMapping(rows.slice(1), mapping) : []), [rows, mapping]);
@@ -86,7 +91,31 @@ function FileImport() {
   }, [rows, mapping]);
   const ok = parsed.filter((r) => r.errors.length === 0 && r.input);
 
+  async function onPdf(file: File) {
+    setRows(null);
+    setMapping(null);
+    setPdfRows(null);
+    setPdfState("reading");
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let bin = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      const r = await apiFetch("/api/logbook-pdf", { method: "POST", body: JSON.stringify({ pdf: btoa(bin) }) });
+      const d = (await r.json().catch(() => ({}))) as { legs?: LogbookLeg[]; role?: string | null; reader?: string; error?: string };
+      if (!r.ok || !d.legs) return setPdfState(d.error ?? "error");
+      const role = d.role === "CDB" || d.role === "CDT" ? "PIC" : "SIC";
+      setPdfRows(legsToRows(d.legs, (c) => airports?.get(c)?.icao, { function: role, pilotFlying: false }));
+      setApp(d.reader === "airfrance-ep5" ? "Air France · Carnet de vol EP5" : undefined);
+      setPdfState(null);
+    } catch {
+      setPdfState("error");
+    }
+  }
+
   async function onFile(file: File) {
+    if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") return onPdf(file);
+    setPdfRows(null);
+    setPdfState(null);
     // header row, two-row headers, columns (names + values) and date order are all detected automatically
     const a = analyseTable(await readTable(file));
     setRows([a.header, ...a.rows]);
@@ -116,13 +145,15 @@ function FileImport() {
     toast(t("done", { count: built.length }) + (skipped ? ` · ${t("skipped", { count: skipped })}` : ""));
     setRows(null);
     setMapping(null);
+    setPdfRows(null);
   }
 
   return (
     <div className="space-y-5">
-      <DropZone accept=".csv,.txt,.tsv,.xlsx" onFile={onFile} label={t("drop")} />
+      <DropZone accept=".csv,.txt,.tsv,.xlsx,.pdf" onFile={onFile} label={t("drop")} />
+      {pdfState && <p className={`mt-2 text-sm ${pdfState === "reading" ? "text-accent" : "text-[var(--warning)]"}`}>{t(`pdf.${["reading", "plan", "unauthorized", "rate_limited"].includes(pdfState) ? pdfState : "error"}`)}</p>}
       <p className="mt-2 text-xs text-muted">{t("fromApps")}</p>
-      {app && rows && <p className="mt-2 text-sm font-semibold text-accent">{t("appRecognised", { app })}</p>}
+      {app && (rows || pdfRows) && <p className="mt-2 text-sm font-semibold text-accent">{t("appRecognised", { app })}</p>}
       {rows && mapping && (
         <>
           <Card title={t("mapping")}>

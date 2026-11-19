@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   defaultIfrFor, deriveFlightTimes, isoDate, PILOT_FUNCTIONS, type Aircraft, type Approach, type Flight, type FlightFormInput, type Pilot,
-  APPROACH_TYPES, EXTRA_FLIGHT_FIELDS, extraFieldsFor, frameworkOf, LOGGED_SHARES, shareLabel,
+  APPROACH_TYPES, EXTRA_FLIGHT_FIELDS, isPilot, extraFieldsFor, frameworkOf, LOGGED_SHARES, shareLabel,
 } from "@cielo/core";
 import { useRouter } from "@/i18n/navigation";
 import { useAirports } from "@/lib/airports";
@@ -17,6 +17,7 @@ import { useAccess } from "@/lib/access";
 import { AircraftPhoto } from "./AircraftPhoto";
 import { AirportInput } from "./AirportInput";
 import { FlightAwareFill } from "./FlightAwareFill";
+import { ReportPaste } from "./ReportPaste";
 import { Card, ClockInput, DurationInput, Field, Segmented, Toggle, useToast } from "./ui";
 import { SignatureModal, SignatureStatus } from "./Signature";
 import { FlightHistory } from "./FlightHistory";
@@ -132,7 +133,38 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
         )}
         {source === "roster" && <p className="rounded-lg bg-accent/10 px-4 py-2 text-sm text-accent">{t("fromRoster")}</p>}
 
-        <Card title={t("general")}>
+        <Card
+          title={t("general")}
+          action={
+            <ReportPaste
+              onApply={(rep) => {
+                const icao = (c?: string) => (c ? airports?.get(c)?.icao : undefined);
+                const reg = rep.registration?.toUpperCase();
+                // aircraft known under that registration (with or without its dash)
+                const plane = reg ? aircraftList?.find((a) => a.registration.toUpperCase().replace(/[^A-Z0-9]/g, "") === reg.replace(/[^A-Z0-9]/g, "")) : undefined;
+                const tookOff = isPilot(rep.takeoffBy ?? rep.pilotFlying, pilot?.fullName);
+                const landed = isPilot(rep.landingBy ?? rep.pilotFlying, pilot?.fullName);
+                const named = !!(rep.takeoffBy || rep.landingBy || rep.pilotFlying);
+                setV((s) => ({
+                  ...s,
+                  date: rep.date ?? s.date,
+                  flightNumber: rep.flightNumber ?? s.flightNumber,
+                  depIcao: icao(rep.from) ?? s.depIcao,
+                  arrIcao: icao(rep.to) ?? s.arrIcao,
+                  out: rep.out ?? s.out,
+                  off: rep.off ?? s.off,
+                  on: rep.on ?? s.on,
+                  in: rep.in ?? s.in,
+                  registration: plane?.registration ?? reg ?? s.registration,
+                  aircraftId: plane?.id ?? (reg ? null : s.aircraftId),
+                  aircraftTypeIcao: plane ? findType(types ?? [], plane.aircraftTypeId)?.icao : s.aircraftTypeIcao,
+                  // who flew it, when the report names the pilots
+                  ...(named ? { pilotFlying: tookOff || landed, takeoffsDay: tookOff ? 1 : 0, takeoffsNight: 0, landingsDay: landed ? 1 : 0, landingsNight: 0, autoLandings: landed } : {}),
+                }));
+              }}
+            />
+          }
+        >
           <div className="mb-4">
             <Toggle checked={v.isFstd} onChange={(x) => set("isFstd", x)} label={t("isFstd")} />
           </div>
