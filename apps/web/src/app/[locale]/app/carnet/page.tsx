@@ -1,6 +1,6 @@
 "use client";
 
-import { BookCopy, Building2, Check, ListChecks, Clock, CloudFog, FileDown, MapPin, Moon, NotebookPen, Plane, PlaneLanding, Plus, ScanSearch, ShieldCheck, Upload } from "lucide-react";
+import { BookCopy, Building2, CalendarRange, Check, ListChecks, Clock, CloudFog, FileDown, MapPin, Moon, NotebookPen, Plane, PlaneLanding, Plus, ScanSearch, ShieldCheck, Upload } from "lucide-react";
 import { useAirports } from "@/lib/airports";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -54,10 +54,18 @@ export default function Logbook() {
   const [selecting, setSelecting] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [assignTo, setAssignTo] = useState("");
+  const [rangeFrom, setRangeFrom] = useState("");
+  const [rangeTo, setRangeTo] = useState("");
+  /** Every flight shown between two dates (both included), added to the selection. */
+  const pickRange = () => {
+    const from = rangeFrom || "0000-01-01";
+    const to = rangeTo || "9999-12-31";
+    setPicked((p) => new Set([...p, ...filtered.filter((f) => f.date >= from && f.date <= to).map((f) => f.id)]));
+  };
   const { toast, toastNode } = useToast();
   const toggle = (id: string) => setPicked((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const open = (id: string) => (selecting ? toggle(id) : router.push({ pathname: "/app/carnet/[id]", params: { id } }));
-  const stopSelecting = () => (setSelecting(false), setPicked(new Set()), setAssignTo(""));
+  const stopSelecting = () => (setSelecting(false), setPicked(new Set()), setAssignTo(""), setRangeFrom(""), setRangeTo(""));
   const assign = async () => {
     const n = picked.size;
     await assignOperator([...picked], assignTo || undefined);
@@ -262,11 +270,18 @@ export default function Logbook() {
 
       {selecting && (
         <Overlay>
-        <div className="fixed inset-x-3 bottom-20 z-40 mx-auto flex max-w-3xl flex-wrap items-center gap-2 rounded-2xl border border-white/15 bg-[#061226]/95 p-3 text-white shadow-[0_30px_80px_-20px_rgba(0,0,0,.8)] backdrop-blur-xl lg:bottom-6">
+        <div className="fixed inset-x-3 bottom-20 z-40 mx-auto flex max-w-4xl flex-wrap items-center gap-2 rounded-2xl border border-white/15 bg-[#061226]/95 p-3 text-white shadow-[0_30px_80px_-20px_rgba(0,0,0,.8)] backdrop-blur-xl lg:bottom-6">
           <span className="num px-1 text-sm font-semibold">{t("assign.picked", { count: picked.size })}</span>
           <button type="button" className="text-xs font-semibold text-white/70 underline hover:text-white" onClick={() => setPicked(new Set(filtered.map((f) => f.id)))}>
             {t("assign.all", { count: filtered.length })}
           </button>
+          <span className="flex items-center gap-1.5 text-xs text-white/70">
+            <CalendarRange size={14} className="shrink-0 text-white/60" />
+            <input type="date" className="input num h-9 w-[9.5rem] !bg-white/10 !text-white" value={rangeFrom} onChange={(e) => setRangeFrom(e.target.value)} aria-label={t("assign.from")} />
+            →
+            <input type="date" className="input num h-9 w-[9.5rem] !bg-white/10 !text-white" value={rangeTo} onChange={(e) => setRangeTo(e.target.value)} aria-label={t("assign.to")} />
+            <button type="button" className="btn btn-secondary btn-sm" disabled={!rangeFrom && !rangeTo} onClick={pickRange}>{t("assign.range")}</button>
+          </span>
           <span className="flex min-w-48 flex-1 items-center gap-2">
             <Building2 size={15} className="shrink-0 text-white/60" />
             <input className="input h-9 flex-1 !bg-white/10 !text-white" list="logbook-operators" placeholder={t("assign.placeholder")} value={assignTo} onChange={(e) => setAssignTo(e.target.value)} />

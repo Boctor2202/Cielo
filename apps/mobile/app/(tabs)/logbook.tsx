@@ -8,8 +8,9 @@ import { LogbookCalendar } from "../../src/components/LogbookCalendar";
 import Storage from "expo-sqlite/kv-store";
 import { formatDate, formatMonth } from "../../src/i18n";
 import { useApp } from "../../src/state";
+import { airports } from "../../src/airports";
 import { useSyncStatus } from "../../src/syncStatus";
-import { font, glass, space, useTheme } from "../../src/theme";
+import { font, glass, mono, space, useTheme } from "../../src/theme";
 
 /** Function badges: command green, co-pilot blue, supervised command teal, instruction amber / violet. */
 const FN_TONE: Record<string, string> = { PIC: "#34D399", SIC: "#38BDF8", PICUS: "#2DD4BF", DUAL: "#FBBF24", FI: "#A78BFA", FE: "#E879F9" };
@@ -22,7 +23,7 @@ interface Section {
 }
 
 export default function Logbook() {
-  const { access, t, locale, flights, pilot, remove, session, aircraft } = useApp();
+  const { access, t, locale, flights, pilot, remove, session, aircraft, put } = useApp();
   const wide = useWide();
   const sync = useSyncStatus();
   // flights changed on this phone and not yet on the server (none to show when not signed in)
@@ -76,6 +77,32 @@ export default function Logbook() {
     });
   }, [flights, q, fYear, fType, fFn, fCond, fOp, ops]);
 
+  // selection, to give flights their operator in one go
+  const [selecting, setSelecting] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [assignTo, setAssignTo] = useState("");
+  const [rangeFrom, setRangeFrom] = useState("");
+  const [rangeTo, setRangeTo] = useState("");
+  const okDate = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d);
+  /** Every flight shown between two dates (both included), added to the selection. */
+  const pickRange = () => {
+    const from = okDate(rangeFrom) ? rangeFrom : "0000-01-01";
+    const to = okDate(rangeTo) ? rangeTo : "9999-12-31";
+    setPicked((p) => new Set([...p, ...shown.filter((f) => f.date >= from && f.date <= to).map((f) => f.id)]));
+  };
+  const toggle = (id: string) => setPicked((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const stopSelecting = () => (setSelecting(false), setPicked(new Set()), setAssignTo(""), setRangeFrom(""), setRangeTo(""));
+  const assign = async () => {
+    const op = assignTo.trim() || undefined;
+    const n = picked.size;
+    for (const f of flights) if (picked.has(f.id) && (f.operator ?? undefined) !== op) await put("flights", { ...f, operator: op });
+    Alert.alert(t("log.assign.title"), op ? t("log.assign.done", { n, op }) : t("log.assign.cleared", { n }));
+    stopSelecting();
+  };
+  const sum = useMemo(() => sumFlights(shown), [shown]);
+  const airportCount = useMemo(() => new Set(shown.filter((f) => !f.isFstd).flatMap((f) => [f.depIcao, f.arrIcao])).size, [shown]);
+  const short = (icao: string) => (airports().get(icao) ? airports().shortName(icao) : "");
+
   const sections = useMemo<Section[]>(() => {
     const byMonth = new Map<string, Flight[]>();
     for (const f of shown) {
@@ -127,10 +154,37 @@ export default function Logbook() {
                   returnKeyType="search"
                 />
               </Row>
-              <Pressable onPress={() => (tap(), setShowFilters((x) => !x))} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", marginLeft: 4 }}>
-                <Ionicons name="options-outline" size={15} color={filtersOn ? c.accent : c.muted} />
-                <Txt variant="small" color={filtersOn ? c.accent : c.muted}>{filtersOn ? t("log.filtersOn") : t("log.filters")}</Txt>
-              </Pressable>
+              {/* what the selection adds up to */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {[
+                  { icon: "time-outline", k: t("log.sum.total"), v: fmt(sum.totalMin + sum.fstdMin), lead: true },
+                  { icon: "airplane-outline", k: t("log.sum.flights"), v: String(shown.length) },
+                  { icon: "moon-outline", k: t("log.sum.night"), v: fmt(sum.nightMin) },
+                  { icon: "cloud-outline", k: "IFR", v: fmt(sum.ifrMin) },
+                  { icon: "trending-down-outline", k: t("log.sum.landings"), v: String(sum.landingsDay + sum.landingsNight) },
+                  { icon: "location-outline", k: t("log.sum.airports"), v: String(airportCount) },
+                ].map((x) => (
+                  <View key={x.k} style={{ minWidth: 104, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 14, borderWidth: 1, borderColor: x.lead ? c.accent + "66" : glass(c).edge, backgroundColor: x.lead ? c.accent + "1a" : glass(c).strong }}>
+                    <Row gap={4} style={{ alignItems: "center" }}>
+                      <Ionicons name={x.icon as keyof typeof Ionicons.glyphMap} size={12} color={x.lead ? c.accent : c.muted} />
+                      <Txt variant="small" style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: 0.6 }}>{x.k}</Txt>
+                    </Row>
+                    <Txt mono style={{ fontSize: 19, fontWeight: "700", marginTop: 2 }} color={x.lead ? c.accent : undefined}>{x.v}</Txt>
+                  </View>
+                ))}
+              </ScrollView>
+              <Row style={{ justifyContent: "space-between", alignItems: "center", marginHorizontal: 4 }}>
+                <Pressable onPress={() => (tap(), setShowFilters((x) => !x))} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Ionicons name="options-outline" size={15} color={filtersOn ? c.accent : c.muted} />
+                  <Txt variant="small" color={filtersOn ? c.accent : c.muted}>{filtersOn ? t("log.filtersOn") : t("log.filters")}</Txt>
+                </Pressable>
+                {access.canWrite ? (
+                  <Pressable onPress={() => (tap(), selecting ? stopSelecting() : setSelecting(true))} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Ionicons name="checkbox-outline" size={15} color={selecting ? c.accent : c.muted} />
+                    <Txt variant="small" color={selecting ? c.accent : c.muted}>{selecting ? t("log.assign.stop") : t("log.assign.start")}</Txt>
+                  </Pressable>
+                ) : null}
+              </Row>
               {showFilters ? (
                 <View style={{ gap: 6 }}>
                   {[
@@ -192,7 +246,8 @@ export default function Logbook() {
             <Pressable
               onPress={() => {
                 tap();
-                router.push({ pathname: "/flight/[id]", params: { id: f.id } });
+                if (selecting) toggle(f.id);
+                else router.push({ pathname: "/flight/[id]", params: { id: f.id } });
               }}
               onLongPress={() => {
                 tap("medium");
@@ -210,11 +265,16 @@ export default function Logbook() {
                 borderBottomRightRadius: last ? 16 : 0,
                 borderBottomWidth: last ? 0 : StyleSheet.hairlineWidth,
                 borderBottomColor: glass(c).edge,
-                backgroundColor: pressed ? glass(c).pane : glass(c).strong,
+                backgroundColor: picked.has(f.id) ? c.accent + "22" : pressed ? glass(c).pane : glass(c).strong,
                 transform: [{ scale: pressed ? 0.99 : 1 }],
               })}
             >
               <Row gap={12}>
+                {selecting ? (
+                  <View style={{ alignSelf: "center", width: 22, height: 22, borderRadius: 7, borderWidth: 1.5, borderColor: picked.has(f.id) ? c.accent : c.muted, backgroundColor: picked.has(f.id) ? c.accent : "transparent", alignItems: "center", justifyContent: "center" }}>
+                    {picked.has(f.id) ? <Ionicons name="checkmark" size={15} color="#fff" /> : null}
+                  </View>
+                ) : null}
                 {/* a coloured edge: night flights indigo, IFR sky, VFR green, simulator violet (as on the website) */}
                 <View style={{ width: 3, alignSelf: "stretch", borderRadius: 2, backgroundColor: f.isFstd ? "#A78BFA" : f.nightMin > 0 ? "#818CF8" : f.ifrMin > 0 ? "#38BDF8" : "#34D399" }} />
                 {/* date block: day of month, short weekday */}
@@ -229,11 +289,23 @@ export default function Logbook() {
                     {f.isFstd ? (
                       <Txt style={{ fontSize: 17, fontWeight: "600" }} color="#A78BFA" numberOfLines={1}>{`${t("log.fstd")} ${f.fstdType ?? ""}`}</Txt>
                     ) : (
-                      <>
-                        <Txt style={{ fontSize: 17, fontWeight: "600", letterSpacing: 0.3 }}>{f.depIcao}</Txt>
-                        <Ionicons name="airplane" size={13} color={c.accent} />
-                        <Txt style={{ fontSize: 17, fontWeight: "600", letterSpacing: 0.3 }}>{f.arrIcao}</Txt>
-                      </>
+                      <View style={{ flex: 1, flexDirection: "row", alignItems: "flex-start" }}>
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <Txt mono style={{ fontSize: 17, fontWeight: "700", letterSpacing: 0.4 }}>{f.depIcao}</Txt>
+                          <Txt variant="small" numberOfLines={1} style={{ fontSize: 11 }}>{short(f.depIcao)}</Txt>
+                        </View>
+                        {/* one length on every row, so the lines stand aligned */}
+                        <View style={{ width: 44, height: 22, justifyContent: "center", alignItems: "center", marginHorizontal: 6 }}>
+                          <View style={{ position: "absolute", left: 0, right: 0, top: 11, borderTopWidth: 1, borderStyle: "dashed", borderColor: c.accent + "aa" }} />
+                          <View style={{ position: "absolute", left: 0, top: 9, width: 5, height: 5, borderRadius: 3, backgroundColor: c.accent }} />
+                          <View style={{ position: "absolute", right: 0, top: 9, width: 5, height: 5, borderRadius: 3, backgroundColor: c.accent }} />
+                          <Ionicons name="airplane" size={13} color={c.accent} style={{ backgroundColor: "transparent" }} />
+                        </View>
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <Txt mono style={{ fontSize: 17, fontWeight: "700", letterSpacing: 0.4 }}>{f.arrIcao}</Txt>
+                          <Txt variant="small" numberOfLines={1} style={{ fontSize: 11 }}>{short(f.arrIcao)}</Txt>
+                        </View>
+                      </View>
                     )}
                   </Row>
                   <Row gap={6} style={{ alignItems: "center", flexWrap: "wrap" }}>
@@ -246,7 +318,7 @@ export default function Logbook() {
                       </View>
                     ) : null}
                     <Txt variant="small" numberOfLines={1} style={{ flexShrink: 1 }}>
-                      {[f.aircraftTypeIcao, !f.isFstd && f.outUtc ? `${formatClock(f.outUtc)}–${formatClock(f.inUtc)}` : "", f.flightNumber].filter(Boolean).join(" · ")}
+                      {[f.aircraftTypeIcao, !f.isFstd && f.outUtc ? `${formatClock(f.outUtc)}–${formatClock(f.inUtc)}` : "", f.flightNumber, ops.of(f)].filter(Boolean).join(" · ")}
                     </Txt>
                   </Row>
                   {pendingIds.has(f.id) ? (
@@ -279,7 +351,65 @@ export default function Logbook() {
           );
         }}
       />
-      <Fab label={t("flight.new")} onPress={() => router.push(access.canWrite ? "/flight/new" : "/subscription")} />
+      {selecting ? (
+        <View style={{ position: "absolute", left: 12, right: 12, bottom: 24, gap: 8, padding: 12, borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", backgroundColor: "rgba(6,18,38,0.97)" }}>
+          <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+            <Txt color="#fff" style={{ fontWeight: "700" }}>{t("log.assign.picked", { n: picked.size })}</Txt>
+            <Pressable onPress={() => setPicked(new Set(shown.map((f) => f.id)))} hitSlop={8}>
+              <Txt variant="small" color={c.accent} style={{ fontWeight: "700" }}>{t("log.assign.all", { n: shown.length })}</Txt>
+            </Pressable>
+          </Row>
+          {/* a date range, added to the selection */}
+          <Row gap={6} style={{ alignItems: "center" }}>
+            {[
+              { v: rangeFrom, set: setRangeFrom, ph: t("log.assign.from") },
+              { v: rangeTo, set: setRangeTo, ph: t("log.assign.to") },
+            ].map((x) => (
+              <TextInput
+                key={x.ph}
+                style={{ flex: 1, color: "#fff", ...mono, fontSize: 14, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.1)" }}
+                placeholder={x.ph}
+                placeholderTextColor="rgba(255,255,255,0.45)"
+                keyboardType="number-pad"
+                maxLength={10}
+                value={x.v}
+                // digits only: 20261101 → 2026-11-01
+                onChangeText={(s) => {
+                  const d = s.replace(/\D/g, "").slice(0, 8);
+                  x.set(d.length > 6 ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6)}` : d.length > 4 ? `${d.slice(0, 4)}-${d.slice(4)}` : d);
+                }}
+              />
+            ))}
+            <Pressable disabled={!okDate(rangeFrom) && !okDate(rangeTo)} onPress={pickRange} style={{ paddingHorizontal: 12, paddingVertical: 9, borderRadius: 10, backgroundColor: okDate(rangeFrom) || okDate(rangeTo) ? c.accent + "33" : "rgba(255,255,255,0.06)" }}>
+              <Ionicons name="calendar" size={16} color={c.accent} />
+            </Pressable>
+          </Row>
+          <TextInput
+            style={{ color: "#fff", ...font.regular, fontSize: 15, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.1)" }}
+            placeholder={t("log.assign.placeholder")}
+            placeholderTextColor="rgba(255,255,255,0.45)"
+            value={assignTo}
+            onChangeText={setAssignTo}
+          />
+          {ops.all.length ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }} keyboardShouldPersistTaps="handled">
+              {ops.all.slice(0, 8).map((o) => (
+                <Chip key={o} label={o} selected={assignTo === o} onPress={() => setAssignTo(o)} />
+              ))}
+            </ScrollView>
+          ) : null}
+          <Row gap={8}>
+            <Pressable disabled={!picked.size} onPress={() => void assign()} style={{ flex: 1, alignItems: "center", paddingVertical: 11, borderRadius: 12, backgroundColor: picked.size ? c.accent : c.accent + "55" }}>
+              <Txt color="#fff" style={{ fontWeight: "700" }}>{assignTo.trim() ? t("log.assign.go") : t("log.assign.clear")}</Txt>
+            </Pressable>
+            <Pressable onPress={stopSelecting} style={{ paddingHorizontal: 16, paddingVertical: 11, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.08)" }}>
+              <Txt color="#fff">{t("log.assign.stop")}</Txt>
+            </Pressable>
+          </Row>
+        </View>
+      ) : (
+        <Fab label={t("flight.new")} onPress={() => router.push(access.canWrite ? "/flight/new" : "/subscription")} />
+      )}
     </View>
   );
 }

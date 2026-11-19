@@ -579,7 +579,10 @@
         "go": "Assign",
         "clear": "Clear operator",
         "done": "{count, plural, one {# flight} other {# flights}} assigned to {operator}",
-        "cleared": "Operator cleared on {count, plural, one {# flight} other {# flights}}"
+        "cleared": "Operator cleared on {count, plural, one {# flight} other {# flights}}",
+        "from": "From",
+        "to": "To",
+        "range": "Select these dates"
       },
       "flightCount": "{count, plural, =0 {No flights} one {# flight} other {# flights}}"
     },
