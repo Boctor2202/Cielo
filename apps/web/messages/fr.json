@@ -580,7 +580,8 @@
         "clear": "Retirer l'opérateur",
         "done": "{count, plural, one {# vol attribué} other {# vols attribués}} à {operator}",
         "cleared": "Opérateur retiré sur {count, plural, one {# vol} other {# vols}}"
-      }
+      },
+      "flightCount": "{count, plural, =0 {Aucun vol} one {# vol} other {# vols}}"
     },
     "form": {
       "newTitle": "Nouveau vol",

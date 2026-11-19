@@ -86,7 +86,7 @@ export default function Logbook() {
     <>
       <PageTitle
         title={t("title")}
-        subtitle={t("entries", { count: filtered.length })}
+        subtitle={t("flightCount", { count: filtered.length })}
         actions={
           <>
             <Link href="/app/carnet/import" className="btn btn-secondary btn-sm"><Upload size={15} /> {t("import")}</Link>
@@ -146,7 +146,7 @@ export default function Logbook() {
                   <header className="sticky top-0 z-10 flex items-baseline justify-between gap-3 border-b border-border bg-surface/90 px-5 py-2.5 backdrop-blur">
                     <h2 className="font-display text-lg font-semibold capitalize">{m.label}</h2>
                     <p className="num flex items-center gap-4 text-xs text-muted">
-                      <span>{t("entries", { count: m.flights.length })}</span>
+                      <span>{t("flightCount", { count: m.flights.length })}</span>
                       {m.night > 0 && <span className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-300"><Moon size={11} /> {d(m.night)}</span>}
                       <span className="rounded-md bg-accent/12 px-2 py-0.5 text-sm font-bold text-accent">{d(m.total)}</span>
                     </p>
