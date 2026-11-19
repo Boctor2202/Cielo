@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { reportAiFailure } from "@/lib/server/anthropic";
 import { accessFor, ep5Legs, parseAirFranceEp5, parseFlightReport, tableSignature, type LogbookLeg, type StoredMapping } from "@cielo/core";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { pdfText } from "@/lib/server/pdf";
@@ -120,7 +121,7 @@ export async function POST(req: Request) {
     if (e instanceof ImportAiError) return Response.json({ error: e.code }, { status: 422 });
     if (e instanceof SyntaxError) return Response.json({ error: "unreadable" }, { status: 422 });
     if (e instanceof Anthropic.RateLimitError) return Response.json({ error: "busy" }, { status: 429 });
-    console.error("import-any: Claude read failed", kind, e instanceof Anthropic.APIError ? `${e.status} ${e.message}` : e);
+    await reportAiFailure(`import ${String(kind)}`, e);
     return Response.json({ error: "upstream" }, { status: 502 });
   }
 }

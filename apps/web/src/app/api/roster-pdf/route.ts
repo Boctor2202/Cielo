@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { anthropic } from "@/lib/server/anthropic";
+import { AI_MODEL, anthropic, reportAiFailure } from "@/lib/server/anthropic";
 import { accessFor, parseLeonRoster } from "@cielo/core";
 import { pdfText } from "@/lib/server/pdf";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
   const client = anthropic();
   try {
     const stream = client.beta.messages.stream({
-      model: "claude-opus-5-5",
+      model: AI_MODEL,
       max_tokens: 32000,
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
@@ -129,6 +129,7 @@ export async function POST(req: Request) {
     const out = JSON.parse(text) as { timeBasis: "UTC" | "local"; pilotName: string | null; events: unknown[] };
     return Response.json(out, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
+    await reportAiFailure("roster PDF", e);
     if (e instanceof SyntaxError) return Response.json({ error: "unreadable" }, { status: 422 });
     if (e instanceof Anthropic.RateLimitError) return Response.json({ error: "busy" }, { status: 429 });
     if (e instanceof Anthropic.APIError) return Response.json({ error: "upstream", status: e.status }, { status: 502 });

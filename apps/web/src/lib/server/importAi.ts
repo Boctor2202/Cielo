@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { anthropic } from "@/lib/server/anthropic";
+import { AI_MODEL, anthropic } from "@/lib/server/anthropic";
 import { IMPORT_FIELDS, type LogbookLeg } from "@cielo/core";
 
 /**
@@ -75,7 +75,7 @@ type Block = Anthropic.Beta.Messages.BetaContentBlockParam;
 export async function extractLegs(content: Block[], today: string): Promise<LegsResult> {
   const client = anthropic();
   const stream = client.beta.messages.stream({
-    model: "claude-opus-5-5",
+    model: AI_MODEL,
     max_tokens: 32000,
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
@@ -116,7 +116,7 @@ export async function mapTable(header: string[], rows: string[][]): Promise<{ so
   const client = anthropic();
   const csv = [header, ...rows.slice(0, 25)].map((r) => r.map((c) => (c ?? "").replace(/[\t\n]/g, " ")).join("\t")).join("\n");
   const msg = await client.beta.messages.create({
-    model: "claude-opus-5-5",
+    model: AI_MODEL,
     max_tokens: 4000,
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",

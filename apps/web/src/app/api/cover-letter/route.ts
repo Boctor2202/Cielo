@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { anthropic } from "@/lib/server/anthropic";
+import { AI_MODEL, anthropic, reportAiFailure } from "@/lib/server/anthropic";
 import { accessFor } from "@cielo/core";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { rateLimited } from "@/lib/places";
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
   const client = anthropic();
   try {
     const msg = await client.beta.messages.create({
-      model: "claude-opus-5-5",
+      model: AI_MODEL,
       max_tokens: 8000,
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
@@ -110,6 +110,7 @@ export async function POST(req: Request) {
     if (!letter) return Response.json({ error: "empty" }, { status: 502 });
     return Response.json({ letter }, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
+    await reportAiFailure("cover letter", e);
     if (e instanceof Anthropic.RateLimitError) return Response.json({ error: "busy" }, { status: 429 });
     if (e instanceof Anthropic.APIError) return Response.json({ error: "upstream", status: e.status }, { status: 502 });
     return Response.json({ error: "upstream" }, { status: 502 });
