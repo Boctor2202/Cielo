@@ -10,6 +10,8 @@ describe("experienceFromLogbook", () => {
       f({ date: "2026-11-12", flightNumber: "AJD214K", aircraftTypeIcao: "C68A" }),
       f({ date: "2026-05-01", flightNumber: "AJD100", aircraftTypeIcao: "C68A" }),
       f({ date: "2026-06-01", operator: "Aéroclub de Paris", aircraftTypeIcao: "DR40", function: "PIC", depIcao: "LFPN" }),
+      f({ date: "2026-07-01", operator: "Private", aircraftTypeIcao: "DR40", function: "PIC" }),
+      f({ date: "2026-07-02", operator: "Training", aircraftTypeIcao: "C172", function: "DUAL" }),
     ];
     const s = experienceFromLogbook(flights, operatorIndex(flights), [{ role: "Pilot", employer: "Aéroclub de Paris", start: "2020-01", bullets: [] }], "2026-11-19");
     expect(s.map((x) => [x.employer, x.role, x.start, x.end ?? "now", x.aircraft?.join()])).toEqual([

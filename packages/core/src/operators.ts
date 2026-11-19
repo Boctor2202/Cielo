@@ -295,3 +295,10 @@ export function searchOperators(query: string, known: string[] = [], limit = 8, 
     .slice(0, limit)
     .map(({ score: _s, ...h }) => h);
 }
+
+/** Flights that belong to no company: stored as these values, shown in the pilot's language. */
+export const PRIVATE_OPERATOR = "Private";
+export const TRAINING_OPERATOR = "Training";
+
+/** A private or training flight: not an experience with a company. */
+export const isNonCommercialOperator = (op?: string | null) => !!op && /^(private|priv[ée]|vol priv[ée]|private flight|training|formation|instruction)$/i.test(op.trim());

@@ -1,4 +1,4 @@
-import type { Flight, OperatorIndex } from "@cielo/core";
+import { isNonCommercialOperator, type Flight, type OperatorIndex } from "@cielo/core";
 import type { CvExperience } from "./types";
 
 /** A past or current job read from the logbook: one per operator flown for. */
@@ -18,7 +18,8 @@ export function experienceFromLogbook(flights: Flight[], ops: OperatorIndex, exi
   for (const f of flights) {
     if (f.deletedAt || f.isFstd) continue;
     const op = ops.of(f);
-    if (!op) continue;
+    // private and training flights are not jobs with a company
+    if (!op || isNonCommercialOperator(op)) continue;
     by.set(op, [...(by.get(op) ?? []), f]);
   }
   const have = new Set(existing.map((e) => norm(e.employer)).filter(Boolean));

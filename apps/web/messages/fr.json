@@ -590,7 +590,12 @@
         "why": "Attribuez-les pour que votre CV liste chaque compagnie où vous avez volé, avec ses heures et ses avions.",
         "go": "Attribuer",
         "dismiss": "Masquer (vols privés ou de formation)"
-      }
+      },
+      "op": {
+        "private": "Vol privé",
+        "training": "Formation"
+      },
+      "hideSim": "Masquer les séances simulateur"
     },
     "form": {
       "newTitle": "Nouveau vol",

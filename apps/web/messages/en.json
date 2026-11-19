@@ -590,7 +590,12 @@
         "why": "Assign them so your CV lists every company you flew for, with its hours and aircraft.",
         "go": "Assign",
         "dismiss": "Hide (private or training flights)"
-      }
+      },
+      "op": {
+        "private": "Private flight",
+        "training": "Training"
+      },
+      "hideSim": "Hide simulator sessions"
     },
     "form": {
       "newTitle": "New flight",

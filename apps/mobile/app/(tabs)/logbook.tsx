@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, SectionList, StyleSheet, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { formatClock, formatDuration, operatorIndex, sumFlights, type Flight } from "@cielo/core";
+import { PRIVATE_OPERATOR, TRAINING_OPERATOR, formatClock, formatDuration, operatorIndex, sumFlights, type Flight } from "@cielo/core";
 import { useWide, Chip, EmptyState, Fab, Row, Segmented, Txt, tap } from "../../src/components/ui";
 import { LogbookCalendar } from "../../src/components/LogbookCalendar";
 import Storage from "expo-sqlite/kv-store";
@@ -57,6 +57,19 @@ export default function Logbook() {
   const [fFn, setFFn] = useState("");
   const [fCond, setFCond] = useState<"" | "night" | "ifr" | "fstd">("");
   const [fOp, setFOp] = useState("");
+  // simulator sessions hidden (remembered on this phone)
+  const [hideSim, setHideSim] = useState(() => {
+    try {
+      return Storage.getItemSync("logbook.hideSim") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleSim = () => {
+    const v = !hideSim;
+    setHideSim(v);
+    void Storage.setItem("logbook.hideSim", v ? "1" : "0").catch(() => undefined);
+  };
   const filtersOn = !!(fYear || fType || fFn || fCond || fOp);
   const ops = useMemo(() => operatorIndex(flights, aircraft, airlines()), [flights, aircraft]);
   const years = useMemo(() => [...new Set(flights.map((f) => f.date.slice(0, 4)))].sort().reverse(), [flights]);
@@ -72,12 +85,13 @@ export default function Logbook() {
       if (fCond === "night" && !(f.nightMin > 0)) return false;
       if (fCond === "ifr" && !(f.ifrMin > 0 && !f.isFstd)) return false;
       if (fCond === "fstd" && !f.isFstd) return false;
+      if (hideSim && f.isFstd) return false;
       if (fOp && (fOp === "-" ? !!ops.of(f) || f.isFstd : ops.of(f) !== fOp)) return false;
       if (!words.length) return true;
       const hay = [f.depIcao, f.arrIcao, f.registration, f.aircraftTypeIcao, f.flightNumber, f.picName, f.remarks, f.function, f.date, ops.of(f)].filter(Boolean).join(" ").toLowerCase();
       return words.every((w) => hay.includes(w));
     });
-  }, [flights, q, fYear, fType, fFn, fCond, fOp, ops]);
+  }, [flights, q, fYear, fType, fFn, fCond, fOp, ops, hideSim]);
 
   // selection, to give flights their operator in one go
   const [selecting, setSelecting] = useState(false);
@@ -94,15 +108,17 @@ export default function Logbook() {
   };
   const toggle = (id: string) => setPicked((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const stopSelecting = () => (setSelecting(false), setPicked(new Set()), setAssignTo(""), setRangeFrom(""), setRangeTo(""));
-  const assign = async () => {
-    const op = assignTo.trim() || undefined;
+  const assign = async (to = assignTo) => {
+    const op = to.trim() || undefined;
     const n = picked.size;
     for (const f of flights) if (picked.has(f.id) && (f.operator ?? undefined) !== op) await put("flights", { ...f, operator: op });
-    Alert.alert(t("log.assign.title"), op ? t("log.assign.done", { n, op }) : t("log.assign.cleared", { n }));
+    Alert.alert(t("log.assign.title"), op ? t("log.assign.done", { n, op: opLabel(op)! }) : t("log.assign.cleared", { n }));
     stopSelecting();
   };
   const sum = useMemo(() => sumFlights(shown), [shown]);
   /** flights the CV cannot place: no operator typed or recognised */
+  /** "Private" and "Training" are stored as such and shown in the pilot's language */
+  const opLabel = (op?: string) => (op === PRIVATE_OPERATOR ? t("log.op.private") : op === TRAINING_OPERATOR ? t("log.op.training") : op);
   const unassigned = useMemo(() => flights.filter((f) => !f.deletedAt && !f.isFstd && !ops.of(f)).length, [flights, ops]);
   // dismissed: hidden until more flights without an operator come in (private, training… stay as they are)
   const [dismissedAt, setDismissedAt] = useState(0);
@@ -207,6 +223,10 @@ export default function Logbook() {
                   <Ionicons name="options-outline" size={15} color={filtersOn ? c.accent : c.muted} />
                   <Txt variant="small" color={filtersOn ? c.accent : c.muted}>{filtersOn ? t("log.filtersOn") : t("log.filters")}</Txt>
                 </Pressable>
+                <Pressable onPress={() => (tap(), toggleSim())} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Ionicons name={hideSim ? "checkbox" : "square-outline"} size={15} color={hideSim ? c.accent : c.muted} />
+                  <Txt variant="small" color={hideSim ? c.accent : c.muted}>{t("log.hideSim")}</Txt>
+                </Pressable>
                 {access.canWrite ? (
                   <Pressable onPress={() => (tap(), selecting ? stopSelecting() : setSelecting(true))} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                     <Ionicons name="checkbox-outline" size={15} color={selecting ? c.accent : c.muted} />
@@ -226,7 +246,7 @@ export default function Logbook() {
                       <Txt variant="small" style={{ width: 62 }}>{g.label}</Txt>
                       <Chip label={t("log.f.all")} selected={!g.value} onPress={() => g.set("")} />
                       {g.opts.map((o) => (
-                        <Chip key={o} label={o} selected={g.value === o} onPress={() => g.set(g.value === o ? "" : o)} />
+                        <Chip key={o} label={opLabel(o) ?? o} selected={g.value === o} onPress={() => g.set(g.value === o ? "" : o)} />
                       ))}
                     </ScrollView>
                   ))}
@@ -347,7 +367,7 @@ export default function Logbook() {
                       </View>
                     ) : null}
                     <Txt variant="small" numberOfLines={1} style={{ flexShrink: 1 }}>
-                      {[f.aircraftTypeIcao, !f.isFstd && f.outUtc ? `${formatClock(f.outUtc)}–${formatClock(f.inUtc)}` : "", f.flightNumber, ops.of(f)].filter(Boolean).join(" · ")}
+                      {[f.aircraftTypeIcao, !f.isFstd && f.outUtc ? `${formatClock(f.outUtc)}–${formatClock(f.inUtc)}` : "", f.flightNumber, opLabel(ops.of(f))].filter(Boolean).join(" · ")}
                     </Txt>
                   </Row>
                   {pendingIds.has(f.id) ? (
@@ -416,11 +436,19 @@ export default function Logbook() {
           <OperatorField value={assignTo} onChange={setAssignTo} known={ops.all} placeholder={t("log.assign.placeholder")} dark />
           {ops.all.length ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }} keyboardShouldPersistTaps="handled">
-              {ops.all.slice(0, 8).map((o) => (
+              {ops.all.filter((o) => o !== PRIVATE_OPERATOR && o !== TRAINING_OPERATOR).slice(0, 8).map((o) => (
                 <Chip key={o} label={o} selected={assignTo === o} onPress={() => setAssignTo(o)} />
               ))}
             </ScrollView>
           ) : null}
+          {/* private and training flights: not a company, never an experience on the CV */}
+          <Row gap={8}>
+            {[PRIVATE_OPERATOR, TRAINING_OPERATOR].map((x) => (
+              <Pressable key={x} disabled={!picked.size} onPress={() => void assign(x)} style={{ flex: 1, alignItems: "center", paddingVertical: 9, borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.25)", opacity: picked.size ? 1 : 0.5 }}>
+                <Txt color="#fff">{opLabel(x)}</Txt>
+              </Pressable>
+            ))}
+          </Row>
           <Row gap={8}>
             <Pressable disabled={!picked.size} onPress={() => void assign()} style={{ flex: 1, alignItems: "center", paddingVertical: 11, borderRadius: 12, backgroundColor: picked.size ? c.accent : c.accent + "55" }}>
               <Txt color="#fff" style={{ fontWeight: "700" }}>{assignTo.trim() ? t("log.assign.go") : t("log.assign.clear")}</Txt>

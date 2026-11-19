@@ -4,7 +4,7 @@ import { X, BookCopy, Building2, CalendarRange, Check, ListChecks, Clock, CloudF
 import { useAirports } from "@/lib/airports";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { operatorIndex, sumFlights } from "@cielo/core";
+import { PRIVATE_OPERATOR, TRAINING_OPERATOR, operatorIndex, sumFlights } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, Overlay, PageTitle, useToast } from "@/components/app/ui";
 import { setOperator as assignOperator } from "@/lib/repo";
@@ -34,6 +34,19 @@ export default function Logbook() {
   const [year, setYear] = useState("");
   const [type, setType] = useState("");
   const [operator, setOperator] = useState("");
+  // simulator sessions hidden (remembered on this device)
+  const [hideSim, setHideSim] = useState(false);
+  useEffect(() => {
+    try {
+      setHideSim(localStorage.getItem("gd:hide-sim") === "1");
+    } catch {}
+  }, []);
+  const toggleSim = (v: boolean) => {
+    setHideSim(v);
+    try {
+      localStorage.setItem("gd:hide-sim", v ? "1" : "0");
+    } catch {}
+  };
   // a link from the CV opens the logbook on the flights without an operator, ready to assign
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("operator");
@@ -55,9 +68,10 @@ export default function Logbook() {
         (!year || f.date.startsWith(year)) &&
         (!type || (type === "FSTD" ? f.isFstd : f.aircraftTypeIcao === type)) &&
         (!operator || (operator === "-" ? !ops.of(f) : ops.of(f) === operator)) &&
+        !(hideSim && f.isFstd) &&
         (!s || [f.depIcao, f.arrIcao, f.registration, f.aircraftTypeIcao, f.flightNumber, f.remarks, f.picName, f.fstdType, ops.of(f)].some((x) => x?.toUpperCase().includes(s))),
     );
-  }, [flights, q, year, type, operator, ops]);
+  }, [flights, q, year, type, operator, ops, hideSim]);
   const totals = useMemo(() => sumFlights(filtered), [filtered]);
   const [limit, setLimit] = useState(100);
   const airports = useAirports();
@@ -77,12 +91,14 @@ export default function Logbook() {
   const toggle = (id: string) => setPicked((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const open = (id: string) => (selecting ? toggle(id) : router.push({ pathname: "/app/carnet/[id]", params: { id } }));
   const stopSelecting = () => (setSelecting(false), setPicked(new Set()), setAssignTo(""), setRangeFrom(""), setRangeTo(""));
-  const assign = async () => {
+  const assign = async (to = assignTo) => {
     const n = picked.size;
-    await assignOperator([...picked], assignTo || undefined);
-    toast(assignTo ? t("assign.done", { count: n, operator: assignTo }) : t("assign.cleared", { count: n }));
+    await assignOperator([...picked], to || undefined);
+    toast(to ? t("assign.done", { count: n, operator: opLabel(to)! }) : t("assign.cleared", { count: n }));
     stopSelecting();
   };
+  /** "Private" and "Training" are stored as such and shown in the pilot's language */
+  const opLabel = (op?: string) => (op === PRIVATE_OPERATOR ? t("op.private") : op === TRAINING_OPERATOR ? t("op.training") : op);
   const unassigned = useMemo(() => (flights ?? []).filter((f) => !f.deletedAt && !f.isFstd && !ops.of(f)).length, [flights, ops]);
   // dismissed: hidden until more flights without an operator come in (private, training… stay as they are)
   const [dismissedAt, setDismissedAt] = useState(0);
@@ -130,7 +146,7 @@ export default function Logbook() {
           </>
         }
       />
-      <div className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_140px_140px_190px_auto]">
+      <div className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_170px_160px_200px_auto]">
         <input className="input" type="search" placeholder={t("searchPlaceholder")} value={q} onChange={(e) => setQ(e.target.value)} />
         <select className="input" value={year} onChange={(e) => setYear(e.target.value)} aria-label={t("allYears")}>
           <option value="">{t("allYears")}</option>
@@ -142,13 +158,18 @@ export default function Logbook() {
         </select>
         <select className="input" value={operator} onChange={(e) => setOperator(e.target.value)} aria-label={t("allOperators")}>
           <option value="">{t("allOperators")}</option>
-          {ops.all.map((o) => <option key={o} value={o}>{o}</option>)}
+          {ops.all.map((o) => <option key={o} value={o}>{opLabel(o)}</option>)}
           <option value="-">{t("noOperator")}</option>
         </select>
         <button type="button" className={`btn btn-sm h-full ${selecting ? "btn-primary" : "btn-secondary"}`} onClick={() => (selecting ? stopSelecting() : setSelecting(true))}>
           <ListChecks size={15} /> {selecting ? t("assign.stop") : t("assign.start")}
         </button>
       </div>
+
+      <label className="-mt-2 mb-4 flex w-fit cursor-pointer items-center gap-2 text-sm text-muted hover:text-text">
+        <input type="checkbox" className="h-4 w-4 accent-[var(--accent)]" checked={hideSim} onChange={(e) => toggleSim(e.target.checked)} />
+        {t("hideSim")}
+      </label>
 
       {/* flights without an operator: the CV cannot place them */}
       {unassigned > dismissedAt && operator !== "-" && (
@@ -209,7 +230,7 @@ export default function Logbook() {
                     {m.flights.map((f) => {
                       const dep = airports?.get(f.depIcao);
                       const arr = airports?.get(f.arrIcao);
-                      const op = ops.of(f);
+                      const op = opLabel(ops.of(f));
                       return (
                         <li key={f.id}>
                           <button
@@ -331,6 +352,13 @@ export default function Logbook() {
           <span className="flex min-w-48 flex-1 items-center gap-2">
             <Building2 size={15} className="shrink-0 text-white/60" />
             <OperatorInput value={assignTo} onChange={setAssignTo} known={ops.all} placeholder={t("assign.placeholder")} className="h-9 !bg-white/10 !text-white" up dark />
+          </span>
+          <span className="flex items-center gap-1.5">
+            {[PRIVATE_OPERATOR, TRAINING_OPERATOR].map((x) => (
+              <button key={x} type="button" className="btn btn-sm border border-white/20 !text-white/85 hover:border-white/50" disabled={!picked.size} onClick={() => void assign(x)}>
+                {opLabel(x)}
+              </button>
+            ))}
           </span>
           <button type="button" className="btn btn-primary btn-sm" disabled={!picked.size} onClick={() => void assign()}>
             {assignTo ? t("assign.go") : t("assign.clear")}
