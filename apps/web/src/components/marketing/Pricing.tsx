@@ -77,7 +77,7 @@ export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
               </div>
               {yearly ? (
                 <p className="mt-1 text-sm text-muted">
-                  <span className="num line-through">{money(full)}</span> · <span className="num font-semibold text-accent">{t("perMonthEquiv", { price: money(price / 12) })}</span>
+                  <span className="num line-through">{money(full)}</span> · <span className="num font-semibold text-accent">{t("perMonthEquiv", { price: money(Math.floor((price / 12) * 100) / 100) })}</span>
                 </p>
               ) : (
                 <p className="mt-1 text-sm text-muted">{t("orYearly", { price: money(SITE.pricing[p].yearly) })}</p>

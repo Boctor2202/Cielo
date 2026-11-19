@@ -15,8 +15,8 @@ export const SITE = {
     currency: "EUR",
     /** monthly, or yearly with two months free (10 months paid), after a 7-day trial (card required);
      * "premium" is the Max plan */
-    basic: { monthly: 4.99, yearly: 49.9 },
-    premium: { monthly: 8.99, yearly: 89.9 },
+    basic: { monthly: 4.99, yearly: 49.99 },
+    premium: { monthly: 8.99, yearly: 89.99 },
     trialDays: 7,
   },
   stores: {
