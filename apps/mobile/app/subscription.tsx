@@ -58,6 +58,19 @@ export default function Subscription() {
 
   const money = (n: number) => new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-IE", { style: "currency", currency: "EUR" }).format(n);
   const fallbackPrice = (p: Plan) => money(interval === "yearly" ? YEARLY_PRICES_EUR[p] : PRICES_EUR[p]);
+  /** The monthly equivalent of a yearly plan: the App Store's own figure (in the pilot's currency), else the website's price / 12. */
+  const perMonth = (pkg: PurchasesPackage | undefined, plan: Plan) => {
+    const p = pkg?.product;
+    if (p?.pricePerMonthString) return p.pricePerMonthString;
+    if (p && p.price > 0) {
+      try {
+        return new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-IE", { style: "currency", currency: p.currencyCode }).format(Math.floor((p.price / 12) * 100) / 100);
+      } catch {
+        /* unknown currency code: fall through */
+      }
+    }
+    return money(Math.floor((YEARLY_PRICES_EUR[plan] / 12) * 100) / 100);
+  };
   // a card subscription taken on the website: managed there, never bought a second time through the App Store
   const onWeb = !!current && pilot.subscriptionSource === "stripe";
   const plans: Plan[] = ["basic", "premium"];
@@ -102,7 +115,7 @@ export default function Subscription() {
               {price}
               <Txt variant="muted"> / {t(interval === "yearly" ? "sub.perYear" : "sub.perMonth")}</Txt>
             </Txt>
-            {interval === "yearly" ? <Txt variant="small" color={c.accent}>{t("sub.yearlyEq", { price: money(Math.round((YEARLY_PRICES_EUR[plan] / 12) * 100) / 100) })}</Txt> : null}
+            {interval === "yearly" ? <Txt variant="small" color={c.accent}>{t("sub.yearlyEq", { price: perMonth(pkg, plan) })}</Txt> : null}
             <Txt variant="muted">{t(plan === "premium" ? "sub.maxPitch" : "sub.basicPitch")}</Txt>
             {!isCurrent && !onWeb && isPurchasesEnabled ? (
               <View style={{ gap: 6 }}>
