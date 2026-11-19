@@ -234,6 +234,12 @@ async function main() {
 
     // review screenshot
     const current = await api("GET", `/v1/subscriptions/${sub.id}/appStoreReviewScreenshot`).catch(() => ({ data: null }));
+    // a screenshot Apple refused (e.g. wrong size) is replaced
+    if (current.data && current.data.attributes.assetDeliveryState?.state === "FAILED") {
+      await api("DELETE", `/v1/subscriptionAppStoreReviewScreenshots/${current.data.id}`);
+      current.data = null;
+      log("  refused screenshot removed");
+    }
     if (!current.data) {
       const res = (await api("POST", "/v1/subscriptionAppStoreReviewScreenshots", {
         data: { type: "subscriptionAppStoreReviewScreenshots", attributes: { fileName: "subscription.jpg", fileSize: shot.length }, relationships: { subscription: rel("subscriptions", sub.id) } },
