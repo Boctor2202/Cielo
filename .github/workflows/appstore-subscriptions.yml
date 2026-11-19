@@ -1,0 +1,28 @@
+name: App Store subscriptions
+
+# Creates (or completes) Geardown's subscriptions in App Store Connect. Run by hand: Actions › App Store subscriptions › Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      check:
+        description: "Only show what exists (no change)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  subscriptions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/appstore/subscriptions.mjs ${{ inputs.check && '--check' || '' }}
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
