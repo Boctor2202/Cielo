@@ -365,7 +365,7 @@ function PlatformTab() {
           {data.services.map((s) => (
             <li key={s.key} className="flex items-center justify-between gap-3">
               <span>{t(`service.${s.key}`)}</span>
-              <span className={`text-xs font-semibold ${s.ok ? "text-success" : "text-caution"}`}>{s.ok ? (s.note ?? t("ok")) : t("missing")}</span>
+              <span className={`text-xs font-semibold ${s.ok ? "text-success" : "text-caution"}`}>{s.ok ? (s.note ?? t("ok")) : (s.note ?? t("missing"))}</span>
             </li>
           ))}
         </ul>

@@ -1792,7 +1792,8 @@
           "planespotters": "Planespotters",
           "adsblol": "Radar adsb.lol",
           "ticketmaster": "Spectacles (Ticketmaster)",
-          "flightaware": "Horaires réels (FlightAware)"
+          "flightaware": "Horaires réels (FlightAware)",
+          "anthropic": "Lecture par IA (Anthropic)"
         }
       }
     },
