@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Alert, Linking, Platform, View } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { Stack, router } from "expo-router";
@@ -8,6 +8,8 @@ import { API_URL } from "../src/api";
 import { supabase } from "../src/auth";
 import { useApp } from "../src/state";
 import { useTheme } from "../src/theme";
+import { useCancelledUntil } from "../src/subscriptionStatus";
+import { CancelledNotice } from "../src/components/CancelledNotice";
 
 /**
  * The account: the e-mail address (sign-in and Geardown's e-mails), the password, and the subscription — changed
@@ -46,23 +48,7 @@ export default function Account() {
     Alert.alert(t("account.pwTitle"), t("account.pwDone"));
   };
 
-  // a cancelled card subscription: still running until the end of the paid period
-  const [endsAt, setEndsAt] = useState<string | null>(null);
-  useEffect(() => {
-    if (!supabase || !session) return;
-    void supabase
-      .from("subscriptions")
-      .select("status, current_period_end, cancel_at:raw->>cancel_at, cape:raw->>cancel_at_period_end")
-      .eq("source", "stripe")
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        const d = data as { status: string; current_period_end: string | null; cancel_at: string | null; cape: string | null } | null;
-        if (!d || d.status === "canceled" || !(d.cancel_at || d.cape === "true")) return setEndsAt(null);
-        setEndsAt(d.cancel_at ? new Date(Number(d.cancel_at) * 1000).toISOString() : d.current_period_end);
-      });
-  }, [session]);
+  const endsAt = useCancelledUntil();
 
   const source = pilot.subscriptionTier && pilot.subscriptionTier !== "free" ? pilot.subscriptionSource : null;
   /** The Stripe space for a card subscription (taken on the website). */
@@ -121,15 +107,7 @@ export default function Account() {
           <Ionicons name="card-outline" size={18} color={c.accent} />
           <Txt variant="h2">{t("account.subTitle")}</Txt>
         </Row>
-        {endsAt ? (
-          <Row style={{ alignItems: "flex-start", gap: 8, padding: 10, borderRadius: 12, borderWidth: 1, borderColor: "rgba(251,191,36,0.45)", backgroundColor: "rgba(251,191,36,0.1)" }}>
-            <Ionicons name="calendar-clear-outline" size={16} color="#fbbf24" style={{ marginTop: 2 }} />
-            <View style={{ flex: 1, gap: 2 }}>
-              <Txt style={{ fontWeight: "700" }}>{t("account.cancelled", { date: new Date(endsAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) })}</Txt>
-              <Txt variant="small">{t("account.cancelledHint")}</Txt>
-            </View>
-          </Row>
-        ) : null}
+        {endsAt ? <CancelledNotice endsAt={endsAt} /> : null}
         {source === "stripe" ? (
           <>
             <Txt variant="small">{t("account.subStripe")}</Txt>
