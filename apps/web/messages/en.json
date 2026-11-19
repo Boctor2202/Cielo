@@ -2084,7 +2084,12 @@
         "longest": "Longest flight",
         "types": "Aircraft types",
         "signed": "Signed flights"
-      }
+      },
+      "honours": "Honours",
+      "allBadges": "All badges",
+      "distinctions": "Distinctions",
+      "noWings": "First wings at 100 h",
+      "noDistinction": "Your first badges appear with your first flights."
     },
     "share": {
       "mail": "E-mail",

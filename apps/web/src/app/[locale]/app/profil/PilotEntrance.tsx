@@ -6,10 +6,10 @@ import { useTranslations } from "next-intl";
 import { rankStripes } from "@cielo/core";
 import { Epaulette } from "@/components/app/Epaulette";
 
-/** Profile hero: the crew badge, still, on the left of the apron photo. */
+/** Profile hero: the crew badge on the left of the apron photo, the pilot's honours on the right. */
 
 
-export function PilotEntrance({ photo, name, rank, employer, base }: { photo?: string; name: string; rank?: string; employer?: string; base?: string }) {
+export function PilotEntrance({ photo, name, rank, employer, base, honours }: { photo?: string; name: string; rank?: string; employer?: string; base?: string; honours?: React.ReactNode }) {
   const t = useTranslations("app.profile");
   const reduce = useReducedMotion();
 
@@ -27,12 +27,12 @@ export function PilotEntrance({ photo, name, rank, employer, base }: { photo?: s
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#02040b]/85 via-[#02040b]/45 to-[#02040b]/20" />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-t from-[#02040b]/80 to-transparent" />
 
-      <div className="grid min-h-[340px] items-center gap-6 px-6 py-8 sm:px-10">
+      <div className="grid min-h-[340px] items-center gap-6 px-6 py-8 sm:px-10 lg:grid-cols-[320px_minmax(0,1fr)]">
         <motion.div
           initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.25, 0.8, 0.3, 1] }}
-          className="w-[min(100%,320px)] rounded-2xl border border-white/15 bg-[#02040b]/65 p-5 text-white shadow-[0_30px_60px_-20px_rgba(0,0,0,.7)] backdrop-blur-xl"
+          className="w-[min(100%,320px)] self-center rounded-2xl border border-white/15 bg-[#02040b]/65 p-5 text-white shadow-[0_30px_60px_-20px_rgba(0,0,0,.7)] backdrop-blur-xl"
         >
           <div className="flex items-center gap-4">
             <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl ring-2 ring-[#22c55e]/80">
@@ -55,6 +55,7 @@ export function PilotEntrance({ photo, name, rank, employer, base }: { photo?: s
             <span className="num font-semibold text-white">{base || "····"}</span>
           </div>
         </motion.div>
+        {honours}
       </div>
     </section>
   );

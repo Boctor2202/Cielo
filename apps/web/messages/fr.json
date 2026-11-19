@@ -2084,7 +2084,12 @@
         "longest": "Plus long vol",
         "types": "Types d'avion",
         "signed": "Vols signés"
-      }
+      },
+      "honours": "Distinctions",
+      "allBadges": "Tous les badges",
+      "distinctions": "Badges",
+      "noWings": "Premières ailes à 100 h",
+      "noDistinction": "Vos premiers badges apparaîtront avec vos premiers vols."
     },
     "share": {
       "mail": "E-mail",

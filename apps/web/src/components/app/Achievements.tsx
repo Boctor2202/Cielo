@@ -10,7 +10,7 @@ import { Card, Modal } from "./ui";
 import { ShareSheet } from "./ShareSheet";
 
 /** A hexagonal emblem in the metal of its rank, with one star per rank; a dark silhouette with a lock while it is still to earn. */
-function Emblem({ badge, size = 64, locked }: { badge: Pick<DiscoveryBadge, "id" | "series" | "tier" | "rank" | "of">; size?: number; locked?: boolean }) {
+export function Emblem({ badge, size = 64, locked }: { badge: Pick<DiscoveryBadge, "id" | "series" | "tier" | "rank" | "of">; size?: number; locked?: boolean }) {
   const [from, to] = TIER[badge.tier];
   const Icon = iconFor(badge.id, badge.series);
   const n = locked ? 0 : starsOf(badge.rank, badge.of);
@@ -50,7 +50,7 @@ function Emblem({ badge, size = 64, locked }: { badge: Pick<DiscoveryBadge, "id"
 }
 
 /** Pilot wings for an hour level, in its metal; grey while locked. */
-function Wings({ hours, tier, locked, width = 120 }: { hours: number; tier: Tier; locked?: boolean; width?: number }) {
+export function Wings({ hours, tier, locked, width = 120 }: { hours: number; tier: Tier; locked?: boolean; width?: number }) {
   const [from, to] = TIER[tier];
   const svg = wingsSvg({ from, to, label: hoursLabel(hours), locked, id: `w${hours}` });
   return (

@@ -5,7 +5,7 @@ import { Settings2, BadgeCheck, Camera, Check, Pencil, Plane, Trash2, X } from "
 import { CountryInput } from "@/components/app/CountryInput";
 import { AirportInput } from "@/components/app/AirportInput";
 import { motion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatPhoneIntl, AUTHORITIES, RANKS, countryName, licenseStatus, type Pilot } from "@cielo/core";
 import { flightExperience } from "@cielo/cv";
@@ -15,6 +15,8 @@ import { useDuration, useFlights, usePilot, useTable, useToday, useTypes } from 
 import { updatePilot } from "@/lib/repo";
 import { localStore } from "@/lib/db";
 import { PilotEntrance } from "./PilotEntrance";
+import { Honours } from "@/components/app/Honours";
+import { useAirports } from "@/lib/airports";
 
 
 type Draft = Pick<Pilot, "fullName" | "rank" | "employer" | "homeBaseIcao" | "nationality" | "licenceNumber" | "phone" | "bio" | "photoDataUrl">;
@@ -39,6 +41,8 @@ export default function ProfilePage() {
   const pilot = usePilot();
   const flights = useFlights();
   const opening = useTable("opening_balances");
+  const airports = useAirports();
+  const airportOf = useCallback((icao: string) => airports?.get(icao), [airports]);
   const licenses = useTable("licenses");
   const types = useTypes();
   const today = useToday();
@@ -137,7 +141,9 @@ export default function ProfilePage() {
         )}
       </header>
 
-      <PilotEntrance photo={editing ? draft.photoDataUrl : pilot.photoDataUrl} name={pilot.fullName} rank={pilot.rank} employer={pilot.employer} base={pilot.homeBaseIcao} />
+      <PilotEntrance photo={editing ? draft.photoDataUrl : pilot.photoDataUrl} name={pilot.fullName} rank={pilot.rank} employer={pilot.employer} base={pilot.homeBaseIcao}
+        honours={flights ? <Honours flights={flights} opening={opening ?? []} airport={airportOf} /> : null}
+      />
 
       {editing && (
         <Card title={t("editTitle")}>
