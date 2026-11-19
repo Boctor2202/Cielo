@@ -714,9 +714,9 @@
     "import": {
       "title": "Importer des vols",
       "tabs": {
-        "file": "Fichier CSV / Excel",
+        "file": "Fichier, PDF ou texte",
         "roster": "Roster compagnie",
-        "scan": "Scan du carnet papier"
+        "scan": "Carnet papier (photos)"
       },
       "drop": "Déposez un fichier CSV, XLSX, TXT ou PDF (relevé de vol de compagnie), ou cliquez pour choisir",
       "mapping": "Correspondance des colonnes",
@@ -777,12 +777,25 @@
       "fromApps": "Vous venez d'un autre carnet ? Exportez depuis LogTen Pro, ForeFlight, mccPILOTLOG, CrewLounge, Flylog, MyFlightbook, Logbook Pro, APDL ou Safelog (CSV, texte tabulé ou Excel) et déposez le fichier ici : le format est reconnu et les colonnes associées pour vous.",
       "appRecognised": "Export {app} reconnu",
       "pdf": {
-        "reading": "Lecture du PDF…",
-        "plan": "Ce format de PDF est lu par IA, inclus dans l'offre Max. Les relevés Air France EP5 sont lus avec toutes les offres.",
+        "reading": "Lecture du document…",
+        "plan": "Ce document est lu par IA, incluse dans l'offre Max. Les fichiers CSV/Excel, les relevés Air France EP5 et les comptes rendus collés sont lus avec toutes les offres.",
         "unauthorized": "Connecte-toi pour importer un PDF.",
         "rate_limited": "Trop de PDF en peu de temps, réessaie dans une minute.",
-        "error": "Ce PDF n'a pas pu être lu. Envoie-le-nous via « Signaler un problème » et on ajoutera son format."
-      }
+        "error": "Ce PDF n'a pas pu être lu. Envoie-le-nous via « Signaler un problème » et on ajoutera son format.",
+        "mapping": "Reconnaissance des colonnes…",
+        "none": "Aucun vol trouvé dans ce document.",
+        "busy": "Le lecteur est occupé, réessayez dans une minute."
+      },
+      "dropAny": "Déposez n'importe quoi : CSV, Excel, relevé PDF, photos de pages de carnet… ou cliquez pour choisir",
+      "pasteTitle": "Coller un texte (e-mail de fin de vol, récapitulatif)",
+      "pastePh": "Collez l'e-mail ou le récapitulatif envoyé par votre compagnie après le vol",
+      "pasteRead": "Lire les vols",
+      "share": "Aider Geardown à reconnaître ce format : s'il est nouveau, le document nous est envoyé pour écrire un lecteur dédié (conservé 90 jours, peut contenir des noms).",
+      "readLearned": "Format déjà connu : colonnes réglées d'après les imports d'autres pilotes.",
+      "readReport": "Lu comme un compte rendu de vol.",
+      "readAi": "Lu par IA ({source}) : vérifiez chaque vol avant d'importer.",
+      "photosHelp": "Photographiez chaque page de votre carnet papier (les deux pages en vis-à-vis quand les heures sont à droite), jusqu'à 12 à la fois. Chaque vol est affiché pour vérification avant l'import.",
+      "photosDrop": "Déposez les photos de vos pages de carnet, ou cliquez pour choisir"
     },
     "audit": {
       "title": "Audit du carnet",

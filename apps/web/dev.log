@@ -1,0 +1,12 @@
+▲ Next.js 16.4.6 (Turbopack)
+- Local:         http://localhost:3123
+- Network:       http://192.0.2.2:3123
+- Environments: .env.local
+✓ Ready in 611ms
+✓ Running next.config.ts took 343ms
+
+○ Compiling /[locale] ...
+ GET /en 200 in 5.3s (next.js: 4.1s, proxy.ts: 173ms, generate-params: 561ms, application-code: 504ms)
+○ Compiling /[locale]/app/carnet/import ...
+ GET /fr/app/carnet/import 200 in 4.0s (next.js: 3.2s, proxy.ts: 8ms, generate-params: 494ms, application-code: 220ms)
+ GET /api/flags 200 in 116ms (next.js: 88ms, application-code: 28ms)

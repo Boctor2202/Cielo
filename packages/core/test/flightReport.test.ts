@@ -52,3 +52,15 @@ describe("withDash", () => {
     expect(withDash("9H-J4K")).toBe("9H-J4K");
   });
 });
+
+import { tableSignature, mappingToTitles, titlesToMapping, IMPORT_FIELDS } from "../src";
+describe("table layouts", () => {
+  it("are known by their column titles, whatever their case or accents", () => {
+    expect(tableSignature(["Date", "Départ", "Arrivée"])).toBe(tableSignature(["DATE", "depart", "ARRIVEE "]));
+    expect(tableSignature(["Date", "From"])).not.toBe(tableSignature(["Date", "To"]));
+  });
+  it("keep a mapping by column title", () => {
+    const stored = mappingToTitles(["Day", "From", "To"], { ...Object.fromEntries(IMPORT_FIELDS.map((f) => [f, -1])), date: 0, dep: 1, arr: 2 } as never);
+    expect(titlesToMapping(["To", "Day", "From", "Extra"], stored, IMPORT_FIELDS)).toMatchObject({ date: 1, dep: 2, arr: 0 });
+  });
+});

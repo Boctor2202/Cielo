@@ -132,15 +132,27 @@ export interface LogbookLeg {
   dep: string;
   arr: string;
   out?: string;
+  off?: string;
+  on?: string;
   in?: string;
   totalMin?: number;
   nightMin?: number;
+  ifrMin?: number;
+  /** time per function, when the document has those columns (paper logbooks) */
+  picMin?: number;
+  copilotMin?: number;
+  dualMin?: number;
+  instructorMin?: number;
+  multiPilotMin?: number;
+  landingsDay?: number;
+  landingsNight?: number;
   registration?: string;
   aircraftType?: string;
   flightNumber?: string;
   /** PIC, SIC… when the document says */
   function?: string;
   picName?: string;
+  remarks?: string;
 }
 
 export const ep5Legs = (ep5: Ep5): LogbookLeg[] => ep5.legs.map((l) => ({ date: l.date, dep: l.dep, arr: l.arr, out: l.out, in: l.in, totalMin: l.totalMin, nightMin: l.nightMin, registration: l.registration }));
@@ -162,8 +174,11 @@ export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string 
       depIcao: dep ?? l.dep,
       arrIcao: arr ?? l.arr,
       out: l.out,
+      off: l.off,
+      on: l.on,
       in: l.in,
       registration: l.registration,
+      remarks: l.remarks,
       aircraftTypeIcao: l.aircraftType && /^[A-Z][A-Z0-9]{1,3}$/.test(l.aircraftType) ? l.aircraftType : undefined,
       flightNumber: l.flightNumber,
       function: fn,
@@ -171,13 +186,18 @@ export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string 
       pilotFlying: base.pilotFlying,
       ifr: true,
       isFstd: false,
-      operation: "multi_pilot",
+      operation: l.multiPilotMin === 0 ? "single_pilot" : "multi_pilot",
       autoLandings: false,
-      takeoffsDay: 0,
-      takeoffsNight: 0,
-      landingsDay: 0,
-      landingsNight: 0,
+      takeoffsDay: l.landingsDay ?? 0,
+      takeoffsNight: l.landingsNight ?? 0,
+      landingsDay: l.landingsDay ?? 0,
+      landingsNight: l.landingsNight ?? 0,
     };
-    return { rowIndex: i, input, explicit: { total: l.totalMin, night: l.nightMin }, errors };
+    return {
+      rowIndex: i,
+      input,
+      explicit: { total: l.totalMin, night: l.nightMin, ifr: l.ifrMin, pic: l.picMin, copilot: l.copilotMin, dual: l.dualMin, instructor: l.instructorMin, multiPilot: l.multiPilotMin },
+      errors,
+    };
   });
 }

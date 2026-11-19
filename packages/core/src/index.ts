@@ -32,5 +32,6 @@ export * from "./achievements";
 export * from "./art";
 export * from "./flightReport";
 export * from "./airFranceEp5";
+export * from "./universalImport";
 export * from "./revisions";
 export * from "./phone";
