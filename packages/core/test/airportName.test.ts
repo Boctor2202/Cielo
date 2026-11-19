@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { airportShortName } from "../src";
 
-const CITIES = new Set(["milan", "lyon", "athens", "london", "paris"]);
-const isCity = (w: string) => CITIES.has(w.toLowerCase());
+const CITIES = new Set(["milan", "lyon", "athens", "london", "paris", "new york"]);
+const isCity = (w: string) => (CITIES.has(w.toLowerCase()) ? 5 : 0);
 const n = (name: string, city: string) => airportShortName({ name, city }, isCity);
 
 describe("airportShortName", () => {
@@ -22,6 +22,15 @@ describe("airportShortName", () => {
     expect(n("Lyon Saint-Exupéry Airport", "Colombier-Saugnieu, Rhône")).toBe("Lyon – Saint-Exupéry");
     expect(n("John F. Kennedy International Airport", "New York")).toBe("New York – John F. Kennedy");
     expect(n("Dublin Airport", "Dublin")).toBe("Dublin");
+    expect(n("Melun-Villaroche Airfield", "Moissy-Cramayel, Seine-et-Marne")).toBe("Melun – Villaroche");
+    expect(n("Pontoise-Cormeilles Aerodrome", "Cormeilles-en-Vexin, Val-d'Oise")).toBe("Pontoise – Cormeilles");
+    expect(n("Beauvais-Tillé airport", "Beauvais")).toBe("Beauvais – Tillé");
+    expect(n("Vitoria Airport", "Alava")).toBe("Vitoria");
+    expect(n("Saint-Yan Airport", "L'Hôpital-le-Mercier, Saône-et-Loire")).toBe("Saint-Yan");
+    expect(n("Valence-Chabeuil Airport", "Chabeuil, Drôme")).toBe("Valence – Chabeuil");
+    expect(n("Péronne Saint-Quentin Airfield", "Monchy-Lagache, Somme")).toBe("Péronne Saint-Quentin");
+    expect(n("Aérodrome de Saint-Girons - Antichan", "Saint-Girons/Antichan")).toBe("Saint-Girons – Antichan");
+    expect(n("Biarritz Pays Basque airport", "Biarritz")).toBe("Biarritz – Pays Basque");
     expect(n("Cambridge City Airport", "Cambridge, Cambridgeshire")).toBe("Cambridge City");
     expect(n("Athens Eleftherios Venizelos International Airport", "Spata-Artemida")).toBe("Athens – Eleftherios Venizelos");
   });

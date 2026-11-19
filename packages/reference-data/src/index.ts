@@ -222,14 +222,22 @@ export class AirportIndex {
     return this.byIcao.get(c) ?? (c.length === 3 ? this.byIata.get(c) : undefined);
   }
   iataToIcao = (iata: string) => this.byIata.get(iata.toUpperCase())?.icao;
-  private cities?: Set<string>;
+  private cities?: Map<string, number>;
   /** The name pilots say: "Paris – Charles de Gaulle", "Madrid – Barajas" (the code itself when unknown). */
   shortName(code: string | undefined | null): string {
     const a = this.get(code);
     if (!a) return code ?? "";
-    // cities served by a medium or large airport, to tell "Milan" in "Milan Malpensa"
-    this.cities ??= new Set(this.list.filter((x) => (x.size ?? 0) >= 2 && x.city).map((x) => cityOf(x.city).toLowerCase()));
-    return airportShortName(a, (w) => this.cities!.has(w.toLowerCase()));
+    // how many airports each town names ("Paris", "London", "Lyon" in "Chassieu, Lyon"), to tell the town in
+    // "Lyon Bron" and to put it in front of "Charles de Gaulle"
+    if (!this.cities) {
+      const n = new Map<string, number>();
+      for (const x of this.list) {
+        if (!x.city) continue;
+        for (const part of new Set(x.city.split(/[(),/]/).map((p) => p.trim().toLowerCase()).filter((p) => p.length > 2))) n.set(part, (n.get(part) ?? 0) + 1);
+      }
+      this.cities = n;
+    }
+    return airportShortName(a, (w) => this.cities!.get(w.toLowerCase()) ?? 0);
   }
   search(query: string, limit = 8): Airport[] {
     const q = query.trim().toUpperCase();
