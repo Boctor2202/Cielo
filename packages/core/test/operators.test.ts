@@ -23,6 +23,7 @@ describe("operators", () => {
     expect(idx.of(flights[2]!)).toBe("Air France");
     expect(idx.of(flights[3]!)).toBe("Astonjet");
     expect(idx.of(flights[4]!)).toBeUndefined();
+    expect(operatorIndex([f({ flightNumber: "AJD214K" })]).of({ flightNumber: "AJD214K" })).toBe("Astonjet");
     expect(idx.all[0]).toBe("Astonjet");
   });
 });

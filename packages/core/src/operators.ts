@@ -123,6 +123,7 @@ export const AIRLINES: Record<string, AirlineInfo> = {
   AHO: { name: "Air Hamburg" },
   GAC: { name: "GlobeAir" },
   PJS: { name: "Jet Aviation" },
+  AJD: { name: "Astonjet" },
 };
 
 const IATA = new Map(Object.entries(AIRLINES).flatMap(([icao, a]) => (a.iata ? [[a.iata, icao] as const] : [])));
