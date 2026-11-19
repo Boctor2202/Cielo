@@ -1,7 +1,8 @@
 "use client";
 
-import { CreditCard, Download, ExternalLink, LogOut, RefreshCw, Trash2, Upload } from "lucide-react";
+import { CalendarX, CreditCard, Download, ExternalLink, LogOut, RefreshCw, Trash2, Upload } from "lucide-react";
 import { AccountCard } from "@/components/app/AccountCard";
+import { useSubscriptionStatus } from "@/lib/subscriptionStatus";
 import { AirportInput } from "@/components/app/AirportInput";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -34,6 +35,7 @@ export default function SettingsPage() {
   const cloud = useCloud();
   const { toast, toastNode } = useToast();
   const [interval, setInterval] = useState<"monthly" | "yearly">("yearly");
+  const subStatus = useSubscriptionStatus();
   const [v, setV] = useState<Pilot | null>(null);
   const [delOpen, setDelOpen] = useState(false);
   const [word, setWord] = useState("");
@@ -163,6 +165,15 @@ export default function SettingsPage() {
           ) : (
             <div className="mt-4 space-y-3">
               {/* an active subscription: change plan, card or cancel where it was taken */}
+              {subStatus?.cancelled && subStatus.endsAt && (
+                <div className="flex items-start gap-2.5 rounded-xl border border-caution/40 bg-caution/10 p-3 text-sm">
+                  <CalendarX size={16} className="mt-0.5 shrink-0 text-caution" />
+                  <span>
+                    <span className="block font-semibold">{t("cancelledTitle", { date: new Date(subStatus.endsAt).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" }) })}</span>
+                    <span className="block text-muted">{t("cancelledHint")}</span>
+                  </span>
+                </div>
+              )}
               {v.subscriptionTier && v.subscriptionTier !== "free" && v.subscriptionSource ? (
                 <div className="rounded-xl border border-border bg-surface-2/50 p-3">
                   {v.subscriptionSource === "stripe" ? (

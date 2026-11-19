@@ -1316,7 +1316,9 @@
       "manageGoogle": "Votre abonnement a été pris sur Google Play : modifiez-le ou résiliez-le depuis le Play Store.",
       "manageStore": "Ouvrir mes abonnements",
       "manageNone": "Aucun abonnement par carte trouvé pour ce compte.",
-      "manageUnavailable": "La gestion de l'abonnement n'est pas disponible pour le moment. Écrivez-nous et nous le ferons pour vous."
+      "manageUnavailable": "La gestion de l'abonnement n'est pas disponible pour le moment. Écrivez-nous et nous le ferons pour vous.",
+      "cancelledTitle": "Abonnement résilié : accès jusqu'au {date}",
+      "cancelledHint": "Vous changez d'avis ? Réactivez-le avec le bouton « Gérer ou résilier mon abonnement » ci-dessous (« Renouveler l'abonnement » dans Stripe)."
     },
     "functions": {
       "PIC": "Commandant de bord (PIC)",

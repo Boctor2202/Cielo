@@ -1316,7 +1316,9 @@
       "manageGoogle": "Your subscription was taken on Google Play: change or cancel it from the Play Store.",
       "manageStore": "Open my subscriptions",
       "manageNone": "No card subscription found for this account.",
-      "manageUnavailable": "Subscription management is not available right now. Write to us and we will do it for you."
+      "manageUnavailable": "Subscription management is not available right now. Write to us and we will do it for you.",
+      "cancelledTitle": "Subscription cancelled: access until {date}",
+      "cancelledHint": "Changed your mind? Renew it with the button below (“Renew subscription” in Stripe)."
     },
     "functions": {
       "PIC": "Pilot in command (PIC)",
