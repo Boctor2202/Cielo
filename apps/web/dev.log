@@ -2,23 +2,14 @@
 - Local:         http://localhost:3123
 - Network:       http://192.0.2.2:3123
 - Environments: .env.local
-✓ Ready in 737ms
-✓ Running next.config.ts took 242ms
+✓ Ready in 563ms
+✓ Running next.config.ts took 253ms
 
 ○ Compiling /[locale] ...
- GET /en 200 in 6.9s (next.js: 5.8s, proxy.ts: 117ms, generate-params: 497ms, application-code: 416ms)
- GET /en/app 200 in 1290ms (next.js: 361ms, proxy.ts: 12ms, generate-params: 531ms, application-code: 387ms)
- GET /api/flags 200 in 129ms (next.js: 91ms, application-code: 38ms)
- GET /en/app 200 in 106ms (next.js: 11ms, proxy.ts: 7ms, generate-params: 20ms, application-code: 69ms)
-○ Compiling /[locale]/app/ftl ...
- GET /en/app/ftl 200 in 3.9s (next.js: 3.3s, proxy.ts: 6ms, generate-params: 482ms, application-code: 104ms)
- GET /api/flags 200 in 5ms (next.js: 1.1ms, application-code: 4ms)
- GET /en/app/statistics 200 in 3.5s (next.js: 2.7s, proxy.ts: 12ms, generate-params: 516ms, application-code: 320ms)
- GET /api/flags 200 in 10ms (next.js: 1.9ms, application-code: 8ms)
- GET /en/app 200 in 230ms (next.js: 47ms, proxy.ts: 8ms, generate-params: 24ms, application-code: 152ms)
- GET /api/flags 200 in 10ms (next.js: 2ms, application-code: 8ms)
- GET /en/app 200 in 95ms (next.js: 8ms, proxy.ts: 10ms, generate-params: 14ms, application-code: 63ms)
- GET /en/app/ftl 200 in 216ms (next.js: 91ms, proxy.ts: 6ms, generate-params: 21ms, application-code: 98ms)
- GET /api/flags 200 in 12ms (next.js: 1.4ms, application-code: 11ms)
- GET /en/app/statistics 200 in 138ms (next.js: 7ms, proxy.ts: 8ms, generate-params: 16ms, application-code: 108ms)
- GET /api/flags 200 in 7ms (next.js: 1.5ms, application-code: 6ms)
+ GET /en 200 in 4.8s (next.js: 3.7s, proxy.ts: 112ms, generate-params: 476ms, application-code: 482ms)
+ GET /en/app 200 in 1561ms (next.js: 696ms, proxy.ts: 9ms, generate-params: 446ms, application-code: 409ms)
+ GET /api/flags 200 in 121ms (next.js: 84ms, application-code: 37ms)
+ GET /en/app 200 in 179ms (next.js: 84ms, proxy.ts: 9ms, generate-params: 14ms, application-code: 72ms)
+ GET /en/app/statistics 200 in 1863ms (next.js: 804ms, proxy.ts: 6ms, generate-params: 606ms, application-code: 447ms)
+ GET /api/flags 200 in 9ms (next.js: 2ms, application-code: 7ms)
+ GET /api/share-card?type=badge&id=airports10&on=2025-11-17&lang=en&name=Camille+Martin&rank=&hrs=1845&ap=21&ct=11&nm=146986 200 in 2.0s (next.js: 37ms, application-code: 1971ms)

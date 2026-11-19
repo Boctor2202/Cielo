@@ -2085,6 +2085,17 @@
         "types": "Aircraft types",
         "signed": "Signed flights"
       }
+    },
+    "share": {
+      "mail": "E-mail",
+      "copyImage": "Copy image",
+      "copyLink": "Copy text",
+      "download": "Download the image",
+      "imageCopied": "Image copied: paste it in any app or post.",
+      "imageSaved": "Image saved: add it to your post.",
+      "postInApp": "Image saved: open {app}, create a post or a story and choose this image.",
+      "addImage": "Image saved: add it to the post that just opened.",
+      "linkCopied": "Text and link copied."
     }
   },
   "why": {

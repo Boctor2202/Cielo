@@ -2085,6 +2085,17 @@
         "types": "Types d'avion",
         "signed": "Vols signés"
       }
+    },
+    "share": {
+      "mail": "E-mail",
+      "copyImage": "Copier l'image",
+      "copyLink": "Copier le texte",
+      "download": "Télécharger l'image",
+      "imageCopied": "Image copiée : colle-la dans n'importe quelle app ou publication.",
+      "imageSaved": "Image enregistrée : ajoute-la à ta publication.",
+      "postInApp": "Image enregistrée : ouvre {app}, crée une publication ou une story et choisis cette image.",
+      "addImage": "Image enregistrée : ajoute-la à la publication qui vient de s'ouvrir.",
+      "linkCopied": "Texte et lien copiés."
     }
   },
   "why": {

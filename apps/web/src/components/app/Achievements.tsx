@@ -1,12 +1,13 @@
 "use client";
 
-import { Download, Flame, Lock, Share2 } from "lucide-react";
+import { Flame, Lock, Share2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { distanceNm, discoveryBadges, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
 import { useFormatDate } from "@/lib/hooks";
 import { TIER_COLORS as TIER, iconFor, starPath, starsOf, starX } from "@/lib/badgeArt";
 import { Card, Modal } from "./ui";
+import { ShareSheet } from "./ShareSheet";
 
 /** A hexagonal emblem in the metal of its rank, with one star per rank; a dark silhouette with a lock while it is still to earn. */
 function Emblem({ badge, size = 64, locked }: { badge: Pick<DiscoveryBadge, "id" | "series" | "tier" | "rank" | "of">; size?: number; locked?: boolean }) {
@@ -284,13 +285,7 @@ export function Achievements({ flights, opening, airport, pilot }: { flights: Fl
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={cardUrl(preview.base, preview.square)} alt={preview.text} className="mx-auto max-h-[55vh] w-auto rounded-xl border border-border" />
-          <div className="flex flex-wrap justify-center gap-2">
-            <a className="btn btn-primary btn-sm" href={cardUrl(preview.base, preview.square)} download="geardown.png"><Download size={14} /> {t("download")}</a>
-            <a className="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgeardown.app">LinkedIn</a>
-            <a className="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href={`https://x.com/intent/post?text=${encodeURIComponent(preview.text)}&url=${encodeURIComponent("https://geardown.app")}`}>X</a>
-            <a className="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent("https://geardown.app")}`}>Facebook</a>
-          </div>
-          <p className="text-center text-xs text-muted">{t("shareHint")}</p>
+          <ShareSheet image={cardUrl(preview.base, preview.square)} text={preview.text} />
         </div>
       )}
     </Modal>
