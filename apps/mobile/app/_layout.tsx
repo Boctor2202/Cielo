@@ -17,12 +17,11 @@ import { Backdrop, KeyboardDoneBar, Txt } from "../src/components/ui";
 import { glass } from "../src/theme";
 import { Splash, SplashOverlay } from "../src/components/Splash";
 import { ThreeGreensO } from "../src/components/Logo";
-import { applyUpdateAtLaunch } from "../src/updates";
+import { launchReady, markShown } from "../src/updates";
 import { LogReminderSync } from "../src/logReminders";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
-// a newer update is fetched during the opening screen and applied at once
-void applyUpdateAtLaunch();
+// a newer update is fetched during the opening screen and applied at once (`launchReady`, started on import)
 // dark by default; applied before the first render so the app never flashes light
 applyThemePref(loadThemePref());
 
@@ -39,8 +38,13 @@ function Boot() {
 function Navigator() {
   const { t } = useApp();
   const c = useTheme();
+  // the opening screen stays up until the update check is over: a restart on a new update then happens under it,
+  // never after the app has shown (which looked like a second opening screen)
   useEffect(() => {
-    SplashScreen.hideAsync().catch(() => undefined);
+    void launchReady.then(() => {
+      markShown();
+      SplashScreen.hideAsync().catch(() => undefined);
+    });
   }, []);
   // a tap on an expiry reminder opens the document it is about (also when it launched the app)
   useEffect(() => {
