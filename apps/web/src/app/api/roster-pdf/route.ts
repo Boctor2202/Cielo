@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { anthropic } from "@/lib/server/anthropic";
 import { accessFor, parseLeonRoster } from "@cielo/core";
 import { pdfText } from "@/lib/server/pdf";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
@@ -102,7 +103,7 @@ export async function POST(req: Request) {
 
   // 2. any other layout: Claude reads the document
   if (!process.env.ANTHROPIC_API_KEY) return Response.json({ error: "unsupported" }, { status: 422 });
-  const client = new Anthropic();
+  const client = anthropic();
   try {
     const stream = client.beta.messages.stream({
       model: "claude-opus-5-5",

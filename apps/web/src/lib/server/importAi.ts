@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { anthropic } from "@/lib/server/anthropic";
 import { IMPORT_FIELDS, type LogbookLeg } from "@cielo/core";
 
 /**
@@ -71,7 +72,7 @@ export interface LegsResult {
 type Block = Anthropic.Beta.Messages.BetaContentBlockParam;
 
 export async function extractLegs(content: Block[], today: string): Promise<LegsResult> {
-  const client = new Anthropic();
+  const client = anthropic();
   const stream = client.beta.messages.stream({
     model: "claude-opus-5-5",
     max_tokens: 32000,
@@ -111,7 +112,7 @@ const MAP_SCHEMA = {
 
 /** Which column of a table holds which field (the table itself is then read in the app, row by row). */
 export async function mapTable(header: string[], rows: string[][]): Promise<{ source: string; mapping: Record<string, number> }> {
-  const client = new Anthropic();
+  const client = anthropic();
   const csv = [header, ...rows.slice(0, 25)].map((r) => r.map((c) => (c ?? "").replace(/[\t\n]/g, " ")).join("\t")).join("\n");
   const msg = await client.beta.messages.create({
     model: "claude-opus-5-5",

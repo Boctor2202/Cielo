@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { anthropic } from "@/lib/server/anthropic";
 import { accessFor } from "@cielo/core";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { rateLimited } from "@/lib/places";
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
     .filter((l) => l !== "")
     .join("\n");
 
-  const client = new Anthropic();
+  const client = anthropic();
   try {
     const msg = await client.beta.messages.create({
       model: "claude-opus-5-5",

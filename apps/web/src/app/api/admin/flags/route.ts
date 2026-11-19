@@ -9,7 +9,7 @@ async function anthropicStatus(): Promise<{ ok: boolean; note?: string }> {
   const key = raw.trim();
   if (key !== raw) return { ok: false, note: "the key has spaces or a line break around it: paste it again in Vercel" };
   if (!key.startsWith("sk-ant-")) return { ok: false, note: "this does not look like an Anthropic API key (sk-ant-…)" };
-  const r = await fetch("https://api.anthropic.com/v1/models?limit=1", { headers: { "x-api-key": key, "anthropic-version": "2023-06-01" }, cache: "no-store" }).catch(() => null);
+  const r = await fetch("https://api.anthropic.com/v1/models?limit=1", { headers: { "x-api-key": key, "anthropic-version": "2023-06-01", ...(process.env.ANTHROPIC_WORKSPACE_ID?.trim() ? { "anthropic-workspace-id": process.env.ANTHROPIC_WORKSPACE_ID.trim() } : {}) }, cache: "no-store" }).catch(() => null);
   if (!r) return { ok: false, note: "unreachable" };
   if (r.ok) return { ok: true, note: "key accepted" };
   // Anthropic's own reason (it never contains the key): low credit, malformed key, disabled organisation…
