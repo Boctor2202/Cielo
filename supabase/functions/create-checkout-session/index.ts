@@ -32,6 +32,15 @@ Deno.serve(async (req) => {
   const appUrl = requireEnv("APP_URL").replace(/\/$/, "");
 
   try {
+    // A subscription still running: a change of plan goes through the customer portal, never a second subscription.
+    const { count: running } = await adminClient()
+      .from("subscriptions")
+      .select("id", { count: "exact", head: true })
+      .eq("pilot_id", user.id)
+      .eq("source", "stripe")
+      .in("status", ["trialing", "active", "past_due"]);
+    if (running) return json({ error: "already_subscribed" }, 409);
+
     // Reuse the Stripe customer of a previous subscription, if any.
     const { data: previous } = await adminClient()
       .from("subscriptions")

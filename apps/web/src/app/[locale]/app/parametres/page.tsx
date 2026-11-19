@@ -47,6 +47,8 @@ export default function SettingsPage() {
     await updatePilot(p);
   };
 
+  // a card subscription running: another plan is a change in the Stripe space, never a second subscription
+  const stripeActive = !!pilot && pilot.subscriptionSource === "stripe" && !!pilot.subscriptionTier && pilot.subscriptionTier !== "free" && (!pilot.subscriptionExpiresAt || pilot.subscriptionExpiresAt > new Date().toISOString());
   /** The Stripe customer portal: change plan, update the card, invoices, cancel. */
   async function manage() {
     try {
@@ -196,7 +198,7 @@ export default function SettingsPage() {
               />
               <div className="grid gap-2 sm:grid-cols-2">
                 {(["basic", "premium"] as const).map((p) => (
-                  <button key={p} type="button" className={`btn ${p === "premium" ? "btn-primary" : "btn-secondary"}`} disabled={v.subscriptionTier === p} onClick={() => checkout(p, interval)}>
+                  <button key={p} type="button" className={`btn ${p === "premium" ? "btn-primary" : "btn-secondary"}`} disabled={v.subscriptionTier === p} onClick={() => (stripeActive ? void manage() : checkout(p, interval))}>
                     {tp(p)} · {SITE.pricing[p][interval].toLocaleString(locale, { minimumFractionDigits: 2 })} €{interval === "yearly" ? tpr("perYear") : tpr("perMonth")}
                   </button>
                 ))}
