@@ -106,10 +106,10 @@ export default function Subscription() {
         const price = pkg?.product.priceString ?? fallbackPrice(plan);
         const isCurrent = current === plan;
         return (
-          <Card key={plan} style={plan === "premium" ? { borderWidth: 1.5, borderColor: c.accent, borderRadius: 20 } : undefined}>
+          <Card key={plan} style={{ borderWidth: 1.5, borderRadius: 20, borderColor: isCurrent ? c.success : plan === "premium" ? c.accent : "rgba(255,255,255,0.18)" }}>
             <Row style={{ justifyContent: "space-between" }}>
               <Txt variant="h2" style={{ fontSize: 20 }}>{t(plan === "premium" ? "sub.max" : "sub.basic")}</Txt>
-              {isCurrent ? <Badge text={t("sub.current")} color={c.success} /> : null}
+              {isCurrent ? <Badge text={t("sub.current")} color={c.success} /> : plan === "premium" ? <Badge text={t("sub.recommended")} color={c.accent} /> : null}
             </Row>
             <Txt mono style={{ fontSize: 30 }}>
               {price}
@@ -121,7 +121,7 @@ export default function Subscription() {
               <View style={{ gap: 6 }}>
                 <Button
                   title={t("sub.choose")}
-                  kind={plan === "premium" ? "primary" : "secondary"}
+                  kind="primary"
                   disabled={!pkg}
                   loading={busy === plan}
                   onPress={() => pkg && run(plan, () => purchase(pkg))}
