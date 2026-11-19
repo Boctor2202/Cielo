@@ -331,6 +331,16 @@ async function putFlight(next: Flight) {
   await logRevision(prev, next);
 }
 
+/** Gives flights their operator (or clears it). The operator is not part of a signed entry: signatures stay valid. */
+export async function setOperator(ids: string[], operator: string | undefined) {
+  guard();
+  const op = operator?.trim() || undefined;
+  for (const id of ids) {
+    const f = await db().t("flights").get(id);
+    if (f && !f.deletedAt && (f.operator ?? undefined) !== op) await putFlight({ ...f, operator: op, updatedAt: now() });
+  }
+}
+
 export async function saveFlight(input: FlightFormInput, airports: AirportIndex, opts: Parameters<typeof buildFlight>[2] = {}) {
   guard();
   const f = await buildFlight(input, airports, opts);

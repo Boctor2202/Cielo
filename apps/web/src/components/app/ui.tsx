@@ -10,7 +10,7 @@ import { createPortal } from "react-dom";
  * of position:fixed descendants: a dialog or toast rendered inside a pane would be placed relative to the pane
  * (often off screen on long pages) instead of the viewport.
  */
-function Overlay({ children }: { children: ReactNode }) {
+export function Overlay({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
   return ready ? createPortal(children, document.body) : null;

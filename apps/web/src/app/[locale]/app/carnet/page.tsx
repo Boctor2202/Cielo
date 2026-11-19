@@ -1,11 +1,13 @@
 "use client";
 
-import { FileDown, Moon, NotebookPen, Plane, Plus, ScanSearch, ShieldCheck, Upload, BookCopy } from "lucide-react";
+import { BookCopy, Building2, Check, ListChecks, Clock, CloudFog, FileDown, MapPin, Moon, NotebookPen, Plane, PlaneLanding, Plus, ScanSearch, ShieldCheck, Upload } from "lucide-react";
+import { useAirports } from "@/lib/airports";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { operatorIndex, sumFlights } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
-import { Card, Empty, PageTitle } from "@/components/app/ui";
+import { Card, Empty, Overlay, PageTitle, useToast } from "@/components/app/ui";
+import { setOperator as assignOperator } from "@/lib/repo";
 import { useDuration, useFlights, useFormatDate, useTable } from "@/lib/hooks";
 
 /** Function badges: command green, co-pilot blue, supervised command teal, instruction amber / violet. */
@@ -47,6 +49,38 @@ export default function Logbook() {
   }, [flights, q, year, type, operator, ops]);
   const totals = useMemo(() => sumFlights(filtered), [filtered]);
   const [limit, setLimit] = useState(100);
+  const airports = useAirports();
+  // selection, to give flights their operator in one go
+  const [selecting, setSelecting] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [assignTo, setAssignTo] = useState("");
+  const { toast, toastNode } = useToast();
+  const toggle = (id: string) => setPicked((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const open = (id: string) => (selecting ? toggle(id) : router.push({ pathname: "/app/carnet/[id]", params: { id } }));
+  const stopSelecting = () => (setSelecting(false), setPicked(new Set()), setAssignTo(""));
+  const assign = async () => {
+    const n = picked.size;
+    await assignOperator([...picked], assignTo || undefined);
+    toast(assignTo ? t("assign.done", { count: n, operator: assignTo }) : t("assign.cleared", { count: n }));
+    stopSelecting();
+  };
+  const airportCount = useMemo(() => new Set(filtered.filter((f) => !f.isFstd).flatMap((f) => [f.depIcao, f.arrIcao])).size, [filtered]);
+  // the shown flights, month by month
+  const months = useMemo(() => {
+    const out: { key: string; label: string; flights: typeof filtered; total: number; night: number }[] = [];
+    for (const f of filtered.slice(0, limit)) {
+      const key = f.date.slice(0, 7);
+      let m = out[out.length - 1];
+      if (!m || m.key !== key) {
+        m = { key, label: fd(`${key}-15`, { month: "long", year: "numeric" }), flights: [], total: 0, night: 0 };
+        out.push(m);
+      }
+      m.flights.push(f);
+      m.total += f.isFstd ? f.fstdMin : f.totalMin;
+      m.night += f.nightMin;
+    }
+    return out;
+  }, [filtered, limit, fd]);
 
   return (
     <>
@@ -63,7 +97,7 @@ export default function Logbook() {
           </>
         }
       />
-      <div className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_160px_160px_200px]">
+      <div className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_140px_140px_190px_auto]">
         <input className="input" type="search" placeholder={t("searchPlaceholder")} value={q} onChange={(e) => setQ(e.target.value)} />
         <select className="input" value={year} onChange={(e) => setYear(e.target.value)} aria-label={t("allYears")}>
           <option value="">{t("allYears")}</option>
@@ -78,6 +112,26 @@ export default function Logbook() {
           {ops.all.map((o) => <option key={o} value={o}>{o}</option>)}
           <option value="-">{t("noOperator")}</option>
         </select>
+        <button type="button" className={`btn btn-sm h-full ${selecting ? "btn-primary" : "btn-secondary"}`} onClick={() => (selecting ? stopSelecting() : setSelecting(true))}>
+          <ListChecks size={15} /> {selecting ? t("assign.stop") : t("assign.start")}
+        </button>
+      </div>
+
+      {/* what the selection adds up to */}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {[
+          { icon: Plane, k: t("sum.flights"), v: String(filtered.length) },
+          { icon: Clock, k: t("sum.total"), v: d(totals.totalMin + totals.fstdMin), lead: true },
+          { icon: Moon, k: t("night"), v: d(totals.nightMin) },
+          { icon: CloudFog, k: t("ifr"), v: d(totals.ifrMin) },
+          { icon: PlaneLanding, k: t("sum.landings"), v: String(totals.landingsDay + totals.landingsNight) },
+          { icon: MapPin, k: t("sum.airports"), v: String(airportCount) },
+        ].map(({ icon: Icon, k, v, lead }) => (
+          <div key={k} className={`readout relative overflow-hidden rounded-2xl border px-4 py-3 ${lead ? "border-accent/40 bg-accent/[0.08]" : "border-border bg-surface/70"}`} style={{ "--readout": lead ? "var(--accent)" : "var(--muted)" } as React.CSSProperties}>
+            <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted"><Icon size={13} className={lead ? "text-accent" : ""} /> {k}</p>
+            <p className={`num mt-1 text-2xl font-bold ${lead ? "text-accent" : ""}`}>{v}</p>
+          </div>
+        ))}
       </div>
 
       <Card pad={false}>
@@ -85,90 +139,102 @@ export default function Logbook() {
           <Empty icon={<NotebookPen size={36} />} text={t("empty")} />
         ) : (
           <>
-            {/* Desktop table */}
-            <div className="hidden overflow-x-auto md:block">
-              <table className="w-full text-sm">
-                <thead className="border-b border-border text-left">
-                  <tr className="[&>th]:label-caps [&>th]:px-3 [&>th]:py-2.5">
-                    <th>{t("date")}</th>
-                    <th>{t("route")}</th>
-                    <th>{t("times")}</th>
-                    <th>{t("aircraft")}</th>
-                    <th>{t("function")}</th>
-                    <th className="!text-right">{t("total")}</th>
-                    <th className="!text-right">{t("night")}</th>
-                    <th className="!text-right">{t("ifr")}</th>
-                    <th className="!text-right">{t("ldg")}</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {filtered.slice(0, limit).map((f) => (
-                    <tr
-                      key={f.id}
-                      className="group cursor-pointer transition-colors hover:bg-accent/[0.06] [&>td]:px-3 [&>td]:py-2.5"
-                      onClick={() => router.push({ pathname: "/app/carnet/[id]", params: { id: f.id } })}
-                    >
-                      <td className="num whitespace-nowrap">
-                        {/* a coloured edge: night flights indigo, IFR sky, VFR green, simulator violet */}
-                        <span className={`mr-2.5 inline-block h-6 w-1 rounded-full align-middle ${f.isFstd ? "bg-violet-400" : f.nightMin > 0 ? "bg-indigo-400" : f.ifrMin > 0 ? "bg-sky-400" : "bg-emerald-400"}`} aria-hidden />
-                        {fd(f.date, { day: "2-digit", month: "2-digit", year: "2-digit" })}
-                      </td>
-                      <td className="num whitespace-nowrap font-semibold">
-                        {f.isFstd ? (
-                          <span className="rounded-md bg-violet-500/15 px-2 py-0.5 text-violet-700 dark:text-violet-300">{t("fstd")}</span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5">
-                            {f.depIcao}
-                            <Plane size={12} className="text-accent" aria-hidden />
-                            {f.arrIcao}
-                          </span>
-                        )}
-                      </td>
-                      <td className="num whitespace-nowrap text-muted">{f.isFstd ? f.fstdType : `${f.outUtc?.slice(11, 16) ?? "--"} – ${f.inUtc?.slice(11, 16) ?? "--"}`}</td>
-                      <td className="whitespace-nowrap">
-                        {f.registration ? <span className="num rounded-md border border-border bg-surface-2 px-1.5 py-0.5 text-[12.5px] font-semibold">{f.registration}</span> : null}{" "}
-                        <span className="num text-[12.5px] text-muted">{f.aircraftTypeIcao}</span>
-                      </td>
-                      <td className="whitespace-nowrap" title={tfn(f.function)}>
-                        <span className={`num rounded-full px-2 py-0.5 text-[12px] font-semibold ${FUNCTION_TONE[f.function] ?? "bg-surface-2 text-muted"}`}>{f.function}</span>
-                      </td>
-                      <td className="num text-right">
-                        <span className="rounded-md bg-accent/12 px-2 py-0.5 font-bold text-accent">{d(f.isFstd ? f.fstdMin : f.totalMin)}</span>
-                      </td>
-                      <td className="num text-right">
-                        {f.nightMin > 0 ? (
-                          <span className="inline-flex items-center gap-1 text-indigo-700 dark:text-indigo-300">
-                            <Moon size={12} aria-hidden />
-                            {d(f.nightMin, true)}
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="num text-right">
-                        {f.ifrMin > 0 ? <span className="rounded-md bg-sky-500/12 px-1.5 py-0.5 text-sky-700 dark:text-sky-300">{d(f.ifrMin, true)}</span> : null}
-                      </td>
-                      <td className="num text-right text-muted">{f.landingsDay + f.landingsNight || ""}</td>
-                      <td className="w-6">{f.signatureId && <ShieldCheck size={15} className="text-success" aria-label={t("signed")} />}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="border-t-2 border-border bg-surface-2/60 font-semibold">
-                  <tr className="[&>td]:px-3 [&>td]:py-2.5">
-                    <td colSpan={5}>{t("pageTotal")}</td>
-                    <td className="num text-right">{d(totals.totalMin)}</td>
-                    <td className="num text-right">{d(totals.nightMin)}</td>
-                    <td className="num text-right">{d(totals.ifrMin)}</td>
-                    <td className="num text-right">{totals.landingsDay + totals.landingsNight}</td>
-                    <td />
-                  </tr>
-                </tfoot>
-              </table>
+            {/* Desktop: the flights by month, each month with its own totals */}
+            <div className="hidden md:block">
+              {months.map((m) => (
+                <section key={m.key} className="logbook-month">
+                  <header className="sticky top-0 z-10 flex items-baseline justify-between gap-3 border-b border-border bg-surface/90 px-5 py-2.5 backdrop-blur">
+                    <h2 className="font-display text-lg font-semibold capitalize">{m.label}</h2>
+                    <p className="num flex items-center gap-4 text-xs text-muted">
+                      <span>{t("entries", { count: m.flights.length })}</span>
+                      {m.night > 0 && <span className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-300"><Moon size={11} /> {d(m.night)}</span>}
+                      <span className="rounded-md bg-accent/12 px-2 py-0.5 text-sm font-bold text-accent">{d(m.total)}</span>
+                    </p>
+                  </header>
+                  <ul>
+                    {m.flights.map((f) => {
+                      const dep = airports?.get(f.depIcao);
+                      const arr = airports?.get(f.arrIcao);
+                      const op = ops.of(f);
+                      return (
+                        <li key={f.id}>
+                          <button
+                            type="button"
+                            onClick={() => open(f.id)}
+                            aria-pressed={selecting ? picked.has(f.id) : undefined}
+                            className={`logbook-row group grid w-full items-center gap-4 border-b border-border/60 px-5 py-3 text-left transition-colors hover:bg-accent/[0.05] ${selecting ? "grid-cols-[22px_64px_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_96px]" : "grid-cols-[64px_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_96px]"} ${picked.has(f.id) ? "bg-accent/[0.08]" : ""}`}
+                          >
+                            {selecting && (
+                              <span className={`grid h-5 w-5 place-items-center rounded-md border ${picked.has(f.id) ? "border-accent bg-accent text-white" : "border-border"}`} aria-hidden>
+                                {picked.has(f.id) && <Check size={13} strokeWidth={3} />}
+                              </span>
+                            )}
+                            {/* the day, with a coloured edge: night indigo, IFR sky, VFR green, simulator violet */}
+                            <span className="relative flex items-center gap-3">
+                              <span className={`h-10 w-1 rounded-full ${f.isFstd ? "bg-violet-400" : f.nightMin > 0 ? "bg-indigo-400" : f.ifrMin > 0 ? "bg-sky-400" : "bg-emerald-400"}`} aria-hidden />
+                              <span className="text-center leading-none">
+                                <span className="num block text-xl font-bold">{f.date.slice(8, 10)}</span>
+                                <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-muted">{fd(f.date, { weekday: "short" })}</span>
+                              </span>
+                            </span>
+                            {/* the route, as on a boarding pass */}
+                            <span className="min-w-0">
+                              {f.isFstd ? (
+                                <span className="inline-flex items-center gap-2 font-semibold"><span className="rounded-md bg-violet-500/15 px-2 py-0.5 text-violet-700 dark:text-violet-300">{t("fstd")}</span> {f.fstdType}</span>
+                              ) : (
+                                <span className="flex items-center gap-3">
+                                  <span className="min-w-0">
+                                    <span className="num block text-[17px] font-bold tracking-wide">{f.depIcao}</span>
+                                    <span className="block truncate text-[11px] text-muted">{dep?.city ?? dep?.name ?? ""}</span>
+                                  </span>
+                                  <span className="logbook-line relative mx-1 h-px min-w-10 flex-1" aria-hidden>
+                                    <Plane size={13} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 text-accent" />
+                                  </span>
+                                  <span className="min-w-0 text-right">
+                                    <span className="num block text-[17px] font-bold tracking-wide">{f.arrIcao}</span>
+                                    <span className="block truncate text-[11px] text-muted">{arr?.city ?? arr?.name ?? ""}</span>
+                                  </span>
+                                </span>
+                              )}
+                            </span>
+                            {/* times, flight number, operator */}
+                            <span className="min-w-0 text-sm">
+                              {!f.isFstd && <span className="num block font-medium">{f.outUtc?.slice(11, 16) ?? "--"} <span className="text-muted">→</span> {f.inUtc?.slice(11, 16) ?? "--"} <span className="text-[11px] text-muted">UTC</span></span>}
+                              <span className="block truncate text-xs text-muted">{[f.flightNumber, op].filter(Boolean).join(" · ") || "\u00a0"}</span>
+                            </span>
+                            {/* aircraft and function */}
+                            <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+                              {f.registration ? <span className="num rounded-md border border-border bg-surface-2 px-1.5 py-0.5 text-[12px] font-semibold">{f.registration}</span> : null}
+                              {f.aircraftTypeIcao ? <span className="num text-[12px] text-muted">{f.aircraftTypeIcao}</span> : null}
+                              <span title={tfn(f.function)} className={`num rounded-full px-2 py-0.5 text-[11px] font-semibold ${FUNCTION_TONE[f.function] ?? "bg-surface-2 text-muted"}`}>{f.function}</span>
+                            </span>
+                            {/* time, with night / IFR / landings / signature underneath */}
+                            <span className="text-right">
+                              <span className="num block text-lg font-bold text-accent">{d(f.isFstd ? f.fstdMin : f.totalMin)}</span>
+                              <span className="num mt-0.5 flex items-center justify-end gap-2 text-[11px] text-muted">
+                                {f.nightMin > 0 && <span className="inline-flex items-center gap-0.5 text-indigo-600 dark:text-indigo-300"><Moon size={10} />{d(f.nightMin, true)}</span>}
+                                {f.ifrMin > 0 && <span className="text-sky-600 dark:text-sky-300">IFR</span>}
+                                {f.landingsDay + f.landingsNight > 0 && <span>{f.landingsDay + f.landingsNight} ldg</span>}
+                                {f.signatureId && <ShieldCheck size={12} className="text-success" aria-label={t("signed")} />}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ))}
             </div>
             {/* Mobile list */}
             <ul className="divide-y divide-border md:hidden">
               {filtered.slice(0, limit).map((f) => (
                 <li key={f.id}>
-                  <Link href={{ pathname: "/app/carnet/[id]", params: { id: f.id } }} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <Link
+                    href={{ pathname: "/app/carnet/[id]", params: { id: f.id } }}
+                    onClick={(e) => { if (selecting) { e.preventDefault(); toggle(f.id); } }}
+                    className={`flex items-center justify-between gap-3 px-4 py-3 ${picked.has(f.id) ? "bg-accent/[0.08]" : ""}`}
+                  >
                     <div className="min-w-0">
                       <p className="num font-semibold">{f.isFstd ? `FSTD · ${f.fstdType ?? ""}` : `${f.depIcao} → ${f.arrIcao}`}</p>
                       <p className="truncate text-xs text-muted">{fd(f.date)} · {f.registration} {f.aircraftTypeIcao} · {f.function}</p>
@@ -193,6 +259,27 @@ export default function Logbook() {
           </>
         )}
       </Card>
+
+      {selecting && (
+        <Overlay>
+        <div className="fixed inset-x-3 bottom-20 z-40 mx-auto flex max-w-3xl flex-wrap items-center gap-2 rounded-2xl border border-white/15 bg-[#061226]/95 p-3 text-white shadow-[0_30px_80px_-20px_rgba(0,0,0,.8)] backdrop-blur-xl lg:bottom-6">
+          <span className="num px-1 text-sm font-semibold">{t("assign.picked", { count: picked.size })}</span>
+          <button type="button" className="text-xs font-semibold text-white/70 underline hover:text-white" onClick={() => setPicked(new Set(filtered.map((f) => f.id)))}>
+            {t("assign.all", { count: filtered.length })}
+          </button>
+          <span className="flex min-w-48 flex-1 items-center gap-2">
+            <Building2 size={15} className="shrink-0 text-white/60" />
+            <input className="input h-9 flex-1 !bg-white/10 !text-white" list="logbook-operators" placeholder={t("assign.placeholder")} value={assignTo} onChange={(e) => setAssignTo(e.target.value)} />
+            <datalist id="logbook-operators">{ops.all.map((o) => <option key={o} value={o} />)}</datalist>
+          </span>
+          <button type="button" className="btn btn-primary btn-sm" disabled={!picked.size} onClick={() => void assign()}>
+            {assignTo ? t("assign.go") : t("assign.clear")}
+          </button>
+          <button type="button" className="btn btn-ghost btn-sm !text-white/70" onClick={stopSelecting}>{t("assign.stop")}</button>
+        </div>
+        </Overlay>
+      )}
+      {toastNode}
     </>
   );
 }

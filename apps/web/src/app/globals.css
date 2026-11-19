@@ -556,3 +556,11 @@ select.input {
 .timeline-dot { width: 8px; height: 8px; border-radius: 999px; border: 2px solid color-mix(in srgb, var(--muted) 60%, transparent); }
 .timeline-dot.on { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 8px var(--accent); }
 .computed-head { background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--accent) 35%, transparent), transparent 55%), linear-gradient(160deg, #0b1f3a, #061226); }
+
+/* logbook: a dashed route line with a lit dot at each end */
+.logbook-line { background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--accent) 55%, transparent) 0 4px, transparent 4px 8px); }
+.logbook-line::before, .logbook-line::after { content: ""; position: absolute; top: -2px; width: 5px; height: 5px; border-radius: 999px; background: var(--accent); }
+.logbook-line::before { left: 0; }
+.logbook-line::after { right: 0; }
+.logbook-row:hover .logbook-line svg { transform: translate(-50%, -50%) rotate(45deg) scale(1.25); }
+.logbook-line svg { transition: transform 200ms ease; }

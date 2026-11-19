@@ -563,7 +563,24 @@
       "fstd": "Simulator",
       "deleted": "Flight deleted",
       "allOperators": "All operators",
-      "noOperator": "No operator recognised"
+      "noOperator": "No operator recognised",
+      "sum": {
+        "flights": "Flights",
+        "total": "Total time",
+        "landings": "Landings",
+        "airports": "Airports"
+      },
+      "assign": {
+        "start": "Select",
+        "stop": "Done",
+        "picked": "{count, plural, =0 {No flight selected} one {# flight selected} other {# flights selected}}",
+        "all": "Select all {count}",
+        "placeholder": "Operator (e.g. Astonjet)",
+        "go": "Assign",
+        "clear": "Clear operator",
+        "done": "{count, plural, one {# flight} other {# flights}} assigned to {operator}",
+        "cleared": "Operator cleared on {count, plural, one {# flight} other {# flights}}"
+      }
     },
     "form": {
       "newTitle": "New flight",
