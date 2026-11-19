@@ -1,6 +1,7 @@
 "use client";
 
-import { Cake, Flag, Globe2, HeartPulse, IdCard, Landmark, Languages, Plane, Plus, X } from "lucide-react";
+import { Cake, Flag, Globe2, HeartPulse, IdCard, Landmark, Languages, Mail, Plane, Plus, X } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { licenseStatus, type License, type Pilot, type Regulator } from "@cielo/core";
@@ -48,6 +49,7 @@ export function PilotDetails({
   typesAuto,
   today,
   onEdit,
+  email,
 }: {
   pilot: Pilot;
   age?: number;
@@ -59,6 +61,7 @@ export function PilotDetails({
   typesAuto: boolean;
   today: string;
   onEdit: () => void;
+  email?: string;
 }) {
   const t = useTranslations("app.profile");
   const fd = useFormatDate();
@@ -114,6 +117,10 @@ export function PilotDetails({
             ))}
             {typesAuto && <span className="text-xs text-muted">{t("typesAuto")}</span>}
           </div>
+        </Item>
+        <Item icon={Mail} label={t("f.email")} empty={!email} onEdit={onEdit}>
+          <p className="truncate font-semibold" title={email}>{email}</p>
+          <Link href="/app/parametres" className="text-xs font-semibold text-accent hover:underline">{t("f.emailChange")}</Link>
         </Item>
         <Item icon={Globe2} label={t("f.base")} empty={!pilot.homeBaseIcao} onEdit={onEdit}>
           <p className="num font-semibold">{pilot.homeBaseIcao}</p>

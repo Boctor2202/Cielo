@@ -1,6 +1,7 @@
 "use client";
 
-import { Download, LogOut, RefreshCw, Trash2, Upload } from "lucide-react";
+import { CreditCard, Download, ExternalLink, LogOut, RefreshCw, Trash2, Upload } from "lucide-react";
+import { AccountCard } from "@/components/app/AccountCard";
 import { AirportInput } from "@/components/app/AirportInput";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -44,6 +45,18 @@ export default function SettingsPage() {
     setV({ ...v, ...p });
     await updatePilot(p);
   };
+
+  /** The Stripe customer portal: change plan, update the card, invoices, cancel. */
+  async function manage() {
+    try {
+      const { url } = await cloud.invoke<{ url: string }>("create-portal-session", { returnPath: `/${locale}/app/parametres` });
+      window.location.href = url;
+    } catch (e) {
+      // the function answers 404 when the pilot has no card subscription (App Store, Google Play or none)
+      const status = (e as { context?: { status?: number } })?.context?.status;
+      toast(status === 404 ? t("manageNone") : t("manageUnavailable"));
+    }
+  }
 
   async function checkout(plan: "basic" | "premium") {
     try {
@@ -129,6 +142,8 @@ export default function SettingsPage() {
           </div>
         </Card>
 
+        <AccountCard />
+
         <Card title={t("subscription")}>
           {/* the plan actually granted now (server tier once signed in, demo or nothing otherwise) */}
           <p className="text-sm">
@@ -144,6 +159,31 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div className="mt-4 space-y-3">
+              {/* an active subscription: change plan, card or cancel where it was taken */}
+              {v.subscriptionTier && v.subscriptionTier !== "free" && v.subscriptionSource ? (
+                <div className="rounded-xl border border-border bg-surface-2/50 p-3">
+                  {v.subscriptionSource === "stripe" ? (
+                    <>
+                      <p className="text-sm">{t("manageStripe")}</p>
+                      <button type="button" className="btn btn-secondary btn-sm mt-2" onClick={() => void manage()}>
+                        <CreditCard size={14} /> {t("manageButton")}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm">{v.subscriptionSource === "apple" ? t("manageApple") : t("manageGoogle")}</p>
+                      <a
+                        className="btn btn-secondary btn-sm mt-2"
+                        href={v.subscriptionSource === "apple" ? "https://apps.apple.com/account/subscriptions" : "https://play.google.com/store/account/subscriptions"}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <ExternalLink size={14} /> {t("manageStore")}
+                      </a>
+                    </>
+                  )}
+                </div>
+              ) : null}
               <p className="text-xs text-muted">{tpr("trialNote")}</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {(["basic", "premium"] as const).map((p) => (

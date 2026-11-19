@@ -67,3 +67,6 @@ verify_jwt = true
 
 [functions.gdpr-delete]
 verify_jwt = true
+
+[functions.create-portal-session]
+verify_jwt = true

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { formatPhoneIntl, AUTHORITIES, RANKS, ageOn, countryName, flagEmoji, licenseStatus, pilotCredentials, regulatorById, suggestedCurrentTypes, type License, type Pilot } from "@cielo/core";
 import { DateField, isValidDate } from "../../src/components/DateField";
@@ -8,6 +8,7 @@ import { Badge, Button, Card, Chip, Field, Row, Screen, Txt } from "../../src/co
 import { SuggestField } from "../../src/components/SuggestField";
 import { AirportField } from "../../src/components/AirportField";
 import { useApp } from "../../src/state";
+import { router } from "expo-router";
 import { CrewHero, Honours } from "../../src/components/Honours";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "../../src/theme";
@@ -110,6 +111,9 @@ export default function Profile() {
         <Txt variant="label">{t("profile.details")}</Txt>
         <Detail icon="gift-outline" label={t("profile.birthDate")} value={pilot.birthDate ? `${pilot.birthDate} · ${t("profile.age", { n: ageOn(pilot.birthDate, today) })}` : undefined} />
         <Detail icon="flag-outline" label={t("profile.nationality")} value={pilot.nationality ? `${flagEmoji(pilot.nationality)}  ${countryName(pilot.nationality, locale)}` : undefined} />
+        <Pressable onPress={() => router.push("/account")}>
+          <Detail icon="mail-outline" label={t("profile.email")} value={app.session?.user.email ?? pilot.email} sub={t("profile.emailChange")} />
+        </Pressable>
         <Detail icon="business-outline" label={t("profile.authority")} value={regulatorById(pilot.authority ?? pilot.regulatoryFramework)?.short} sub={regulatorById(pilot.authority ?? pilot.regulatoryFramework)?.name} />
         <Detail icon="card-outline" label={t("profile.licence")} value={creds.licence?.code} sub={pilot.licenceNumber || creds.licence?.number} />
         <Detail icon="pulse-outline" label={t("profile.medical")} value={creds.medical?.code} badge={creds.medical ? validity(creds.medical) : undefined} />

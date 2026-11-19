@@ -1306,7 +1306,14 @@
         "americas": "Amériques",
         "mena": "Moyen-Orient et Afrique",
         "apac": "Asie-Pacifique"
-      }
+      },
+      "manageStripe": "Changez de formule ou de carte, consultez vos factures ou résiliez : dans l'espace sécurisé Stripe.",
+      "manageButton": "Gérer ou résilier mon abonnement",
+      "manageApple": "Votre abonnement a été pris sur l'App Store : modifiez-le ou résiliez-le depuis votre iPhone (Réglages › votre nom › Abonnements).",
+      "manageGoogle": "Votre abonnement a été pris sur Google Play : modifiez-le ou résiliez-le depuis le Play Store.",
+      "manageStore": "Ouvrir mes abonnements",
+      "manageNone": "Aucun abonnement par carte trouvé pour ce compte.",
+      "manageUnavailable": "La gestion de l'abonnement n'est pas disponible pour le moment. Écrivez-nous et nous le ferons pour vous."
     },
     "functions": {
       "PIC": "Commandant de bord (PIC)",
@@ -1614,7 +1621,8 @@
         "birthDate": "Date de naissance",
         "authority": "Autorité de la licence",
         "currentTypes": "Types actuels",
-        "currentTypesHint": "Les avions que vous pilotez en ce moment (codes OACI). Appuyez sur Entrée après chacun."
+        "currentTypesHint": "Les avions que vous pilotez en ce moment (codes OACI). Appuyez sur Entrée après chacun.",
+        "emailChange": "Modifier dans Paramètres › Compte"
       },
       "details": "Fiche pilote",
       "addInfo": "Ajouter",
@@ -2182,6 +2190,28 @@
     },
     "operatorSearch": {
       "known": "Dans votre carnet"
+    },
+    "account": {
+      "title": "Compte",
+      "emailTitle": "Adresse e-mail",
+      "emailCurrent": "Connecté avec",
+      "emailWhy": "Elle sert à vous connecter et à recevoir les e-mails de Geardown : alertes d'expiration, demandes de signature, reçus.",
+      "emailNew": "Nouvelle adresse",
+      "emailChange": "Modifier",
+      "emailSent": "Un lien de confirmation a été envoyé à {email} (et un autre à votre adresse actuelle) : le changement est fait une fois le lien suivi.",
+      "emailInvalid": "Saisissez une adresse valide, différente de l'actuelle.",
+      "emailTaken": "Cette adresse est déjà utilisée par un autre compte.",
+      "pwTitle": "Mot de passe",
+      "pwNew": "Nouveau mot de passe",
+      "pwConfirm": "Confirmation",
+      "pwHint": "8 caractères minimum. Fonctionne aussi si vous vous connectez avec Google ou Apple : vous pourrez alors aussi vous connecter avec votre e-mail.",
+      "pwChange": "Changer le mot de passe",
+      "pwShort": "8 caractères minimum.",
+      "pwMismatch": "Les deux mots de passe sont différents.",
+      "pwSame": "Choisissez un mot de passe différent de l'actuel.",
+      "pwReauth": "Déconnectez-vous et reconnectez-vous, puis changez votre mot de passe.",
+      "pwDone": "Mot de passe modifié.",
+      "error": "Ça n'a pas fonctionné, réessayez dans un instant."
     }
   },
   "why": {

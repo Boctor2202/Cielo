@@ -1306,7 +1306,14 @@
         "americas": "Americas",
         "mena": "Middle East and Africa",
         "apac": "Asia-Pacific"
-      }
+      },
+      "manageStripe": "Change your plan or your card, see your invoices, or cancel: in the secure Stripe space.",
+      "manageButton": "Manage or cancel my subscription",
+      "manageApple": "Your subscription was taken on the App Store: change or cancel it from your iPhone (Settings › your name › Subscriptions).",
+      "manageGoogle": "Your subscription was taken on Google Play: change or cancel it from the Play Store.",
+      "manageStore": "Open my subscriptions",
+      "manageNone": "No card subscription found for this account.",
+      "manageUnavailable": "Subscription management is not available right now. Write to us and we will do it for you."
     },
     "functions": {
       "PIC": "Pilot in command (PIC)",
@@ -1614,7 +1621,8 @@
         "birthDate": "Date of birth",
         "authority": "Licensing authority",
         "currentTypes": "Current types",
-        "currentTypesHint": "The aircraft you fly now (ICAO designators). Press Enter after each one."
+        "currentTypesHint": "The aircraft you fly now (ICAO designators). Press Enter after each one.",
+        "emailChange": "Change in Settings › Account"
       },
       "details": "Pilot details",
       "addInfo": "Add",
@@ -2182,6 +2190,28 @@
     },
     "operatorSearch": {
       "known": "In your logbook"
+    },
+    "account": {
+      "title": "Account",
+      "emailTitle": "E-mail address",
+      "emailCurrent": "Signed in as",
+      "emailWhy": "Used to sign in and to receive Geardown's e-mails: expiry alerts, signature requests, receipts.",
+      "emailNew": "New address",
+      "emailChange": "Change",
+      "emailSent": "A confirmation link was sent to {email} (and one to your current address): the change is made once you follow it.",
+      "emailInvalid": "Enter a valid address, different from the current one.",
+      "emailTaken": "This address is already used by another account.",
+      "pwTitle": "Password",
+      "pwNew": "New password",
+      "pwConfirm": "Confirm",
+      "pwHint": "8 characters at least. Also works if you sign in with Google or Apple: you can then sign in with your e-mail too.",
+      "pwChange": "Change password",
+      "pwShort": "8 characters at least.",
+      "pwMismatch": "The two passwords differ.",
+      "pwSame": "Choose a password different from the current one.",
+      "pwReauth": "Sign out and in again, then change your password.",
+      "pwDone": "Password changed.",
+      "error": "That did not work, try again in a moment."
     }
   },
   "why": {

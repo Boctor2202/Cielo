@@ -92,6 +92,7 @@ function Navigator() {
         <Stack.Screen name="import" options={{ contentStyle: { backgroundColor: c.bg }, title: t("uimp.title"), presentation: "modal" }} />
         <Stack.Screen name="letter" options={{ contentStyle: { backgroundColor: c.bg }, title: t("letter.title"), presentation: "modal" }} />
         <Stack.Screen name="subscription" options={{ contentStyle: { backgroundColor: c.bg }, title: t("sub.title"), presentation: "modal" }} />
+        <Stack.Screen name="account" options={{ contentStyle: { backgroundColor: c.bg }, title: t("account.title") }} />
       </Stack>
       {/* what each new flight or import brought to the logbook */}
       <GainsSheet />

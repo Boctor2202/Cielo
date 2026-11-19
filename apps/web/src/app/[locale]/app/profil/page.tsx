@@ -17,6 +17,7 @@ import { localStore } from "@/lib/db";
 import { PilotEntrance } from "./PilotEntrance";
 import { Honours } from "@/components/app/Honours";
 import { PilotDetails, TypesInput } from "./PilotDetails";
+import { useCloud } from "@/lib/cloud";
 import { useAirports } from "@/lib/airports";
 
 
@@ -52,6 +53,8 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
   const locale = useLocale();
+  // the address of the account (sign-in and Geardown's e-mails), changed in Settings › Account
+  const cloudEmail = useCloud().session?.user.email ?? "";
   /** What the app already knows elsewhere: the licence document, its authority's country, the CV draft. */
   const [cvPhone, setCvPhone] = useState<string | undefined>();
   useEffect(() => {
@@ -211,7 +214,16 @@ export default function ProfilePage() {
               <Field label={t("f.currentTypes")} className="sm:col-span-2" hint={t("f.currentTypesHint")}>
                 <TypesInput value={draft.currentTypes ?? []} suggestions={suggestedTypes} onChange={(v) => set("currentTypes", v)} />
               </Field>
-              <Field label={t("f.email")}><input id="p-email" className="input" value={pilot.email} disabled /></Field>
+              <Field
+                label={t("f.email")}
+                hint={
+                  <Link href="/app/parametres" className="font-semibold text-accent underline">
+                    {t("f.emailChange")}
+                  </Link>
+                }
+              >
+                <input id="p-email" className="input" value={cloudEmail || pilot.email} disabled />
+              </Field>
               <Field label={t("f.bio")} className="sm:col-span-2"><textarea id="p-bio" className="input min-h-28" maxLength={600} value={draft.bio ?? ""} onChange={(e) => set("bio", e.target.value || undefined)} /></Field>
             </div>
           </div>
@@ -230,6 +242,7 @@ export default function ProfilePage() {
           typesAuto={!pilot.currentTypes?.length && suggestedTypes.length > 0}
           today={today}
           onEdit={() => setEditing(true)}
+          email={cloudEmail || pilot.email}
         />
       )}
 

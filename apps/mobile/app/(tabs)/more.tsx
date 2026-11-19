@@ -223,6 +223,7 @@ export default function More() {
         ) : session ? (
           <>
             <Txt>{t("more.signedInAs", { email: session.user.email ?? session.user.id })}</Txt>
+            <Button title={t("account.open")} onPress={() => router.push("/account")} />
             <Button kind="secondary" title={t("more.signOut")} onPress={() => void app.signOut()} />
           </>
         ) : (
