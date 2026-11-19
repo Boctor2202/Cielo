@@ -28,6 +28,7 @@ import { AircraftTypeField } from "../../src/components/AircraftTypeField";
 import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPicker";
 import { AircraftPhoto } from "../../src/components/AircraftPhoto";
 import { FlightTrackCard } from "../../src/components/FlightTrack";
+import { FlightAwareFill } from "../../src/components/FlightAwareFill";
 import { FlightSignature } from "../../src/components/FlightSignature";
 import { FlightHistory } from "../../src/components/FlightHistory";
 import { DurationField, normDuration } from "../../src/components/DurationField";
@@ -434,6 +435,23 @@ function FlightForm() {
             {clockField("on", "flight.on")}
             {clockField("in", "flight.in")}
           </Row>
+          {/* actual times of the aircraft's flights that day, from FlightAware */}
+          <FlightAwareFill
+            registration={selectedAircraft?.registration}
+            date={form.date}
+            onPick={(f) =>
+              setForm((s) => ({
+                ...s,
+                depIcao: f.dep && /^[A-Z]{4}$/.test(f.dep) ? f.dep : s.depIcao,
+                arrIcao: f.arr && /^[A-Z]{4}$/.test(f.arr) ? f.arr : s.arrIcao,
+                out: f.out ? formatClock(f.out) : s.out,
+                off: f.off ? formatClock(f.off) : s.off,
+                on: f.on ? formatClock(f.on) : s.on,
+                in: f.in ? formatClock(f.in) : s.in,
+                flightNumber: s.flightNumber || (f.ident && !/^[A-Z]-?[A-Z0-9]{3,5}$/.test(f.ident) ? f.ident : ""),
+              }))
+            }
+          />
         </Card>
 
         <Card>
