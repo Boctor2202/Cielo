@@ -210,11 +210,18 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
         setData(await loadAll(store));
       },
       async signOut() {
+        // last changes to the server first: the logbook lives on in the account
+        await syncRef.current?.syncNow().catch(() => undefined);
         syncRef.current?.stop();
         syncRef.current = null;
         await authSignOut();
         setSyncStatus({ mode: "local", pending: 0, pendingFlightIds: new Set() });
         setSession(null);
+        // then the phone is cleared: the next person or account starts clean, and signing back in brings it all back
+        await cancelAllLicenseAlerts().catch(() => undefined);
+        await store.clear();
+        await seedReferenceData(store);
+        setData(await loadAll(store));
       },
     };
   }, [store, data, locale, t, session, reload]);

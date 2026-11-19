@@ -1,3 +1,4 @@
+import { getSyncStatus } from "../../src/syncStatus";
 import React, { useEffect, useState } from "react";
 import { Alert, Platform } from "react-native";
 import { router } from "expo-router";
@@ -36,6 +37,15 @@ export default function More() {
     } finally {
       setBusy(null);
     }
+  };
+
+  // signing out clears the phone: say so, and warn when changes have not reached the server yet
+  const confirmSignOut = () => {
+    const pending = getSyncStatus().pending;
+    Alert.alert(t("more.signOut"), pending ? t("more.signOutPending", { n: pending }) : t("more.signOutBody"), [
+      { text: t("common.cancel"), style: "cancel" },
+      { text: t("more.signOut"), style: pending ? "destructive" : "default", onPress: () => void run("signout", () => app.signOut()) },
+    ]);
   };
 
   const confirmWipe = () =>
@@ -224,7 +234,7 @@ export default function More() {
           <>
             <Txt>{t("more.signedInAs", { email: session.user.email ?? session.user.id })}</Txt>
             <Button title={t("account.open")} onPress={() => router.push("/account")} />
-            <Button kind="secondary" title={t("more.signOut")} onPress={() => void app.signOut()} />
+            <Button kind="secondary" title={t("more.signOut")} onPress={confirmSignOut} />
           </>
         ) : (
           <>
