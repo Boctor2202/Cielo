@@ -24,7 +24,9 @@ import {
   frameworkOf,
   isPilot,
   parseFlightReport,
+  operatorIndex,
 } from "@cielo/core";
+import { announceGains } from "../../src/gains";
 import { AirportField } from "../../src/components/AirportField";
 import { AircraftTypeField } from "../../src/components/AircraftTypeField";
 import { AircraftPicker, aircraftLabel } from "../../src/components/AircraftPicker";
@@ -48,6 +50,7 @@ type Clock = "out" | "off" | "on" | "in";
 interface FormState {
   date: string;
   flightNumber: string;
+  operator: string;
   depIcao: string;
   arrIcao: string;
   out: string;
@@ -123,6 +126,7 @@ function FlightForm() {
       return {
         date: f.date,
         flightNumber: f.flightNumber ?? "",
+        operator: f.operator ?? "",
         depIcao: f.depIcao,
         arrIcao: f.arrIcao,
         out: formatClock(f.outUtc),
@@ -170,6 +174,7 @@ function FlightForm() {
     return {
       date: ev ? ev.startUtc.slice(0, 10) : todayUtc(),
       flightNumber: ev?.flightNumber ?? "",
+      operator: "",
       depIcao: ev?.depIcao ?? last?.arrIcao ?? pilot.homeBaseIcao ?? "",
       arrIcao: ev?.arrIcao ?? "",
       out: ev ? formatClock(ev.startUtc) : "",
@@ -250,6 +255,7 @@ function FlightForm() {
     () => ({
       date: form.date,
       flightNumber: form.flightNumber || undefined,
+      operator: form.operator.trim() || undefined,
       depIcao: form.depIcao,
       arrIcao: form.arrIcao,
       out: form.out || undefined,
@@ -298,6 +304,8 @@ function FlightForm() {
     [input, selectedType, selectedAircraft],
   );
   const fmt = (m: number) => formatDuration(m, pilot.timeDisplay);
+  const operators = useMemo(() => operatorIndex(flights, aircraft), [flights, aircraft]);
+  const recognisedOperator = form.isFstd ? undefined : operators.of({ flightNumber: form.flightNumber, registration: selectedAircraft?.registration });
   const locked = !!existing?.locked;
   // what the collapsed "advanced times" header shows: only the values the pilot entered
   const advancedSummary = [
@@ -320,6 +328,8 @@ function FlightForm() {
         pilotId: pilot.id,
         date: input.date,
         flightNumber: input.flightNumber,
+        // as typed, else as recognised (aircraft, call sign, logbook)
+        operator: input.isFstd ? undefined : input.operator ?? recognisedOperator,
         source: existing?.source ?? (rosterEvent ? "roster" : "manual"),
         rosterEventId: existing?.rosterEventId ?? rosterEvent?.id ?? null,
         depIcao: input.depIcao.toUpperCase(),
@@ -350,6 +360,8 @@ function FlightForm() {
       const saved = await put("flights", flight);
       if (rosterEvent && !rosterEvent.flightId) await put("roster_events", { ...rosterEvent, flightId: saved.id });
       router.back();
+      // a new flight: what it brought to the logbook
+      if (!existing) announceGains([saved.id]);
     } catch (e) {
       Alert.alert(t("common.error"), e instanceof Error && e.message === "read_only" ? t("access.readOnlyBanner") : e instanceof Error ? e.message : String(e));
     } finally {
@@ -451,6 +463,15 @@ function FlightForm() {
             onChangeText={(s) => set("flightNumber", s)}
             placeholder="AFR1234"
           />
+          {!form.isFstd ? (
+            <Field
+              label={t("flight.operator")}
+              value={form.operator}
+              onChangeText={(s) => set("operator", s)}
+              placeholder={recognisedOperator ?? t("flight.operatorPh")}
+              hint={!form.operator && recognisedOperator ? t("flight.operatorRecognised") : undefined}
+            />
+          ) : null}
         </Card>
 
         {form.isFstd ? (

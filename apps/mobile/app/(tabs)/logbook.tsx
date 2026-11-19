@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, SectionList, StyleSheet, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { formatClock, formatDuration, sumFlights, type Flight } from "@cielo/core";
+import { formatClock, formatDuration, operatorIndex, sumFlights, type Flight } from "@cielo/core";
 import { useWide, Chip, EmptyState, Fab, Row, Segmented, Txt, tap } from "../../src/components/ui";
 import { LogbookCalendar } from "../../src/components/LogbookCalendar";
 import Storage from "expo-sqlite/kv-store";
@@ -22,7 +22,7 @@ interface Section {
 }
 
 export default function Logbook() {
-  const { access, t, locale, flights, pilot, remove, session } = useApp();
+  const { access, t, locale, flights, pilot, remove, session, aircraft } = useApp();
   const wide = useWide();
   const sync = useSyncStatus();
   // flights changed on this phone and not yet on the server (none to show when not signed in)
@@ -53,7 +53,9 @@ export default function Logbook() {
   const [fType, setFType] = useState("");
   const [fFn, setFFn] = useState("");
   const [fCond, setFCond] = useState<"" | "night" | "ifr" | "fstd">("");
-  const filtersOn = !!(fYear || fType || fFn || fCond);
+  const [fOp, setFOp] = useState("");
+  const filtersOn = !!(fYear || fType || fFn || fCond || fOp);
+  const ops = useMemo(() => operatorIndex(flights, aircraft), [flights, aircraft]);
   const years = useMemo(() => [...new Set(flights.map((f) => f.date.slice(0, 4)))].sort().reverse(), [flights]);
   const typesFlown = useMemo(() => [...new Set(flights.filter((f) => !f.isFstd && f.aircraftTypeIcao).map((f) => f.aircraftTypeIcao!))].sort(), [flights]);
   const fns = useMemo(() => [...new Set(flights.map((f) => f.function))].sort(), [flights]);
@@ -67,11 +69,12 @@ export default function Logbook() {
       if (fCond === "night" && !(f.nightMin > 0)) return false;
       if (fCond === "ifr" && !(f.ifrMin > 0 && !f.isFstd)) return false;
       if (fCond === "fstd" && !f.isFstd) return false;
+      if (fOp && ops.of(f) !== fOp) return false;
       if (!words.length) return true;
-      const hay = [f.depIcao, f.arrIcao, f.registration, f.aircraftTypeIcao, f.flightNumber, f.picName, f.remarks, f.function, f.date].filter(Boolean).join(" ").toLowerCase();
+      const hay = [f.depIcao, f.arrIcao, f.registration, f.aircraftTypeIcao, f.flightNumber, f.picName, f.remarks, f.function, f.date, ops.of(f)].filter(Boolean).join(" ").toLowerCase();
       return words.every((w) => hay.includes(w));
     });
-  }, [flights, q, fYear, fType, fFn, fCond]);
+  }, [flights, q, fYear, fType, fFn, fCond, fOp, ops]);
 
   const sections = useMemo<Section[]>(() => {
     const byMonth = new Map<string, Flight[]>();
@@ -134,6 +137,7 @@ export default function Logbook() {
                     { label: t("log.f.year"), value: fYear, set: setFYear, opts: years },
                     { label: t("log.f.type"), value: fType, set: setFType, opts: typesFlown },
                     { label: t("log.f.function"), value: fFn, set: setFFn, opts: fns },
+                    ...(ops.all.length ? [{ label: t("log.f.operator"), value: fOp, set: setFOp, opts: ops.all }] : []),
                   ].map((g) => (
                     <ScrollView key={g.label} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, alignItems: "center" }}>
                       <Txt variant="small" style={{ width: 62 }}>{g.label}</Txt>
@@ -151,7 +155,7 @@ export default function Logbook() {
                     ))}
                   </ScrollView>
                   {filtersOn ? (
-                    <Pressable onPress={() => (setFYear(""), setFType(""), setFFn(""), setFCond(""))} hitSlop={6} style={{ alignSelf: "flex-start", marginLeft: 4 }}>
+                    <Pressable onPress={() => (setFYear(""), setFType(""), setFFn(""), setFCond(""), setFOp(""))} hitSlop={6} style={{ alignSelf: "flex-start", marginLeft: 4 }}>
                       <Txt variant="small" color={c.accent}>{t("log.f.reset")}</Txt>
                     </Pressable>
                   ) : null}

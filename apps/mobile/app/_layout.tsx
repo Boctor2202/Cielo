@@ -2,6 +2,7 @@ import "../src/polyfills";
 import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from "expo-router";
+import { GainsSheet } from "../src/components/GainsSheet";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -90,6 +91,8 @@ function Navigator() {
         <Stack.Screen name="letter" options={{ contentStyle: { backgroundColor: c.bg }, title: t("letter.title"), presentation: "modal" }} />
         <Stack.Screen name="subscription" options={{ contentStyle: { backgroundColor: c.bg }, title: t("sub.title"), presentation: "modal" }} />
       </Stack>
+      {/* what each new flight or import brought to the logbook */}
+      <GainsSheet />
       {/* the opening screen stays 5 s, then fades onto the overview */}
       <SplashOverlay />
     </ThemeProvider>

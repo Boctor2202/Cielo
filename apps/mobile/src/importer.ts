@@ -2,6 +2,7 @@
  * CSV / text import of past flights (same parser and column detection as the web app: @cielo/core).
  * Picks a file, maps the columns, derives every time with deriveFlightTimes and stores the flights at once.
  */
+import { announceGains } from "./gains";
 import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import {
@@ -136,6 +137,7 @@ export async function saveImportedRows(store: SqliteStore, pilot: Pilot, types: 
     await store.bulkPut("flights", out);
     // one "created by import" entry each in the audit trail
     await store.bulkPut("flight_revisions", out.map((f) => stamp({ ...flightRevision(undefined, f, "import")! } as Partial<SyncedRecord>) as unknown as FlightRevision));
+    announceGains(out.map((f) => f.id));
   }
   return { imported: out.length, skipped, duplicates };
 }
