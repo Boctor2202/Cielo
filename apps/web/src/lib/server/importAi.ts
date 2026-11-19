@@ -7,9 +7,10 @@ import { IMPORT_FIELDS, type LogbookLeg } from "@cielo/core";
  * pages), an e-mail or a summary (text). The pilot reviews every flight before it is imported.
  */
 
-const n = { type: ["integer", "null"] };
-const s = { type: ["string", "null"] };
-const hhmm = { type: ["string", "null"], pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" };
+// No nullable types: the API compiles at most 16 union-typed parameters. Absent values are "" and -1 instead.
+const n = { type: "integer", description: "-1 when absent" };
+const s = { type: "string", description: "\"\" when absent" };
+const hhmm = { type: "string", pattern: "^(([01]\\d|2[0-3]):[0-5]\\d)?$" };
 
 const LEGS_SCHEMA = {
   type: "object",
@@ -28,11 +29,11 @@ const LEGS_SCHEMA = {
           date: { type: "string", description: "YYYY-MM-DD, day of departure" },
           dep: { type: "string", description: "Departure airport code as written (ICAO or IATA)" },
           arr: { type: "string", description: "Arrival airport code as written (ICAO or IATA)" },
-          out: { ...hhmm, description: "Off-block (departure time in a paper logbook)" },
-          off: { ...hhmm, description: "Take-off, when given apart from off-block" },
-          on: { ...hhmm, description: "Landing, when given apart from on-block" },
-          in: { ...hhmm, description: "On-block (arrival time in a paper logbook)" },
-          totalMin: { ...n, description: "Total flight / block time in minutes" },
+          out: { ...hhmm, description: "Off-block (departure time in a paper logbook); \"\" when absent" },
+          off: { ...hhmm, description: "Take-off, when given apart from off-block; \"\" when absent" },
+          on: { ...hhmm, description: "Landing, when given apart from on-block; \"\" when absent" },
+          in: { ...hhmm, description: "On-block (arrival time in a paper logbook); \"\" when absent" },
+          totalMin: { ...n, description: "Total flight / block time in minutes; -1 when absent" },
           nightMin: n,
           ifrMin: n,
           picMin: n,
@@ -43,10 +44,10 @@ const LEGS_SCHEMA = {
           landingsDay: n,
           landingsNight: n,
           registration: s,
-          aircraftType: { ...s, description: "ICAO type designator when you can tell it (A320, C172, DA42…), else as written" },
+          aircraftType: { ...s, description: "ICAO type designator when you can tell it (A320, C172, DA42…), else as written; \"\" when absent" },
           flightNumber: s,
-          function: { type: ["string", "null"], enum: ["PIC", "PICUS", "SIC", "DUAL", "FI", "FE", null], description: "From the function-time columns or the role printed" },
-          picName: { ...s, description: "Name of the pilot in command as written ('SELF' when the pilot is PIC)" },
+          function: { type: "string", enum: ["PIC", "PICUS", "SIC", "DUAL", "FI", "FE", ""], description: "From the function-time columns or the role printed; \"\" when unknown" },
+          picName: { ...s, description: "Name of the pilot in command as written ('SELF' when the pilot is PIC); \"\" when absent" },
           remarks: s,
         },
       },
@@ -61,7 +62,7 @@ Rules:
 - Times: HH:MM. Convert decimal hours ("14.63" = 14:38, "1.5" = 90 min). Durations in minutes ("1:30" = 90, "1h30" = 90).
 - Paper logbooks: read every column carefully, row by row; a page spread has the date/route/aircraft on the left and the times, landings, function times and remarks on the right — keep each row aligned. When the year is not written on a row, take it from the page or the previous rows. Ditto marks (" or 〃) repeat the value above.
 - Airports as written (ICAO or IATA). Registrations as written, with the national prefix when obvious ("FGKXA" → "F-GKXA", Air France "HZUN" → "F-HZUN").
-- Never invent: null when a value is absent or unreadable.`;
+- Never invent: when a value is absent or unreadable, write "" for text and times, -1 for numbers.`;
 
 export interface LegsResult {
   source: string;
@@ -86,8 +87,8 @@ export async function extractLegs(content: Block[], today: string): Promise<Legs
   if (msg.stop_reason === "refusal") throw new ImportAiError("refused");
   if (msg.stop_reason === "max_tokens") throw new ImportAiError("too_long");
   const out = JSON.parse(msg.content.map((c) => (c.type === "text" ? c.text : "")).join("")) as LegsResult;
-  // null → undefined, as the import expects
-  out.legs = out.legs.map((l) => Object.fromEntries(Object.entries(l).filter(([, v]) => v !== null)) as unknown as LogbookLeg);
+  // "" / -1 → undefined, as the import expects
+  out.legs = out.legs.map((l) => Object.fromEntries(Object.entries(l).filter(([, v]) => v !== null && v !== "" && v !== -1)) as unknown as LogbookLeg);
   return out;
 }
 

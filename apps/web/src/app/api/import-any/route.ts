@@ -120,6 +120,7 @@ export async function POST(req: Request) {
     if (e instanceof ImportAiError) return Response.json({ error: e.code }, { status: 422 });
     if (e instanceof SyntaxError) return Response.json({ error: "unreadable" }, { status: 422 });
     if (e instanceof Anthropic.RateLimitError) return Response.json({ error: "busy" }, { status: 429 });
+    console.error("import-any: Claude read failed", kind, e instanceof Anthropic.APIError ? `${e.status} ${e.message}` : e);
     return Response.json({ error: "upstream" }, { status: 502 });
   }
 }
