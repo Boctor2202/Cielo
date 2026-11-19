@@ -11,7 +11,8 @@ export const runtime = "nodejs";
 /**
  * The image a pilot shares for an achievement (Instagram portrait 1080×1350, or square 1080×1080).
  * Everything shown comes from the query, chosen by the pilot: nothing is read from their account.
- *  ?type=badge&id=firstNight | ?type=level&h=1500, &on=2026-11-04, &name=, &rank=, &hrs=, &ap=, &ct=, &nm=, &lang=fr|en, &fmt=square
+ *  ?type=badge&id=firstNight | ?type=level&h=1500, &on=2026-11-04, &name=, &rank=, &hrs=, &ap=, &ct=, &nm=, &lang=fr|en,
+ *  &fmt=square | og (1200×630 link preview). Drawn at twice the size (HD): 2160×2700, 2160×2160, 2400×1260.
  */
 
 const clip = (v: string | null, n: number) => (v ?? "").replace(/[\u0000-\u001f]/g, "").trim().slice(0, n);
@@ -38,34 +39,32 @@ const loadFonts = (origin: string) =>
 export async function GET(req: Request) {
   const q = new URL(req.url).searchParams;
   const lang = q.get("lang") === "fr" ? "fr" : "en";
-  const B = (lang === "fr" ? fr : en).app.badges as unknown as { d: Record<string, string>; dd: Record<string, string>; title: Record<string, string>; club: string; earned: string };
-  const square = q.get("fmt") === "square";
-  const W = 1080;
-  const H = square ? 1080 : 1350;
+  const B = (lang === "fr" ? fr : en).app.badges as unknown as { d: Record<string, string>; dd: Record<string, string>; title: Record<string, string>; club: string };
+  const fmt = q.get("fmt") === "square" ? "square" : q.get("fmt") === "og" ? "og" : "portrait";
+  // everything is laid out at 1× and drawn at 2× (HD)
+  const k = 2;
+  const u = (n: number) => Math.round(n * k);
+  const W = fmt === "og" ? 1200 : 1080;
+  const H = fmt === "og" ? 630 : fmt === "square" ? 1080 : 1350;
 
   // what is shown big: a badge, or an hour level
   let art: string;
-  // the medal's figure, written over it (an SVG text has no font on the server)
-  let medalLabel: string | undefined;
+  let ratio: number; // height / width of the art
   let glow: string;
   let kicker: string;
   let title: string;
-  let sub: string;
-  let artW: number;
-  let artH: number;
-  const big = square ? 420 : 520;
+  let sub = "";
+  let medalLabel: string | undefined;
   if (q.get("type") === "level") {
     const level = HOUR_LEVELS.find((l) => l.hours === num(q.get("h")));
     if (!level) return new Response("level", { status: 400 });
     const [from, to] = TIER_COLORS[level.tier];
     art = uri(wingsSvg({ from, to }));
-    artW = square ? 760 : 880;
-    artH = (artW * 56) / 120;
+    ratio = 56 / 120;
     medalLabel = hoursLabel(level.hours);
     glow = from;
     kicker = B.title[String(level.hours)] ?? "";
     title = B.club.replace("{n}", level.hours.toLocaleString(lang === "fr" ? "fr-FR" : "en-GB").replace(/[\u202f\u00a0]/g, " "));
-    sub = "";
   } else {
     const id = q.get("id");
     const s = DISCOVERY_SERIES.find((x) => x.steps.some((st) => st.id === id));
@@ -73,8 +72,7 @@ export async function GET(req: Request) {
     if (!s || !id) return new Response("badge", { status: 400 });
     const tier = tierOfRank(rank, s.steps.length);
     art = uri(emblemSvg(tier, starsOf(rank, s.steps.length), iconSvgFor(id as never, s.series)));
-    artW = big;
-    artH = (big * 68) / 64;
+    ratio = 68 / 64;
     glow = TIER_COLORS[tier][0];
     kicker = lang === "fr" ? "Badge débloqué" : "Badge unlocked";
     title = B.d[id] ?? id;
@@ -92,59 +90,93 @@ export async function GET(req: Request) {
     { v: num(q.get("ap")), l: lang === "fr" ? "aérodromes" : "airports" },
     { v: num(q.get("ct")), l: lang === "fr" ? "pays" : "countries" },
     { v: num(q.get("nm")), l: "NM" },
-  ].filter((s) => s.v !== undefined && s.v > 0);
+  ].filter((x) => x.v !== undefined && x.v > 0);
 
-  return new ImageResponse(
-    (
-      <div style={{ width: W, height: H, display: "flex", flexDirection: "column", alignItems: "center", background: "linear-gradient(160deg, #0B1A2E 0%, #050B16 60%, #02040B 100%)", color: "#fff", fontFamily: "Inter", position: "relative" }}>
-        {/* glow of the badge's colour behind it */}
-        <div style={{ position: "absolute", top: square ? 120 : 170, left: W / 2 - 380, width: 760, height: 760, borderRadius: 380, background: `radial-gradient(circle, ${glow}55 0%, ${glow}00 65%)`, display: "flex" }} />
-        {/* the brand */}
-        <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 64 }}>
-          <svg width="44" height="44" viewBox="0 0 40 40">
-            <circle cx="20" cy="13.5" r="5" fill="#22C55E" />
-            <circle cx="11.5" cy="26.5" r="5" fill="#22C55E" />
-            <circle cx="28.5" cy="26.5" r="5" fill="#22C55E" />
-          </svg>
-          <div style={{ fontSize: 34, fontWeight: 600, letterSpacing: 10 }}>GEARDOWN</div>
+  const isLevel = q.get("type") === "level";
+  const artW = fmt === "og" ? (isLevel ? 420 : 400) : isLevel ? (fmt === "square" ? 760 : 880) : fmt === "square" ? 420 : 520;
+  const artH = artW * ratio;
+  // the Geardown wordmark: GEAR bold, D, the O drawn as the three greens in a ring, WN
+  const fs = u(36);
+  const ls = fs * 0.18;
+  const brand = (
+    <div style={{ display: "flex", alignItems: "center", fontSize: fs, lineHeight: 1, color: "#fff" }}>
+      <div style={{ display: "flex", fontWeight: 700, letterSpacing: ls }}>GEAR</div>
+      <div style={{ display: "flex", fontWeight: 400, marginRight: ls }}>D</div>
+      <svg width={fs * 1.3} height={fs * 1.3} viewBox="0 0 40 40" style={{ marginRight: ls }}>
+        <circle cx="20" cy="20" r="17.3" stroke="#ffffff" strokeWidth="3.4" fill="none" />
+        <circle cx="20" cy="13.4" r="4.6" fill="#22C55E" />
+        <circle cx="14" cy="23.8" r="4.6" fill="#22C55E" />
+        <circle cx="26" cy="23.8" r="4.6" fill="#22C55E" />
+      </svg>
+      <div style={{ display: "flex", fontWeight: 400, letterSpacing: ls }}>WN</div>
+    </div>
+  );
+  const artBlock = (
+    <div style={{ display: "flex", position: "relative" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
+      <img src={art} width={u(artW)} height={u(artH)} />
+      {medalLabel ? (
+        <div style={{ position: "absolute", left: 0, right: 0, top: u((artH * 27) / 56 - artW * 0.045), height: u(artW * 0.09), display: "flex", alignItems: "center", justifyContent: "center", fontSize: u(artW * (medalLabel.length > 3 ? 0.062 : 0.075)), fontWeight: 700, color: "rgba(10,22,38,.82)" }}>{medalLabel}</div>
+      ) : null}
+    </div>
+  );
+  const pilot = (
+    <div style={{ display: "flex", alignItems: "center", gap: u(20) }}>
+      {stripes ? (
+        // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+        <img src={uri(epauletteSvg(stripes))} height={u(60)} width={u(((14 + stripes * 5.5 + 4) / 22) * 60)} />
+      ) : null}
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {name ? <div style={{ fontSize: u(34), fontWeight: 700 }}>{name}</div> : null}
+        {rank ? <div style={{ fontSize: u(24), color: "rgba(255,255,255,.6)" }}>{rank}</div> : null}
+      </div>
+    </div>
+  );
+  const statRow = stats.length ? (
+    <div style={{ display: "flex", gap: u(22) }}>
+      {stats.map((x) => (
+        <div key={x.l} style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: `${u(18)}px ${u(26)}px`, borderRadius: u(24), background: "rgba(255,255,255,.07)", border: `${u(1)}px solid rgba(255,255,255,.12)` }}>
+          <div style={{ fontSize: u(40), fontWeight: 700 }}>{nf(x.v!)}</div>
+          <div style={{ fontSize: u(20), color: "rgba(255,255,255,.6)", marginTop: u(4) }}>{x.l}</div>
         </div>
-        <div style={{ display: "flex", marginTop: square ? 18 : 40, position: "relative" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
-          <img src={art} width={artW} height={artH} />
-          {medalLabel ? (
-            <div style={{ position: "absolute", left: 0, right: 0, top: (artH * 27) / 56 - artW * 0.045, height: artW * 0.09, display: "flex", alignItems: "center", justifyContent: "center", fontSize: artW * (medalLabel.length > 3 ? 0.062 : 0.075), fontWeight: 700, color: "rgba(10,22,38,.82)" }}>{medalLabel}</div>
-          ) : null}
-        </div>
-        <div style={{ display: "flex", fontSize: 26, fontWeight: 700, letterSpacing: 6, color: glow, marginTop: 18, textTransform: "uppercase" }}>{kicker}</div>
-        <div style={{ display: "flex", fontSize: 76, fontWeight: 700, marginTop: 8, textAlign: "center", maxWidth: 940, lineHeight: 1.05 }}>{title}</div>
-        {sub ? <div style={{ display: "flex", fontSize: 32, color: "rgba(255,255,255,.72)", marginTop: 14, textAlign: "center", maxWidth: 900 }}>{sub}</div> : null}
-        {date ? <div style={{ display: "flex", fontSize: 26, color: "rgba(255,255,255,.55)", marginTop: 14 }}>{date}</div> : null}
-        <div style={{ display: "flex", flex: 1 }} />
-        {stats.length ? (
-          <div style={{ display: "flex", gap: 22, marginBottom: 34 }}>
-            {stats.map((s) => (
-              <div key={s.l} style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "18px 26px", borderRadius: 24, background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)" }}>
-                <div style={{ fontSize: 40, fontWeight: 700 }}>{nf(s.v!)}</div>
-                <div style={{ fontSize: 20, color: "rgba(255,255,255,.6)", marginTop: 4 }}>{s.l}</div>
-              </div>
-            ))}
-          </div>
-        ) : null}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: W - 140, paddingTop: 28, paddingBottom: 56, borderTop: "1px solid rgba(255,255,255,.14)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            {stripes ? (
-              // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-              <img src={uri(epauletteSvg(stripes))} height={60} width={((14 + stripes * 5.5 + 4) / 22) * 60} />
-            ) : null}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {name ? <div style={{ fontSize: 34, fontWeight: 700 }}>{name}</div> : null}
-              {rank ? <div style={{ fontSize: 24, color: "rgba(255,255,255,.6)" }}>{rank}</div> : null}
-            </div>
-          </div>
-          <div style={{ fontSize: 26, color: "#22C55E", fontWeight: 600 }}>geardown.app</div>
+      ))}
+    </div>
+  ) : null;
+  const bg = "linear-gradient(160deg, #0B1A2E 0%, #050B16 60%, #02040B 100%)";
+
+  const tree =
+    fmt === "og" ? (
+      // the link preview: the badge on the left, the words on the right
+      <div style={{ width: u(W), height: u(H), display: "flex", alignItems: "center", background: bg, color: "#fff", fontFamily: "Inter", position: "relative", padding: `0 ${u(70)}px` }}>
+        <div style={{ position: "absolute", top: u(-80), left: u(-60), width: u(720), height: u(720), borderRadius: u(360), background: `radial-gradient(circle, ${glow}55 0%, ${glow}00 65%)`, display: "flex" }} />
+        <div style={{ display: "flex", width: u(440), justifyContent: "center" }}>{artBlock}</div>
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, marginLeft: u(50), gap: u(14) }}>
+          {brand}
+          <div style={{ display: "flex", fontSize: u(22), fontWeight: 700, letterSpacing: u(5), color: glow, textTransform: "uppercase", marginTop: u(18) }}>{kicker}</div>
+          <div style={{ display: "flex", fontSize: u(title.length > 16 ? 52 : 62), fontWeight: 700, lineHeight: 1.05, whiteSpace: "nowrap" }}>{title}</div>
+          {sub ? <div style={{ display: "flex", fontSize: u(26), color: "rgba(255,255,255,.72)" }}>{sub}</div> : null}
+          {date ? <div style={{ display: "flex", fontSize: u(22), color: "rgba(255,255,255,.55)" }}>{date}</div> : null}
+          <div style={{ display: "flex", marginTop: u(22) }}>{pilot}</div>
+          <div style={{ display: "flex", fontSize: u(24), color: "#22C55E", fontWeight: 600, marginTop: u(6) }}>geardown.app</div>
         </div>
       </div>
-    ),
-    { width: W, height: H, fonts: await loadFonts(new URL(req.url).origin), headers: { "Cache-Control": "public, max-age=86400" } },
-  );
+    ) : (
+      <div style={{ width: u(W), height: u(H), display: "flex", flexDirection: "column", alignItems: "center", background: bg, color: "#fff", fontFamily: "Inter", position: "relative" }}>
+        <div style={{ position: "absolute", top: u(fmt === "square" ? 120 : 170), left: u(W / 2 - 380), width: u(760), height: u(760), borderRadius: u(380), background: `radial-gradient(circle, ${glow}55 0%, ${glow}00 65%)`, display: "flex" }} />
+        <div style={{ display: "flex", marginTop: u(64) }}>{brand}</div>
+        <div style={{ display: "flex", marginTop: u(fmt === "square" ? 18 : 40) }}>{artBlock}</div>
+        <div style={{ display: "flex", fontSize: u(26), fontWeight: 700, letterSpacing: u(6), color: glow, marginTop: u(18), textTransform: "uppercase" }}>{kicker}</div>
+        <div style={{ display: "flex", fontSize: u(76), fontWeight: 700, marginTop: u(8), textAlign: "center", maxWidth: u(940), lineHeight: 1.05 }}>{title}</div>
+        {sub ? <div style={{ display: "flex", fontSize: u(32), color: "rgba(255,255,255,.72)", marginTop: u(14), textAlign: "center", maxWidth: u(900) }}>{sub}</div> : null}
+        {date ? <div style={{ display: "flex", fontSize: u(26), color: "rgba(255,255,255,.55)", marginTop: u(14) }}>{date}</div> : null}
+        <div style={{ display: "flex", flex: 1 }} />
+        {statRow ? <div style={{ display: "flex", marginBottom: u(34) }}>{statRow}</div> : null}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: u(W - 140), paddingTop: u(28), paddingBottom: u(56), borderTop: `${u(1)}px solid rgba(255,255,255,.14)` }}>
+          {pilot}
+          <div style={{ fontSize: u(26), color: "#22C55E", fontWeight: 600 }}>geardown.app</div>
+        </div>
+      </div>
+    );
+
+  return new ImageResponse(tree, { width: u(W), height: u(H), fonts: await loadFonts(new URL(req.url).origin), headers: { "Cache-Control": "public, max-age=86400" } });
 }

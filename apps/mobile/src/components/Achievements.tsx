@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Share, View } from "react-native";
 import Svg, { Defs, LinearGradient, Path, Stop, SvgXml } from "react-native-svg";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { distanceNm, discoveryBadges, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type DiscoverySeries, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
+import { distanceNm, discoveryBadges, shareLinkUrl, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type DiscoverySeries, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
 import { lookupAirport } from "../airports";
 import { Track } from "./Bars";
 import { API_URL } from "../api";
-import { shareFile } from "../exporters";
+import { File, Paths } from "expo-file-system";
 import { formatDate } from "../i18n";
 import { Card, Row, Txt } from "./ui";
 import { useTheme } from "../theme";
@@ -113,22 +113,31 @@ export function Achievements({ flights, opening, t, locale, pilot }: { flights: 
     return { ap: aps.size, ct: cts.size, nm: Math.round(nm) };
   }, [flights]);
   const [sharing, setSharing] = useState<string | null>(null);
-  /** Downloads the share image drawn by geardown.app and opens the iOS share sheet with it. */
-  const share = async (key: string, what: string) => {
+  /**
+   * The share image (HD, drawn by geardown.app) with a text and the achievement's public link, in the iOS share
+   * sheet: every app gets the image, and the link shows the image again as its preview.
+   */
+  const share = async (key: string, what: string, text: string) => {
     setSharing(key);
     try {
-      const q = new URLSearchParams({ lang: locale === "fr" ? "fr" : "en", name: pilot?.fullName ?? "", rank: pilot?.rank ?? "", hrs: String(h), ap: String(totals.ap), ct: String(totals.ct), nm: String(totals.nm) });
-      const r = await fetch(`${API_URL}/api/share-card?${what}&${q}`);
+      const lang = locale === "fr" ? "fr" : "en";
+      const q = new URLSearchParams(`${what}&${new URLSearchParams({ lang, name: pilot?.fullName ?? "", rank: pilot?.rank ?? "", hrs: String(h), ap: String(totals.ap), ct: String(totals.ct), nm: String(totals.nm) })}`);
+      const r = await fetch(`${API_URL}/api/share-card?${q}`);
       if (!r.ok) throw new Error(String(r.status));
-      await shareFile(`geardown-${key}.png`, new Uint8Array(await r.arrayBuffer()), "image/png", "public.png");
+      const file = new File(Paths.cache, `geardown-${key}.png`);
+      if (file.exists) file.delete();
+      file.create();
+      file.write(new Uint8Array(await r.arrayBuffer()));
+      const link = shareLinkUrl(API_URL, lang, q);
+      await Share.share({ url: file.uri, message: `${text} · ${link}` });
     } catch {
       Alert.alert(t("badges.shareError"));
     } finally {
       setSharing(null);
     }
   };
-  const ShareButton = ({ k, what }: { k: string; what: string }) => (
-    <Pressable onPress={() => void share(k, what)} disabled={!!sharing} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: c.scheme === "dark" ? "rgba(255,255,255,0.16)" : "rgba(10,22,38,0.16)" }}>
+  const ShareButton = ({ k, what, text }: { k: string; what: string; text: string }) => (
+    <Pressable onPress={() => void share(k, what, text)} disabled={!!sharing} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: c.scheme === "dark" ? "rgba(255,255,255,0.16)" : "rgba(10,22,38,0.16)" }}>
       {sharing === k ? <ActivityIndicator size="small" /> : <Ionicons name="share-outline" size={13} color={c.text} />}
       <Txt variant="small" style={{ fontWeight: "700", fontSize: 12 }} color={c.text}>{t("badges.share")}</Txt>
     </Pressable>
@@ -143,7 +152,7 @@ export function Achievements({ flights, opening, t, locale, pilot }: { flights: 
           <View style={{ flex: 1, gap: 4 }}>
             {level.current ? <Txt style={{ fontSize: 11, fontWeight: "800", letterSpacing: 1 }} color={TIER[level.current.tier][1]}>{t(`badges.title.${level.current.hours}` as I18nKey).toUpperCase()}</Txt> : null}
             <Txt style={{ fontSize: 17, fontWeight: "800" }}>{level.current ? t("badges.club", { n: level.current.hours.toLocaleString() }) : t("badges.noLevel")}</Txt>
-            {level.current ? <View style={{ alignSelf: "flex-start" }}><ShareButton k={`level-${level.current.hours}`} what={`type=level&h=${level.current.hours}`} /></View> : null}
+            {level.current ? <View style={{ alignSelf: "flex-start" }}><ShareButton k={`level-${level.current.hours}`} what={`type=level&h=${level.current.hours}`} text={`${t(`badges.title.${level.current.hours}` as I18nKey)} · ${t("badges.club", { n: level.current.hours.toLocaleString() })}`} /></View> : null}
             {level.next ? (
               <>
                 <Txt variant="small">{t("badges.toNext", { left: (level.next.hours - h).toLocaleString(), n: level.next.hours.toLocaleString() })}</Txt>
@@ -213,7 +222,7 @@ export function Achievements({ flights, opening, t, locale, pilot }: { flights: 
                   <Txt variant="small" style={{ fontWeight: "700" }} color={TIER[shown.tier][1]}>{t("badges.seriesDone")}</Txt>
                 )}
                 <Row gap={8} style={{ flexWrap: "wrap" }}>
-                  {held ? <ShareButton k={held.id} what={`type=badge&id=${held.id}&on=${held.on}`} /> : null}
+                  {held ? <ShareButton k={held.id} what={`type=badge&id=${held.id}&on=${held.on}`} text={`${t(`badges.d.${held.id}` as I18nKey)} · ${t(`badges.dd.${held.id}` as I18nKey)}`} /> : null}
                   {steps.length > 1 ? <Txt variant="small" style={{ fontWeight: "700", marginTop: 8 }} color={c.accent}>{t("badges.seeSeries", { n: steps.length })} ›</Txt> : null}
                 </Row>
               </View>

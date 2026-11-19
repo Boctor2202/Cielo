@@ -64,3 +64,14 @@ describe("table layouts", () => {
     expect(titlesToMapping(["To", "Day", "From", "Extra"], stored, IMPORT_FIELDS)).toMatchObject({ date: 1, dep: 2, arr: 0 });
   });
 });
+
+import { packShare, unpackShare } from "../src";
+describe("share links", () => {
+  it("carry the share image's settings, accents included", () => {
+    const p = packShare({ type: "badge", id: "countries10", name: "Cyrille Boctor", rank: "Commandant de bord", lang: "fr", evil: "x" });
+    const q = unpackShare(p)!;
+    expect(q.get("rank")).toBe("Commandant de bord");
+    expect(q.get("evil")).toBeNull();
+    expect(p).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+});

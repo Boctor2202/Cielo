@@ -3,7 +3,7 @@
 import { Flame, Lock, Share2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { distanceNm, discoveryBadges, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
+import { distanceNm, discoveryBadges, shareLinkUrl, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
 import { useFormatDate } from "@/lib/hooks";
 import { TIER_COLORS as TIER, iconFor, starPath, starsOf, starX } from "@/lib/badgeArt";
 import { Card, Modal } from "./ui";
@@ -94,11 +94,11 @@ export function Achievements({ flights, opening, airport, pilot }: { flights: Fl
     return { ap: aps.size, ct: cts.size, nm: Math.round(nm) };
   }, [flights, airport]);
   const [openSeries, setOpenSeries] = useState<string | null>(null);
-  const [preview, setPreview] = useState<{ base: string; text: string; square: boolean } | null>(null);
+  const [preview, setPreview] = useState<{ base: string; text: string; link: string; square: boolean } | null>(null);
   const cardUrl = (base: string, square: boolean) => `${base}${square ? "&fmt=square" : ""}`;
   /** Shares the image through the device's share sheet; on a computer, shows it with download and links. */
   const share = async (what: string, text: string) => {
-    const base = `/api/share-card?${what}&${new URLSearchParams({
+    const params = new URLSearchParams(`${what}&${new URLSearchParams({
       lang: locale === "fr" ? "fr" : "en",
       name: pilot?.fullName ?? "",
       rank: pilot?.rank ?? "",
@@ -106,19 +106,23 @@ export function Achievements({ flights, opening, airport, pilot }: { flights: Fl
       ap: String(totals.ap),
       ct: String(totals.ct),
       nm: String(totals.nm),
-    })}`;
+    })}`);
+    const base = `/api/share-card?${params}`;
+    // the public page of this achievement: its preview is the image, on every network
+    const link = shareLinkUrl(window.location.origin, locale, params);
     try {
       const blob = await (await fetch(base)).blob();
       const file = new File([blob], "geardown.png", { type: "image/png" });
       const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-      if (nav.canShare?.({ files: [file] }) && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)) {
-        await navigator.share({ files: [file], text: `${text} · geardown.app` });
+      // the device's own share sheet (phones, and Windows / macOS in Chrome, Edge, Safari): image + text + link
+      if (nav.canShare?.({ files: [file], text, url: link })) {
+        await navigator.share({ files: [file], text: `${text} · ${link}` });
         return;
       }
     } catch (e) {
       if ((e as Error)?.name === "AbortError") return;
     }
-    setPreview({ base, text, square: false });
+    setPreview({ base, text, link, square: false });
   };
   const ShareButton = ({ onClick }: { onClick: () => void }) => (
     <button type="button" onClick={onClick} className="relative mt-2 inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-semibold text-muted transition hover:border-accent hover:text-accent">
@@ -285,7 +289,7 @@ export function Achievements({ flights, opening, airport, pilot }: { flights: Fl
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={cardUrl(preview.base, preview.square)} alt={preview.text} className="mx-auto max-h-[55vh] w-auto rounded-xl border border-border" />
-          <ShareSheet image={cardUrl(preview.base, preview.square)} text={preview.text} />
+          <ShareSheet image={cardUrl(preview.base, preview.square)} text={preview.text} link={preview.link} />
         </div>
       )}
     </Modal>

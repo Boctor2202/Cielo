@@ -5,8 +5,6 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { siFacebook, siInstagram, siLinkedin, siMessenger, siTelegram, siTiktok, siWhatsapp, siX, type SimpleIcon } from "simple-icons";
 
-const SITE = "https://geardown.app";
-
 /** A network's logo (simple-icons), white on its brand colour. */
 function Logo({ icon, size = 22 }: { icon: SimpleIcon; size?: number }) {
   return (
@@ -17,10 +15,13 @@ function Logo({ icon, size = 22 }: { icon: SimpleIcon; size?: number }) {
 }
 
 /**
- * Sharing an image on every network from a computer: the networks that take a link and a text open their share
- * page; Instagram and TikTok take only images posted from their app, so the image is saved (or copied) first.
+ * Sharing on every network from a computer. The link sent is the achievement's own page, whose preview is the
+ * image: WhatsApp, Messenger, Telegram, LinkedIn, Facebook, X, SMS and e-mail all show the image with it.
+ * Instagram and TikTok take only images posted from their app, so the image is saved (or copied) for them.
  */
-export function ShareSheet({ image, text }: { image: string; text: string }) {
+export function ShareSheet({ image, text, link }: { image: string; text: string; link: string }) {
+  // the link is the achievement's public page: every network shows its image as the preview
+  const SITE = link;
   const t = useTranslations("app.share");
   const [note, setNote] = useState<string | null>(null);
   const message = `${text} · ${SITE}`;
