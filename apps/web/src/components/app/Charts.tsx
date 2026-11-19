@@ -30,7 +30,13 @@ export function HoursBars({ data, format, height = 220, horizontal = false }: { 
           <XAxis type="number" {...axis} tickFormatter={(v: number) => `${Math.round(v)} h`} />
           <YAxis type="category" dataKey="label" {...axis} width={64} />
           {tip}
-          <Bar dataKey="hours" fill="var(--chart-1)" radius={[0, 4, 4, 0]} maxBarSize={18} />
+          <defs>
+            <linearGradient id="hb-h" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor="var(--chart-1)" stopOpacity={0.55} />
+              <stop offset="1" stopColor="var(--chart-1)" stopOpacity={1} />
+            </linearGradient>
+          </defs>
+          <Bar dataKey="hours" fill="url(#hb-h)" radius={[0, 6, 6, 0]} maxBarSize={18} />
         </BarChart>
       </ResponsiveContainer>
     );
@@ -42,7 +48,13 @@ export function HoursBars({ data, format, height = 220, horizontal = false }: { 
         <XAxis dataKey="label" {...axis} interval="preserveStartEnd" />
         <YAxis {...axis} tickFormatter={(v: number) => `${Math.round(v)}`} width={44} />
         {tip}
-        <Bar dataKey="hours" fill="var(--chart-1)" radius={[4, 4, 0, 0]} maxBarSize={28} />
+        <defs>
+          <linearGradient id="hb-v" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="var(--chart-1)" stopOpacity={1} />
+            <stop offset="1" stopColor="var(--chart-1)" stopOpacity={0.45} />
+          </linearGradient>
+        </defs>
+        <Bar dataKey="hours" fill="url(#hb-v)" radius={[6, 6, 0, 0]} maxBarSize={28} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -54,9 +66,9 @@ export function SplitBar({ a, b, format }: { a: { label: string; value: number }
   const pa = (a.value / total) * 100;
   return (
     <div>
-      <div className="flex h-3 gap-[2px] overflow-hidden rounded" role="img" aria-label={`${a.label} ${Math.round(pa)} %, ${b.label} ${Math.round(100 - pa)} %`}>
-        {a.value > 0 && <div className="h-full rounded-l" style={{ width: `${pa}%`, background: "var(--chart-1)" }} />}
-        {b.value > 0 && <div className="h-full rounded-r" style={{ width: `${100 - pa}%`, background: "var(--chart-2)" }} />}
+      <div className="flex h-3.5 gap-[3px] overflow-hidden rounded-full shadow-[inset_0_1px_2px_rgba(0,0,0,.2)]" role="img" aria-label={`${a.label} ${Math.round(pa)} %, ${b.label} ${Math.round(100 - pa)} %`}>
+        {a.value > 0 && <div className="split-seg h-full rounded-l-full" style={{ width: `${pa}%`, ["--seg" as string]: "var(--chart-1)" }} />}
+        {b.value > 0 && <div className="split-seg h-full rounded-r-full" style={{ width: `${100 - pa}%`, ["--seg" as string]: "var(--chart-2)" }} />}
       </div>
       <div className="mt-2.5 flex flex-wrap justify-between gap-x-4 gap-y-1.5 text-sm">
         {[{ ...a, c: "var(--chart-1)", p: pa }, { ...b, c: "var(--chart-2)", p: 100 - pa }].map((x) => (

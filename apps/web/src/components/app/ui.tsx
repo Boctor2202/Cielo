@@ -2,7 +2,7 @@
 
 import { Roll } from "@/components/ui/Roll";
 import { ChevronRight, X } from "lucide-react";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 /**
@@ -66,7 +66,8 @@ export function Readout({ label, value, sub, level = "info", onClick }: { label:
     <Box
       type={onClick ? "button" : undefined}
       onClick={onClick}
-      className={`card relative flex flex-col justify-start overflow-hidden p-5 text-left ${onClick ? "group cursor-pointer transition hover:border-accent/50 hover:bg-accent/[0.04] focus-visible:outline-2 focus-visible:outline-accent" : ""}`}
+      style={{ "--readout": LEVEL_VAR[level] } as CSSProperties}
+      className={`card readout relative flex flex-col justify-start overflow-hidden p-5 text-left ${onClick ? "group cursor-pointer transition hover:border-accent/50 hover:bg-accent/[0.04] focus-visible:outline-2 focus-visible:outline-accent" : ""}`}
     >
       {onClick ? <ChevronRight size={16} className="absolute right-4 top-5 text-muted opacity-60 transition group-hover:translate-x-0.5 group-hover:text-accent group-hover:opacity-100" aria-hidden /> : null}
       <p className="label-caps flex items-center gap-1.5 !text-[12.5px]">
@@ -223,12 +224,21 @@ export function Segmented<T extends string>({ value, options, onChange }: { valu
   );
 }
 
+/** The colour of a level, as a CSS value (for gradients and glows). */
+const LEVEL_VAR: Record<Level, string> = { ok: "var(--success)", info: "var(--accent)", caution: "var(--caution)", warning: "var(--warning)", neutral: "var(--muted)" };
+
+/** A progress bar: a glowing gradient that fills in when it appears, with a sheen and a bright tip. */
 export function Meter({ value, max, level }: { value: number; max: number; level?: Level }) {
-  const pct = Math.min(100, (value / max) * 100);
+  const pct = Math.min(100, max > 0 ? (value / max) * 100 : 0);
   const l: Level = level ?? (value > max ? "warning" : value >= max * 0.9 ? "caution" : "ok");
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2" role="meter" aria-valuenow={value} aria-valuemin={0} aria-valuemax={max}>
-      <div className={`h-full rounded-full ${LEVEL_BG[l]}`} style={{ width: `${pct}%` }} />
+    <div className="meter" role="meter" aria-valuenow={value} aria-valuemin={0} aria-valuemax={max} style={{ "--meter": LEVEL_VAR[l] } as CSSProperties}>
+      <div className="meter-fill" style={{ width: `${shown ? Math.max(pct, pct > 0 ? 3 : 0) : 0}%` }} />
     </div>
   );
 }
