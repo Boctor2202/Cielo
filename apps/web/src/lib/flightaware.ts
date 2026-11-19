@@ -23,7 +23,7 @@ export interface FoundFlight {
 }
 
 export class FlightAwareError extends Error {
-  constructor(public code: "not_configured" | "not_found" | "upstream", message: string, public status = 502) {
+  constructor(public code: "not_configured" | "not_found" | "upstream" | "history_off", message: string, public status = 502) {
     super(message);
   }
 }
@@ -61,6 +61,8 @@ export async function flightsForRegistration(registration: string, date: string)
   const path = recent ? `/flights/${encodeURIComponent(ident)}` : `/history/flights/${encodeURIComponent(ident)}`;
   const r = await fetch(`https://aeroapi.flightaware.com/aeroapi${path}?${qs}`, { headers: { "x-apikey": key, Accept: "application/json" }, cache: "no-store" });
   if (r.status === 404) return [];
+  // the key's plan has no history (AeroAPI Personal): only the last ten days or so
+  if (!recent && (r.status === 401 || r.status === 403)) throw new FlightAwareError("history_off", "no historical data on this AeroAPI plan", 403);
   if (!r.ok) throw new FlightAwareError("upstream", `AeroAPI ${r.status}: ${(await r.text()).slice(0, 200)}`);
   const d = (await r.json()) as { flights?: FaFlight[] };
   return (d.flights ?? [])
@@ -104,6 +106,7 @@ export async function trackForFlight(faFlightId: string, recent: boolean): Promi
   const path = `${recent ? "" : "/history"}/flights/${encodeURIComponent(faFlightId)}/track`;
   const r = await fetch(`https://aeroapi.flightaware.com/aeroapi${path}`, { headers: { "x-apikey": key, Accept: "application/json" }, cache: "no-store" });
   if (r.status === 404) throw new FlightAwareError("not_found", "no track", 404);
+  if (!recent && (r.status === 401 || r.status === 403)) throw new FlightAwareError("history_off", "no historical data on this AeroAPI plan", 403);
   if (!r.ok) throw new FlightAwareError("upstream", `AeroAPI ${r.status}: ${(await r.text()).slice(0, 200)}`);
   const d = (await r.json()) as { positions?: FaPosition[] };
   return (d.positions ?? [])

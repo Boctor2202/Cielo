@@ -11,7 +11,7 @@ import { apiFetch } from "./report";
 export const TRACK_WINDOW_H = 30;
 const RETRY_MIN = 15;
 
-export type TrackResult = "saved" | "exists" | "no_times" | "too_old" | "no_hex" | "no_match" | "quota" | "error" | "signin" | "fa_off";
+export type TrackResult = "saved" | "exists" | "no_times" | "too_old" | "no_hex" | "no_match" | "quota" | "error" | "signin" | "fa_off" | "history_off";
 
 const blockTimes = (f: Flight) => {
   const out = f.outUtc ?? f.offUtc;
@@ -44,6 +44,7 @@ async function fromFlightAware(f: Flight, times: { out: string; inn: string }): 
   if (r.ok && d.points) return { hex: "", points: d.points, source: "flightaware" };
   if (d.error === "signin") return "signin";
   if (d.error === "not_configured") return "fa_off";
+  if (d.error === "history_off") return "history_off";
   if (r.status === 429) return "quota";
   if (r.status === 404) return "no_match";
   return "error";

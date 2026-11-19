@@ -644,7 +644,8 @@
         "diverted": "diverted",
         "attribution": "Actual UTC times (block / runway) from FlightAware. Check them before saving.",
         "signin": "Sign in to use FlightAware.",
-        "limit": "Daily FlightAware limit reached, try again tomorrow."
+        "limit": "Daily FlightAware limit reached, try again tomorrow.",
+        "history": "Only flights from the last 10 days are available from FlightAware for now."
       },
       "extra": {
         "title": "Other entries",
@@ -1599,7 +1600,8 @@
         "quota": "Data quota reached, will retry later.",
         "error": "Track unavailable right now.",
         "signin": "Sign in to fetch tracks from FlightAware.",
-        "fa_off": "FlightAware is not switched on yet."
+        "fa_off": "FlightAware is not switched on yet.",
+        "history_off": "Only flights from the last 10 days are available from FlightAware for now."
       },
       "sourceFa": "Track recorded by",
       "fromFa": "Fetch this flight's actual track from FlightAware (any date)."

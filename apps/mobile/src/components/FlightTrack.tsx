@@ -33,7 +33,7 @@ export function FlightTrackCard({ flightId }: { flightId: string }) {
         const rec = await put("flight_tracks", { id: flightId, pilotId: pilot.id, flightId, hex: "", source: "flightaware", points: d.points, fetchedAt: new Date().toISOString() } as never);
         setTrack(rec as unknown as Track);
       } else {
-        setMsg(d.error === "not_configured" ? t("fa.off") : r.status === 429 ? t("fa.limit") : r.status === 404 ? t("fa.trackNone") : t("fa.error"));
+        setMsg(d.error === "not_configured" ? t("fa.off") : d.error === "history_off" ? t("fa.history") : r.status === 429 ? t("fa.limit") : r.status === 404 ? t("fa.trackNone") : t("fa.error"));
       }
     } catch {
       setMsg(t("fa.error"));
