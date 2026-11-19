@@ -112,6 +112,20 @@ async function main() {
     for (const p of PLANS) {
       const s = existing.find((x) => x.attributes.productId === p.productId);
       log(`  ${p.productId}: ${s ? s.attributes.state : "missing"}`);
+      if (!s) continue;
+      const locs = await all(`/v1/subscriptions/${s.id}/subscriptionLocalizations?limit=50`);
+      for (const l of locs) log(`    text ${l.attributes.locale}: ${l.attributes.state ?? ""} "${l.attributes.name}" / "${l.attributes.description}"`);
+      const shot = await api("GET", `/v1/subscriptions/${s.id}/appStoreReviewScreenshot`).catch((e) => ({ error: e.message }));
+      log(`    screenshot: ${shot.data ? JSON.stringify(shot.data.attributes.assetDeliveryState) : shot.error ?? "none"}`);
+      const prices = await all(`/v1/subscriptions/${s.id}/prices?include=territory,subscriptionPricePoint&limit=200`).catch((e) => (log(`    prices: ${e.message}`), []));
+      log(`    prices: ${prices.length} countries`);
+      const av = await api("GET", `/v1/subscriptions/${s.id}/subscriptionAvailability`).catch((e) => ({ error: e.message }));
+      log(`    availability: ${av.data ? "set" : av.error ?? "none"}`);
+      log(`    attributes: ${JSON.stringify(s.attributes)}`);
+    }
+    const gl = await all(`/v1/subscriptionGroups/${group.id}/subscriptionGroupLocalizations?limit=50`);
+    for (const l of gl) log(`  group text ${l.attributes.locale}: ${JSON.stringify(l.attributes)}`);
+    {
     }
     return;
   }
