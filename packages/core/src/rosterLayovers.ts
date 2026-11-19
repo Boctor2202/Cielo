@@ -20,7 +20,7 @@ const MAX_DAYS = 7;
  */
 export function rosterLayovers(events: RosterEvent[], homeBase?: string | null): RosterLayover[] {
   const moves = events
-    .filter((e) => !e.deletedAt && MOVES.has(e.kind) && e.depIcao && e.arrIcao && e.startUtc && e.endUtc)
+    .filter((e) => !e.deletedAt && !e.tentative && MOVES.has(e.kind) && e.depIcao && e.arrIcao && e.startUtc && e.endUtc)
     .sort((a, b) => a.startUtc.localeCompare(b.startUtc));
   let base = homeBase?.toUpperCase() || undefined;
   if (!base) {

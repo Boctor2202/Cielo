@@ -28,6 +28,8 @@ export interface PrintedDuty {
   aircraftReg: string | null;
   aircraftType: string | null;
   title: string | null;
+  /** an option, not confirmed yet */
+  tentative?: boolean;
 }
 
 export interface PrintedRoster {
@@ -164,6 +166,10 @@ export function parseLeonRoster(pages: PdfTextItem[][]): PrintedRoster | null {
           const fn = items.find((i) => Math.abs(i.y - row.y) < 1.5 && Math.abs(i.x - (col.func + 20)) < 25 && /^[A-Z]{2,4}$/.test(i.s.trim()))?.s.trim() ?? null;
           const ac = bandAircraft.sort((a, b) => Math.abs(a.y - row.y) - Math.abs(b.y - row.y))[0]?.s.trim().split(/\s+/);
           const start = leg[1]!;
+          // Leon prints a confirmed leg with its trip code cut short ("A… 14:07LFBZ") and an option with its
+          // full call sign on its own ("AJD214K", then "17:00")
+          const sign = desc.map((d) => d.s.trim()).find((s) => /^[A-Z][A-Z0-9]{3,8}$/.test(s) && !/^[A-Z]{4}$/.test(s));
+          const tentative = !!sign && !descText.includes("…");
           events.push({
             kind: fn && /^(DH|PAX|POS)$/.test(fn) ? "DEADHEAD" : "FLIGHT",
             date: lab.iso,
@@ -171,12 +177,13 @@ export function parseLeonRoster(pages: PdfTextItem[][]): PrintedRoster | null {
             start,
             end,
             endDayOffset: end && end < start ? 1 : 0,
-            flightNumber: null,
+            flightNumber: tentative ? sign! : null,
             dep: leg[2]!,
             arr,
             aircraftReg: ac?.[1] ?? null,
             aircraftType: ac?.[0] ?? null,
             title: null,
+            ...(tentative ? { tentative: true } : {}),
           });
           continue;
         }
@@ -266,6 +273,7 @@ export function printedDutiesToEvents(
       aircraftReg: e.aircraftReg?.toUpperCase() || undefined,
       aircraftTypeIcao: e.aircraftType?.toUpperCase() || undefined,
       flightId: null,
+      ...(e.tentative ? { tentative: true } : {}),
     });
   }
   return out;

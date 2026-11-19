@@ -27,6 +27,7 @@ export * from "./regulators";
 export * from "./importFormats";
 export * from "./layoverNights";
 export * from "./rosterLayovers";
+export * from "./rosterMerge";
 export * from "./profile";
 export * from "./achievements";
 export * from "./art";

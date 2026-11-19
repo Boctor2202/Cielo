@@ -907,7 +907,8 @@
           "too_big": "Le PDF est trop lourd (3 Mo max).",
           "rate_limited": "Trop d'imports d'affilée : réessayez dans une minute.",
           "upstream": "Le PDF n'a pas pu être lu. Réessayez."
-        }
+        },
+        "merged": "Roster mis à jour : {added} nouveaux, {updated} modifiés, {removed} supprimés, {linked} reliés à des vols déjà loggés"
       },
       "addEvent": "Ajouter un événement",
       "today": "Aujourd'hui",
@@ -935,7 +936,10 @@
       "start": "Début (UTC)",
       "end": "Fin (UTC)",
       "report": "Présentation (UTC)",
-      "deleteEvent": "Supprimer l'événement"
+      "deleteEvent": "Supprimer l'événement",
+      "option": "Option",
+      "optionHint": "Option : prévue mais pas encore confirmée. Elle n'entre ni dans vos limites FTL ni dans vos escales tant qu'elle n'est pas confirmée (nouvel import du roster ou bouton ci-dessous).",
+      "confirmOption": "Marquer confirmée"
     },
     "layover": {
       "title": "Escale {icao}",

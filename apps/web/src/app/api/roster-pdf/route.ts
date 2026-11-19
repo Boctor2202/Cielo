@@ -33,7 +33,7 @@ const SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["kind", "date", "report", "start", "end", "endDayOffset", "flightNumber", "dep", "arr", "aircraftReg", "aircraftType", "title"],
+        required: ["kind", "date", "report", "start", "end", "endDayOffset", "flightNumber", "dep", "arr", "aircraftReg", "aircraftType", "title", "tentative"],
         properties: {
           kind: { type: "string", enum: KINDS },
           date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$", description: "Day the duty or flight starts, YYYY-MM-DD" },
@@ -47,6 +47,7 @@ const SCHEMA = {
           aircraftReg: str,
           aircraftType: { ...str, description: "Aircraft type as printed (ICAO designator when shown)" },
           title: { ...str, description: "Short label for non-flight items (e.g. 'Standby home', 'Day off', 'Sim LPC')" },
+          tentative: { type: "boolean", description: "true for an option / tentative / not yet confirmed duty (OPT, option, tentative, pending), else false" },
         },
       },
     },

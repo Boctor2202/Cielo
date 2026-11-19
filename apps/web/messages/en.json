@@ -907,7 +907,8 @@
           "too_big": "The PDF is too large (3 MB max).",
           "rate_limited": "Too many imports in a row: try again in a minute.",
           "upstream": "The PDF could not be read. Try again."
-        }
+        },
+        "merged": "Roster updated: {added} new, {updated} changed, {removed} removed, {linked} linked to logged flights"
       },
       "addEvent": "Add event",
       "today": "Today",
@@ -935,7 +936,10 @@
       "start": "Start (UTC)",
       "end": "End (UTC)",
       "report": "Report (UTC)",
-      "deleteEvent": "Delete event"
+      "deleteEvent": "Delete event",
+      "option": "Option",
+      "optionHint": "Option: planned but not confirmed yet. It is left out of your duty-time limits and layovers until it is confirmed (a new print of the roster, or the button below).",
+      "confirmOption": "Mark as confirmed"
     },
     "layover": {
       "title": "Layover {icao}",

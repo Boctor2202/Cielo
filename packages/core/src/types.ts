@@ -305,6 +305,8 @@ export interface RosterEvent extends SyncedRecord {
   crew?: CrewMember[];
   flightId?: UUID | null;
   externalUid?: string;
+  /** an option: planned but not confirmed yet (shown apart, left out of duty-time limits) */
+  tentative?: boolean;
 }
 
 export type RevisionAction = "create" | "update" | "delete" | "restore" | "sign" | "unsign";

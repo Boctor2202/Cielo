@@ -232,7 +232,7 @@ export function buildDutyPeriods(flights: Flight[], settings: FtlSettings = DEFA
 export function dutyPeriodsFromRoster(events: RosterEvent[], settings: FtlSettings = DEFAULT_FTL_SETTINGS): DutyPeriod[] {
   const duties: DutyPeriod[] = [];
   const sorted = events
-    .filter((e) => !e.deletedAt && ["FLIGHT", "DEADHEAD", "SIM", "GROUND", "STANDBY"].includes(e.kind))
+    .filter((e) => !e.deletedAt && !e.tentative && ["FLIGHT", "DEADHEAD", "SIM", "GROUND", "STANDBY"].includes(e.kind))
     // a whole-day marker (an "ON" availability or standby day, 16 h or more) is not a duty period to chain flights
     // into, and a flight without its two airports is not a sector
     .filter((e) => minutesBetween(e.startUtc, e.endUtc) < ALL_DAY_MIN)

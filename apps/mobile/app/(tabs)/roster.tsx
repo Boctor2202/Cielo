@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Alert, Pressable, SectionList, View } from "react-native";
 import { router } from "expo-router";
-import { formatClock, formatDuration, minutesBetween } from "@cielo/core";
+import { formatClock, formatDuration, minutesBetween, stamp, type RosterEvent } from "@cielo/core";
 import { useWide, Button, EmptyState, Fab, Glass, Row, Segmented, Txt } from "../../src/components/ui";
 import { type I18nKey } from "../../src/i18n";
 import { useApp } from "../../src/state";
@@ -27,6 +27,18 @@ function RosterScreen() {
 
   // read-only without a live subscription: the roster stays visible, adding / importing opens the plans
   const addEvent = () => (access.canWrite ? router.push({ pathname: "/roster/[id]", params: { id: "new" } }) : router.push("/subscription"));
+  /** An option (planned, not confirmed): confirmed by hand when the operator confirms it before a new print. */
+  const confirmOption = (e: RosterEvent) =>
+    Alert.alert(t("roster.option"), t("roster.optionHint"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("roster.confirmOption"),
+        onPress: async () => {
+          await store.bulkPut("roster_events", [stamp({ ...e, tentative: false })]);
+          await reload();
+        },
+      },
+    ]);
   const importRoster = async () => {
     if (!access.canWrite) return router.push("/subscription");
     setImporting(true);
@@ -38,7 +50,13 @@ function RosterScreen() {
       await reload();
       Alert.alert(
         t("roster.import"),
-        r.imported || r.updated || r.duplicates ? t("roster.importDone", { n: r.imported, u: r.updated, d: r.duplicates, s: r.skipped }) : t("roster.importEmpty"),
+        r.removed !== undefined
+          ? r.imported + r.updated + r.removed + (r.linked ?? 0)
+            ? t("roster.pdfMerged", { n: r.imported, u: r.updated, r: r.removed, l: r.linked ?? 0 })
+            : t("roster.pdfSame")
+          : r.imported || r.updated || r.duplicates
+            ? t("roster.importDone", { n: r.imported, u: r.updated, d: r.duplicates, s: r.skipped })
+            : t("roster.importEmpty"),
       );
     } catch (e) {
       const code = e instanceof RosterPdfError ? e.message : null;
@@ -102,12 +120,17 @@ function RosterScreen() {
           const rest = e.kind === "OFF" || e.kind === "REST" || e.kind === "LEAVE";
           // events typed on the phone or the web (no roster file behind them) can be edited and deleted
           const manual = !e.rosterId;
+          const option = !!e.tentative;
           return (
-            <Pressable disabled={!manual || !access.canWrite} onPress={() => router.push({ pathname: "/roster/[id]", params: { id: e.id } })} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+            <Pressable
+              disabled={(!manual && !option) || !access.canWrite}
+              onPress={() => (option ? confirmOption(e) : router.push({ pathname: "/roster/[id]", params: { id: e.id } }))}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : option ? 0.6 : 1 })}
+            >
               <Glass>
                 <Row style={{ alignItems: "stretch", gap: 0 }}>
                   {/* coloured rail: what kind of duty */}
-                  <View style={{ width: 5, backgroundColor: color }} />
+                  <View style={{ width: 5, backgroundColor: option ? "transparent" : color, borderLeftWidth: option ? 2 : 0, borderStyle: "dashed", borderColor: color }} />
                   <View style={{ width: 64, paddingVertical: 12, alignItems: "center" }}>
                     <Txt mono style={{ fontWeight: "700" }}>{formatClock(e.reportUtc ?? e.startUtc)}</Txt>
                     {!rest ? <Txt mono variant="small">{formatClock(e.endUtc)}</Txt> : null}
@@ -117,7 +140,7 @@ function RosterScreen() {
                       <Txt style={{ fontSize: rest ? 15 : 17, fontWeight: rest ? "500" : "700", letterSpacing: 0.3 }} numberOfLines={1}>
                         {e.depIcao && e.arrIcao ? `${e.depIcao}  →  ${e.arrIcao}` : (e.title ?? t(`roster.kind.${e.kind}` as I18nKey))}
                       </Txt>
-                      <Txt variant="small" color={color} style={{ fontWeight: "700" }}>{t(`roster.kind.${e.kind}` as I18nKey)}</Txt>
+                      <Txt variant="small" color={color} style={{ fontWeight: "700" }}>{option ? t("roster.option") : t(`roster.kind.${e.kind}` as I18nKey)}</Txt>
                     </Row>
                     {!rest ? (
                       <Txt variant="small" mono numberOfLines={1}>
@@ -126,7 +149,7 @@ function RosterScreen() {
                         {formatDuration(minutesBetween(e.startUtc, e.endUtc))} · UTC
                       </Txt>
                     ) : null}
-                    {(e.kind === "FLIGHT" || e.kind === "SIM") && !e.flightId && e.startUtc < new Date().toISOString() ? (
+                    {!option && (e.kind === "FLIGHT" || e.kind === "SIM") && !e.flightId && e.startUtc < new Date().toISOString() ? (
                       <Button kind="secondary" small title={t("roster.log")} onPress={() => router.push({ pathname: "/flight/[id]", params: { id: "new", rosterEventId: e.id } })} />
                     ) : null}
                   </View>

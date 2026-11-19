@@ -3,7 +3,8 @@
  * (@cielo/core): one Roster record for the file, then its events. iCal events already known (same UID)
  * are updated in place, keeping their id and the logged flight; CSV rows already in the roster are skipped.
  * A PDF roster (Leon, AIMS, Netline… export only that) is read on the server (/api/roster-pdf) and comes back
- * as structured duties, converted here to UTC with the airports' time zones when the document is in local time.
+ * as structured duties, converted here to UTC with the airports' time zones when the document is in local time;
+ * a new print of a roster replaces the days it covers (mergeRosterImport: logged flights stay linked, options marked).
  */
 import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
@@ -11,12 +12,14 @@ import {
   combineUtc,
   detectMapping,
   icalToRosterEvent,
+  mergeRosterImport,
   parseCsv,
+  printedDutiesToEvents,
   parseFlexibleDate,
   parseIcal,
   stamp,
-  tzOffsetMs,
   type Pilot,
+  type PrintedDuty,
   type Roster,
   type RosterEvent,
 } from "@cielo/core";
@@ -29,6 +32,9 @@ export interface RosterImportResult {
   updated: number;
   duplicates: number;
   skipped: number;
+  /** PDF re-import: duties gone from the new print, and duties linked to flights already logged */
+  removed?: number;
+  linked?: number;
 }
 
 /** what makes two roster events the same duty */
@@ -41,84 +47,9 @@ const content = (e: Partial<RosterEvent>) =>
 
 export class RosterPdfError extends Error {}
 
-interface PdfEvent {
-  kind: RosterEvent["kind"];
-  date: string;
-  report: string | null;
-  start: string | null;
-  end: string | null;
-  endDayOffset: number;
-  flightNumber: string | null;
-  dep: string | null;
-  arr: string | null;
-  aircraftReg: string | null;
-  aircraftType: string | null;
-  title: string | null;
-}
-
-const addDaysIso = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
-
-/** A wall-clock time on a day, in a zone (or UTC), as an ISO instant. */
-function instant(date: string, time: string, tz: string | null): string {
-  const [h, m] = time.split(":").map(Number) as [number, number];
-  const [y, mo, d] = date.split("-").map(Number) as [number, number, number];
-  const wall = Date.UTC(y, mo - 1, d, h, m);
-  return new Date(tz ? wall - tzOffsetMs(tz, wall) : wall).toISOString();
-}
-
-/** PDF duties (as printed) → roster events in UTC. */
-function pdfToEvents(list: PdfEvent[], basis: "UTC" | "local", pilot: Pilot, rosterId: string, now: string): RosterEvent[] {
-  const code = (c: string | null) => {
-    const x = (c ?? "").trim().toUpperCase();
-    if (!x) return "";
-    if (x.length === 3) return airports().iataToIcao(x) ?? x;
-    return toIcao(x) || x;
-  };
-  const home = pilot.homeBaseIcao ? lookupAirport(pilot.homeBaseIcao)?.timezone ?? null : null;
-  const out: RosterEvent[] = [];
-  for (const e of list) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date)) continue;
-    const dep = code(e.dep);
-    const arr = code(e.arr);
-    const tzOf = (icao: string) => (basis === "UTC" ? null : (icao ? lookupAirport(icao)?.timezone : null) ?? home);
-    const startTz = tzOf(dep);
-    const endTz = tzOf(arr || dep);
-    const allDay = !e.start && !e.end;
-    const startUtc = instant(e.date, e.start ?? "00:00", allDay ? home : startTz);
-    let endUtc = instant(addDaysIso(e.date, e.endDayOffset || 0), e.end ?? "23:59", allDay ? home : endTz);
-    // an end printed before the start without a day offset: it is the next day
-    if (endUtc <= startUtc) endUtc = new Date(Date.parse(endUtc) + 86_400_000).toISOString();
-    let reportUtc: string | null = null;
-    if (e.report) {
-      reportUtc = instant(e.date, e.report, startTz);
-      if (reportUtc > startUtc) reportUtc = new Date(Date.parse(reportUtc) - 86_400_000).toISOString();
-    }
-    out.push(
-      stamp(
-        {
-          pilotId: pilot.id,
-          rosterId,
-          kind: e.kind,
-          title: e.title || [e.flightNumber, dep && arr ? `${dep}-${arr}` : ""].filter(Boolean).join(" ") || undefined,
-          reportUtc,
-          startUtc,
-          endUtc,
-          flightNumber: e.flightNumber || undefined,
-          depIcao: dep || undefined,
-          arrIcao: arr || undefined,
-          aircraftReg: e.aircraftReg?.toUpperCase() || undefined,
-          aircraftTypeIcao: e.aircraftType?.toUpperCase() || undefined,
-          flightId: null,
-        } as RosterEvent,
-        now,
-      ),
-    );
-  }
-  return out;
-}
 
 /** Sends a PDF roster to the server reader; returns its duties. */
-async function readPdfRoster(uri: string, token: string | undefined): Promise<{ timeBasis: "UTC" | "local"; events: PdfEvent[] }> {
+async function readPdfRoster(uri: string, token: string | undefined): Promise<{ timeBasis: "UTC" | "local"; events: PrintedDuty[] }> {
   if (!token) throw new RosterPdfError("signin");
   const pdf = await new File(uri).base64();
   if (pdf.length > 4_000_000) throw new RosterPdfError("too_big");
@@ -127,7 +58,7 @@ async function readPdfRoster(uri: string, token: string | undefined): Promise<{ 
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({ pdf, today: new Date().toISOString().slice(0, 10) }),
   });
-  const d = (await r.json().catch(() => ({}))) as { timeBasis?: "UTC" | "local"; events?: PdfEvent[]; error?: string };
+  const d = (await r.json().catch(() => ({}))) as { timeBasis?: "UTC" | "local"; events?: PrintedDuty[]; error?: string };
   if (!r.ok || !d.events) throw new RosterPdfError(d.error ?? "upstream");
   return { timeBasis: d.timeBasis ?? "local", events: d.events };
 }
@@ -144,23 +75,21 @@ export async function pickAndImportRoster(store: SqliteStore, pilot: Pilot, exis
     const read = await readPdfRoster(asset.uri, token);
     const now = new Date().toISOString();
     const roster: Roster = stamp({ pilotId: pilot.id, source: "manual", fileName: asset.name || undefined, importedAt: now } as Roster, now);
-    const seen = new Set(existing.filter((e) => !e.deletedAt).map(sameKey));
-    const result: RosterImportResult = { imported: 0, updated: 0, duplicates: 0, skipped: 0 };
-    const out: RosterEvent[] = [];
-    for (const e of pdfToEvents(read.events, read.timeBasis, pilot, roster.id, now)) {
-      if (seen.has(sameKey(e))) {
-        result.duplicates++;
-        continue;
-      }
-      seen.add(sameKey(e));
-      out.push(e);
-      result.imported++;
-    }
-    result.skipped = read.events.length - result.imported - result.duplicates;
-    if (!out.length) return result;
-    const days = out.map((e) => e.startUtc.slice(0, 10)).sort();
+    const home = pilot.homeBaseIcao ? lookupAirport(pilot.homeBaseIcao)?.timezone : undefined;
+    const incoming = printedDutiesToEvents(read.events as PrintedDuty[], read.timeBasis, {
+      pilotId: pilot.id,
+      rosterId: roster.id,
+      toIcao: (c) => (c.length === 3 ? airports().iataToIcao(c) ?? c : toIcao(c) || c),
+      timezoneOf: (icao) => lookupAirport(icao)?.timezone,
+      homeTimezone: home,
+    });
+    // the new print replaces the days it covers: same duties updated in place (logged flights stay linked)
+    const m = mergeRosterImport(existing, incoming, await store.all("flights"), now);
+    const result: RosterImportResult = { imported: m.added, updated: m.updated, duplicates: m.unchanged, skipped: read.events.length - incoming.length, removed: m.removed, linked: m.linked };
+    if (!m.put.length) return result;
+    const days = incoming.map((e) => e.startUtc.slice(0, 10)).sort();
     await store.bulkPut("rosters", [{ ...roster, periodStart: days[0], periodEnd: days[days.length - 1] }]);
-    await store.bulkPut("roster_events", out);
+    await store.bulkPut("roster_events", m.put);
     return result;
   }
 

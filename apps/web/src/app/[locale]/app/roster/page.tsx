@@ -1,14 +1,14 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Hotel, NotebookPen, Plus, Trash2, Upload } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Hotel, NotebookPen, Plus, Trash2, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ROSTER_KINDS, printedDutiesToEvents, type PrintedDuty, combineUtc, detectMapping, icalToRosterEvent, isoDate, parseCsv, parseFlexibleDate, parseIcal, stamp, type RosterEvent, type RosterEventKind, rosterLayovers } from "@cielo/core";
+import { ROSTER_KINDS, mergeRosterImport, printedDutiesToEvents, type PrintedDuty, combineUtc, detectMapping, icalToRosterEvent, isoDate, parseCsv, parseFlexibleDate, parseIcal, stamp, type RosterEvent, type RosterEventKind, rosterLayovers } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { DropZone } from "@/components/app/DropZone";
 import { useAirports } from "@/lib/airports";
-import { useFormatDate, usePilot, useTable } from "@/lib/hooks";
+import { useFlights, useFormatDate, usePilot, useTable } from "@/lib/hooks";
 import { put, saveLayover, saveRosterEvent, softDelete } from "@/lib/repo";
 import { db } from "@/lib/db";
 import { supabase } from "@/lib/supabase";
@@ -33,6 +33,7 @@ export default function RosterPage() {
   const router = useRouter();
   const locale = useLocale();
   const events = useTable("roster_events");
+  const flights = useFlights();
   const layovers = useTable("layovers");
   const pilot = usePilot();
   const airports = useAirports();
@@ -93,23 +94,21 @@ export default function RosterPage() {
         return toast(t(`pdf.err.${code}` as "pdf.err.upstream"));
       }
       const roster = await put("rosters", { source: "manual", fileName: file.name, importedAt: new Date().toISOString() });
-      const key = (e: Pick<RosterEvent, "kind" | "startUtc" | "endUtc" | "depIcao" | "arrIcao" | "flightNumber">) =>
-        [e.kind, e.startUtc, e.endUtc, e.depIcao ?? "", e.arrIcao ?? "", e.flightNumber ?? ""].join("|");
-      const seen = new Set((events ?? []).filter((e) => !e.deletedAt).map(key));
       const home = pilot.homeBaseIcao ? airports?.get(pilot.homeBaseIcao)?.timezone : undefined;
-      const rows = printedDutiesToEvents(d.events, d.timeBasis ?? "local", {
+      const incoming = printedDutiesToEvents(d.events, d.timeBasis ?? "local", {
         pilotId: pilot.id,
         rosterId: roster.id,
         toIcao: (c) => (c.length === 3 ? airports?.iataToIcao(c) ?? c : airports?.get(c)?.icao ?? c),
         timezoneOf: (icao) => airports?.get(icao)?.timezone,
         homeTimezone: home,
-      })
-        .filter((e) => (seen.has(key(e)) ? false : (seen.add(key(e)), true)))
-        .map((e) => stamp(e as RosterEvent));
-      await db().t("roster_events").bulkPut(rows);
+      });
+      // the new print replaces the days it covers: same duties updated in place (logged flights stay linked)
+      const m = mergeRosterImport(events ?? [], incoming, flights ?? []);
+      await db().t("roster_events").bulkPut(m.put);
       setImportOpen(false);
-      toast(rows.length ? t("imported", { count: rows.length }) : t("pdf.nothingNew"));
-      if (rows[0]) setCursor(rows[0].startUtc.slice(0, 7));
+      toast(m.added + m.updated + m.removed + m.linked ? t("pdf.merged", { added: m.added, updated: m.updated, removed: m.removed, linked: m.linked }) : t("pdf.nothingNew"));
+      const first = [...incoming].sort((a, b) => a.startUtc.localeCompare(b.startUtc))[0];
+      if (first) setCursor(first.startUtc.slice(0, 7));
     } catch {
       toast(t("pdf.err.upstream"));
     } finally {
@@ -160,7 +159,8 @@ export default function RosterPage() {
   }
 
   const EventChip = ({ e }: { e: RosterEvent }) => (
-    <button type="button" onClick={() => setSelected(e)} className={`num w-full truncate rounded border px-1 py-0.5 text-left text-[10.5px] font-semibold leading-tight sm:text-[11px] ${KIND_STYLE[e.kind]}`}>
+    <button type="button" onClick={() => setSelected(e)} className={`num w-full truncate rounded border px-1 py-0.5 text-left text-[10.5px] font-semibold leading-tight sm:text-[11px] ${KIND_STYLE[e.kind]} ${e.tentative ? "border-dashed opacity-60" : ""}`} title={e.tentative ? t("option") : undefined}>
+      {e.tentative && <span className="mr-0.5 font-bold">?</span>}
       {e.kind === "FLIGHT" || e.kind === "DEADHEAD" ? `${e.depIcao ?? ""}-${e.arrIcao ?? ""}` : t(`kinds.${e.kind}`)}
       {e.flightId && " ✓"}
     </button>
@@ -217,7 +217,7 @@ export default function RosterPage() {
             <ul className="divide-y divide-border">
               {sorted.filter((e) => e.startUtc.startsWith(cursor)).map((e) => (
                 <li key={e.id} className="flex items-center gap-3 px-5 py-3">
-                  <span className={`rounded border px-2 py-0.5 text-xs font-semibold ${KIND_STYLE[e.kind]}`}>{t(`kinds.${e.kind}`)}</span>
+                  <span className={`rounded border px-2 py-0.5 text-xs font-semibold ${KIND_STYLE[e.kind]} ${e.tentative ? "border-dashed opacity-70" : ""}`}>{e.tentative ? t("option") : t(`kinds.${e.kind}`)}</span>
                   <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setSelected(e)}>
                     <p className="num truncate text-sm font-semibold">{e.title || `${e.depIcao ?? ""} → ${e.arrIcao ?? ""}`}</p>
                     <p className="num text-xs text-muted">{fd(e.startUtc, { weekday: "short", day: "2-digit", month: "short" })} · {e.startUtc.slice(11, 16)}–{e.endUtc.slice(11, 16)} UTC</p>
@@ -230,12 +230,13 @@ export default function RosterPage() {
         </Card>
       )}
 
-      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected ? t(`kinds.${selected.kind}`) : ""}>
+      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected ? `${t(`kinds.${selected.kind}`)}${selected.tentative ? ` · ${t("option")}` : ""}` : ""}>
         {selected && (
           <div className="space-y-4">
             <div>
               <p className="num text-lg font-semibold">{selected.title}</p>
               <p className="num text-sm text-muted">{fd(selected.startUtc, { dateStyle: "full" })}</p>
+              {selected.tentative && <p className="mt-2 rounded-lg border border-dashed border-amber-400/60 bg-amber-400/10 px-3 py-2 text-xs">{t("optionHint")}</p>}
               <p className="num mt-1 text-sm">{selected.reportUtc && `${t("report")} ${selected.reportUtc.slice(11, 16)} · `}{selected.startUtc.slice(11, 16)} – {selected.endUtc.slice(11, 16)} UTC</p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -243,6 +244,11 @@ export default function RosterPage() {
                 <Link href={{ pathname: "/app/carnet/nouveau", query: { roster: selected.id } }} className="btn btn-primary btn-sm"><NotebookPen size={15} /> {t("logFlight")}</Link>
               )}
               {selected.flightId && <Link href={{ pathname: "/app/carnet/[id]", params: { id: selected.flightId } }} className="btn btn-secondary btn-sm">✓ {t("logged")}</Link>}
+              {selected.tentative && (
+                <button type="button" className="btn btn-secondary btn-sm" onClick={async () => (await db().t("roster_events").put(stamp({ ...selected, tentative: false })), setSelected(null))}>
+                  <Check size={15} /> {t("confirmOption")}
+                </button>
+              )}
               {selected.arrIcao && <button type="button" className="btn btn-secondary btn-sm" onClick={() => openLayover(selected)}><Hotel size={15} /> {t("layover")}</button>}
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => (setEdit(selected), setSelected(null))}>{tc("edit")}</button>
               <button type="button" className="btn btn-danger btn-sm" onClick={async () => (await softDelete("roster_events", selected.id), setSelected(null))}><Trash2 size={14} /> {t("deleteEvent")}</button>
