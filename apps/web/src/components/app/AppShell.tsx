@@ -16,6 +16,8 @@ import { useFlags, type Flags } from "@/lib/flags";
 import { apiFetch, installErrorReporter } from "@/lib/report";
 import { ReportDialog } from "./ReportDialog";
 import { GainsToast } from "./GainsToast";
+import { loadAirlineDirectory } from "@/lib/airlines";
+import { backfillOperators } from "@/lib/repo";
 import type { MaxFeature } from "@cielo/core";
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
@@ -88,6 +90,12 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(installErrorReporter, []);
   const nav = NAV.filter((i) => (!i.flag || flags[i.flag]) && (!i.admin || isAdmin));
   const pilot = usePilot();
+  // once per device: old flights get their recognised operator (after the first sync has brought them)
+  useEffect(() => {
+    if (!pilot || !access.canWrite) return;
+    const id = setTimeout(() => void loadAirlineDirectory().then((d) => backfillOperators(d)).catch(() => undefined), 8000);
+    return () => clearTimeout(id);
+  }, [pilot?.id, access.canWrite]); // eslint-disable-line react-hooks/exhaustive-deps
   const online = useOnline();
   const [more, setMore] = useState(false);
   const isActive = (href: string) => (href === "/app" ? pathname === "/app" : pathname.startsWith(href));

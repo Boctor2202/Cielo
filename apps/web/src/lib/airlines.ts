@@ -7,7 +7,7 @@ import { airlineDirectory, type AirlineDirectory } from "@cielo/core";
 let cache: Promise<AirlineDirectory> | null = null;
 const fallback = airlineDirectory();
 
-function load() {
+export function loadAirlineDirectory() {
   cache ??= fetch("/data/airlines.json")
     .then((r) => r.json())
     .then((f: { rows: Parameters<typeof airlineDirectory>[0] }) => airlineDirectory(f.rows))
@@ -22,7 +22,7 @@ export function useAirlineDirectory(): AirlineDirectory {
   const [dir, setDir] = useState<AirlineDirectory>(fallback);
   useEffect(() => {
     let on = true;
-    void load().then((d) => on && setDir(d));
+    void loadAirlineDirectory().then((d) => on && setDir(d));
     return () => {
       on = false;
     };

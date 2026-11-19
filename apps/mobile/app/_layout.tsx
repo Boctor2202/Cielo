@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from "expo-router";
 import { GainsSheet } from "../src/components/GainsSheet";
+import { OperatorBackfill } from "../src/components/OperatorBackfill";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -65,6 +66,7 @@ function Navigator() {
       <StatusBar style={c.scheme === "dark" ? "light" : "dark"} />
       <Backdrop />
       <WidgetSync />
+      <OperatorBackfill />
       <CrewInboxWatcher />
       <LogReminderSync />
       <KeyboardDoneBar label={t("common.ok")} />

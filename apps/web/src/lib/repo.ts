@@ -2,6 +2,7 @@
 
 import {
   markPilotFields,
+  operatorIndex,
   canonicalFlightContent, deriveFlightTimes, extraFlightFields, flightRevision, newId, stamp, SYNC_TABLES, type Aircraft, type AircraftType, type Flight,
   type FlightFormInput, type Layover, type License, type Locale, type OpeningBalance, type Pilot, type RosterEvent,
   type Signature, type TableMap, type TableName, type FlightRevision,
@@ -495,3 +496,31 @@ export async function deleteAllLocal() {
 /** Identity of a flight for duplicate detection: route and off-block minute, or route, date and duration. */
 export const flightKey = (f: Pick<Flight, "date" | "depIcao" | "arrIcao" | "outUtc" | "offUtc" | "totalMin">) =>
   `${f.depIcao}|${f.arrIcao}|${(f.outUtc ?? f.offUtc)?.slice(0, 16) ?? `${f.date}|${f.totalMin}`}`;
+
+const OPERATORS_BACKFILL = "backfill:operators:v1";
+
+/**
+ * Once per device: flights entered or imported before operators were recorded get the operator the logbook
+ * recognises for them (call sign, aircraft, what it learned). Flights already given one are left alone; signatures
+ * stay valid (the operator is not part of a signed entry).
+ */
+export async function backfillOperators(directory: Parameters<typeof operatorIndex>[2]): Promise<number> {
+  if (await localStore.getMeta(OPERATORS_BACKFILL)) return 0;
+  const flights = (await db().t("flights").toArray()).filter((f) => !f.deletedAt);
+  // nothing here yet (a new device before its first sync): try again next time
+  if (!flights.length) return 0;
+  const ops = operatorIndex(flights, await db().t("aircraft").toArray(), directory);
+  const byOp = new Map<string, string[]>();
+  for (const f of flights) {
+    if (f.operator || f.isFstd) continue;
+    const op = ops.of(f);
+    if (op) byOp.set(op, [...(byOp.get(op) ?? []), f.id]);
+  }
+  let n = 0;
+  for (const [op, ids] of byOp) {
+    await setOperator(ids, op);
+    n += ids.length;
+  }
+  await localStore.setMeta(OPERATORS_BACKFILL, new Date().toISOString());
+  return n;
+}

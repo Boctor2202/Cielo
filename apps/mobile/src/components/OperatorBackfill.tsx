@@ -1,0 +1,47 @@
+import { useEffect } from "react";
+import { Platform } from "react-native";
+import { flightRevision, operatorIndex, stamp, type Flight, type FlightRevision, type SyncedRecord } from "@cielo/core";
+import { airlines } from "../airlines";
+import { useApp } from "../state";
+
+const KEY = "backfill:operators:v1";
+
+/**
+ * Once per device: flights entered or imported before operators were recorded get the operator the logbook
+ * recognises for them (call sign, aircraft, what it learned). Signatures stay valid (the operator is not signed).
+ */
+export function OperatorBackfill() {
+  const { store, pilot, access, reload } = useApp();
+  useEffect(() => {
+    if (!pilot || !access.canWrite) return;
+    const id = setTimeout(async () => {
+      try {
+        if (await store.getMeta(KEY)) return;
+        const flights = (await store.all("flights")).filter((f) => !f.deletedAt);
+        // nothing here yet (before the first sync): try again next time
+        if (!flights.length) return;
+        const ops = operatorIndex(flights, await store.all("aircraft"), airlines());
+        const next: Flight[] = [];
+        for (const f of flights) {
+          if (f.operator || f.isFstd) continue;
+          const op = ops.of(f);
+          if (op) next.push(stamp({ ...f, operator: op }) as Flight);
+        }
+        if (next.length) {
+          // in one write, with each flight's audit trail entry, then one reload (synced like any change)
+          await store.bulkPut("flights", next);
+          const byId = new Map(flights.map((f) => [f.id, f]));
+          const os = Platform.OS === "android" ? "android" : "ios";
+          const revs = next.map((f) => flightRevision(byId.get(f.id), f, os)).filter(Boolean).map((r) => stamp(r as Partial<SyncedRecord>) as unknown as FlightRevision);
+          if (revs.length) await store.bulkPut("flight_revisions", revs);
+          await reload();
+        }
+        await store.setMeta(KEY, new Date().toISOString());
+      } catch {
+        // tried again at the next launch
+      }
+    }, 8000);
+    return () => clearTimeout(id);
+  }, [pilot?.id, access.canWrite]); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
+}
