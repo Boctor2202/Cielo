@@ -142,6 +142,8 @@ export interface Flight extends SyncedRecord {
   /** UTC date of off-block */
   date: ISODate;
   flightNumber?: string;
+  /** who operated the flight (airline, charter or private operator) */
+  operator?: string;
   source: FlightSource;
   rosterEventId?: UUID | null;
 

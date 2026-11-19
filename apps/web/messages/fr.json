@@ -561,7 +561,9 @@
       "empty": "Aucun vol ne correspond.",
       "signed": "Signé",
       "fstd": "Simulateur",
-      "deleted": "Vol supprimé"
+      "deleted": "Vol supprimé",
+      "allOperators": "Tous les opérateurs",
+      "noOperator": "Opérateur non reconnu"
     },
     "form": {
       "newTitle": "Nouveau vol",
@@ -682,7 +684,10 @@
         }
       },
       "kindFlight": "Vol",
-      "kindFstd": "Simulateur"
+      "kindFstd": "Simulateur",
+      "operator": "Opérateur",
+      "operatorPh": "Compagnie ou opérateur",
+      "operatorRecognised": "Reconnu automatiquement : tapez pour le changer"
     },
     "signature": {
       "title": "Signature du vol",
@@ -2121,6 +2126,19 @@
       "postInApp": "Image enregistrée : ouvre {app}, crée une publication ou une story et choisis cette image.",
       "addImage": "Image enregistrée : ajoute-la à la publication qui vient de s'ouvrir.",
       "linkCopied": "Texte et lien copiés."
+    },
+    "gains": {
+      "titleOne": "Vol ajouté à votre carnet",
+      "titleMany": "{count} vols ajoutés à votre carnet",
+      "hours": "de vol",
+      "airports": "{count, plural, one {nouvel aéroport} other {nouveaux aéroports}}",
+      "countries": "{count, plural, one {nouveau pays} other {nouveaux pays}}",
+      "types": "{count, plural, one {nouveau type} other {nouveaux types}}",
+      "night": "de nuit",
+      "newWings": "Nouvelles ailes",
+      "unlocked": "{count, plural, one {Badge débloqué} other {# badges débloqués}}",
+      "next": "Prochain badge :",
+      "close": "Fermer"
     }
   },
   "why": {

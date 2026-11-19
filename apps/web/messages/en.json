@@ -561,7 +561,9 @@
       "empty": "No matching flight.",
       "signed": "Signed",
       "fstd": "Simulator",
-      "deleted": "Flight deleted"
+      "deleted": "Flight deleted",
+      "allOperators": "All operators",
+      "noOperator": "No operator recognised"
     },
     "form": {
       "newTitle": "New flight",
@@ -682,7 +684,10 @@
         }
       },
       "kindFlight": "Flight",
-      "kindFstd": "Simulator"
+      "kindFstd": "Simulator",
+      "operator": "Operator",
+      "operatorPh": "Airline or operator",
+      "operatorRecognised": "Recognised automatically: type to change it"
     },
     "signature": {
       "title": "Flight signature",
@@ -2121,6 +2126,19 @@
       "postInApp": "Image saved: open {app}, create a post or a story and choose this image.",
       "addImage": "Image saved: add it to the post that just opened.",
       "linkCopied": "Text and link copied."
+    },
+    "gains": {
+      "titleOne": "Flight added to your logbook",
+      "titleMany": "{count} flights added to your logbook",
+      "hours": "flight time",
+      "airports": "{count, plural, one {new airport} other {new airports}}",
+      "countries": "{count, plural, one {new country} other {new countries}}",
+      "types": "{count, plural, one {new type} other {new types}}",
+      "night": "night",
+      "newWings": "New wings",
+      "unlocked": "{count, plural, one {Badge unlocked} other {# badges unlocked}}",
+      "next": "Next badge:",
+      "close": "Close"
     }
   },
   "why": {

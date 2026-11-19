@@ -15,6 +15,7 @@ import { AccessBanner, useAccess, usePendingCheckout } from "@/lib/access";
 import { useFlags, type Flags } from "@/lib/flags";
 import { apiFetch, installErrorReporter } from "@/lib/report";
 import { ReportDialog } from "./ReportDialog";
+import { GainsToast } from "./GainsToast";
 import type { MaxFeature } from "@cielo/core";
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
@@ -94,6 +95,7 @@ function Shell({ children }: { children: ReactNode }) {
 
   return (
     <AirportsProvider>
+      <GainsToast />
       <div className="app-skin min-h-dvh lg:grid lg:grid-cols-[256px_1fr]">
         <div className="app-room" aria-hidden="true" />
         <div className="sticky top-0 hidden h-dvh p-3 pr-0 lg:block">

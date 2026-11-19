@@ -6,6 +6,7 @@ import type { Aircraft, AircraftType, Airport, Flight, IfrDefault, OperationMode
 export interface FlightFormInput {
   date: string;
   flightNumber?: string;
+  operator?: string;
   depIcao: string;
   arrIcao: string;
   out?: string;

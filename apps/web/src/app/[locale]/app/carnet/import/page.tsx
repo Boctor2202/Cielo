@@ -13,6 +13,7 @@ import { Card, Field, PageTitle, Segmented, useToast } from "@/components/app/ui
 import { useAirports } from "@/lib/airports";
 import { logImported, buildFlight, flightKey } from "@/lib/repo";
 import { db } from "@/lib/db";
+import { announceGains } from "@/lib/gains";
 import { DropZone } from "@/components/app/DropZone";
 import { Paywall, useAccess } from "@/lib/access";
 
@@ -225,6 +226,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     }
     await db().t("flights").bulkPut(built);
     await logImported(built);
+    announceGains(built.map((f) => f.id));
     // a table imported with its columns: the layout is kept for the next pilot (column titles only)
     if (rows && mapping && !pdfRows && built.length && !learned) {
       setLearned(true);

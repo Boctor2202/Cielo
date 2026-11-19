@@ -6,11 +6,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   defaultIfrFor, deriveFlightTimes, isoDate, PILOT_FUNCTIONS, type Aircraft, type Approach, type Flight, type FlightFormInput, type Pilot,
-  APPROACH_TYPES, EXTRA_FLIGHT_FIELDS, distanceNm, isPilot, extraFieldsFor, frameworkOf, LOGGED_SHARES, shareLabel,
+  APPROACH_TYPES, EXTRA_FLIGHT_FIELDS, distanceNm, operatorIndex, isPilot, extraFieldsFor, frameworkOf, LOGGED_SHARES, shareLabel,
 } from "@cielo/core";
 import { useRouter } from "@/i18n/navigation";
 import { useAirports } from "@/lib/airports";
-import { useDuration, useTable, useTypes } from "@/lib/hooks";
+import { useDuration, useFlights, useTable, useTypes } from "@/lib/hooks";
+import { announceGains } from "@/lib/gains";
 import { findType, flightToInput, saveFlight, softDelete } from "@/lib/repo";
 import { db } from "@/lib/db";
 import { useAccess } from "@/lib/access";
@@ -47,6 +48,9 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
   const router = useRouter();
   const airports = useAirports();
   const aircraftList = useTable("aircraft");
+  const allFlights = useFlights();
+  // the operator recognised from the aircraft, the call sign and the logbook (shown until one is typed)
+  const operators = useMemo(() => operatorIndex(allFlights ?? [], aircraftList ?? []), [allFlights, aircraftList]);
   const types = useTypes();
   const dur = useDuration();
   const { toast, toastNode } = useToast();
@@ -98,8 +102,11 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
       ifrOverrideMin: ifrManual ? v.ifrOverrideMin : undefined,
       depIcao: v.isFstd ? v.depIcao || "FSTD" : v.depIcao,
       arrIcao: v.isFstd ? v.arrIcao || "FSTD" : v.arrIcao,
+      operator: v.operator?.trim() || (v.isFstd ? undefined : operators.of({ flightNumber: v.flightNumber, registration: v.registration?.trim().toUpperCase() || aircraft?.registration })),
     };
     const saved = await saveFlight(input, airports, { id: flight?.id, source, rosterEventId });
+    // a new flight: what it brought to the logbook
+    if (!flight) announceGains([saved.id]);
     setBusy(false);
     toast(t("saved"));
     if (again) {
@@ -116,6 +123,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
   }
 
   const unknownAirport = !v.isFstd && airports && ((v.depIcao.length >= 3 && !airports.get(v.depIcao)) || (v.arrIcao.length >= 3 && !airports.get(v.arrIcao)));
+  const recognisedOperator = v.isFstd ? undefined : operators.of({ flightNumber: v.flightNumber, registration: v.registration });
   // the great-circle distance of the leg, and the time between each pair of clocks (taxi out, air, taxi in)
   const routeNm = (() => {
     const a = airports?.get(v.depIcao);
@@ -261,7 +269,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
             </Card>
 
             <Card title={<SectionTitle icon={Plane}>{t("aircraftTitle")}</SectionTitle>}>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <Field label={t("aircraft")}>
                   <input
                     className="input num uppercase"
@@ -295,6 +303,20 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                       <option key={ty.id} value={ty.icao}>
                         {ty.manufacturer} {ty.model}
                       </option>
+                    ))}
+                  </datalist>
+                </Field>
+                <Field label={t("operator")} hint={!v.operator && recognisedOperator ? t("operatorRecognised") : undefined}>
+                  <input
+                    className="input"
+                    list="geardown-operators"
+                    value={v.operator ?? ""}
+                    placeholder={recognisedOperator ?? t("operatorPh")}
+                    onChange={(e) => set("operator", e.target.value || undefined)}
+                  />
+                  <datalist id="geardown-operators">
+                    {operators.all.map((o) => (
+                      <option key={o} value={o} />
                     ))}
                   </datalist>
                 </Field>

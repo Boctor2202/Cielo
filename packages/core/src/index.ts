@@ -37,3 +37,5 @@ export * from "./universalImport";
 export * from "./shareLink";
 export * from "./revisions";
 export * from "./phone";
+export * from "./operators";
+export * from "./gains";

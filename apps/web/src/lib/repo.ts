@@ -253,6 +253,7 @@ export async function buildFlight(
     pilotId: pilot.id,
     date: input.date,
     flightNumber: input.flightNumber?.trim() || undefined,
+    operator: input.operator?.trim() || aircraft?.operator?.trim() || undefined,
     source: opts.source ?? existing?.source ?? "manual",
     rosterEventId: opts.rosterEventId ?? existing?.rosterEventId ?? null,
     depIcao: input.depIcao.trim().toUpperCase(),
@@ -365,6 +366,7 @@ export function flightToInput(f: Flight): FlightFormInput {
   return {
     date: f.date,
     flightNumber: f.flightNumber,
+    operator: f.operator,
     depIcao: f.depIcao,
     arrIcao: f.arrIcao,
     out: clock(f.outUtc),

@@ -3,10 +3,10 @@
 import { FileDown, Moon, NotebookPen, Plane, Plus, ScanSearch, ShieldCheck, Upload, BookCopy } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { sumFlights } from "@cielo/core";
+import { operatorIndex, sumFlights } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, PageTitle } from "@/components/app/ui";
-import { useDuration, useFlights, useFormatDate } from "@/lib/hooks";
+import { useDuration, useFlights, useFormatDate, useTable } from "@/lib/hooks";
 
 /** Function badges: command green, co-pilot blue, supervised command teal, instruction amber / violet. */
 const FUNCTION_TONE: Record<string, string> = {
@@ -29,6 +29,9 @@ export default function Logbook() {
   const [q, setQ] = useState("");
   const [year, setYear] = useState("");
   const [type, setType] = useState("");
+  const [operator, setOperator] = useState("");
+  const aircraft = useTable("aircraft");
+  const ops = useMemo(() => operatorIndex(flights ?? [], aircraft ?? []), [flights, aircraft]);
 
   const years = useMemo(() => [...new Set((flights ?? []).map((f) => f.date.slice(0, 4)))].sort().reverse(), [flights]);
   const types = useMemo(() => [...new Set((flights ?? []).map((f) => (f.isFstd ? "FSTD" : f.aircraftTypeIcao ?? "")).filter(Boolean))].sort(), [flights]);
@@ -38,9 +41,10 @@ export default function Logbook() {
       (f) =>
         (!year || f.date.startsWith(year)) &&
         (!type || (type === "FSTD" ? f.isFstd : f.aircraftTypeIcao === type)) &&
-        (!s || [f.depIcao, f.arrIcao, f.registration, f.aircraftTypeIcao, f.flightNumber, f.remarks, f.picName, f.fstdType].some((x) => x?.toUpperCase().includes(s))),
+        (!operator || (operator === "-" ? !ops.of(f) : ops.of(f) === operator)) &&
+        (!s || [f.depIcao, f.arrIcao, f.registration, f.aircraftTypeIcao, f.flightNumber, f.remarks, f.picName, f.fstdType, ops.of(f)].some((x) => x?.toUpperCase().includes(s))),
     );
-  }, [flights, q, year, type]);
+  }, [flights, q, year, type, operator, ops]);
   const totals = useMemo(() => sumFlights(filtered), [filtered]);
   const [limit, setLimit] = useState(100);
 
@@ -59,7 +63,7 @@ export default function Logbook() {
           </>
         }
       />
-      <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_180px_180px]">
+      <div className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_160px_160px_200px]">
         <input className="input" type="search" placeholder={t("searchPlaceholder")} value={q} onChange={(e) => setQ(e.target.value)} />
         <select className="input" value={year} onChange={(e) => setYear(e.target.value)} aria-label={t("allYears")}>
           <option value="">{t("allYears")}</option>
@@ -68,6 +72,11 @@ export default function Logbook() {
         <select className="input" value={type} onChange={(e) => setType(e.target.value)} aria-label={t("allTypes")}>
           <option value="">{t("allTypes")}</option>
           {types.map((y) => <option key={y}>{y}</option>)}
+        </select>
+        <select className="input" value={operator} onChange={(e) => setOperator(e.target.value)} aria-label={t("allOperators")}>
+          <option value="">{t("allOperators")}</option>
+          {ops.all.map((o) => <option key={o} value={o}>{o}</option>)}
+          <option value="-">{t("noOperator")}</option>
         </select>
       </div>
 
