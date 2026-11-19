@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Share, View } from "react-native";
-import Svg, { Defs, LinearGradient, Path, Stop, SvgXml } from "react-native-svg";
+import Svg, { SvgXml } from "react-native-svg";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { distanceNm, discoveryBadges, shareLinkUrl, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type DiscoverySeries, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
+import { badgeEmblemSvg, distanceNm, discoveryBadges, shareLinkUrl, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
 import { lookupAirport } from "../airports";
 import { Track } from "./Bars";
 import { API_URL } from "../api";
@@ -22,49 +22,16 @@ export const TIER: Record<Tier, [string, string]> = {
 };
 
 /** Each series' symbol. */
-const SERIES_ICON: Record<DiscoverySeries, keyof typeof Ionicons.glyphMap> = {
-  night: "moon",
-  nightLandings: "moon-outline",
-  landings: "airplane-outline",
-  airports: "compass",
-  countries: "globe",
-  distance: "earth",
-  longest: "trail-sign",
-  types: "airplane",
-  signed: "ribbon",
-};
-const iconFor = (b: Pick<DiscoveryBadge, "id" | "series">): keyof typeof Ionicons.glyphMap => (b.id === "toTheMoon" || b.id === "moonAndBack" ? "rocket" : SERIES_ICON[b.series]);
-const starX = (i: number, n: number) => 32 + (i - (n - 1) / 2) * 7.2;
+
 
 /** A hexagonal emblem in the metal of its rank, one star per rank; a dark silhouette with a lock while still to earn. */
 export function Emblem({ badge, locked, size = 56 }: { badge: DiscoveryBadge; locked?: boolean; size?: number }) {
-  const [from, to] = TIER[badge.tier];
-  const n = locked || badge.of < 2 ? 0 : badge.rank;
-  const g = `e${badge.id}${locked ? "l" : "u"}`;
+  // one outline and one symbol per series, drawn by @cielo/core (as on the website and the share images)
+  const xml = useMemo(() => badgeEmblemSvg({ series: badge.series, id: badge.id, tier: badge.tier, rank: badge.rank, of: badge.of, locked, size }), [badge, locked, size]);
   const h = (size * 68) / 64;
   return (
     <View style={{ width: size, height: h }}>
-      <Svg width={size} height={h} viewBox="0 0 64 68">
-        <Defs>
-          <LinearGradient id={g} x1="0" y1="0" x2="0.6" y2="1">
-            <Stop offset="0" stopColor={locked ? "#3B4657" : from} />
-            <Stop offset="1" stopColor={locked ? "#151C27" : to} />
-          </LinearGradient>
-          <LinearGradient id={`${g}s`} x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#fff" stopOpacity={locked ? 0.08 : 0.45} />
-            <Stop offset="1" stopColor="#fff" stopOpacity={0} />
-          </LinearGradient>
-        </Defs>
-        <Path d="M32 2 L59 17.5 V50.5 L32 66 L5 50.5 V17.5 Z" fill={`url(#${g})`} stroke={locked ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.55)"} strokeWidth={1.5} />
-        <Path d="M32 8 L54 20.7 V47.3 L32 60 L10 47.3 V20.7 Z" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={1} strokeDasharray={locked ? "2 3" : undefined} />
-        <Path d="M5 17.5 L32 2 L59 17.5 V30 C44 24 20 24 5 30 Z" fill={`url(#${g}s)`} />
-        {Array.from({ length: n }, (_, i) => (
-          <Path key={i} d={`M${starX(i, n)} 47 l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z`} fill="#FFF7D6" scale={0.85} origin={`${starX(i, n)}, 50`} />
-        ))}
-      </Svg>
-      <View style={{ position: "absolute", left: 0, right: 0, top: h * (n ? 0.22 : 0.29), alignItems: "center" }}>
-        <Ionicons name={iconFor(badge)} size={size * 0.38} color={locked ? "rgba(255,255,255,0.28)" : "#fff"} />
-      </View>
+      <SvgXml xml={xml} width={size} height={h} />
       {locked ? (
         <View style={{ position: "absolute", right: -2, bottom: -2, width: 20, height: 20, borderRadius: 10, backgroundColor: "#0b1526", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" }}>
           <Ionicons name="lock-closed" size={10} color="rgba(255,255,255,0.7)" />

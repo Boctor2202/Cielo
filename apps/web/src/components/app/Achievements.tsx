@@ -3,43 +3,20 @@
 import { Flame, Lock, Share2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { distanceNm, discoveryBadges, shareLinkUrl, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
+import { badgeEmblemSvg, distanceNm, discoveryBadges, shareLinkUrl, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
 import { useFormatDate } from "@/lib/hooks";
-import { TIER_COLORS as TIER, iconFor, starPath, starsOf, starX } from "@/lib/badgeArt";
+import { TIER_COLORS as TIER } from "@/lib/badgeArt";
 import { Card, Modal } from "./ui";
 import { ShareSheet } from "./ShareSheet";
 
-/** A hexagonal emblem in the metal of its rank, with one star per rank; a dark silhouette with a lock while it is still to earn. */
+/** A discovery badge: one outline and one symbol per series, in the metal of its rank (@cielo/core draws it). */
 export function Emblem({ badge, size = 64, locked }: { badge: Pick<DiscoveryBadge, "id" | "series" | "tier" | "rank" | "of">; size?: number; locked?: boolean }) {
-  const [from, to] = TIER[badge.tier];
-  const Icon = iconFor(badge.id, badge.series);
-  const n = locked ? 0 : starsOf(badge.rank, badge.of);
-  const g = `e-${badge.id}-${locked ? "l" : "u"}`;
+  const svg = useMemo(() => badgeEmblemSvg({ series: badge.series, id: badge.id, tier: badge.tier, rank: badge.rank, of: badge.of, locked }), [badge.series, badge.id, badge.tier, badge.rank, badge.of, locked]);
+  const [, to] = TIER[badge.tier];
   return (
     <div className="relative shrink-0" style={{ width: size, height: (size * 68) / 64 }}>
-      <svg viewBox="0 0 64 68" width={size} height={(size * 68) / 64} aria-hidden style={locked ? undefined : { filter: `drop-shadow(0 8px 14px ${to}66)` }}>
-        <defs>
-          <linearGradient id={g} x1="0" y1="0" x2="0.6" y2="1">
-            <stop offset="0" stopColor={locked ? "#3B4657" : from} />
-            <stop offset="1" stopColor={locked ? "#151C27" : to} />
-          </linearGradient>
-          <linearGradient id={`${g}-s`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fff" stopOpacity={locked ? 0.08 : 0.45} />
-            <stop offset="1" stopColor="#fff" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d="M32 2 L59 17.5 V50.5 L32 66 L5 50.5 V17.5 Z" fill={`url(#${g})`} stroke={locked ? "rgba(255,255,255,.12)" : "rgba(255,255,255,.55)"} strokeWidth="1.5" />
-        <path d="M32 8 L54 20.7 V47.3 L32 60 L10 47.3 V20.7 Z" fill="none" stroke="rgba(255,255,255,.35)" strokeWidth="1" strokeDasharray={locked ? "2 3" : undefined} />
-        <path d="M5 17.5 L32 2 L59 17.5 V30 C44 24 20 24 5 30 Z" fill={`url(#${g}-s)`} />
-        {Array.from({ length: n }, (_, i) => (
-          <path key={i} d={starPath(starX(i, n))} fill="#FFF7D6" transform={`translate(${starX(i, n)} 50) scale(.85) translate(${-starX(i, n)} -50)`} />
-        ))}
-      </svg>
-      <Icon
-        className="absolute left-1/2 -translate-x-1/2"
-        style={{ top: n ? "22%" : "30%", width: size * 0.4, height: size * 0.4, color: locked ? "rgba(255,255,255,.28)" : "#fff", filter: locked ? undefined : "drop-shadow(0 2px 3px rgba(0,0,0,.35))" }}
-        strokeWidth={2.2}
-      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`} alt="" width={size} height={(size * 68) / 64} style={locked ? undefined : { filter: `drop-shadow(0 8px 14px ${to}66)` }} />
       {locked && (
         <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full border border-white/15 bg-[#0b1526] text-white/70">
           <Lock size={12} />

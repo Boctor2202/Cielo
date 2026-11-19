@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { ImageResponse } from "next/og";
-import { DISCOVERY_SERIES, HOUR_LEVELS, hoursLabel, rankStripes, tierOfRank, wingsSvg } from "@cielo/core";
-import { TIER_COLORS, emblemSvg, epauletteSvg, iconSvgFor, starsOf } from "@/lib/badgeArt";
+import { badgeEmblemSvg, DISCOVERY_SERIES, HOUR_LEVELS, hoursLabel, rankStripes, tierOfRank, wingsSvg, type DiscoveryId } from "@cielo/core";
+import { TIER_COLORS, epauletteSvg } from "@/lib/badgeArt";
 import en from "../../../../messages/en.json";
 import fr from "../../../../messages/fr.json";
 
@@ -71,7 +71,7 @@ export async function GET(req: Request) {
     const rank = s ? s.steps.findIndex((st) => st.id === id) + 1 : 0;
     if (!s || !id) return new Response("badge", { status: 400 });
     const tier = tierOfRank(rank, s.steps.length);
-    art = uri(emblemSvg(tier, starsOf(rank, s.steps.length), iconSvgFor(id as never, s.series)));
+    art = uri(badgeEmblemSvg({ series: s.series, id: id as DiscoveryId, tier, rank, of: s.steps.length }));
     ratio = 68 / 64;
     glow = TIER_COLORS[tier][0];
     kicker = lang === "fr" ? "Badge débloqué" : "Badge unlocked";
