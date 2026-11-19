@@ -4,11 +4,18 @@ export const dynamic = "force-dynamic";
 
 /** Whether a paid key is accepted right now (a free call: the list of models / a flights query is not made). */
 async function anthropicStatus(): Promise<{ ok: boolean; note?: string }> {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) return { ok: false };
+  const raw = process.env.ANTHROPIC_API_KEY;
+  if (!raw) return { ok: false };
+  const key = raw.trim();
+  if (key !== raw) return { ok: false, note: "the key has spaces or a line break around it: paste it again in Vercel" };
+  if (!key.startsWith("sk-ant-")) return { ok: false, note: "this does not look like an Anthropic API key (sk-ant-…)" };
   const r = await fetch("https://api.anthropic.com/v1/models?limit=1", { headers: { "x-api-key": key, "anthropic-version": "2023-06-01" }, cache: "no-store" }).catch(() => null);
   if (!r) return { ok: false, note: "unreachable" };
-  return r.ok ? { ok: true, note: "key accepted" } : { ok: false, note: r.status === 401 ? "key refused (expired or deleted)" : `error ${r.status}` };
+  if (r.ok) return { ok: true, note: "key accepted" };
+  // Anthropic's own reason (it never contains the key): low credit, malformed key, disabled organisation…
+  const why = ((await r.json().catch(() => null)) as { error?: { type?: string; message?: string } } | null)?.error;
+  const reason = why?.message ? `${why.type ?? ""}: ${why.message}`.slice(0, 160) : "";
+  return { ok: false, note: r.status === 401 ? `key refused (expired or deleted)${reason ? ` — ${reason}` : ""}` : `error ${r.status}${reason ? ` — ${reason}` : ""}` };
 }
 
 /** Which outside services are configured (names only, never values). */
