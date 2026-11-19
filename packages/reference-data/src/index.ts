@@ -1,4 +1,4 @@
-import type { AircraftCategory, AircraftType, Airport, EngineType } from "@cielo/core";
+import { airportShortName, cityOf, type AircraftCategory, type AircraftType, type Airport, type EngineType } from "@cielo/core";
 
 type Row = [string, string, string, AircraftCategory, EngineType, number, boolean, string];
 
@@ -222,6 +222,15 @@ export class AirportIndex {
     return this.byIcao.get(c) ?? (c.length === 3 ? this.byIata.get(c) : undefined);
   }
   iataToIcao = (iata: string) => this.byIata.get(iata.toUpperCase())?.icao;
+  private cities?: Set<string>;
+  /** The name pilots say: "Paris – Charles de Gaulle", "Madrid – Barajas" (the code itself when unknown). */
+  shortName(code: string | undefined | null): string {
+    const a = this.get(code);
+    if (!a) return code ?? "";
+    // cities served by a medium or large airport, to tell "Milan" in "Milan Malpensa"
+    this.cities ??= new Set(this.list.filter((x) => (x.size ?? 0) >= 2 && x.city).map((x) => cityOf(x.city).toLowerCase()));
+    return airportShortName(a, (w) => this.cities!.has(w.toLowerCase()));
+  }
   search(query: string, limit = 8): Airport[] {
     const q = query.trim().toUpperCase();
     if (!q) return [];

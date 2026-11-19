@@ -182,17 +182,17 @@ export default function Logbook() {
                               {f.isFstd ? (
                                 <span className="inline-flex items-center gap-2 font-semibold"><span className="rounded-md bg-violet-500/15 px-2 py-0.5 text-violet-700 dark:text-violet-300">{t("fstd")}</span> {f.fstdType}</span>
                               ) : (
-                                <span className="flex items-center gap-3">
+                                <span className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center gap-3">
                                   <span className="min-w-0">
                                     <span className="num block text-[17px] font-bold tracking-wide">{f.depIcao}</span>
-                                    <span className="block truncate text-[11px] text-muted">{dep?.city ?? dep?.name ?? ""}</span>
+                                    <span className="block truncate text-[11px] text-muted" title={dep?.name}>{dep ? airports?.shortName(f.depIcao) : ""}</span>
                                   </span>
-                                  <span className="logbook-line relative mx-1 h-px min-w-10 flex-1" aria-hidden>
+                                  <span className="logbook-line relative h-px w-full" aria-hidden>
                                     <Plane size={13} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 text-accent" />
                                   </span>
-                                  <span className="min-w-0 text-right">
+                                  <span className="min-w-0">
                                     <span className="num block text-[17px] font-bold tracking-wide">{f.arrIcao}</span>
-                                    <span className="block truncate text-[11px] text-muted">{arr?.city ?? arr?.name ?? ""}</span>
+                                    <span className="block truncate text-[11px] text-muted" title={arr?.name}>{arr ? airports?.shortName(f.arrIcao) : ""}</span>
                                   </span>
                                 </span>
                               )}

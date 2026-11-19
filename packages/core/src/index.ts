@@ -39,3 +39,4 @@ export * from "./revisions";
 export * from "./phone";
 export * from "./operators";
 export * from "./gains";
+export * from "./airportName";
