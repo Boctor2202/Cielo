@@ -399,7 +399,8 @@
       "radar": "Radar",
       "admin": "Admin",
       "report": "Signaler un problème",
-      "signIn": "Se connecter"
+      "signIn": "Se connecter",
+      "timezones": "Fuseaux horaires"
     },
     "dashboard": {
       "hello": "Bonjour {name}",
@@ -2252,6 +2253,15 @@
       "pwReauth": "Déconnectez-vous et reconnectez-vous, puis changez votre mot de passe.",
       "pwDone": "Mot de passe modifié.",
       "error": "Ça n'a pas fonctionné, réessayez dans un instant."
+    },
+    "timezones": {
+      "title": "Fuseaux horaires",
+      "subtitle": "Le monde par décalage UTC, avec la nuit en ce moment. Clique sur la carte pour l'heure n'importe où.",
+      "local": "Locale",
+      "mapAlt": "Carte du monde des fuseaux horaires",
+      "legend": "Couleurs : décalage UTC standard (terres claires, mer sombre). En ombré : la nuit en ce moment. En haut : l'heure de chaque bande de 15°. Clique n'importe où pour son heure locale.",
+      "airports": "Tes aéroports",
+      "base": "Base"
     }
   },
   "why": {

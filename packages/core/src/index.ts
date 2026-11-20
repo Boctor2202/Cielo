@@ -42,3 +42,4 @@ export * from "./gains";
 export * from "./airportName";
 export * from "./badgeEmblem";
 export * from "./dashboard";
+export * from "./timezones";

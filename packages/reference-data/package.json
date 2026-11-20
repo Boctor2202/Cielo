@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "exports": { ".": "./src/index.ts", "./airports.json": "./data/airports.json", "./runways.json": "./data/runways.json", "./airlines.json": "./data/airlines.json" },
+  "exports": { ".": "./src/index.ts", "./airports.json": "./data/airports.json", "./runways.json": "./data/runways.json", "./airlines.json": "./data/airlines.json", "./timezones.json": "./data/timezones.json" },
   "scripts": {
     "build:airports": "node scripts/build-airports.mjs raw/airports.csv data/airports.json",
     "build:runways": "node scripts/build-runways.mjs raw/runways.csv data/airports.json data/runways.json",

@@ -399,7 +399,8 @@
       "radar": "Radar",
       "admin": "Admin",
       "report": "Report a problem",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "timezones": "Time zones"
     },
     "dashboard": {
       "hello": "Hello {name}",
@@ -2252,6 +2253,15 @@
       "pwReauth": "Sign out and in again, then change your password.",
       "pwDone": "Password changed.",
       "error": "That did not work, try again in a moment."
+    },
+    "timezones": {
+      "title": "Time zones",
+      "subtitle": "The world by UTC offset, with the night side right now. Click the map for the time anywhere.",
+      "local": "Local",
+      "mapAlt": "World map of time zones",
+      "legend": "Colours: standard UTC offset (land bright, sea dark). Shaded: night right now. Top: the time in each 15° band. Click anywhere for its local time.",
+      "airports": "Your airports",
+      "base": "Home base"
     }
   },
   "why": {

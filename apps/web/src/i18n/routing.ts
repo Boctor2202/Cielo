@@ -34,6 +34,7 @@ export const routing = defineRouting({
     "/app/escales": { fr: "/app/escales", en: "/app/layovers" },
     "/app/escales/[id]": { fr: "/app/escales/[id]", en: "/app/layovers/[id]" },
     "/app/ftl": "/app/ftl",
+    "/app/fuseaux": { fr: "/app/fuseaux", en: "/app/timezones" },
     "/app/documents": "/app/documents",
     "/app/statistiques": { fr: "/app/statistiques", en: "/app/statistics" },
     "/app/carte": { fr: "/app/carte", en: "/app/map" },
