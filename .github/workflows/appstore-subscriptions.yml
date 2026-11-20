@@ -8,6 +8,10 @@ on:
         description: "Only show what exists (no change)"
         type: boolean
         default: false
+      update_prices:
+        description: "Apply the prices of scripts/appstore/subscriptions.mjs to new subscribers (existing ones keep theirs)"
+        type: boolean
+        default: false
       replace_screenshot:
         description: "Replace the review screenshot with scripts/appstore/review-subscription.jpg"
         type: boolean
@@ -25,7 +29,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node scripts/appstore/subscriptions.mjs ${{ inputs.check && '--check' || '' }} ${{ inputs.replace_screenshot && '--replace-screenshot' || '' }}
+      - run: node scripts/appstore/subscriptions.mjs ${{ inputs.check && '--check' || '' }} ${{ inputs.replace_screenshot && '--replace-screenshot' || '' }} ${{ inputs.update_prices && '--update-prices' || '' }}
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
