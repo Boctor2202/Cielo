@@ -8,6 +8,7 @@ import { Tabs } from "expo-router/js-tabs";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useApp } from "../../src/state";
 import { SyncBadge } from "../../src/components/SyncBadge";
+import { BackButton } from "../../src/components/BackButton";
 import { font, glass, useTheme } from "../../src/theme";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -20,11 +21,7 @@ export default function TabsLayout() {
   // frosted header and tab bar over the photo backdrop, like the web app's glass panes
   // screens opened from "More" or a dashboard card live in the tab navigator without their own tab:
   // a back chevron returns to where the pilot came from
-  const back = () => (
-    <Pressable onPress={() => (router.canGoBack() ? router.back() : router.navigate("/more"))} hitSlop={12} style={{ paddingHorizontal: 12 }}>
-      <Ionicons name="chevron-back" size={26} color={c.accent} />
-    </Pressable>
-  );
+  const back = () => <BackButton />;
   // Not `href: null`: in this expo-router version a hidden tab is treated like a protected screen and any
   // navigation to it is redirected to the first tab. Hiding only the tab button keeps the screen reachable.
   const sub = (title: string) => ({ headerTitle: title, headerLeft: back, headerRight: mark, tabBarItemStyle: { display: "none" as const }, tabBarButton: () => null });

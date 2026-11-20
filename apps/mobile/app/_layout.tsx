@@ -2,6 +2,7 @@ import "../src/polyfills";
 import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from "expo-router";
+import { BackButton } from "../src/components/BackButton";
 import { GainsSheet } from "../src/components/GainsSheet";
 import { OperatorBackfill } from "../src/components/OperatorBackfill";
 import * as Notifications from "expo-notifications";
@@ -80,6 +81,10 @@ function Navigator() {
           headerTintColor: c.text,
           headerTitleStyle: { fontWeight: "600" },
           headerShadowVisible: false,
+          // our round chevron instead of the system one (which showed the "(tabs)" group name as its title)
+          headerBackVisible: false,
+          headerBackButtonDisplayMode: "minimal",
+          headerLeft: ({ canGoBack }) => (canGoBack ? <BackButton /> : null),
           contentStyle: { backgroundColor: "transparent" },
           // the lit "O" of the logo on every page opened over the tabs (a screen's own button replaces it)
           headerRight: () => <ThreeGreensO size={22} color={c.text} />,
