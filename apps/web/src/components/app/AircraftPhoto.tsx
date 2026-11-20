@@ -22,7 +22,10 @@ export function AircraftPhoto({ registration, hex, showEmpty, className = "" }: 
   }, [registration]);
   const [photo, setPhoto] = useState<Photo | null | undefined>(reg ? cache.get(reg) : null);
   // demo data uses fictional registrations: a real aircraft wearing them would show the wrong photo
-  const fictional = useAccess().demo || isDemoAccount(usePilot()?.email);
+  // both hooks always run (a hook behind || ran only sometimes: React stopped the page)
+  const access = useAccess();
+  const pilot = usePilot();
+  const fictional = access.demo || isDemoAccount(pilot?.email);
   useEffect(() => {
     if (fictional || process.env.NEXT_PUBLIC_PLANESPOTTERS !== "1" || !reg || reg.length < 3) return setPhoto(null);
     if (cache.has(reg)) return setPhoto(cache.get(reg));
