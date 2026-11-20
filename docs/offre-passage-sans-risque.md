@@ -16,7 +16,8 @@ Ces migrations sont réversibles, et je ne les applique que sur votre ordre.
 
 ### 2. Fonctions Supabase (déploiement à me demander)
 - `create-checkout-session` : la carte n'est demandée qu'à l'abonnement, et les jours d'essai restants sont conservés (`trial_end`). La formule Élève y est ajoutée.
-- `trial-reminders` (nouvelle) : rappels par e-mail à J-7 et J-1 via Resend. Elle se programme dans pg_cron, comme `license-alerts` (`docs/backend.md`, §8), avec le même `CRON_SECRET`.
+- `trial-reminders` (nouvelle) : rappels par e-mail à J-7 et J-1 via Resend. ✅ Déployée le 20/11 avec `create-checkout-session` et `stripe-webhook`.
+- ✅ Tâches pg_cron programmées le 20/11 : `cielo-license-alerts` (06:00 UTC) et `cielo-trial-reminders` (08:15 UTC). Secrets `CRON_SECRET`, `RESEND_API_KEY` et `ALERTS_FROM_EMAIL` en place, ainsi que `cron_secret` et `project_url` dans Vault.
 
 ### 3. Stripe
 Les abonnés existants gardent leur prix.
