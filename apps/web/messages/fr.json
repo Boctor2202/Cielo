@@ -574,7 +574,8 @@
         "jobsValue": "Offres pilote",
         "jobsSub": "selon ton carnet",
         "cockpitPreview": "Le cockpit complet : temps total, objectif, heures des 12 derniers mois, derniers vols et objectifs.",
-        "local": "Locale"
+        "local": "Locale",
+        "badgeLeft": "encore {n}"
       }
     },
     "logbook": {

@@ -6,7 +6,8 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   FTL_LIMITS,
   WIDGETS,
-  closestBadge,
+  badgeEmblemSvg,
+  closestBadges,
   cumulativeLevel,
   dashboardValue,
   dashboardWidgets,
@@ -63,6 +64,7 @@ export function OverviewWidgets({
 }) {
   const t = useTranslations("app.dashboard.widgets");
   const tb = useTranslations("app.badges.d");
+  const tbd = useTranslations("app.badges.dd");
   const locale = useLocale();
   const d = useDuration();
   const fd = useFormatDate();
@@ -79,7 +81,8 @@ export function OverviewWidgets({
   const byType = useMemo(() => hoursByType(flights), [flights]);
   const byOperator = useMemo(() => hoursByOperator(flights), [flights]);
   const places = useMemo(() => placesVisited(flights, (i) => airports?.get(i)?.country), [flights, airports]);
-  const badge = useMemo(() => (airports ? closestBadge(discoveryBadges(flights, (i) => airports.get(i))) : undefined), [flights, airports]);
+  const nearBadges = useMemo(() => (airports ? closestBadges(discoveryBadges(flights, (i) => airports.get(i)), 3) : []), [flights, airports]);
+  const badge = nearBadges[0];
   const layover = useMemo(() => nextLayover(layovers ?? [], nowIso), [layovers, nowIso]);
   const nextDuty = useMemo(
     () => (roster ?? []).filter((e) => e.startUtc > nowIso && ["FLIGHT", "DEADHEAD", "STANDBY", "SIM", "GROUND"].includes(e.kind)).sort((a, b) => a.startUtc.localeCompare(b.startUtc))[0],
@@ -172,7 +175,42 @@ export function OverviewWidgets({
         }
       : null,
     nextLayover: layover ? { value: layover.airportIcao, sub: layover.hotelName || (layover.arrivalUtc ? fd(layover.arrivalUtc.slice(0, 10), { day: "numeric", month: "short" }) : undefined), href: "/app/escales" } : { value: "—", sub: t("noLayover"), href: "/app/escales" },
-    nextBadge: badge ? { value: tb(badge.id), sub: `${badge.value.toLocaleString(locale)} / ${badge.target.toLocaleString(locale)}`, href: "/app/statistiques" } : null,
+    nextBadge: badge
+      ? {
+          value: (
+            <span className="flex items-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img alt="" width={28} height={30} src={`data:image/svg+xml;utf8,${encodeURIComponent(badgeEmblemSvg({ series: badge.series, id: badge.id, tier: badge.tier, rank: badge.rank, of: badge.of, size: 56 }))}`} />
+              <span className="truncate text-[#a78bfa]">{tb(badge.id)}</span>
+            </span>
+          ),
+          sub: (
+            <>
+              <span className="block truncate">{tbd(badge.id)} · {t("badgeLeft", { n: Math.round(badge.target - badge.value).toLocaleString(locale) })}</span>
+              <span className="mt-2 block"><Meter value={badge.value} max={badge.target} level="info" /></span>
+            </>
+          ),
+          href: "/app/statistiques",
+          list: (
+            <ul className="mt-4 space-y-3">
+              {nearBadges.slice(1).map((b) => (
+                <li key={b.id} className="flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img alt="" width={30} height={32} src={`data:image/svg+xml;utf8,${encodeURIComponent(badgeEmblemSvg({ series: b.series, id: b.id, tier: b.tier, rank: b.rank, of: b.of, size: 60 }))}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="flex justify-between gap-2 text-sm">
+                      <span className="truncate font-semibold">{tb(b.id)}</span>
+                      <span className="num shrink-0 text-muted">{Math.round(b.value).toLocaleString(locale)} / {b.target.toLocaleString(locale)}</span>
+                    </p>
+                    <p className="truncate text-xs text-muted">{tbd(b.id)}</p>
+                    <Meter value={b.value} max={b.target} level="info" />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ),
+        }
+      : null,
     jobs: { value: t("jobsValue"), sub: t("jobsSub"), href: "/app/emplois" },
   };
 
@@ -206,7 +244,7 @@ export function OverviewWidgets({
         ) : (
           <>
             <p className={`mt-1.5 truncate text-2xl font-bold ${b.level ? LEVEL_TEXT[b.level] : ""}`}>{b.value}</p>
-            {b.sub && <p className="truncate text-sm text-muted">{b.sub}</p>}
+            {b.sub && <div className="truncate text-sm text-muted">{b.sub}</div>}
             {w.size === "l" && b.list}
           </>
         )}

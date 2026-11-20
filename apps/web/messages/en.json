@@ -574,7 +574,8 @@
         "jobsValue": "Pilot jobs",
         "jobsSub": "matched to your logbook",
         "cockpitPreview": "The full cockpit: total time, goal, hours of the last 12 months, last flights and goals.",
-        "local": "Local"
+        "local": "Local",
+        "badgeLeft": "{n} to go"
       }
     },
     "logbook": {

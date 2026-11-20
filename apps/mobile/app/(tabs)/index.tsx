@@ -17,7 +17,7 @@ import {
   pilotFirstName,
   dayPart,
   licenseStatus,
-  closestBadge,
+  closestBadges,
   dashboardValue,
   dashboardWidgets,
   discoveryBadges,
@@ -45,6 +45,7 @@ import { loadDismissed, pendingDrafts } from "../../src/flightDrafts";
 import { useCurrency } from "../../src/currency";
 import { space, useTheme } from "../../src/theme";
 import { lookupAirport } from "../../src/airports";
+import { Emblem } from "../../src/components/Achievements";
 
 const FTL_KEYS = ["duty7d", "duty14d", "duty28d", "flight28d", "flightYear", "flight12m"] as const;
 
@@ -97,7 +98,8 @@ export default function Dashboard() {
   const byType = useMemo(() => hoursByType(flights), [flights]);
   const byOperator = useMemo(() => hoursByOperator(flights), [flights]);
   const places = useMemo(() => placesVisited(flights, (i) => lookupAirport(i)?.country), [flights]);
-  const badge = useMemo(() => closestBadge(discoveryBadges(flights, lookupAirport)), [flights]);
+  const nearBadges = useMemo(() => closestBadges(discoveryBadges(flights, lookupAirport), 3), [flights]);
+  const badge = nearBadges[0];
   const layover = useMemo(() => nextLayover(layovers, new Date().toISOString()), [layovers]);
   const inWords = (iso: string) => {
     const h = Math.round((Date.parse(iso) - Date.now()) / 3_600_000);
@@ -248,6 +250,24 @@ export default function Dashboard() {
         ))}
       </Card>
     ) : null,
+    nextBadge: nearBadges.length ? (
+      <Card onPress={() => router.navigate("/stats")}>
+        <Txt variant="h2">{t("dash.nextBadges")}</Txt>
+        {nearBadges.map((b) => (
+          <Row key={b.id} style={{ alignItems: "center", gap: 12 }}>
+            <Emblem badge={b} size={40} />
+            <View style={{ flex: 1, gap: 3 }}>
+              <Row style={{ justifyContent: "space-between", alignItems: "baseline" }}>
+                <Txt style={{ fontWeight: "700", flex: 1 }} numberOfLines={1}>{t(`badges.d.${b.id}` as I18nKey)}</Txt>
+                <Txt mono variant="small">{Math.round(b.value).toLocaleString()} / {b.target.toLocaleString()}</Txt>
+              </Row>
+              <Txt variant="small" numberOfLines={1}>{t(`badges.dd.${b.id}` as I18nKey)} · {t("dash.badgeLeft", { n: Math.round(b.target - b.value).toLocaleString() })}</Txt>
+              <Track ratio={Math.max(0.02, b.value / b.target)} color="#A78BFA" />
+            </View>
+          </Row>
+        ))}
+      </Card>
+    ) : null,
     byOperator: byOperator.length ? (
       <Card onPress={() => router.navigate("/logbook")}>
         <Txt variant="h2">{widgetLabel("byOperator", locale)}</Txt>
@@ -280,6 +300,19 @@ export default function Dashboard() {
     jobs: { value: t("dash.jobsValue"), sub: t("dash.jobsSub"), color: c.accent, go: () => router.navigate("/jobs") },
   };
   const tile = (id: WidgetId) => {
+    // the next badge: its emblem, what it takes, how far along
+    if (id === "nextBadge" && badge)
+      return (
+        <Card onPress={() => router.navigate("/stats")} style={{ flex: 1, minHeight: 92, gap: 4 }}>
+          <Txt variant="small" numberOfLines={1} style={{ fontWeight: "700", letterSpacing: 0.6, textTransform: "uppercase", fontSize: 10.5 }}>{widgetLabel(id, locale)}</Txt>
+          <Row style={{ alignItems: "center", gap: 8 }}>
+            <Emblem badge={badge} size={30} />
+            <Txt numberOfLines={1} style={{ flex: 1, fontSize: 16, fontWeight: "800" }} color="#A78BFA">{t(`badges.d.${badge.id}` as I18nKey)}</Txt>
+          </Row>
+          <Txt variant="small" numberOfLines={2}>{t(`badges.dd.${badge.id}` as I18nKey)} · {t("dash.badgeLeft", { n: Math.round(badge.target - badge.value).toLocaleString() })}</Txt>
+          <Track ratio={Math.max(0.02, badge.value / badge.target)} color="#A78BFA" />
+        </Card>
+      );
     const x = small[id];
     if (!x) return null;
     const locked = !!widgetSpec(id).max && !access.has("jobs");

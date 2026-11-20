@@ -148,3 +148,8 @@ export function nextLayover(layovers: Layover[], nowIso: string): Layover | unde
 export function closestBadge<B extends { unlocked: boolean; value: number; target: number }>(badges: B[]): B | undefined {
   return badges.filter((b) => !b.unlocked && b.target > 0).sort((a, b) => b.value / b.target - a.value / a.target)[0];
 }
+
+/** The locked badges closest to being earned, nearest first. */
+export function closestBadges<B extends { unlocked: boolean; value: number; target: number }>(badges: B[], n = 3): B[] {
+  return badges.filter((b) => !b.unlocked && b.target > 0).sort((a, b) => b.value / b.target - a.value / a.target).slice(0, n);
+}
