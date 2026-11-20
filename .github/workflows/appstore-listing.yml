@@ -8,6 +8,10 @@ on:
         description: "Only show what is there (no change)"
         type: boolean
         default: true
+      screenshots:
+        description: "Upload the App Store screenshots (scripts/appstore/shots/final)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -21,7 +25,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node scripts/appstore/listing.mjs ${{ inputs.check && '--check' || '' }}
+      - run: node scripts/appstore/listing.mjs ${{ inputs.check && '--check' || '' }} ${{ inputs.screenshots && '--screenshots' || '' }}
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}

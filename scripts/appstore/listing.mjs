@@ -2,10 +2,16 @@
 // and the privacy policy that subscriptions require, the privacy policy URL, and the support URL.
 // Safe to run again. Same App Store Connect key as subscriptions.mjs (ASC_KEY_ID, ASC_ISSUER_ID, ASC_PRIVATE_KEY).
 // Run: node scripts/appstore/listing.mjs            (or --check to only show what is there)
-import { createPrivateKey, sign } from "node:crypto";
+import { createHash, createPrivateKey, sign } from "node:crypto";
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const BUNDLE_ID = "app.geardown.logbook";
 const CHECK = process.argv.includes("--check");
+const SHOTS = process.argv.includes("--screenshots");
+const SHOT_DIR = join(dirname(fileURLToPath(import.meta.url)), "shots/final");
+const SHOT_LOCALE = { "fr-FR": "fr", "en-US": "en" };
 
 const TEXT = {
   "fr-FR": {
@@ -138,6 +144,37 @@ async function main() {
     if (l) await api("PATCH", `/v1/appStoreVersionLocalizations/${l.id}`, { data: { type: "appStoreVersionLocalizations", id: l.id, attributes } });
     else await api("POST", "/v1/appStoreVersionLocalizations", { data: { type: "appStoreVersionLocalizations", attributes: { locale, ...attributes }, relationships: { appStoreVersion: { data: { type: "appStoreVersions", id: version.id } } } } });
     log(`${locale}: description, support and marketing URLs set`);
+  }
+  if (SHOTS) await screenshots(version.id);
+}
+
+/** The App Store screenshots (iPhone 6.9"/6.7", 1290 × 2796) from shots/final/<fr|en>/1..n.jpg, replacing what is there. */
+async function screenshots(versionId) {
+  const locs = (await api("GET", `/v1/appStoreVersions/${versionId}/appStoreVersionLocalizations`)).data;
+  for (const [locale, dir] of Object.entries(SHOT_LOCALE)) {
+    const loc = locs.find((l) => l.attributes.locale === locale);
+    if (!loc) { log(`${locale}: no localization`); continue; }
+    const sets = (await api("GET", `/v1/appStoreVersionLocalizations/${loc.id}/appScreenshotSets`)).data;
+    let set = sets.find((x) => x.attributes.screenshotDisplayType === "APP_IPHONE_67");
+    if (set) {
+      for (const old of (await api("GET", `/v1/appScreenshotSets/${set.id}/appScreenshots`)).data) await api("DELETE", `/v1/appScreenshots/${old.id}`);
+    } else {
+      set = (await api("POST", "/v1/appScreenshotSets", { data: { type: "appScreenshotSets", attributes: { screenshotDisplayType: "APP_IPHONE_67" }, relationships: { appStoreVersionLocalization: { data: { type: "appStoreVersionLocalizations", id: loc.id } } } } })).data;
+    }
+    const files = readdirSync(join(SHOT_DIR, dir)).filter((f) => /\.(jpg|png)$/.test(f)).sort((a, b) => parseInt(a) - parseInt(b));
+    for (const f of files) {
+      const buf = readFileSync(join(SHOT_DIR, dir, f));
+      const shot = (await api("POST", "/v1/appScreenshots", { data: { type: "appScreenshots", attributes: { fileName: `${dir}-${f}`, fileSize: buf.length }, relationships: { appScreenshotSet: { data: { type: "appScreenshotSets", id: set.id } } } } })).data;
+      for (const op of shot.attributes.uploadOperations) {
+        const headers = Object.fromEntries((op.requestHeaders ?? []).map((h) => [h.name, h.value]));
+        const up = await fetch(op.url, { method: op.method, headers, body: buf.subarray(op.offset, op.offset + op.length) });
+        if (!up.ok) throw new Error(`upload ${f}: ${up.status}`);
+      }
+      await api("PATCH", `/v1/appScreenshots/${shot.id}`, { data: { type: "appScreenshots", id: shot.id, attributes: { uploaded: true, sourceFileChecksum: createHash("md5").update(buf).digest("hex") } } });
+    }
+    log(`${locale}: ${files.length} screenshots uploaded`);
+    await new Promise((r) => setTimeout(r, 15000));
+    for (const x of (await api("GET", `/v1/appScreenshotSets/${set.id}/appScreenshots`)).data) log(`  ${x.attributes.fileName}: ${x.attributes.assetDeliveryState?.state} ${JSON.stringify(x.attributes.assetDeliveryState?.errors ?? [])}`);
   }
 }
 
