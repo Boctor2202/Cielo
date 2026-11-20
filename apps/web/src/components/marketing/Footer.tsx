@@ -22,7 +22,8 @@ export function Footer() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <Logo />
-          <p className="mt-4 max-w-xs text-sm text-muted">{t("tagline")}</p>
+          <p className="mt-4 text-sm font-semibold text-text">{SITE.slogan}</p>
+          <p className="mt-1 max-w-xs text-sm text-muted">{t("tagline")}</p>
           <div className="mt-5 flex gap-2">
             <Social href={SITE.social.linkedin} label="LinkedIn" d="M4.98 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1 0-5zM3 9h4v12H3zm7 0h3.8v1.7h.1c.5-1 1.8-2 3.8-2 4 0 4.8 2.6 4.8 6V21h-4v-5.6c0-1.3 0-3-1.9-3s-2.2 1.5-2.2 3V21h-4z" />
             <Social href={SITE.social.instagram} label="Instagram" evenOdd d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zM7.5 4h9A3.5 3.5 0 0 1 20 7.5v9a3.5 3.5 0 0 1-3.5 3.5h-9A3.5 3.5 0 0 1 4 16.5v-9A3.5 3.5 0 0 1 7.5 4zM12 7.5a4.5 4.5 0 1 0 0 9a4.5 4.5 0 1 0 0-9zM12 9.3a2.7 2.7 0 1 0 0 5.4a2.7 2.7 0 1 0 0-5.4zM17.3 5.6a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2z" />
