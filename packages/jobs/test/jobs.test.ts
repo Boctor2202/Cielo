@@ -195,3 +195,30 @@ describe("criteria (met / unmet / to verify)", () => {
     expect(pc24("500 hours multi-engine").requirements.multiPilotHours).toBeUndefined();
   });
 });
+
+describe("collection", () => {
+  const src = { company: "Test", ats: "recruitee" as const, token: "t", segment: "business" as const, country: "FR" };
+  it("keeps an unknown publication date unknown, tells a pool from a post, and folds copies", async () => {
+    const { foldCopies } = await import("../src/collect");
+    const a = toJob({ id: "1", company: "Test", title: "Captain Citation XLS (m/w/d)", url: "u", text: "ATPL" }, src);
+    expect(a.postedAt).toBeUndefined();
+    expect(a.kind).toBe("position");
+    expect(toJob({ id: "p", company: "Test", title: "Pilot talent pool", url: "u", text: "" }, src).kind).toBe("pool");
+    const b = toJob({ id: "2", company: "Test", title: "Captain Citation XLS", url: "u2", text: "ATPL", postedAt: "2026-10-01T00:00:00Z" }, src);
+    const folded = foldCopies([a, b]);
+    expect(folded).toHaveLength(1);
+    expect(folded[0]!.variants).toBe(1);
+    expect(folded[0]!.id).toBe("2");
+  });
+  it("flags what it could not read", () => {
+    const j = toJob({ id: "3", company: "Test", title: "Pilot", url: "u", text: "You will fly around 450 hours a year." }, src);
+    expect(j.ambiguous).toEqual(expect.arrayContaining(["aircraft"]));
+  });
+});
+
+describe("workload is not a requirement", () => {
+  it("does not read flying hours per year as a minimum", () => {
+    expect(extractRequirements("Captain", "You will fly around 450 hours a year. Minimum 3000 hours total.").totalHours).toBe(3000);
+    expect(extractRequirements("Captain", "Up to 900 h per year").totalHours).toBeUndefined();
+  });
+});

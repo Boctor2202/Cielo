@@ -1538,7 +1538,9 @@
           "authorityFromCountry": "Inferred from the job's country"
         }
       },
-      "postedNone": "Posting date not stated"
+      "postedNone": "Posting date not stated",
+      "checked": "Checked {date}",
+      "pool": "Application pool (not a specific post)"
     },
     "cv": {
       "title": "Pilot CV",

@@ -37,7 +37,7 @@ const greenhouse: Fetcher = async (s) => {
   const d = JSON.parse(await get(`https://boards-api.greenhouse.io/v1/boards/${s.token}/jobs?content=true`)) as {
     jobs: { id: number; title: string; absolute_url: string; location?: { name?: string }; content?: string; first_published?: string; updated_at?: string }[];
   };
-  return d.jobs.map((j) => ({ id: `gh-${s.token}-${j.id}`, company: s.company, title: j.title, url: j.absolute_url, location: j.location?.name, postedAt: j.first_published ?? j.updated_at, text: toText(j.content) }));
+  return d.jobs.map((j) => ({ id: `gh-${s.token}-${j.id}`, company: s.company, title: j.title, url: j.absolute_url, location: j.location?.name, postedAt: j.first_published ?? undefined, updatedAt: j.updated_at ?? undefined, text: toText(j.content) }));
 };
 
 const lever: Fetcher = async (s) => {

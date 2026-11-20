@@ -27,6 +27,8 @@ export interface RawPosting {
   location?: string;
   country?: string;
   postedAt?: string;
+  /** last change the employer made to the posting (not a publication date) */
+  updatedAt?: string;
   employment?: string;
   /** Plain text of the posting, used for extraction then dropped */
   text: string;
@@ -95,11 +97,21 @@ export interface Job {
   region: RegionId;
   authority: Authority;
   employment?: string;
+  /** publication date as the employer gives it; absent when unknown (never replaced by today) */
   postedAt?: string;
+  /** last change the employer made to the posting, when given */
+  updatedAt?: string;
   url: string;
   requirements: Requirements;
   salary?: Salary;
+  /** when Geardown last read the offer in the employer's feed (it was still published then) */
   fetchedAt: string;
+  /** a precise post, or a call for applications to a pool ("talent pool", "candidature spontanée") */
+  kind?: "position" | "pool";
+  /** other copies of the same offer (another language, a republication), folded into this one */
+  variants?: number;
+  /** what Geardown could not read with confidence, for internal review */
+  ambiguous?: ("position" | "aircraft" | "hours")[];
 }
 
 /** The subscriber's experience, computed on their device from the logbook and licences. */

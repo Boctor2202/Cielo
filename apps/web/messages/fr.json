@@ -1538,7 +1538,9 @@
           "authorityFromCountry": "Déduit du pays de l'offre"
         }
       },
-      "postedNone": "Date de publication non communiquée"
+      "postedNone": "Date de publication non communiquée",
+      "checked": "Vérifiée le {date}",
+      "pool": "Vivier de candidatures (pas un poste précis)"
     },
     "cv": {
       "title": "CV pilote",

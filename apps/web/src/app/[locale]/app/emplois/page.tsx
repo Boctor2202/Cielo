@@ -283,6 +283,7 @@ function JobCard({ job, match, showMatch }: { job: Job; match: Match; showMatch:
                 <span className="flex items-center gap-1"><MapPin size={13} aria-hidden /> {[job.location, job.country].filter(Boolean).join(" · ")}</span>
               )}
               <span>{job.postedAt ? t("posted", { date: fd(job.postedAt) }) : t("postedNone")}</span>
+              <span>{t("checked", { date: fd(job.fetchedAt) })}</span>
             </p>
           </div>
           <div className="text-right">
@@ -302,6 +303,7 @@ function JobCard({ job, match, showMatch }: { job: Job; match: Match; showMatch:
           {r.visaSponsored && <Badge level="info">{t("work.visa")}</Badge>}
           {r.typeRatingRequired && <Badge level={showMatch && !match.onType ? "caution" : "neutral"}>{t("tr.required")}</Badge>}
           {r.typeRatingProvided && <Badge level="info">{t("tr.provided")}</Badge>}
+          {job.kind === "pool" && <Badge level="neutral">{t("pool")}</Badge>}
         </div>
 
         {showMatch ? (

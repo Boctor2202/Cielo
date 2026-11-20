@@ -104,6 +104,8 @@ function hours(text: string): Partial<Requirements> {
     // context stops at the next figure or clause break, so "2,000 h total, including 1,000 on jet" stays two facts
     const after = text.slice(m.index + m[0].length, m.index + m[0].length + 60).toLowerCase().split(/[\d,;•\n]|including|dont|davon|of which/)[0] ?? "";
     const near = `${before} ${after}`;
+    // "you will fly 450 hours a year", "up to 900 h per year": workload, not a requirement
+    if (/^\s*(?:a|per|par|pro|each|every|annually|annual)\b|^\s*\/\s*(?:year|an|jahr|month|mois)/.test(after) || /\b(?:fly|flying|vol(?:er)?|fliegen|up to|jusqu'?\s*[àa]|bis zu)\s*(?:around|about|approximately|environ|ca\.?)?\s*$/.test(before)) continue;
     if (/\b(pic|command|commandant|cdb|captain|p1)\b/.test(after) || /\b(pic|in command|as captain|als kapit)/.test(before.slice(-30))) {
       if (set("picHours", n, m.index)) {
         const q = picQualifier(`${before.slice(-30)} ${after}`);
