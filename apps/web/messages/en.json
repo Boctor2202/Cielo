@@ -810,7 +810,7 @@
       "preview": "Preview",
       "rowsOk": "{ok} valid rows out of {total}",
       "errors": "Errors",
-      "importN": "Import {count, plural, one {# flight} other {# flights}}",
+      "importN": "Check the totals ({count, plural, one {# flight} other {# flights}})",
       "skipped": "{count, plural, one {# already in the logbook, skipped} other {# already in the logbook, skipped}}",
       "done": "{count, plural, one {# flight imported} other {# flights imported}}",
       "rosterHelp": "Import your schedule as iCal (.ics) or CSV from the Roster page: completed flights can then be logged in one click.",
@@ -861,7 +861,7 @@
         "notACount": "“{field}” does not hold landing or takeoff counts on {pct} % of rows."
       },
       "unused": "Unused columns: {cols}.",
-      "fromApps": "Moving from another logbook? Export from LogTen Pro, ForeFlight, mccPILOTLOG, CrewLounge, Flylog, MyFlightbook, Logbook Pro, APDL or Safelog (CSV, tab-separated text or Excel) and drop the file here: the format is recognised and the columns matched for you.",
+      "fromApps": "Coming from another logbook? Export it as CSV, tab-separated text or Excel (LogTen Pro, ForeFlight, mccPILOTLOG, MyFlightbook…) and drop the file here: the columns are detected, then you check your totals before importing.",
       "appRecognised": "{app} export recognised",
       "pdf": {
         "reading": "Reading the document…",
@@ -882,7 +882,38 @@
       "readReport": "Read as a post-flight report.",
       "readAi": "Read by AI ({source}): check every flight before importing.",
       "photosHelp": "Photograph each page of your paper logbook (both facing pages when the times are on the right page), up to 12 at a time. Every flight is shown for checking before import.",
-      "photosDrop": "Drop the photos of your logbook pages, or click to choose"
+      "photosDrop": "Drop the photos of your logbook pages, or click to choose",
+      "batches": "Recent imports (on this device)",
+      "batchLine": "{count} flights imported on {date}",
+      "undo": "Undo this import",
+      "undoConfirm": "Delete the {count} flights of this import? Other flights are not touched.",
+      "totals": {
+        "title": "Check your totals",
+        "intro": "Before saving: on the left what your file says, on the right what Geardown will record for the {kept} flights kept. Nothing is saved yet.",
+        "column": "Column",
+        "file": "Your file",
+        "geardown": "Geardown",
+        "status": "Check",
+        "landings": "Landings",
+        "diff": "{count, plural, one {# row differs} other {# rows differ}}",
+        "same": "Same",
+        "noColumn": "Not in the file",
+        "diffTitle": "Rows to look at",
+        "rows": "rows {rows}",
+        "diffHelp": "Geardown works out total time from the block times and night from the times and airports, so a column of your file may differ by a minute here and there (decimal rounding) or reveal a mistake. Fix the column mapping or your file, or confirm knowingly.",
+        "rejected": "{count, plural, one {# row not imported} other {# rows not imported}}",
+        "rejectedLine": "Row {row}: {reasons}",
+        "reason": {
+          "date": "unreadable date",
+          "route": "departure or arrival missing",
+          "times": "no block times nor total time",
+          "duplicate": "already in your logbook (or twice in the file)",
+          "other": "unreadable data"
+        },
+        "cancel": "Cancel the import",
+        "fix": "Fix the columns",
+        "confirm": "Confirm and import ({count, plural, one {# flight} other {# flights}})"
+      }
     },
     "audit": {
       "title": "Logbook audit",

@@ -810,7 +810,7 @@
       "preview": "Aperçu",
       "rowsOk": "{ok} lignes valides sur {total}",
       "errors": "Erreurs",
-      "importN": "Importer {count, plural, one {# vol} other {# vols}}",
+      "importN": "Vérifier les totaux ({count, plural, one {# vol} other {# vols}})",
       "skipped": "{count, plural, one {# déjà présent ignoré} other {# déjà présents ignorés}}",
       "done": "{count, plural, one {# vol importé} other {# vols importés}}",
       "rosterHelp": "Importez votre planning au format iCal (.ics) ou CSV depuis la page Roster : les vols effectués peuvent ensuite être créés en un clic.",
@@ -861,7 +861,7 @@
         "notACount": "« {field} » ne contient pas des nombres d'atterrissages ou de décollages sur {pct} % des lignes."
       },
       "unused": "Colonnes non utilisées : {cols}.",
-      "fromApps": "Vous venez d'un autre carnet ? Exportez depuis LogTen Pro, ForeFlight, mccPILOTLOG, CrewLounge, Flylog, MyFlightbook, Logbook Pro, APDL ou Safelog (CSV, texte tabulé ou Excel) et déposez le fichier ici : le format est reconnu et les colonnes associées pour vous.",
+      "fromApps": "Vous venez d'un autre carnet ? Exportez-le en CSV, texte tabulé ou Excel (LogTen Pro, ForeFlight, mccPILOTLOG, MyFlightbook…) et déposez le fichier ici : les colonnes sont détectées, puis vous vérifiez vos totaux avant d'importer.",
       "appRecognised": "Export {app} reconnu",
       "pdf": {
         "reading": "Lecture du document…",
@@ -882,7 +882,38 @@
       "readReport": "Lu comme un compte rendu de vol.",
       "readAi": "Lu par IA ({source}) : vérifiez chaque vol avant d'importer.",
       "photosHelp": "Photographiez chaque page de votre carnet papier (les deux pages en vis-à-vis quand les heures sont à droite), jusqu'à 12 à la fois. Chaque vol est affiché pour vérification avant l'import.",
-      "photosDrop": "Déposez les photos de vos pages de carnet, ou cliquez pour choisir"
+      "photosDrop": "Déposez les photos de vos pages de carnet, ou cliquez pour choisir",
+      "batches": "Imports récents (sur cet appareil)",
+      "batchLine": "{count} vols importés le {date}",
+      "undo": "Annuler cet import",
+      "undoConfirm": "Supprimer les {count} vols de cet import ? Les autres vols ne sont pas touchés.",
+      "totals": {
+        "title": "Vérifiez vos totaux",
+        "intro": "Avant d'enregistrer : à gauche ce que dit votre fichier, à droite ce que Geardown enregistrera pour les {kept} vols retenus. Rien n'est encore enregistré.",
+        "column": "Colonne",
+        "file": "Votre fichier",
+        "geardown": "Geardown",
+        "status": "Contrôle",
+        "landings": "Atterrissages",
+        "diff": "{count, plural, one {# ligne diffère} other {# lignes diffèrent}}",
+        "same": "Identique",
+        "noColumn": "Absent du fichier",
+        "diffTitle": "Lignes à regarder",
+        "rows": "lignes {rows}",
+        "diffHelp": "Geardown recalcule le temps total à partir des heures bloc et la nuit à partir des heures et des aéroports ; une colonne de votre fichier peut donc différer d'une minute à l'autre (arrondis décimaux) ou révéler une erreur. Corrigez la correspondance des colonnes ou votre fichier, ou validez en connaissance de cause.",
+        "rejected": "{count, plural, one {# ligne non importée} other {# lignes non importées}}",
+        "rejectedLine": "Ligne {row} : {reasons}",
+        "reason": {
+          "date": "date illisible",
+          "route": "départ ou arrivée manquant",
+          "times": "ni heures bloc ni temps total",
+          "duplicate": "déjà dans votre carnet (ou en double dans le fichier)",
+          "other": "donnée illisible"
+        },
+        "cancel": "Annuler l'import",
+        "fix": "Corriger les colonnes",
+        "confirm": "Valider et importer ({count, plural, one {# vol} other {# vols}})"
+      }
     },
     "audit": {
       "title": "Audit du carnet",

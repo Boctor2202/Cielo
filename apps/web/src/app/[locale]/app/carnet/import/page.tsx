@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarDays, Camera, FileSpreadsheet, Upload } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   analyseTable, checkMapping, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, titlesToMapping,
@@ -11,14 +11,15 @@ import { apiFetch } from "@/lib/report";
 import { Link } from "@/i18n/navigation";
 import { Card, Field, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { useAirports } from "@/lib/airports";
-import { logImported, buildFlight, flightKey } from "@/lib/repo";
-import { db } from "@/lib/db";
+import { logImported, buildFlight, flightKey, softDelete } from "@/lib/repo";
+import { db, localStore } from "@/lib/db";
 import { announceGains } from "@/lib/gains";
 import { useAirlineDirectory } from "@/lib/airlines";
-import { operatorIndex } from "@cielo/core";
+import { checkImport, formatDuration, operatorIndex, type Flight, type ImportCheck } from "@cielo/core";
 import { DropZone } from "@/components/app/DropZone";
 import { Paywall, useAccess } from "@/lib/access";
 import { track } from "@/lib/metrics";
+import { useFormatDate } from "@/lib/hooks";
 
 type Tab = "file" | "roster" | "scan";
 
@@ -213,7 +214,9 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     }
   }
 
-  async function run() {
+  // step 1: build the flights as they would be saved, and compare them with the file ("Check your totals")
+  const [review, setReview] = useState<{ built: Flight[]; check: ImportCheck } | null>(null);
+  async function prepare() {
     if (!airports) return;
     setBusy(true);
     // flights already in the logbook (or twice in the file) are skipped: importing the same file again adds nothing
@@ -221,19 +224,29 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     const seen = new Set(existing.map(flightKey));
     // the operator of each imported flight, as the logbook recognises it (call sign, aircraft, what it learned)
     const ops = operatorIndex(existing, await db().t("aircraft").toArray(), airlines);
-    const built = [];
-    let skipped = 0;
+    const pairs: { rowIndex: number; flight: Flight }[] = [];
+    const dups: number[] = [];
     for (const r of ok) {
       const f = await buildFlight(r.input!, airports, { source: "import", explicit: r.explicit });
       if (!f.operator && !f.isFstd) f.operator = ops.of(f);
-      if (seen.has(flightKey(f))) skipped++;
+      if (seen.has(flightKey(f))) dups.push(r.rowIndex);
       else {
         seen.add(flightKey(f));
-        built.push(f);
+        pairs.push({ rowIndex: r.rowIndex, flight: f });
       }
     }
+    setReview({ built: pairs.map((p) => p.flight), check: checkImport(parsed, pairs, dups) });
+    setBusy(false);
+  }
+
+  // step 2: the pilot checked the totals: save, and keep the batch so it can be undone as a whole
+  async function run() {
+    if (!review) return;
+    setBusy(true);
+    const built = review.built;
     await db().t("flights").bulkPut(built);
     await logImported(built);
+    await rememberBatch(built.map((f) => f.id));
     announceGains(built.map((f) => f.id));
     // a table imported with its columns: the layout is kept for the next pilot (column titles only)
     if (rows && mapping && !pdfRows && built.length && !learned) {
@@ -241,8 +254,10 @@ function FileImport({ photos = false }: { photos?: boolean }) {
       void importAny({ kind: "learn", header: rows[0], mapping: mappingToTitles(rows[0]!, mapping), source: app ?? source ?? undefined }).catch(() => undefined);
     }
     setBusy(false);
+    const skipped = review.check.rejected.filter((x) => x.reasons.includes("duplicate")).length;
     toast(t("done", { count: built.length }) + (skipped ? ` · ${t("skipped", { count: skipped })}` : ""));
     track(built.length ? "import_success" : "import_fail");
+    setReview(null);
     setRows(null);
     setMapping(null);
     setPdfRows(null);
@@ -265,7 +280,11 @@ function FileImport({ photos = false }: { photos?: boolean }) {
       </label>
       {pdfState && <p className={`mt-2 text-sm ${pdfState === "reading" || pdfState === "mapping" ? "text-accent" : "text-[var(--warning)]"}`}>{t(`pdf.${["reading", "mapping", "plan", "unauthorized", "rate_limited", "none", "busy"].includes(pdfState) ? pdfState : "error"}`)}</p>}
       {source && <p className="text-sm font-semibold text-accent">{source === "learned" ? t("readLearned") : source === "report" ? t("readReport") : t("readAi", { source })}</p>}
-      {pdfRows && <PreviewCard parsed={pdfRows} ok={ok.length} onImport={run} busy={busy || !airports} />}
+      {review ? (
+        <TotalsCheck check={review.check} busy={busy} onConfirm={run} onFix={() => setReview(null)} onCancel={() => { setReview(null); setRows(null); setMapping(null); setPdfRows(null); }} />
+      ) : (
+        pdfRows && <PreviewCard parsed={pdfRows} ok={ok.length} onImport={prepare} busy={busy || !airports} />
+      )}
       <p className="mt-2 text-xs text-muted">{t("fromApps")}</p>
       {app && (rows || pdfRows) && <p className="mt-2 text-sm font-semibold text-accent">{t("appRecognised", { app })}</p>}
       {rows && mapping && (
@@ -304,11 +323,135 @@ function FileImport({ photos = false }: { photos?: boolean }) {
             </div>
             </details>
           </Card>
-          <PreviewCard parsed={parsed} ok={ok.length} onImport={run} busy={busy || !airports} />
+          {!review && <PreviewCard parsed={parsed} ok={ok.length} onImport={prepare} busy={busy || !airports} />}
         </>
       )}
+      <ImportBatches />
       {toastNode}
     </div>
+  );
+}
+
+const BATCHES = "importBatches";
+type Batch = { id: string; at: string; ids: string[] };
+
+/** Keeps the ids of an import (this device) so it can be undone as a whole, without touching anything else. */
+async function rememberBatch(ids: string[]) {
+  if (!ids.length) return;
+  let list: Batch[] = [];
+  try {
+    list = JSON.parse((await localStore.getMeta(BATCHES)) ?? "[]");
+  } catch {}
+  list.unshift({ id: crypto.randomUUID(), at: new Date().toISOString(), ids });
+  await localStore.setMeta(BATCHES, JSON.stringify(list.slice(0, 10)));
+  window.dispatchEvent(new Event("import-batches"));
+}
+
+/** The last imports, each with « Undo this import » (the flights of that import only are deleted). */
+function ImportBatches() {
+  const t = useTranslations("app.import");
+  const fd = useFormatDate();
+  const [list, setList] = useState<Batch[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const load = () =>
+    void localStore.getMeta(BATCHES).then((v) => {
+      try {
+        setList(JSON.parse(v ?? "[]"));
+      } catch {
+        setList([]);
+      }
+    });
+  useEffect(() => {
+    load();
+    window.addEventListener("import-batches", load);
+    return () => window.removeEventListener("import-batches", load);
+  }, []);
+  if (!list.length) return null;
+  const undo = async (b: Batch) => {
+    if (!window.confirm(t("undoConfirm", { count: b.ids.length }))) return;
+    setBusy(b.id);
+    for (const id of b.ids) await softDelete("flights", id);
+    const next = list.filter((x) => x.id !== b.id);
+    await localStore.setMeta(BATCHES, JSON.stringify(next));
+    setList(next);
+    setBusy(null);
+  };
+  return (
+    <Card title={t("batches")}>
+      <ul className="divide-y divide-border text-sm">
+        {list.map((b) => (
+          <li key={b.id} className="flex items-center justify-between gap-3 py-2">
+            <span>{t("batchLine", { count: b.ids.length, date: fd(b.at.slice(0, 10)) })}</span>
+            <button type="button" className="btn btn-ghost btn-sm" disabled={busy === b.id} onClick={() => void undo(b)}>{t("undo")}</button>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
+/** « Check your totals »: the file's columns against what Geardown will record, differences and rows left out. */
+function TotalsCheck({ check, busy, onConfirm, onFix, onCancel }: { check: ImportCheck; busy: boolean; onConfirm: () => void; onFix: () => void; onCancel: () => void }) {
+  const t = useTranslations("app.import");
+  const v = (field: string, n: number | undefined) => (n === undefined ? "—" : field === "landings" ? String(n) : formatDuration(n));
+  const shown = check.lines.filter((l) => l.file !== undefined || l.geardown > 0);
+  const diffs = check.lines.filter((l) => l.rows.length);
+  return (
+    <Card title={t("totals.title")}>
+      <p className="text-sm text-muted">{t("totals.intro", { kept: check.kept })}</p>
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-left">
+            <tr className="[&>th]:label-caps [&>th]:px-3 [&>th]:py-2">
+              <th>{t("totals.column")}</th><th className="!text-right">{t("totals.file")}</th><th className="!text-right">{t("totals.geardown")}</th><th>{t("totals.status")}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {shown.map((l) => {
+              const off = l.rows.length > 0;
+              return (
+                <tr key={l.field} className={`num [&>td]:px-3 [&>td]:py-2 ${off ? "bg-[var(--caution)]/10" : ""}`}>
+                  <td>{l.field === "landings" ? t("totals.landings") : t(`fields.${l.field}`)}</td>
+                  <td className="text-right">{v(l.field, l.file)}</td>
+                  <td className="text-right font-semibold">{v(l.field, l.geardown)}</td>
+                  <td className={off ? "font-semibold text-caution" : l.file === undefined ? "text-muted" : "text-success"}>
+                    {off ? t("totals.diff", { count: l.rows.length }) : l.file === undefined ? t("totals.noColumn") : t("totals.same")}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {diffs.length > 0 && (
+        <div className="mt-4 rounded-xl bg-[var(--caution)]/10 p-3 text-sm">
+          <p className="font-semibold">{t("totals.diffTitle")}</p>
+          <ul className="mt-1 space-y-1">
+            {diffs.map((l) => (
+              <li key={l.field}>
+                {l.field === "landings" ? t("totals.landings") : t(`fields.${l.field}`)} : {t("totals.rows", { rows: l.rows.slice(0, 30).join(", ") + (l.rows.length > 30 ? "…" : "") })}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-muted">{t("totals.diffHelp")}</p>
+        </div>
+      )}
+      {check.rejected.length > 0 && (
+        <div className="mt-4 text-sm">
+          <p className="font-semibold">{t("totals.rejected", { count: check.rejected.length })}</p>
+          <ul className="mt-1 max-h-40 space-y-0.5 overflow-auto text-muted">
+            {check.rejected.slice(0, 200).map((r) => (
+              <li key={r.row}>{t("totals.rejectedLine", { row: r.row, reasons: r.reasons.map((x) => t(`totals.reason.${x}`)).join(", ") })}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <button type="button" className="btn btn-ghost" onClick={onCancel}>{t("totals.cancel")}</button>
+        <button type="button" className="btn btn-secondary" onClick={onFix}>{t("totals.fix")}</button>
+        <button type="button" className="btn btn-primary" disabled={busy || check.kept === 0} onClick={onConfirm}>{t("totals.confirm", { count: check.kept })}</button>
+      </div>
+    </Card>
   );
 }
 

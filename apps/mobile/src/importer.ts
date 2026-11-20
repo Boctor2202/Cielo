@@ -29,6 +29,15 @@ export interface ImportResult {
   imported: number;
   skipped: number;
   duplicates: number;
+  /** ids of the flights saved, to undo this import as a whole */
+  ids: string[];
+}
+
+/** The flights an import would save (not stored yet), for « Check your totals ». */
+export interface PreparedImport {
+  pairs: { rowIndex: number; flight: Flight }[];
+  duplicates: number[];
+  skipped: number;
 }
 
 export async function pickAndImportCsv(store: SqliteStore, pilot: Pilot, types: AircraftType[], existing: Flight[]): Promise<ImportResult | null> {
@@ -45,14 +54,31 @@ export async function pickAndImportCsv(store: SqliteStore, pilot: Pilot, types: 
 
 /** Stores reviewed import rows as flights (times derived, the file's totals kept, duplicates skipped). */
 export async function saveImportedRows(store: SqliteStore, pilot: Pilot, types: AircraftType[], existing: Flight[], parsed: ImportedRow[], source: Flight["source"]): Promise<ImportResult> {
+  return savePrepared(store, await prepareImportedRows(store, pilot, types, existing, parsed, source));
+}
+
+/** Saves what prepareImportedRows built (after the pilot checked the totals). */
+export async function savePrepared(store: SqliteStore, p: PreparedImport): Promise<ImportResult> {
+  const out = p.pairs.map((x) => x.flight);
+  if (out.length) {
+    await store.bulkPut("flights", out);
+    // one "created by import" entry each in the audit trail
+    await store.bulkPut("flight_revisions", out.map((f) => stamp({ ...flightRevision(undefined, f, "import")! } as Partial<SyncedRecord>) as unknown as FlightRevision));
+    announceGains(out.map((f) => f.id));
+  }
+  return { imported: out.length, skipped: p.skipped, duplicates: p.duplicates.length, ids: out.map((f) => f.id) };
+}
+
+/** Builds the flights of reviewed rows as they would be saved, without storing them. */
+export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, types: AircraftType[], existing: Flight[], parsed: ImportedRow[], source: Flight["source"]): Promise<PreparedImport> {
   const now = new Date().toISOString();
   const key = (f: Pick<Flight, "date" | "depIcao" | "arrIcao" | "outUtc" | "totalMin">) => `${f.date}|${f.depIcao}|${f.arrIcao}|${f.outUtc ?? ""}|${f.totalMin}`;
   const seen = new Set(existing.map(key));
   // the operator of each imported flight, as the logbook recognises it (call sign, aircraft, what it learned)
   const ops = operatorIndex(existing, await store.all("aircraft"), airlines());
-  const out: Flight[] = [];
+  const pairs: PreparedImport["pairs"] = [];
+  const dups: number[] = [];
   let skipped = 0;
-  let duplicates = 0;
   for (const r of parsed) {
     if (!r.input || r.errors.length) {
       skipped++;
@@ -74,10 +100,11 @@ export async function saveImportedRows(store: SqliteStore, pilot: Pilot, types: 
     }
     if (ex.night !== undefined) d.nightMin = Math.min(ex.night, d.totalMin);
     if (ex.ifr !== undefined) d.ifrMin = Math.min(ex.ifr, d.totalMin);
-    if (ex.pic !== undefined) d.picMin = ex.pic;
-    if (ex.copilot !== undefined) d.copilotMin = ex.copilot;
-    if (ex.dual !== undefined) d.dualMin = ex.dual;
-    if (ex.instructor !== undefined) d.instructorMin = ex.instructor;
+    if (ex.pic !== undefined) d.picMin = Math.min(ex.pic, d.totalMin);
+    if (ex.copilot !== undefined) d.copilotMin = Math.min(ex.copilot, d.totalMin);
+    if (ex.dual !== undefined) d.dualMin = Math.min(ex.dual, d.totalMin);
+    if (ex.instructor !== undefined) d.instructorMin = Math.min(ex.instructor, d.totalMin);
+    if (ex.picus !== undefined) d.picusMin = Math.min(ex.picus, d.totalMin);
     const f: Flight = {
       id: newId(),
       createdAt: now,
@@ -132,17 +159,11 @@ export async function saveImportedRows(store: SqliteStore, pilot: Pilot, types: 
     };
     if (!f.operator && !f.isFstd) f.operator = ops.of(f);
     if (seen.has(key(f))) {
-      duplicates++;
+      dups.push(r.rowIndex);
       continue;
     }
     seen.add(key(f));
-    out.push(f);
+    pairs.push({ rowIndex: r.rowIndex, flight: f });
   }
-  if (out.length) {
-    await store.bulkPut("flights", out);
-    // one "created by import" entry each in the audit trail
-    await store.bulkPut("flight_revisions", out.map((f) => stamp({ ...flightRevision(undefined, f, "import")! } as Partial<SyncedRecord>) as unknown as FlightRevision));
-    announceGains(out.map((f) => f.id));
-  }
-  return { imported: out.length, skipped, duplicates };
+  return { pairs, duplicates: dups, skipped };
 }
