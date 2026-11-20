@@ -69,7 +69,14 @@ export async function loadDemo(airports: AirportIndex, locale: "fr" | "en") {
     let t = Date.parse(`${date}T${String(startHour).padStart(2, "0")}:${rand() > 0.5 ? "10" : "40"}:00Z`);
     // Keep at least 14 h between the end of the previous duty and the next off-block.
     if (t < lastRelease + 14 * 3600_000) continue;
-    const route = legs === 4 ? ["LFPO", dest, "LFPO", DESTS[Math.floor(rand() * DESTS.length)]!, "LFPO"] : ["LFPO", dest, "LFPO"];
+    // a four-sector day stays on short sectors, as a real roster would, so the demo duties keep within the FDP limit
+    const near = DESTS.filter((d) => {
+      const a = airports.get(d);
+      const home = airports.get("LFPO");
+      return a && home && distanceNm(home, a) <= 450;
+    });
+    const pick = () => near[Math.floor(rand() * near.length)]!;
+    const route = legs === 4 && near.length ? ["LFPO", pick(), "LFPO", pick(), "LFPO"] : ["LFPO", dest, "LFPO"];
     for (let i = 0; i < route.length - 1; i++) {
       const dep = airports.get(route[i]!);
       const arr = airports.get(route[i + 1]!);
