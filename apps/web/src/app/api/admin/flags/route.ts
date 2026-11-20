@@ -27,7 +27,6 @@ async function services() {
     { key: "googlePlaces", ok: has("GOOGLE_MAPS_API_KEY") },
     { key: "planespotters", ok: process.env.NEXT_PUBLIC_PLANESPOTTERS === "1" },
     { key: "adsblol", ok: true, note: has("ADSBLOL_API_KEY") ? "key" : "free quota (500/day)" },
-    { key: "ticketmaster", ok: has("TICKETMASTER_API_KEY") },
     { key: "flightaware", ok: has("FLIGHTAWARE_API_KEY") },
     { key: "anthropic", ...(await anthropicStatus()) },
   ];

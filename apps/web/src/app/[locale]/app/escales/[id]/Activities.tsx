@@ -13,11 +13,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Card, Segmented } from "@/components/app/ui";
 import type { HotelHit, Place, PlaceCategory } from "@/lib/places";
-import { Events } from "./Events";
 
-type Cat = PlaceCategory | "events";
+type Cat = PlaceCategory;
 const CATS: Cat[] = [
-  "events",
   "restaurants",
   "bars",
   "nightlife",
@@ -51,7 +49,7 @@ export function Activities({
   const t = useTranslations("app.layover.activities");
   const locale = useLocale();
   const [center, setCenter] = useState<Center | null>(null);
-  const [cat, setCat] = useState<Cat>("events");
+  const [cat, setCat] = useState<Cat>("restaurants");
   const [sort, setSort] = useState<"rating" | "distance">("rating");
   const [places, setPlaces] = useState<Place[] | null>(null);
   const [state, setState] = useState<
@@ -92,7 +90,7 @@ export function Activities({
   }, [hotelPlaceId, airport, locale]);
 
   useEffect(() => {
-    if (!center || cat === "events") return;
+    if (!center) return;
     const k = `${center.lat},${center.lng},${cat},${locale}`;
     const hit = cache.get(k);
     if (hit) {
@@ -170,10 +168,7 @@ export function Activities({
             ))}
           </div>
 
-          {cat === "events" && center && (
-            <Events center={center} from={from} to={to} />
-          )}
-          {cat !== "events" && (
+          {(
             <>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm text-muted">

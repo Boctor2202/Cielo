@@ -1065,28 +1065,7 @@
           "cinema": "Cinéma",
           "parks": "Parcs",
           "wellness": "Spa et sport",
-          "shopping": "Shopping",
-          "events": "Concerts et spectacles"
-        },
-        "events": {
-          "tab": "Concerts et spectacles",
-          "all": "Tout",
-          "concerts": "Concerts",
-          "shows": "Spectacles",
-          "range": "du {from} au {to}",
-          "loading": "Recherche des concerts et spectacles…",
-          "none": "Aucun concert ni spectacle trouvé sur Ticketmaster pendant cette escale.",
-          "error": "Impossible de charger les événements pour le moment.",
-          "notConfigured": "Les concerts et spectacles ne sont pas encore activés : il manque la clé Ticketmaster du service.",
-          "tickets": "Billets",
-          "from": "dès {price}",
-          "walk": "{min} min à pied",
-          "km": "{km} km",
-          "status": {
-            "offsale": "Plus en vente",
-            "other": "Billetterie à vérifier"
-          },
-          "attribution": "Événements fournis par Ticketmaster"
+          "shopping": "Shopping"
         },
         "pickHotel": "Choisissez l'hôtel dans le champ « Hôtel » en haut de la fiche : les adresses se calculeront autour de lui. En attendant, elles sont autour de l'aéroport."
       },
@@ -1907,7 +1886,6 @@
           "googlePlaces": "Lieux Google (escales)",
           "planespotters": "Planespotters",
           "adsblol": "Radar adsb.lol",
-          "ticketmaster": "Spectacles (Ticketmaster)",
           "flightaware": "Horaires réels (FlightAware)",
           "anthropic": "Lecture par IA (Anthropic)"
         }

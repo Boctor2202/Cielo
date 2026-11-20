@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AirportWeather } from "../../src/components/Weather";
-import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, View } from "react-native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { Layover } from "@cielo/core";
-import { Button, Card, Chip, Field, Row, Screen, Segmented, Txt } from "../../src/components/ui";
+import { Button, Card, Chip, Field, Row, Screen, Txt } from "../../src/components/ui";
 import { DateField, isValidDate } from "../../src/components/DateField";
 import { lookupAirport } from "../../src/airports";
-import { api, ApiError, fmtDistance, PLACE_CATEGORIES, type HotelHit, type LiveEvent, type Place, type PlaceCategory } from "../../src/api";
+import { api, ApiError, fmtDistance, PLACE_CATEGORIES, type HotelHit, type Place, type PlaceCategory } from "../../src/api";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { ReadOnlyError, useApp } from "../../src/state";
 import { Requires } from "../../src/components/Access";
@@ -34,10 +34,8 @@ function LayoverScreen() {
   const [searching, setSearching] = useState(false);
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<Load<HotelHit[]>>({ state: "idle", data: [] });
-  const [tab, setTab] = useState<"places" | "events">("places");
   const [cat, setCat] = useState<PlaceCategory>("restaurants");
   const [places, setPlaces] = useState<Load<Place[]>>({ state: "idle", data: [] });
-  const [events, setEvents] = useState<Load<LiveEvent[]>>({ state: "idle", data: [] });
 
   // the saved hotel's position (only its Google place id is stored)
   useEffect(() => {
@@ -52,22 +50,13 @@ function LayoverScreen() {
   const fail = (e: unknown) => (e instanceof ApiError && e.code === "not_configured" ? "not_configured" : "error") as "error" | "not_configured";
 
   useEffect(() => {
-    if (!center || tab !== "places") return;
+    if (!center) return;
     setPlaces({ state: "loading", data: [] });
     api<{ places: Place[] }>(`/api/escale/places?lat=${center.lat}&lng=${center.lng}&cat=${cat}&lang=${locale}`)
       .then((d) => setPlaces({ state: "ok", data: d.places }))
       .catch((e) => setPlaces({ state: fail(e), data: [] }));
-  }, [center, cat, tab, locale]);
+  }, [center, cat, locale]);
 
-  useEffect(() => {
-    if (!center || tab !== "events" || !l) return;
-    const from = (l.arrivalUtc ?? new Date().toISOString()).slice(0, 10);
-    const to = (l.departureUtc ?? l.arrivalUtc ?? new Date().toISOString()).slice(0, 10);
-    setEvents({ state: "loading", data: [] });
-    api<{ events: LiveEvent[] }>(`/api/escale/events?lat=${center.lat}&lng=${center.lng}&from=${from}&to=${to}&lang=${locale}`)
-      .then((d) => setEvents({ state: "ok", data: d.events }))
-      .catch((e) => setEvents({ state: fail(e), data: [] }));
-  }, [center, tab, l, locale]);
 
   const searchHotels = (near: boolean) => {
     if (!airport) return;
@@ -148,17 +137,7 @@ function LayoverScreen() {
 
         <LayoverDetails l={l} />
 
-        <Segmented<"places" | "events">
-          value={tab}
-          onChange={setTab}
-          options={[
-            { value: "places", label: t("lay.activities") },
-            { value: "events", label: t("lay.events") },
-          ]}
-        />
-
-        {tab === "places" ? (
-          <>
+        <>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {PLACE_CATEGORIES.map((k) => (
                 <Chip key={k} label={t(`lay.cat.${k}` as I18nKey)} selected={cat === k} onPress={() => setCat(k)} />
@@ -186,24 +165,7 @@ function LayoverScreen() {
               </Card>
             ))}
             {places.data.length ? <Txt variant="small" style={{ textAlign: "center" }}>{t("lay.google")}</Txt> : null}
-          </>
-        ) : (
-          <>
-            {status(events.state)}
-            {events.state === "ok" && events.data.length === 0 ? <Txt variant="muted">{t("lay.eventsNone")}</Txt> : null}
-            {events.data.map((e) => (
-              <Card key={e.id} onPress={e.url ? () => void Linking.openURL(e.url!) : undefined}>
-                <Row gap={12}>
-                  {e.image ? <Image source={{ uri: e.image }} style={{ width: 64, height: 48, borderRadius: 8 }} /> : null}
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Txt style={{ fontWeight: "600" }} numberOfLines={2}>{e.name}</Txt>
-                    <Txt variant="small" numberOfLines={1}>{[`${formatDate(e.date, locale)}${e.time ? ` ${e.time.slice(0, 5)}` : ""}`, e.venue, fmtDistance(e.distanceM)].filter(Boolean).join(" · ")}</Txt>
-                  </View>
-                </Row>
-              </Card>
-            ))}
-          </>
-        )}
+        </>
 
         <Button
           kind="danger"

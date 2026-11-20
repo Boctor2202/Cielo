@@ -1065,28 +1065,7 @@
           "cinema": "Cinema",
           "parks": "Parks",
           "wellness": "Spa & fitness",
-          "shopping": "Shopping",
-          "events": "Concerts & shows"
-        },
-        "events": {
-          "tab": "Concerts & shows",
-          "all": "All",
-          "concerts": "Concerts",
-          "shows": "Shows",
-          "range": "{from} to {to}",
-          "loading": "Finding concerts and shows…",
-          "none": "No concerts or shows found on Ticketmaster during this layover.",
-          "error": "Events can't be loaded right now.",
-          "notConfigured": "Concerts and shows aren't switched on yet: the service's Ticketmaster key is missing.",
-          "tickets": "Tickets",
-          "from": "from {price}",
-          "walk": "{min} min walk",
-          "km": "{km} km",
-          "status": {
-            "offsale": "No longer on sale",
-            "other": "Check ticketing"
-          },
-          "attribution": "Events provided by Ticketmaster"
+          "shopping": "Shopping"
         },
         "pickHotel": "Pick the hotel in the Hotel field at the top: places will then be found around it. Until then, they're around the airport."
       },
@@ -1907,7 +1886,6 @@
           "googlePlaces": "Google Places (layovers)",
           "planespotters": "Planespotters",
           "adsblol": "adsb.lol radar",
-          "ticketmaster": "Shows (Ticketmaster)",
           "flightaware": "Actual times (FlightAware)",
           "anthropic": "AI reading (Anthropic)"
         }

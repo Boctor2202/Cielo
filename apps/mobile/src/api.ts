@@ -1,5 +1,5 @@
 /**
- * The Geardown web services, shared with the web app (Google Places, Ticketmaster, adsb.lol run server-side,
+ * The Geardown web services, shared with the web app (Google Places, adsb.lol run server-side,
  * so no key ships in the app).
  */
 export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "https://geardown.app").replace(/\/$/, "");
@@ -45,21 +45,6 @@ export interface HotelHit {
   distanceM?: number;
   lat: number;
   lng: number;
-}
-export interface LiveEvent {
-  id: string;
-  name: string;
-  date: string;
-  time?: string;
-  venue?: string;
-  city?: string;
-  distanceM?: number;
-  genre?: string;
-  segment?: string;
-  priceFrom?: number;
-  currency?: string;
-  image?: string;
-  url?: string;
 }
 export interface LiveAircraft {
   hex: string;
