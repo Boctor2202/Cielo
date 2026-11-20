@@ -13,12 +13,14 @@ import { HoursBars } from "@/components/app/Charts";
 import { useAirports } from "@/lib/airports";
 import { useDuration, useFlights, useFormatDate, usePilot, useTable, useToday } from "@/lib/hooks";
 import { loadDemo } from "@/lib/demo";
+import { useCloud } from "@/lib/cloud";
 import { GlassCockpit } from "@/components/app/GlassCockpit";
 import { OverviewWidgets } from "@/components/app/OverviewWidgets";
 import { useAccess } from "@/lib/access";
 
 export default function Dashboard() {
   const t = useTranslations("app.dashboard");
+  const cloud = useCloud();
   const tl = useTranslations("app.documents");
   const tf = useTranslations("app.ftl");
   const tn = useTranslations("app.nav");
@@ -82,7 +84,8 @@ export default function Dashboard() {
                 <Link href="/app/carnet/nouveau" className="btn btn-primary">
                   <Plus size={18} /> {t("emptyCta")}
                 </Link>
-                <button
+                {/* only before an account: demo data loaded while signed in would sync into the real logbook */}
+                {!cloud.session && <button
                   type="button"
                   className="btn btn-secondary"
                   disabled={!airports || busy}
@@ -94,7 +97,7 @@ export default function Dashboard() {
                   }}
                 >
                   {t("loadDemo")}
-                </button>
+                </button>}
               </div>
             }
           />

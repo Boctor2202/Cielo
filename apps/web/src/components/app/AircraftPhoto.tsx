@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { AircraftPhoto as Photo } from "@/lib/planespotters";
 import { useFlags } from "@/lib/flags";
+import { useAccess } from "@/lib/access";
+import { usePilot } from "@/lib/hooks";
+import { isDemoAccount } from "@cielo/core";
 
 const cache = new Map<string, Photo | null>();
 
@@ -18,8 +21,10 @@ export function AircraftPhoto({ registration, hex, showEmpty, className = "" }: 
     return () => clearTimeout(id);
   }, [registration]);
   const [photo, setPhoto] = useState<Photo | null | undefined>(reg ? cache.get(reg) : null);
+  // demo data uses fictional registrations: a real aircraft wearing them would show the wrong photo
+  const fictional = useAccess().demo || isDemoAccount(usePilot()?.email);
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_PLANESPOTTERS !== "1" || !reg || reg.length < 3) return setPhoto(null);
+    if (fictional || process.env.NEXT_PUBLIC_PLANESPOTTERS !== "1" || !reg || reg.length < 3) return setPhoto(null);
     if (cache.has(reg)) return setPhoto(cache.get(reg));
     setPhoto(undefined); // never show the previous aircraft while the new one loads
     let alive = true;
@@ -33,7 +38,7 @@ export function AircraftPhoto({ registration, hex, showEmpty, className = "" }: 
     return () => {
       alive = false;
     };
-  }, [reg, hex]);
+  }, [reg, hex, fictional]);
   const flags = useFlags();
   if (!flags.aircraftPhotos) return null;
   if (photo === null && showEmpty && reg && reg.length >= 4 && cache.has(reg))

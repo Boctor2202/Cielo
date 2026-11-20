@@ -1833,7 +1833,8 @@
       "maxTitle": "Max feature",
       "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, real tracks, audit and scan are included in Max (€8.99/month).",
       "haveAccount": "Already subscribed? Sign in",
-      "demoAccount": "Demo account: fictional pilot and data (Thomas Mercier, Skyline Airways)."
+      "demoAccount": "Demo account: fictional pilot and data (Thomas Mercier, Skyline Airways).",
+      "demoLocal": "Demo — fictional data — local changes, in this browser only. Creating an account erases them: your logbook starts empty (or with your own data)."
     },
     "photo": {
       "alt": "Photo of aircraft {reg}",

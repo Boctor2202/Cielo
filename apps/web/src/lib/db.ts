@@ -29,6 +29,9 @@ export function db(): CieloDB {
 }
 
 /** IndexedDB implementation of the shared LocalStore contract. */
+/** Set while this browser holds the fictional demo logbook: it is never merged into a real account. */
+export const DEMO_META = "demoData";
+
 export const localStore: LocalStore = {
   all: (table) => db().t(table).toArray(),
   get: (table, id) => db().t(table).get(id),

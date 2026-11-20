@@ -2,7 +2,7 @@
 
 import { addDays, distanceNm, isoDate, type FlightFormInput, type PilotFunction } from "@cielo/core";
 import type { AirportIndex } from "@cielo/reference-data";
-import { db } from "./db";
+import { db, DEMO_META, localStore } from "./db";
 import { buildFlight, ensurePilot, saveAircraft, saveLayover, saveLicense, saveOpening, saveRosterEvent, updatePilot, REFERENCE_TYPES } from "./repo";
 
 /** Deterministic pseudo-random generator so the demo looks the same everywhere. */
@@ -23,6 +23,7 @@ const clock = (ms: number) => new Date(ms).toISOString().slice(11, 16);
 export async function loadDemo(airports: AirportIndex, locale: "fr" | "en") {
   const rand = rng(42);
   const pilot = await ensurePilot(locale);
+  await localStore.setMeta(DEMO_META, "1");
   await updatePilot({
     fullName: "Thomas Mercier",
     displayName: "Thomas",
