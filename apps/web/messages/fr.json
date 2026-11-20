@@ -18,12 +18,12 @@
   "hero": {
     "eyebrow": "Conçu par des pilotes · EASA · FAA · CASA",
     "title": "Le carnet de vol qui travaille pour votre carrière",
-    "subtitle": "Un vol saisi en 20 secondes, et Geardown fait le reste : temps de nuit, limites FTL, licences et médical. Votre CV se met à jour tout seul et les offres qui vous correspondent viennent à vous.",
+    "subtitle": "Un vol saisi en quelques secondes, et Geardown calcule le reste : temps de nuit, limites FTL, licences et médical. Votre CV suit votre carnet et les offres sont classées selon votre expérience.",
     "ctaTrial": "Essayer %TRIAL% jours",
     "ctaDemo": "Voir la démo",
     "note": "%TRIAL% jours d'essai · Sans engagement · Vos données restent à vous",
-    "appStore": "Télécharger dans l'App Store",
-    "playStore": "Disponible sur Google Play",
+    "appStore": "Bientôt sur l'App Store",
+    "playStore": "Bientôt sur Google Play",
     "comingSoon": "Bientôt",
     "readoutNight": "Nuit calculée",
     "readoutRoute": "LFPG → LFMN",
@@ -79,7 +79,7 @@
         "text": "Licences, aptitude médicale, SEP, MEP, TR, IR, FI, LPE… Alertes à 90, 30 et 7 jours avant chaque échéance, par notification et e-mail.",
         "points": [
           "Expérience récente FCL.060 calculée",
-          "Scans de vos documents chiffrés",
+          "Scans de vos documents dans un espace privé",
           "Seuils d'alerte personnalisables"
         ]
       },
@@ -105,7 +105,7 @@
         "title": "Signature numérique des vols",
         "text": "Faites signer un vol par votre instructeur ou votre commandant de bord directement sur l'écran. Le vol est verrouillé et son empreinte scellée.",
         "points": [
-          "Empreinte SHA-256 du contenu",
+          "Empreinte SHA-256 : toute modification après signature est détectée",
           "Toute modification invalide la signature",
           "Mention dans l'export PDF"
         ]
@@ -116,12 +116,12 @@
         "points": [
           "Base locale sur chaque appareil",
           "Hébergement dans l'Union européenne",
-          "Sauvegarde automatique chiffrée"
+          "Sauvegarde automatique sur votre compte"
         ]
       },
       "jobs": {
         "title": "Offres d'emploi pilote",
-        "text": "Les offres publiées par les compagnies et opérateurs sur leurs propres pages carrières, classées par région du monde, expérience exigée et salaire quand il est indiqué. Geardown calcule votre pourcentage de correspondance à partir de votre carnet, sur votre appareil.",
+        "text": "Les offres publiées par les compagnies et opérateurs sur leurs propres pages carrières, classées par région du monde, expérience exigée et salaire quand il est indiqué. Geardown calcule votre pourcentage de correspondance à partir de votre carnet, sur votre appareil. La couverture porte d'abord sur l'Europe et l'aviation d'affaires ; d'autres régions sont encore peu alimentées.",
         "points": [
           "Classement par région : licence et droit de travailler pris en compte",
           "Heures exigées, qualification de type, salaire lus dans l'annonce",
@@ -133,7 +133,7 @@
         "text": "Un CV généré depuis votre carnet, avec les heures par catégorie (total, PIC, multipilote, turbine, nuit, IFR, par type) et une mise en page pensée pour les logiciels de tri des compagnies.",
         "points": [
           "Heures par catégorie et par type, toujours à jour",
-          "Vérification avant envoi pour les logiciels de tri (ATS)",
+          "Contrôle de lisibilité par les logiciels de tri (ATS), sans garantie de résultat",
           "Export PDF, texte et JSON Resume, en français ou en anglais"
         ]
       }
@@ -157,13 +157,13 @@
       },
       "premium": {
         "name": "Max",
-        "desc": "Pour les pilotes de ligne et d'affaires : roster, FTL, offres d'emploi, CV, escales, radar et traces réelles."
+        "desc": "Pour les pilotes de ligne et d'affaires : roster, FTL, offres d'emploi, CV, escales, radar et traces ADS-B."
       }
     },
     "highlights": {
       "basic": [
         "Vols illimités, temps de nuit calculé automatiquement",
-        "Import de votre ancien carnet (CSV, Excel), colonnes reconnues seules",
+        "Import de votre ancien carnet (CSV, Excel), colonnes détectées puis vérifiées par vous",
         "Export PDF au format EASA, FAA, CASA, et CSV / Excel",
         "Licences, médical et expérience récente FCL.060, avec rappels d'échéance",
         "Statistiques et carte de vos routes",
@@ -176,7 +176,7 @@
         "Import du roster compagnie et limites FTL ORO.FTL",
         "Audit du carnet (17 contrôles)",
         "Escales : les meilleures adresses autour de l'hôtel équipage",
-        "Radar en direct et trace réelle de chaque vol",
+        "Radar en direct et trace ADS-B des vols quand la couverture le permet",
         "Scan photo du carnet papier (bêta)"
       ]
     },
@@ -197,7 +197,7 @@
       "roster": "Import roster (iCal, CSV)",
       "ftl": "Calcul FTL ORO.FTL",
       "layovers": "Escales : meilleures adresses autour de l'hôtel",
-      "radar": "Radar en direct et traces réelles des vols",
+      "radar": "Radar en direct et traces ADS-B (selon la couverture)",
       "audit": "Audit automatique du carnet (17 contrôles)",
       "signature": "Signature numérique",
       "scan": "Scan photo du carnet papier (bêta)"
@@ -269,7 +269,7 @@
   },
   "airlines": {
     "title": "Geardown pour les compagnies et écoles",
-    "subtitle": "Offrez à vos équipages un carnet de vol moderne, alimenté automatiquement par votre système de planning.",
+    "subtitle": "Offrez à vos équipages un carnet de vol moderne, alimenté par l'import de vos rosters (calendrier iCal, PDF).",
     "points": [
       {
         "t": "Import roster natif",
@@ -1797,10 +1797,10 @@
       "locate": "Me localiser"
     },
     "track": {
-      "title": "Trace réelle",
+      "title": "Trace ADS-B observée",
       "source": "Trace ADS-B de l'appareil {hex} · données",
-      "pending": "La trace réelle sera enregistrée automatiquement dès que le réseau ADS-B l'aura reçue (dans les 30 h suivant le vol).",
-      "needData": "Renseignez l'immatriculation et les heures bloc pour enregistrer la trace réelle.",
+      "pending": "La trace ADS-B sera enregistrée automatiquement dès que le réseau ADS-B l'aura reçue (dans les 30 h suivant le vol).",
+      "needData": "Renseignez l'immatriculation et les heures bloc pour enregistrer la trace ADS-B.",
       "tooOld": "Trace non enregistrée : le réseau ADS-B ne la conserve qu'environ 24 h.",
       "fetch": "Récupérer la trace maintenant",
       "window": "{from} → {to} UTC",
@@ -1814,12 +1814,12 @@
         "no_match": "Aucune trace de {reg} ne correspond aux heures bloc de ce vol (vérifiez qu'elles sont en UTC).",
         "quota": "Quota de données atteint, nouvel essai plus tard.",
         "error": "Trace indisponible pour le moment.",
-        "signin": "Connecte-toi pour récupérer la trace réelle.",
+        "signin": "Connecte-toi pour récupérer la trace ADS-B.",
         "fa_off": "La trace n'est plus disponible : le réseau ADS-B ne la conserve qu'environ 24 h.",
         "history_off": "Ce vol est trop ancien pour retrouver sa trace."
       },
       "sourceFa": "Trace enregistrée par",
-      "fromFa": "La trace réelle se récupère automatiquement pour les vols des dernières 24 h (réseau ADS-B)."
+      "fromFa": "La trace ADS-B se récupère automatiquement pour les vols des dernières 24 h (réseau ADS-B)."
     },
     "access": {
       "demo": "Démo : {days, plural, one {encore # jour} other {encore # jours}} pour tout essayer. Créez votre compte pour continuer avec %TRIAL% jours d'essai.",
@@ -1831,7 +1831,7 @@
       "readOnlyTitle": "Abonnement nécessaire",
       "readOnlyText": "Sans abonnement actif, votre carnet reste consultable et exportable, mais la saisie est désactivée. Basic à 4,99 €/mois, Max à 8,99 €/mois.",
       "maxTitle": "Fonction réservée à Max",
-      "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces réelles, audit et scan sont inclus dans Max (8,99 €/mois).",
+      "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces ADS-B, audit et scan sont inclus dans Max (8,99 €/mois).",
       "haveAccount": "Déjà abonné ? Se connecter",
       "demoAccount": "Compte de démonstration : pilote et données fictifs (Thomas Mercier, Skyline Airways).",
       "demoLocal": "Démonstration — données fictives — modifications locales, sur ce navigateur uniquement. En créant un compte, elles sont effacées : votre carnet démarre vide (ou avec vos propres données)."
@@ -1959,7 +1959,7 @@
           "radar": "Radar en direct",
           "layovers": "Escales",
           "aircraftPhotos": "Photos d'avions (Planespotters)",
-          "flightTracks": "Traces réelles des vols",
+          "flightTracks": "Traces ADS-B des vols",
           "jobs": "Offres d'emploi"
         },
         "services": "Services connectés",
@@ -2449,7 +2449,7 @@
   "seo": {
     "home": {
       "title": "Geardown — Carnet de vol électronique pour pilotes (EASA, FAA, CASA)",
-      "description": "Carnet de vol électronique, export PDF au format EASA, FAA et CASA : temps de nuit calculé automatiquement, licences, FTL, roster, offres d'emploi pilote et CV. Essai gratuit, web, iOS et Android."
+      "description": "Carnet de vol électronique, export PDF au format EASA, FAA et CASA : temps de nuit calculé automatiquement, licences, FTL, roster, offres d'emploi pilote et CV. Essai gratuit, sur le web ; app iPhone en préparation."
     },
     "features": {
       "title": "Fonctionnalités du carnet de vol électronique",

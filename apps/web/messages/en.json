@@ -18,12 +18,12 @@
   "hero": {
     "eyebrow": "Built by pilots · EASA · FAA · CASA",
     "title": "The logbook that works for your career",
-    "subtitle": "Log a flight in 20 seconds and Geardown does the rest: night time, FTL limits, licences and medical. Your CV updates itself and the jobs that fit you come to you.",
+    "subtitle": "Log a flight in seconds and Geardown works out the rest: night time, FTL limits, licences and medical. Your CV follows your logbook and job offers are ranked against your experience.",
     "ctaTrial": "Try %TRIAL% days",
     "ctaDemo": "See the demo",
     "note": "%TRIAL%-day trial · No commitment · Your data stays yours",
-    "appStore": "Download on the App Store",
-    "playStore": "Get it on Google Play",
+    "appStore": "Coming to the App Store",
+    "playStore": "Coming to Google Play",
     "comingSoon": "Coming soon",
     "readoutNight": "Night computed",
     "readoutRoute": "LFPG → LFMN",
@@ -79,7 +79,7 @@
         "text": "Licences, medical certificate, SEP, MEP, TR, IR, FI, LPE… Alerts 90, 30 and 7 days before every expiry, by notification and e-mail.",
         "points": [
           "FCL.060 recent experience computed",
-          "Encrypted document scans",
+          "Scans of your documents in private storage",
           "Custom alert thresholds"
         ]
       },
@@ -105,7 +105,7 @@
         "title": "Digital flight signature",
         "text": "Have a flight signed by your instructor or captain right on the screen. The entry is locked and its fingerprint sealed.",
         "points": [
-          "SHA-256 fingerprint of the content",
+          "SHA-256 fingerprint: any change after signing is detected",
           "Any change voids the signature",
           "Shown in the PDF export"
         ]
@@ -116,12 +116,12 @@
         "points": [
           "Local database on each device",
           "Hosted in the European Union",
-          "Automatic encrypted backup"
+          "Automatic backup to your account"
         ]
       },
       "jobs": {
         "title": "Pilot jobs",
-        "text": "Openings posted by airlines and operators on their own careers pages, sorted by world region, required experience and salary when stated. Geardown works out your match percentage from your logbook, on your device.",
+        "text": "Openings posted by airlines and operators on their own careers pages, sorted by world region, required experience and salary when stated. Geardown works out your match percentage from your logbook, on your device. Coverage is first of all Europe and business aviation; other regions are still thinly covered.",
         "points": [
           "Sorted by region: licence and right to work taken into account",
           "Required hours, type rating and salary read from the posting",
@@ -133,7 +133,7 @@
         "text": "A CV built from your logbook, with your hours by category (total, PIC, multi-pilot, turbine, night, IFR, per type) and a layout designed for the screening software airlines use.",
         "points": [
           "Hours by category and by type, always up to date",
-          "Pre-submission check for applicant tracking systems (ATS)",
+          "Readability check for applicant tracking systems (ATS), with no guaranteed outcome",
           "PDF, text and JSON Resume export, in English or French"
         ]
       }
@@ -157,13 +157,13 @@
       },
       "premium": {
         "name": "Max",
-        "desc": "For airline and business-jet pilots: roster, FTL, job offers, CV, layovers, radar and real tracks."
+        "desc": "For airline and business pilots: roster, FTL, job offers, CV, layovers, radar and ADS-B tracks."
       }
     },
     "highlights": {
       "basic": [
         "Unlimited flights, night time computed automatically",
-        "Import your old logbook (CSV, Excel), columns recognised automatically",
+        "Import your old logbook (CSV, Excel), columns detected then checked by you",
         "PDF export in EASA, FAA, CASA format, plus CSV / Excel",
         "Licences, medical and FCL.060 recency, with expiry reminders",
         "Statistics and a map of your routes",
@@ -176,7 +176,7 @@
         "Airline roster import and ORO.FTL limits",
         "Logbook audit (17 checks)",
         "Layovers: the best places around the crew hotel",
-        "Live radar and the real track of every flight",
+        "Live radar and the ADS-B track of your flights where coverage allows",
         "Paper logbook photo scan (beta)"
       ]
     },
@@ -197,7 +197,7 @@
       "roster": "Roster import (iCal, CSV)",
       "ftl": "ORO.FTL flight time limitations",
       "layovers": "Layovers: best places around the hotel",
-      "radar": "Live radar and real flight tracks",
+      "radar": "Live radar and ADS-B tracks (coverage permitting)",
       "audit": "Automatic logbook audit (17 checks)",
       "signature": "Digital signature",
       "scan": "Paper logbook photo scan (beta)"
@@ -269,7 +269,7 @@
   },
   "airlines": {
     "title": "Geardown for airlines and flight schools",
-    "subtitle": "Give your crews a modern logbook, filled automatically from your crew planning system.",
+    "subtitle": "Give your crews a modern logbook, fed by importing your rosters (iCal calendar, PDF).",
     "points": [
       {
         "t": "Native roster import",
@@ -1831,7 +1831,7 @@
       "readOnlyTitle": "Subscription required",
       "readOnlyText": "Without an active subscription your logbook stays viewable and exportable, but logging is off. Basic €4.99/month, Max €8.99/month.",
       "maxTitle": "Max feature",
-      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, real tracks, audit and scan are included in Max (€8.99/month).",
+      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, ADS-B tracks, audit and scan are included in Max (€8.99/month).",
       "haveAccount": "Already subscribed? Sign in",
       "demoAccount": "Demo account: fictional pilot and data (Thomas Mercier, Skyline Airways).",
       "demoLocal": "Demo — fictional data — local changes, in this browser only. Creating an account erases them: your logbook starts empty (or with your own data)."
@@ -2449,7 +2449,7 @@
   "seo": {
     "home": {
       "title": "Geardown — Electronic pilot logbook (EASA, FAA, CASA)",
-      "description": "Electronic pilot logbook, PDF export in EASA, FAA and CASA format: automatic night time, licences, FTL, roster, pilot jobs and pilot CV. Free trial, web, iOS and Android."
+      "description": "Electronic pilot logbook, PDF export in EASA, FAA and CASA format: automatic night time, licences, FTL, roster, pilot jobs and pilot CV. Free trial, on the web; iPhone app in preparation."
     },
     "features": {
       "title": "Electronic pilot logbook features",
