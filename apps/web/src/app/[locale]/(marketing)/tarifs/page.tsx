@@ -19,7 +19,7 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
     <>
       <JsonLd nodes={[organizationLd(), softwareLd(locale, t("description")), faqLd(m.faq.items)]} />
       <OfferBox />
-      <Pricing />
+      <Pricing asPageTitle />
       <RosterFormats />
       <OwnershipBlock />
       <Faq />
