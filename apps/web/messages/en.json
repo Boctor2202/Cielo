@@ -409,7 +409,23 @@
       "admin": "Admin",
       "report": "Report a problem",
       "signIn": "Sign in",
-      "timezones": "Time zones"
+      "timezones": "Time zones",
+      "home": "Home",
+      "flights": "Flights",
+      "import": "Import",
+      "export": "Export",
+      "audit": "Audit",
+      "experience": "Experience",
+      "cvFile": "CV and file",
+      "more": "More",
+      "groups": {
+        "home": "Home",
+        "logbook": "Logbook",
+        "activity": "Activity",
+        "career": "Career",
+        "account": "Account",
+        "admin": "Admin"
+      }
     },
     "dashboard": {
       "hello": "Hello {name}",
@@ -716,7 +732,7 @@
       "sign": "Get it signed",
       "fromRoster": "Prefilled from roster",
       "flightaware": {
-        "button": "Fill actual times",
+        "button": "Fill from ADS-B",
         "needReg": "Enter the registration and date first",
         "title": "Flights of {reg} that day",
         "loading": "Looking up the actual times…",
@@ -770,7 +786,10 @@
       "kindFstd": "Simulator",
       "operator": "Operator",
       "operatorPh": "Airline or operator",
-      "operatorRecognised": "Recognised automatically: type to change it"
+      "operatorRecognised": "Recognised automatically: type to change it",
+      "adsbTitle": "Flight from today or yesterday?",
+      "adsbHint": "Enter the registration: Geardown finds the airports and times from the aircraft's ADS-B signals.",
+      "registration": "Registration"
     },
     "signature": {
       "title": "Flight signature",

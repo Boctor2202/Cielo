@@ -86,24 +86,12 @@ export default function More() {
         <MenuRow icon={<Ionicons name="ribbon" size={17} color="#fff" />} color="#FF9F0A" label={t("more.documents")} onPress={() => router.navigate("/documents")} />
         <MenuRow icon={<Ionicons name="create" size={17} color="#fff" />} color="#30B0C7" label={t("crew.menu")} value={crewInbox ? String(crewInbox) : undefined} onPress={() => router.navigate("/crew")} />
         <MenuRow icon={<Ionicons name="notifications" size={17} color="#fff" />} color="#FF3B30" label={t("more.reminders")} onPress={() => router.navigate("/reminders")} />
-        <MenuRow icon={<Ionicons name="airplane" size={17} color="#fff" />} color="#5E5CE6" label={t("more.aircraft")} onPress={() => router.navigate("/aircraft")} />
-        <MenuRow icon={<Ionicons name="document-text" size={17} color="#fff" />} color="#30B0C7" label={t("more.cv")} onPress={() => router.navigate("/cv")} />
-        <MenuRow icon={<Ionicons name="briefcase" size={17} color="#fff" />} color="#AC8E68" label={t("more.jobs")} onPress={() => router.navigate("/jobs")} />
       </MenuGroup>
 
-      <MenuGroup title={t("more.g.flying")}>
-        <MenuRow icon={<Ionicons name="pulse" size={17} color="#fff" />} color="#34C759" label={t("cur.title")} onPress={() => router.navigate("/currency")} />
-        <MenuRow icon={<Ionicons name="flag" size={17} color="#fff" />} color="#FF9F0A" label={t("goals.title")} onPress={() => router.navigate("/goals")} />
-        <MenuRow icon={<Ionicons name="timer" size={17} color="#fff" />} color="#FF453A" label={t("more.ftl")} onPress={() => router.navigate("/ftl")} />
-        <MenuRow icon={<Ionicons name="globe-outline" size={17} color="#fff" />} color="#0A84FF" label={t("tz.title")} onPress={() => router.navigate("/timezones")} />
-        <MenuRow icon={<Ionicons name="calendar" size={17} color="#fff" />} color="#FF375F" label={t("more.roster")} onPress={() => router.navigate("/roster")} />
-        <MenuRow icon={<Ionicons name="bar-chart" size={17} color="#fff" />} color="#32D74B" label={t("more.stats")} onPress={() => router.navigate("/stats")} />
-        <MenuRow icon={<Ionicons name="funnel" size={17} color="#fff" />} color="#0A84FF" label={t("more.reports")} onPress={() => router.navigate("/reports")} />
-        <MenuRow icon={<Ionicons name="moon" size={17} color="#fff" />} color="#5856D6" label={t("nights.title")} onPress={() => router.navigate("/nights")} />
-        <MenuRow icon={<Ionicons name="map" size={17} color="#fff" />} color="#64D2FF" label={t("more.map")} onPress={() => router.navigate("/map")} />
-      </MenuGroup>
-
+      {/* Activity (roster, FTL, layovers, time zones, radar, map) and Career (experience, goals, jobs, CV) have their own tabs */}
       <MenuGroup title={t("more.g.logbook")}>
+        <MenuRow icon={<Ionicons name="airplane" size={17} color="#fff" />} color="#5E5CE6" label={t("more.aircraft")} onPress={() => router.navigate("/aircraft")} />
+        <MenuRow icon={<Ionicons name="funnel" size={17} color="#fff" />} color="#0A84FF" label={t("more.reports")} onPress={() => router.navigate("/reports")} />
         <MenuRow icon={<Ionicons name="checkmark-done" size={17} color="#fff" />} color="#34C759" label={t("more.audit")} onPress={() => router.navigate("/audit")} />
         <MenuRow icon={<Ionicons name="sparkles" size={17} color="#fff" />} color="#22C55E" label={t("uimp.title")} onPress={() => router.push("/import" as never)} />
         <MenuRow icon={<Ionicons name="download" size={17} color="#fff" />} color="#8E8E93" label={t("more.import")} loading={busy === "import"} onPress={importCsv} />

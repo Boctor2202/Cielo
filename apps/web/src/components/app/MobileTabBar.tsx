@@ -1,10 +1,9 @@
 "use client";
 
-import { BadgeCheck, CalendarDays, Gauge, LayoutGrid, Plane, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Briefcase, CalendarDays, Gauge, LayoutGrid, Plane, Plus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import type { StaticPathname } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/navigation";
 import { LiquidNavbar, type LiquidNavItem } from "@/components/ui/liquid-glass-navbar";
 
 const ico = { size: 18, strokeWidth: 1.8, "aria-hidden": true } as const;
@@ -22,49 +21,57 @@ function useDocumentTheme(): "light" | "dark" {
   return theme;
 }
 
-const ROUTES: StaticPathname[] = ["/app", "/app/carnet", "/app/roster", "/app/documents"];
+type Tab = "home" | "logbook" | "activity" | "career" | "more";
+const TABS: Tab[] = ["home", "logbook", "activity", "career", "more"];
 
 /**
- * Mobile bottom navigation: liquid-glass pill (4 sections + "More") and the "new flight" action beside it.
- * "More" opens the secondary sections sheet rendered by AppShell.
+ * Mobile bottom navigation: liquid-glass pill (Home, Logbook, Activity, Career, More) and the "new flight" action
+ * beside it. Home and Logbook open their page; Activity, Career and More open the sheet of their sections (AppShell).
  */
-export function MobileTabBar({ moreOpen, onToggleMore, moreActive }: { moreOpen: boolean; onToggleMore: () => void; moreActive: boolean }) {
+export function MobileTabBar({ active, onSheet, onClose }: { active: string; onSheet: (g: "activity" | "career" | "more") => void; onClose: () => void }) {
   const t = useTranslations("app.nav");
-  const pathname = usePathname();
   const router = useRouter();
   const tone = useDocumentTheme();
-
-  const routeIndex = ROUTES.findIndex((r) => (r === "/app" ? pathname === "/app" : pathname.startsWith(r)));
-  const active = moreOpen || moreActive || routeIndex === -1 ? 4 : routeIndex;
+  const index = Math.max(0, TABS.indexOf(active as Tab));
+  const handled = useRef(0);
 
   const items: LiquidNavItem[] = [
-    { label: t("dashboard"), icon: <Gauge {...ico} />, fx: "glow" },
-    { label: t("logbook"), icon: <Plane {...ico} />, fx: "plane" },
-    { label: t("roster"), icon: <CalendarDays {...ico} />, fx: "pop" },
-    { label: t("documents"), icon: <BadgeCheck {...ico} />, fx: "spin" },
-    { label: "Plus", icon: <LayoutGrid {...ico} />, fx: "wave" },
+    { label: t("home"), icon: <Gauge {...ico} />, fx: "glow" },
+    { label: t("groups.logbook"), icon: <Plane {...ico} />, fx: "plane" },
+    { label: t("groups.activity"), icon: <CalendarDays {...ico} />, fx: "pop" },
+    { label: t("groups.career"), icon: <Briefcase {...ico} />, fx: "spin" },
+    { label: t("more"), icon: <LayoutGrid {...ico} />, fx: "wave" },
   ];
+  const open = (i: number) => {
+    const tab = TABS[i]!;
+    if (tab === "home" || tab === "logbook") {
+      onClose();
+      router.push(tab === "home" ? "/app" : "/app/carnet");
+    } else onSheet(tab);
+  };
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-center gap-2.5 px-3 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-2 lg:hidden">
       <div
-        // "More" toggles the sheet on every tap, including when it is already the active item
+        // a tap on the tab already active (the navbar does not report it) toggles its sheet; any other tap goes
+        // through onChange only, so a tap is never handled twice (that opened and closed the sheet at once)
         onClick={(e) => {
+          if (Date.now() - handled.current < 400) return;
           const item = (e.target as HTMLElement).closest(".nimbus-item");
-          if (item && item.parentElement && Array.prototype.indexOf.call(item.parentElement.querySelectorAll(".nimbus-item"), item) === 4) onToggleMore();
+          if (!item || !item.parentElement) return;
+          const i = Array.prototype.indexOf.call(item.parentElement.querySelectorAll(".nimbus-item"), item);
+          if (i >= 2 && i === index) open(i);
         }}
       >
         <LiquidNavbar
           items={items}
-          active={active}
+          active={index}
           tone={tone}
           compact
           style={{ fontFamily: "var(--font-sans)" }}
           onChange={(i) => {
-            if (i < 4) {
-              if (moreOpen) onToggleMore();
-              router.push(ROUTES[i]!);
-            }
+            handled.current = Date.now();
+            open(i);
           }}
         />
       </div>

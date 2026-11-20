@@ -16,7 +16,9 @@ export function FlightAwareFill({
   registration,
   date,
   onPick,
+  prominent = false,
 }: {
+  prominent?: boolean;
   registration?: string;
   date: string;
   onPick: (f: { dep?: string; arr?: string; out?: string; off?: string; on?: string; in?: string }) => void;
@@ -43,7 +45,7 @@ export function FlightAwareFill({
 
   return (
     <div className="relative">
-      <button type="button" className="btn btn-ghost btn-sm text-accent" disabled={!ready} title={ready ? undefined : t("needReg")} onClick={search}>
+      <button type="button" className={prominent ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm text-accent"} disabled={!ready} title={ready ? undefined : t("needReg")} onClick={search}>
         <Radar size={15} /> {t("button")}
       </button>
       {open && (
