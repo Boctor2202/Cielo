@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 PID = sys.argv[1]
 random.seed(42)
+CAPTAINS = ["Cdt A. Moreau", "Cdt L. Garnier", "Cdt S. Laurent", "Cdt J. Petit", "Cdt M. Roux"]
 today = datetime(2026, 11, 19, tzinfo=timezone.utc)
 q = lambda s: "NULL" if s is None else "'" + str(s).replace("'", "''") + "'"
 out = [f"delete from flights where pilot_id='{PID}'; delete from licenses where pilot_id='{PID}'; delete from aircraft where pilot_id='{PID}';"]
@@ -49,15 +50,17 @@ while day < today - timedelta(days=1):
         ld_n = 1 if (pf and night_frac == 1.0) else 0
         ld_d = 1 if (pf and not ld_n) else 0
         fn = f"SKY{random.randint(1000, 7999)}"
+        # a first officer logs the captain's name (EASA format): fictional captains
+        cpt = random.choice(CAPTAINS)
         iso = lambda x: x.strftime("%Y-%m-%dT%H:%M:00Z")
         out.append(
             "insert into flights (id,created_at,updated_at,pilot_id,date,flight_number,source,dep_icao,arr_icao,out_utc,off_utc,on_utc,in_utc,"
             "aircraft_id,registration,aircraft_type_icao,total_min,air_min,single_pilot_se_min,single_pilot_me_min,multi_pilot_min,function,"
             "pic_min,picus_min,copilot_min,dual_min,instructor_min,examiner_min,night_min,ifr_min,actual_imc_min,xc_min,night_calc,"
-            "takeoffs_day,takeoffs_night,landings_day,landings_night,pilot_flying,approaches,is_fstd,fstd_min,crew,locked,operator) values ("
+            "takeoffs_day,takeoffs_night,landings_day,landings_night,pilot_flying,approaches,is_fstd,fstd_min,crew,locked,operator,pic_name) values ("
             f"'{uuid.uuid4()}',now(),now(),'{PID}','{out_t.date()}','{fn}','manual','{dep}','{arr}','{iso(out_t)}','{iso(off_t)}','{iso(on_t)}','{iso(in_t)}',"
             f"'{ac[reg]}','{reg}','A320',{blk},{blk-15},0,0,{blk},'SIC',0,0,{blk},0,0,0,{night},{blk},{random.choice([0,0,10,20])},{blk},'auto',"
-            f"{ld_d},{ld_n},{ld_d},{ld_n},{'true' if pf else 'false'},'[]',false,0,'[]',false,'Skyline Airways');")
+            f"{ld_d},{ld_n},{ld_d},{ld_n},{'true' if pf else 'false'},'[]',false,0,'[]',false,'Skyline Airways','{cpt}');")
         n += 1
         t = in_t + timedelta(minutes=random.choice([40, 45, 50, 60]))
 print("begin;\n" + "\n".join(out) + "\ncommit;")

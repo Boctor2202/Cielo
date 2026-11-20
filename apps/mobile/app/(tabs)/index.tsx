@@ -32,6 +32,7 @@ import {
   type Totals,
   type WidgetId,
   type WidgetPlacement,
+  isDemoAccount,
 } from "@cielo/core";
 import { Button, Card, Dot, Fab, Row, Screen, Txt, statusColor } from "../../src/components/ui";
 import { Track } from "../../src/components/Bars";
@@ -361,6 +362,7 @@ export default function Dashboard() {
   return (
     <View style={{ flex: 1 }}>
       <Screen columns>
+        {isDemoAccount(pilot.email) ? <Txt variant="small" color={c.accent}>{t("access.demoAccount")}</Txt> : null}
         <View style={{ gap: 2, marginTop: 4 }}>
           <Txt variant="muted">{[t(`dash.greet_${dayPart()}` as I18nKey), pilotFirstName(pilot)].filter(Boolean).join(" ")}</Txt>
           <Txt variant="title">{locale === "fr" ? "Vue d'ensemble" : "Overview"}</Txt>

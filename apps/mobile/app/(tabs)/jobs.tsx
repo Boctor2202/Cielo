@@ -123,11 +123,11 @@ function Jobs() {
             </Row>
           </Pressable>
           <Row style={{ justifyContent: "space-between" }}>
-            <Txt variant="small" mono>{salary(job)}</Txt>
+            <Txt variant="small" mono>{salary(job) || t("jobs.salaryNone")}</Txt>
             <Pressable onPress={() => void WebBrowser.openBrowserAsync(job.url)}>
               <Row gap={4}>
                 <Txt variant="small" color={c.accent}>
-                  {job.postedAt ? `${formatDate(job.postedAt.slice(0, 10), locale)} · ` : ""}
+                  {job.postedAt ? `${formatDate(job.postedAt.slice(0, 10), locale)} · ` : `${t("jobs.dateNone")} · `}
                   {t("jobs.apply")}
                 </Txt>
                 <Ionicons name="open-outline" size={13} color={c.accent} />

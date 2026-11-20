@@ -282,7 +282,7 @@ function JobCard({ job, match, showMatch }: { job: Job; match: Match; showMatch:
               {(job.location || job.country) && (
                 <span className="flex items-center gap-1"><MapPin size={13} aria-hidden /> {[job.location, job.country].filter(Boolean).join(" · ")}</span>
               )}
-              {job.postedAt && <span>{t("posted", { date: fd(job.postedAt) })}</span>}
+              <span>{job.postedAt ? t("posted", { date: fd(job.postedAt) }) : t("postedNone")}</span>
             </p>
           </div>
           <div className="text-right">

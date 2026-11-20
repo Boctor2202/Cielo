@@ -1537,7 +1537,8 @@
           "familyRating": "Qualification sur un type de la même famille : à confirmer",
           "authorityFromCountry": "Déduit du pays de l'offre"
         }
-      }
+      },
+      "postedNone": "Date de publication non communiquée"
     },
     "cv": {
       "title": "CV pilote",
@@ -1824,7 +1825,8 @@
       "readOnlyText": "Sans abonnement actif, votre carnet reste consultable et exportable, mais la saisie est désactivée. Basic à 4,99 €/mois, Max à 8,99 €/mois.",
       "maxTitle": "Fonction réservée à Max",
       "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces réelles, audit et scan sont inclus dans Max (8,99 €/mois).",
-      "haveAccount": "Déjà abonné ? Se connecter"
+      "haveAccount": "Déjà abonné ? Se connecter",
+      "demoAccount": "Compte de démonstration : pilote et données fictifs (Thomas Mercier, Skyline Airways)."
     },
     "photo": {
       "alt": "Photo de l'appareil {reg}",

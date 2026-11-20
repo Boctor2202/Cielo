@@ -1537,7 +1537,8 @@
           "familyRating": "Rated on a type of the same family: to confirm",
           "authorityFromCountry": "Inferred from the job's country"
         }
-      }
+      },
+      "postedNone": "Posting date not stated"
     },
     "cv": {
       "title": "Pilot CV",
@@ -1824,7 +1825,8 @@
       "readOnlyText": "Without an active subscription your logbook stays viewable and exportable, but logging is off. Basic €4.99/month, Max €8.99/month.",
       "maxTitle": "Max feature",
       "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, real tracks, audit and scan are included in Max (€8.99/month).",
-      "haveAccount": "Already subscribed? Sign in"
+      "haveAccount": "Already subscribed? Sign in",
+      "demoAccount": "Demo account: fictional pilot and data (Thomas Mercier, Skyline Airways)."
     },
     "photo": {
       "alt": "Photo of aircraft {reg}",

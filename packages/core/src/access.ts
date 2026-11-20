@@ -72,3 +72,7 @@ export function accessFor(
   }
   return make(null);
 }
+
+/** The public demonstration account (fictional pilot, fictional data), shown with a banner. */
+export const DEMO_ACCOUNT_EMAIL = "demo@geardown.app";
+export const isDemoAccount = (email?: string | null) => (email ?? "").trim().toLowerCase() === DEMO_ACCOUNT_EMAIL;

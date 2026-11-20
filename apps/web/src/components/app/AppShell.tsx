@@ -10,6 +10,7 @@ import type { StaticPathname as AppPathname } from "@/i18n/routing";
 import { AirportsProvider } from "@/lib/airports";
 import { CloudProvider, useCloud } from "@/lib/cloud";
 import { usePilot } from "@/lib/hooks";
+import { isDemoAccount } from "@cielo/core";
 import { useTrackAutoFetch } from "@/lib/tracks";
 import { AccessBanner, useAccess, usePendingCheckout } from "@/lib/access";
 import { useFlags, type Flags } from "@/lib/flags";
@@ -172,11 +173,13 @@ function Shell({ children }: { children: ReactNode }) {
             {pathname === "/app" ? (
               <>
                 <AccessBanner />
+                <DemoAccountBanner email={pilot?.email} />
                 {children}
               </>
             ) : (
               <div className="app-glass min-h-[calc(100dvh-1.5rem)] rounded-[28px] px-4 py-6 sm:px-8 sm:py-8">
                 <AccessBanner />
+                <DemoAccountBanner email={pilot?.email} />
                 {children}
               </div>
             )}
@@ -201,4 +204,11 @@ function Shell({ children }: { children: ReactNode }) {
       </div>
     </AirportsProvider>
   );
+}
+
+/** On the public demo account: the data is fictional (so nobody takes it for a real pilot's logbook). */
+function DemoAccountBanner({ email }: { email?: string | null }) {
+  const t = useTranslations("app.access");
+  if (!isDemoAccount(email)) return null;
+  return <p className="mb-3 rounded-lg border border-accent/40 bg-accent/10 px-4 py-2 text-sm">{t("demoAccount")}</p>;
 }
