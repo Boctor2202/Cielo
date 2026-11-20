@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Geardown — le carnet de vol électronique des pilotes",
-    "description": "Carnet de vol électronique conforme EASA, FAA et CASA : saisie rapide, calcul automatique du temps de nuit, exports officiels, licences, FTL et roster. Pour pilotes de ligne, d'affaires et privés."
+    "description": "Carnet de vol électronique, exports au format EASA, FAA et CASA : saisie rapide, calcul automatique du temps de nuit, licences, FTL et roster. Pour pilotes de ligne, d'affaires et privés."
   },
   "nav": {
     "features": "Fonctionnalités",
@@ -9,7 +9,7 @@
     "airlines": "Pour les compagnies",
     "blog": "Blog",
     "login": "Connexion",
-    "trial": "Essai 7 jours",
+    "trial": "Essai %TRIAL% jours",
     "openApp": "Ouvrir l'app",
     "menu": "Menu",
     "theme": "Changer de thème",
@@ -19,15 +19,15 @@
     "eyebrow": "Conçu par des pilotes · EASA · FAA · CASA",
     "title": "Le carnet de vol qui travaille pour votre carrière",
     "subtitle": "Un vol saisi en 20 secondes, et Geardown fait le reste : temps de nuit, limites FTL, licences et médical. Votre CV se met à jour tout seul et les offres qui vous correspondent viennent à vous.",
-    "ctaTrial": "Essayer 7 jours",
+    "ctaTrial": "Essayer %TRIAL% jours",
     "ctaDemo": "Voir la démo",
-    "note": "7 jours d'essai · Sans engagement · Vos données restent à vous",
+    "note": "%TRIAL% jours d'essai · Sans engagement · Vos données restent à vous",
     "appStore": "Télécharger dans l'App Store",
     "playStore": "Disponible sur Google Play",
     "comingSoon": "Bientôt",
     "readoutNight": "Nuit calculée",
     "readoutRoute": "LFPG → LFMN",
-    "readoutStatus": "Carnet conforme",
+    "readoutStatus": "Carnet au format des autorités",
     "liveDemo": "Démo en direct, sans inscription",
     "features": [
       "Nuit calculée",
@@ -48,7 +48,7 @@
     "subtitle": "Dix outils, une seule source de vérité pour votre expérience aéronautique.",
     "items": {
       "logbook": {
-        "title": "Carnet de vol et exports officiels",
+        "title": "Carnet de vol et exports au format des autorités",
         "text": "Toutes les colonnes de l'AMC1 FCL.050, totaux par page et reports automatiques. Export PDF aux formats EASA, FAA et CASA, plus CSV et Excel.",
         "points": [
           "Temps de nuit calculé au crépuscule civil",
@@ -107,7 +107,7 @@
         "points": [
           "Empreinte SHA-256 du contenu",
           "Toute modification invalide la signature",
-          "Mention dans l'export officiel"
+          "Mention dans l'export PDF"
         ]
       },
       "offline": {
@@ -141,14 +141,14 @@
   },
   "pricing": {
     "title": "Des tarifs simples",
-    "subtitle": "7 jours d'essai sur l'offre de votre choix, puis un abonnement mensuel ou annuel (2 mois offerts), sans engagement.",
+    "subtitle": "%TRIAL% jours d'essai sur l'offre de votre choix, puis un abonnement mensuel ou annuel (2 mois offerts), sans engagement.",
     "monthly": "Mensuel",
     "yearly": "Annuel",
     "perMonth": "/mois",
     "perYear": "/an",
     "billedYearly": "soit {price} par mois",
     "popular": "Le plus complet",
-    "cta": "Essayer 7 jours",
+    "cta": "Essayer %TRIAL% jours",
     "ctaFree": "Créer mon carnet",
     "plans": {
       "basic": {
@@ -164,16 +164,17 @@
       "basic": [
         "Vols illimités, temps de nuit calculé automatiquement",
         "Import de votre ancien carnet (CSV, Excel), colonnes reconnues seules",
-        "Export officiel PDF EASA, FAA, CASA, et CSV / Excel",
+        "Export PDF au format EASA, FAA, CASA, et CSV / Excel",
         "Licences, médical et expérience récente FCL.060, avec rappels d'échéance",
         "Statistiques et carte de vos routes",
-        "Web et mobile synchronisés, utilisable hors ligne"
+        "Web et mobile synchronisés, utilisable hors ligne",
+        "Signature numérique de vos vols"
       ],
       "premium": [
         "Tout Basic",
         "Offres d'emploi pilote classées selon votre profil, et CV pilote",
         "Import du roster compagnie et limites FTL ORO.FTL",
-        "Audit du carnet (17 contrôles) et signatures numériques",
+        "Audit du carnet (17 contrôles)",
         "Escales : les meilleures adresses autour de l'hôtel équipage",
         "Radar en direct et trace réelle de chaque vol",
         "Scan photo du carnet papier (bêta)"
@@ -186,7 +187,7 @@
       "night": "Temps de nuit automatique",
       "airports": "Base aéroports et types d'avions",
       "csv": "Import automatique (CSV, Excel) et export CSV / Excel",
-      "pdf": "Export PDF officiel (EASA, FAA, CASA)",
+      "pdf": "Export PDF au format EASA, FAA, CASA",
       "carry": "Report des totaux du carnet papier",
       "licenses": "Licences, médical et rappels d'échéance",
       "recency": "Expérience récente FCL.060",
@@ -206,11 +207,12 @@
       "unlimited": "Illimité",
       "oneDevice": "1 appareil"
     },
-    "vat": "Prix TTC, facturés chaque mois. Sans engagement. Sans abonnement, votre carnet reste consultable et exportable.",
+    "vat": "Prix TTC. Mensuel : facturé chaque mois. Annuel : facturé une fois par an. Sans engagement. Sans abonnement, votre carnet reste consultable et exportable.",
     "trialNote": "Carte bancaire demandée à l'inscription. Aucun prélèvement pendant 7 jours, annulable en un clic avant la fin de l'essai.",
     "twoMonthsFree": "2 mois offerts",
     "perMonthEquiv": "soit {price}/mois",
-    "orYearly": "ou {price}/an, 2 mois offerts"
+    "orYearly": "ou {price}/an, 2 mois offerts",
+    "trialNoteNoCard": "Aucune carte bancaire demandée pendant l'essai de %TRIAL% jours. À la fin, choisissez Basic ou Max pour continuer à écrire ; sinon votre carnet reste consultable et exportable."
   },
   "testimonials": {
     "title": "Ils volent avec Geardown",
@@ -225,8 +227,8 @@
         "a": "Vos données sont stockées d'abord sur votre appareil, puis synchronisées sur des serveurs situés dans l'Union européenne. Les échanges sont chiffrés (TLS), les documents joints sont stockés dans un espace privé et chaque compte n'accède qu'à ses propres données. Nous ne vendons ni ne partageons vos données."
       },
       {
-        "q": "Geardown est-il conforme EASA ?",
-        "a": "Le carnet reprend toutes les informations exigées par FCL.050 et le format de l'AMC1 FCL.050. Le temps de nuit est calculé selon la définition EASA (crépuscule civil). Un carnet électronique est accepté sous réserve que les données soient exactes et disponibles sur demande : vous pouvez à tout moment imprimer ou présenter l'export PDF officiel."
+        "q": "Les exports Geardown sont-ils au format EASA ?",
+        "a": "Le carnet reprend toutes les informations exigées par FCL.050 et le format de l'AMC1 FCL.050. Le temps de nuit est calculé selon la définition EASA (crépuscule civil). Un carnet électronique est accepté sous réserve que les données soient exactes et disponibles sur demande : vous pouvez à tout moment imprimer ou présenter l'export PDF au format AMC1 FCL.050. L'acceptation d'un carnet électronique reste du ressort de votre autorité."
       },
       {
         "q": "Puis-je exporter mon carnet ?",
@@ -249,7 +251,7 @@
   "cta": {
     "title": "Prêt pour votre prochain vol ?",
     "text": "Créez votre carnet en moins d'une minute. Importez votre historique quand vous voulez.",
-    "button": "Essayer 7 jours"
+    "button": "Essayer %TRIAL% jours"
   },
   "footer": {
     "tagline": "Le carnet de vol électronique conçu par et pour les pilotes.",
@@ -262,7 +264,8 @@
     "cookies": "Cookies",
     "contact": "Contact",
     "rights": "Tous droits réservés.",
-    "disclaimer": "Geardown est un outil d'aide. Le pilote reste responsable de l'exactitude de son carnet et du respect de la réglementation applicable."
+    "disclaimer": "Geardown est un outil d'aide. Le pilote reste responsable de l'exactitude de son carnet et du respect de la réglementation applicable.",
+    "yourData": "Vos données"
   },
   "airlines": {
     "title": "Geardown pour les compagnies et écoles",
@@ -790,7 +793,7 @@
       "copy": "Copier",
       "copied": "Copié",
       "linkErr": "Le lien n'a pas pu être créé. Attendez que le vol soit synchronisé, puis réessayez.",
-      "linkPlan": "Les liens de signature font partie de l'offre Max."
+      "linkPlan": "Les liens de signature sont inclus dans Basic et Max."
     },
     "import": {
       "title": "Importer des vols",
@@ -911,7 +914,7 @@
     "export": {
       "title": "Exporter le carnet",
       "format": "Format",
-      "pdfEasa": "PDF officiel EASA (AMC1 FCL.050)",
+      "pdfEasa": "PDF au format EASA (AMC1 FCL.050)",
       "pdfFaa": "PDF FAA (14 CFR 61.51)",
       "pdfCasa": "PDF CASA (CASR 61.345)",
       "csv": "CSV",
@@ -925,7 +928,7 @@
       "count": "{count, plural, one {# entrée} other {# entrées}} dans la période",
       "notice": "L'export PDF reprend les colonnes (1) à (13) du format EASA, avec totaux par page, total des pages précédentes et total général.",
       "pdf": {
-        "EASA": "PDF officiel EASA (AMC1 FCL.050)",
+        "EASA": "PDF au format EASA (AMC1 FCL.050)",
         "UK": "PDF UK CAA (UK Part-FCL)",
         "FAA": "PDF FAA (14 CFR 61.51)",
         "CASA": "PDF CASA (CASR 61.345)",
@@ -1789,7 +1792,7 @@
       "fromFa": "La trace réelle se récupère automatiquement pour les vols des dernières 24 h (réseau ADS-B)."
     },
     "access": {
-      "demo": "Démo : {days, plural, one {encore # jour} other {encore # jours}} pour tout essayer. Créez votre compte pour continuer avec 7 jours d'essai.",
+      "demo": "Démo : {days, plural, one {encore # jour} other {encore # jours}} pour tout essayer. Créez votre compte pour continuer avec %TRIAL% jours d'essai.",
       "startTrial": "Démarrer l'essai",
       "readOnlyBanner": "Votre carnet est en lecture seule : abonnez-vous pour saisir de nouveaux vols. Vos données restent consultables et exportables.",
       "subscribe": "Choisir un abonnement",
@@ -1798,7 +1801,7 @@
       "readOnlyTitle": "Abonnement nécessaire",
       "readOnlyText": "Sans abonnement actif, votre carnet reste consultable et exportable, mais la saisie est désactivée. Basic à 4,99 €/mois, Max à 8,99 €/mois.",
       "maxTitle": "Fonction réservée à Max",
-      "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces réelles, audit, signatures et scan sont inclus dans Max (8,99 €/mois).",
+      "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces réelles, audit et scan sont inclus dans Max (8,99 €/mois).",
       "haveAccount": "Déjà abonné ? Se connecter"
     },
     "photo": {
@@ -2302,7 +2305,7 @@
     "title": "Conçu comme un instrument de bord",
     "items": [
       {
-        "t": "Conforme EASA, FAA et CASA",
+        "t": "Au format EASA, FAA et CASA",
         "d": "Les colonnes de l'AMC1 FCL.050, la définition EASA de la nuit et l'expérience récente FCL.060. Exports FAA et CASA inclus."
       },
       {
@@ -2321,7 +2324,7 @@
   },
   "how": {
     "label": "En 3 étapes",
-    "title": "De votre carnet papier à l'export officiel",
+    "title": "De votre carnet papier à l'export au format EASA",
     "steps": [
       {
         "t": "Importez",
@@ -2379,7 +2382,7 @@
     "c3": {
       "label": "04 · Conformité",
       "title": "Prêt pour le contrôle.",
-      "text": "Audit automatique du carnet, licences et médical suivis, limites FTL, export PDF officiel EASA, FAA ou CASA. Votre carnet est juste, et vous pouvez le prouver.",
+      "text": "Audit automatique du carnet, licences et médical suivis, limites FTL, export PDF au format EASA, FAA ou CASA. Votre carnet est juste, et vous pouvez le prouver.",
       "cta": "Créer mon carnet"
     },
     "hud": {
@@ -2414,7 +2417,7 @@
   "seo": {
     "home": {
       "title": "Geardown — Carnet de vol électronique pour pilotes (EASA, FAA, CASA)",
-      "description": "Carnet de vol électronique conforme EASA, FAA et CASA : temps de nuit calculé automatiquement, export PDF officiel, licences, FTL, roster, offres d'emploi pilote et CV. Essai gratuit, web, iOS et Android."
+      "description": "Carnet de vol électronique, export PDF au format EASA, FAA et CASA : temps de nuit calculé automatiquement, licences, FTL, roster, offres d'emploi pilote et CV. Essai gratuit, web, iOS et Android."
     },
     "features": {
       "title": "Fonctionnalités du carnet de vol électronique",
@@ -2422,11 +2425,11 @@
     },
     "pricing": {
       "title": "Tarifs — carnet de vol électronique dès 4,99 €/mois",
-      "description": "Basic à 4,99 €/mois pour les pilotes privés et élèves, Max à 8,99 €/mois pour les pilotes professionnels (roster, FTL, escales, radar). 7 jours d'essai, sans engagement."
+      "description": "Basic à 4,99 €/mois pour les pilotes privés et élèves, Max à 8,99 €/mois pour les pilotes professionnels (roster, FTL, escales, radar). %TRIAL% jours d'essai, sans engagement."
     },
     "airlines": {
       "title": "Carnet de vol électronique pour compagnies et écoles",
-      "description": "Geardown pour les compagnies, opérateurs d'affaires et écoles de pilotage : rosters importés, suivi des licences de l'équipage, conformité EASA, FAA et CASA, exports officiels."
+      "description": "Geardown pour les compagnies, opérateurs d'affaires et écoles de pilotage : rosters importés, suivi des licences de l'équipage, exports au format EASA, FAA et CASA."
     },
     "blog": {
       "title": "Blog — réglementation EASA et métier de pilote",
@@ -2488,5 +2491,44 @@
       "rate_limited": "Trop d'essais : patientez une minute.",
       "generic": "Une erreur est survenue. Réessayez."
     }
+  },
+  "yourData": {
+    "title": "Vos données vous appartiennent",
+    "lead": "Ce que Geardown garde, où, qui le voit, et comment le récupérer ou l'effacer.",
+    "items": [
+      {
+        "h": "Votre carnet est d'abord sur votre appareil",
+        "p": "Le carnet est enregistré sur votre téléphone et dans votre navigateur. Il fonctionne hors ligne. Avec un compte, il est synchronisé entre vos appareils via nos serveurs."
+      },
+      {
+        "h": "Export complet à tout moment",
+        "p": "CSV, Excel, PDF au format EASA, FAA ou CASA, et l'intégralité de vos données en JSON depuis Paramètres › Mes données. Sans abonnement, le carnet reste consultable et exportable."
+      },
+      {
+        "h": "Suppression du compte",
+        "p": "Depuis les paramètres du site ou de l'app, vous supprimez votre compte et vos données. La suppression est définitive."
+      },
+      {
+        "h": "Le matching emploi reste chez vous",
+        "p": "Le classement des offres d'emploi est calculé sur votre appareil : votre carnet n'est pas envoyé pour cela."
+      },
+      {
+        "h": "Ni publicité, ni revente",
+        "p": "Aucune donnée n'est vendue ni utilisée à des fins publicitaires. Pas de cookie publicitaire, pas de mesure d'audience tierce."
+      },
+      {
+        "h": "Ce que vous ne remplissez pas n'existe pas",
+        "p": "Pour le médical, Geardown n'enregistre que la classe et les dates. Les champs facultatifs (photo, CV, documents) ne sont stockés que si vous les ajoutez."
+      }
+    ],
+    "thirdTitle": "Ce que reçoivent les services tiers",
+    "thirdParties": [
+      "Paiement : Stripe (web), Apple (App Store) ; ils traitent votre paiement, Geardown ne voit pas votre carte.",
+      "Heures réelles d'un vol (ADS-B) : l'immatriculation et la date sont envoyées au réseau ADS-B ouvert adsb.lol, sans votre nom.",
+      "Cartes : les fonds de carte sont chargés depuis Google Maps ou un fournisseur de tuiles, qui voit la zone affichée.",
+      "E-mails : un service d'envoi transmet les codes de connexion et les alertes que vous avez activées."
+    ],
+    "more": "Le détail juridique (bases légales, durées de conservation, vos droits) est dans la",
+    "privacyLink": "politique de confidentialité."
   }
 }

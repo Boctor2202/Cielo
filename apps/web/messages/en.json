@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Geardown — the electronic pilot logbook",
-    "description": "EASA, FAA and CASA compliant electronic logbook: fast entry, automatic night time, official exports, licences, FTL and roster. For airline, business and private pilots."
+    "description": "Electronic logbook with exports in EASA, FAA and CASA format: fast entry, automatic night time, licences, FTL and roster. For airline, business and private pilots."
   },
   "nav": {
     "features": "Features",
@@ -9,7 +9,7 @@
     "airlines": "For airlines",
     "blog": "Blog",
     "login": "Log in",
-    "trial": "7-day trial",
+    "trial": "%TRIAL%-day trial",
     "openApp": "Open app",
     "menu": "Menu",
     "theme": "Toggle theme",
@@ -19,9 +19,9 @@
     "eyebrow": "Built by pilots · EASA · FAA · CASA",
     "title": "The logbook that works for your career",
     "subtitle": "Log a flight in 20 seconds and Geardown does the rest: night time, FTL limits, licences and medical. Your CV updates itself and the jobs that fit you come to you.",
-    "ctaTrial": "Try 7 days",
+    "ctaTrial": "Try %TRIAL% days",
     "ctaDemo": "See the demo",
-    "note": "7-day trial · No commitment · Your data stays yours",
+    "note": "%TRIAL%-day trial · No commitment · Your data stays yours",
     "appStore": "Download on the App Store",
     "playStore": "Get it on Google Play",
     "comingSoon": "Coming soon",
@@ -48,7 +48,7 @@
     "subtitle": "Ten tools, one source of truth for your flying experience.",
     "items": {
       "logbook": {
-        "title": "Logbook and official exports",
+        "title": "Logbook and exports in authority formats",
         "text": "Every AMC1 FCL.050 column, page totals and automatic carry-forward. PDF export in EASA, FAA and CASA formats, plus CSV and Excel.",
         "points": [
           "Night time from civil twilight",
@@ -107,7 +107,7 @@
         "points": [
           "SHA-256 fingerprint of the content",
           "Any change voids the signature",
-          "Shown in the official export"
+          "Shown in the PDF export"
         ]
       },
       "offline": {
@@ -141,14 +141,14 @@
   },
   "pricing": {
     "title": "Simple pricing",
-    "subtitle": "A 7-day trial on the plan of your choice, then a monthly or yearly subscription (2 months free), no commitment.",
+    "subtitle": "A %TRIAL%-day trial on the plan of your choice, then a monthly or yearly subscription (2 months free), no commitment.",
     "monthly": "Monthly",
     "yearly": "Yearly",
     "perMonth": "/month",
     "perYear": "/year",
     "billedYearly": "that's {price} per month",
     "popular": "Most complete",
-    "cta": "Try 7 days",
+    "cta": "Try %TRIAL% days",
     "ctaFree": "Create my logbook",
     "plans": {
       "basic": {
@@ -164,16 +164,17 @@
       "basic": [
         "Unlimited flights, night time computed automatically",
         "Import your old logbook (CSV, Excel), columns recognised automatically",
-        "Official EASA, FAA, CASA PDF export, plus CSV / Excel",
+        "PDF export in EASA, FAA, CASA format, plus CSV / Excel",
         "Licences, medical and FCL.060 recency, with expiry reminders",
         "Statistics and a map of your routes",
-        "Web and mobile in sync, works offline"
+        "Web and mobile in sync, works offline",
+        "Digital signature of your flights"
       ],
       "premium": [
         "Everything in Basic",
         "Pilot job offers ranked for your profile, and a pilot CV",
         "Airline roster import and ORO.FTL limits",
-        "Logbook audit (17 checks) and digital signatures",
+        "Logbook audit (17 checks)",
         "Layovers: the best places around the crew hotel",
         "Live radar and the real track of every flight",
         "Paper logbook photo scan (beta)"
@@ -186,7 +187,7 @@
       "night": "Automatic night time",
       "airports": "Airport and aircraft type database",
       "csv": "Automatic import (CSV, Excel) and CSV / Excel export",
-      "pdf": "Official PDF export (EASA, FAA, CASA)",
+      "pdf": "PDF export in EASA, FAA, CASA format",
       "carry": "Paper logbook carried-forward totals",
       "licenses": "Licences, medical and expiry reminders",
       "recency": "FCL.060 recent experience",
@@ -206,11 +207,12 @@
       "unlimited": "Unlimited",
       "oneDevice": "1 device"
     },
-    "vat": "Prices incl. VAT, billed monthly. No commitment. Without a subscription your logbook stays viewable and exportable.",
+    "vat": "Prices incl. VAT. Monthly: billed every month. Yearly: billed once a year. No commitment. Without a subscription, your logbook stays readable and exportable.",
     "trialNote": "Card required at sign-up. Nothing is charged for 7 days; cancel in one click before the trial ends.",
     "twoMonthsFree": "2 months free",
     "perMonthEquiv": "that is {price}/month",
-    "orYearly": "or {price}/year, 2 months free"
+    "orYearly": "or {price}/year, 2 months free",
+    "trialNoteNoCard": "No card needed for the %TRIAL%-day trial. At the end, choose Basic or Max to keep writing; otherwise your logbook stays readable and exportable."
   },
   "testimonials": {
     "title": "They fly with Geardown",
@@ -225,8 +227,8 @@
         "a": "Your data is stored on your device first, then synced to servers located in the European Union. Traffic is encrypted (TLS), attachments are kept in a private space and each account can only access its own data. We never sell or share your data."
       },
       {
-        "q": "Is Geardown EASA compliant?",
-        "a": "The logbook records all the information required by FCL.050 in the AMC1 FCL.050 layout. Night time follows the EASA definition (civil twilight). An electronic logbook is acceptable provided the data is accurate and available on request: you can print or show the official PDF export at any time."
+        "q": "Are Geardown exports in EASA format?",
+        "a": "The logbook records all the information required by FCL.050 in the AMC1 FCL.050 layout. Night time follows the EASA definition (civil twilight). An electronic logbook is acceptable provided the data is accurate and available on request: you can print or show the PDF export in AMC1 FCL.050 format at any time. Whether an electronic logbook is accepted remains your authority's decision."
       },
       {
         "q": "Can I export my logbook?",
@@ -249,7 +251,7 @@
   "cta": {
     "title": "Ready for your next flight?",
     "text": "Create your logbook in under a minute. Import your history whenever you like.",
-    "button": "Try 7 days"
+    "button": "Try %TRIAL% days"
   },
   "footer": {
     "tagline": "The electronic logbook built by and for pilots.",
@@ -262,7 +264,8 @@
     "cookies": "Cookies",
     "contact": "Contact",
     "rights": "All rights reserved.",
-    "disclaimer": "Geardown is an aid. The pilot remains responsible for the accuracy of their logbook and compliance with applicable regulations."
+    "disclaimer": "Geardown is an aid. The pilot remains responsible for the accuracy of their logbook and compliance with applicable regulations.",
+    "yourData": "Your data"
   },
   "airlines": {
     "title": "Geardown for airlines and flight schools",
@@ -790,7 +793,7 @@
       "copy": "Copy",
       "copied": "Copied",
       "linkErr": "The link could not be created. Wait for the flight to sync, then try again.",
-      "linkPlan": "Signing links are part of the Max plan."
+      "linkPlan": "Signing links are included in Basic and Max."
     },
     "import": {
       "title": "Import flights",
@@ -911,7 +914,7 @@
     "export": {
       "title": "Export logbook",
       "format": "Format",
-      "pdfEasa": "Official EASA PDF (AMC1 FCL.050)",
+      "pdfEasa": "PDF in EASA format (AMC1 FCL.050)",
       "pdfFaa": "FAA PDF (14 CFR 61.51)",
       "pdfCasa": "CASA PDF (CASR 61.345)",
       "csv": "CSV",
@@ -1789,7 +1792,7 @@
       "fromFa": "The actual track is fetched automatically for flights of the last 24 h (ADS-B network)."
     },
     "access": {
-      "demo": "Demo: {days, plural, one {# day} other {# days}} left to try everything. Create your account to continue with a 7-day trial.",
+      "demo": "Demo: {days, plural, one {# day} other {# days}} left to try everything. Create your account to continue with a %TRIAL%-day trial.",
       "startTrial": "Start the trial",
       "readOnlyBanner": "Your logbook is read-only: subscribe to log new flights. Your data stays viewable and exportable.",
       "subscribe": "Choose a plan",
@@ -1798,7 +1801,7 @@
       "readOnlyTitle": "Subscription required",
       "readOnlyText": "Without an active subscription your logbook stays viewable and exportable, but logging is off. Basic €4.99/month, Max €8.99/month.",
       "maxTitle": "Max feature",
-      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, real tracks, audit, signatures and scan are included in Max (€8.99/month).",
+      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, real tracks, audit and scan are included in Max (€8.99/month).",
       "haveAccount": "Already subscribed? Sign in"
     },
     "photo": {
@@ -2302,7 +2305,7 @@
     "title": "Built like a flight instrument",
     "items": [
       {
-        "t": "EASA, FAA and CASA compliant",
+        "t": "In EASA, FAA and CASA format",
         "d": "AMC1 FCL.050 columns, the EASA night definition and FCL.060 recent experience. FAA and CASA exports included."
       },
       {
@@ -2321,7 +2324,7 @@
   },
   "how": {
     "label": "3 steps",
-    "title": "From your paper logbook to the official export",
+    "title": "From your paper logbook to an EASA-format export",
     "steps": [
       {
         "t": "Import",
@@ -2379,7 +2382,7 @@
     "c3": {
       "label": "04 · Compliance",
       "title": "Ready for the check ride.",
-      "text": "Automatic logbook audit, licences and medical tracked, FTL limits, official EASA, FAA or CASA PDF export. Your logbook is right, and you can prove it.",
+      "text": "Automatic logbook audit, licences and medical tracked, FTL limits, PDF export in EASA, FAA or CASA format. Your logbook is right, and you can prove it.",
       "cta": "Create my logbook"
     },
     "hud": {
@@ -2414,7 +2417,7 @@
   "seo": {
     "home": {
       "title": "Geardown — Electronic pilot logbook (EASA, FAA, CASA)",
-      "description": "EASA, FAA and CASA compliant electronic pilot logbook: automatic night time, official PDF export, licences, FTL, roster, pilot jobs and pilot CV. Free trial, web, iOS and Android."
+      "description": "Electronic pilot logbook, PDF export in EASA, FAA and CASA format: automatic night time, licences, FTL, roster, pilot jobs and pilot CV. Free trial, web, iOS and Android."
     },
     "features": {
       "title": "Electronic pilot logbook features",
@@ -2422,11 +2425,11 @@
     },
     "pricing": {
       "title": "Pricing — electronic pilot logbook from €4.99/month",
-      "description": "Basic at €4.99/month for private and student pilots, Max at €8.99/month for professional pilots (roster, FTL, layovers, radar). 7-day trial, no commitment."
+      "description": "Basic at €4.99/month for private and student pilots, Max at €8.99/month for professional pilots (roster, FTL, layovers, radar). %TRIAL%-day trial, no commitment."
     },
     "airlines": {
       "title": "Electronic logbook for airlines and flight schools",
-      "description": "Geardown for airlines, business aviation operators and flight schools: imported rosters, crew licence tracking, EASA, FAA and CASA compliance, official exports."
+      "description": "Geardown for airlines, business aviation operators and flight schools: imported rosters, crew licence tracking, exports in EASA, FAA and CASA format."
     },
     "blog": {
       "title": "Blog — EASA rules and pilot life",
@@ -2488,5 +2491,44 @@
       "rate_limited": "Too many attempts: wait a minute.",
       "generic": "Something went wrong. Try again."
     }
+  },
+  "yourData": {
+    "title": "Your data is yours",
+    "lead": "What Geardown keeps, where, who sees it, and how to take it back or erase it.",
+    "items": [
+      {
+        "h": "Your logbook lives on your device first",
+        "p": "The logbook is saved on your phone and in your browser and works offline. With an account it syncs between your devices through our servers."
+      },
+      {
+        "h": "Full export at any time",
+        "p": "CSV, Excel, PDF in EASA, FAA or CASA format, and all your data as JSON from Settings › My data. Without a subscription, the logbook stays readable and exportable."
+      },
+      {
+        "h": "Account deletion",
+        "p": "From the website or app settings, you delete your account and your data. Deletion is final."
+      },
+      {
+        "h": "Job matching stays with you",
+        "p": "Job offers are ranked on your device: your logbook is not sent for it."
+      },
+      {
+        "h": "No ads, no resale",
+        "p": "No data is sold or used for advertising. No advertising cookies, no third-party analytics."
+      },
+      {
+        "h": "What you don't fill in doesn't exist",
+        "p": "For the medical, Geardown keeps only the class and dates. Optional fields (photo, CV, documents) are stored only if you add them."
+      }
+    ],
+    "thirdTitle": "What third-party services receive",
+    "thirdParties": [
+      "Payment: Stripe (web), Apple (App Store); they process your payment, Geardown never sees your card.",
+      "Actual flight times (ADS-B): the registration and date are sent to the open ADS-B network adsb.lol, without your name.",
+      "Maps: map tiles are loaded from Google Maps or a tile provider, which sees the area shown.",
+      "Email: a sending service delivers sign-in codes and the alerts you turned on."
+    ],
+    "more": "The legal detail (legal bases, retention, your rights) is in the",
+    "privacyLink": "privacy policy."
   }
 }

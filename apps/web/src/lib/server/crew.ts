@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { accessFor, canonicalFlightContent, rowFromDb, type Flight } from "@cielo/core";
+import { accessFor, canonicalFlightContent, noCardTrialDays, rowFromDb, type Flight } from "@cielo/core";
 
 /**
  * Signatures between Geardown pilots (server side, service role).
@@ -50,7 +50,7 @@ export const snapshot = (f: Flight) => ({
 export async function canSign(db: Db, id: string): Promise<boolean> {
   const { data: p } = await db.from("pilots").select("created_at, subscription_tier, subscription_expires_at").eq("id", id).maybeSingle();
   if (!p) return false;
-  return accessFor({ createdAt: p.created_at, subscriptionTier: p.subscription_tier, subscriptionExpiresAt: p.subscription_expires_at }, { signedIn: true }).has("signature");
+  return accessFor({ createdAt: p.created_at, subscriptionTier: p.subscription_tier, subscriptionExpiresAt: p.subscription_expires_at }, { signedIn: true, noCardTrialDays: noCardTrialDays(process.env.NEXT_PUBLIC_NO_CARD_TRIAL_DAYS) }).has("signature");
 }
 
 type FlightRow = { id: string; pilot_id: string; date: string; dep_icao: string; arr_icao: string; registration: string | null; pic_name: string | null; pic_min: number | null; function: string | null; signature_id: string | null; is_fstd: boolean };

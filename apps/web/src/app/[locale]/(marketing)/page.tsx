@@ -1,7 +1,7 @@
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { JsonLd } from "@/components/JsonLd";
 import { faqLd, organizationLd, pageMeta, SITE_URL, softwareLd } from "@/lib/seo";
-import { CtaBand, Faq, HowItWorks, ProofBand, Showcase, Testimonials } from "@/components/marketing/sections";
+import { CtaBand, Faq, HowItWorks, ProofBand, Showcase } from "@/components/marketing/sections";
 import { ImmersiveHome } from "@/components/marketing/immersive/ImmersiveHome";
 import { Pricing } from "@/components/marketing/Pricing";
 
@@ -33,7 +33,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <div className="border-t border-border bg-surface/50">
         <Pricing />
       </div>
-      <Testimonials />
+      {/* testimonials come back once real, consented ones exist (empty slots looked like fake reviews) */}
       <Faq />
       <CtaBand />
     </>

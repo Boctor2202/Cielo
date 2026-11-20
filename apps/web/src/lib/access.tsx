@@ -3,7 +3,7 @@
 import { Lock, Sparkles } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { accessFor, type Access, type MaxFeature } from "@cielo/core";
+import { accessFor, noCardTrialDays, type Access, type MaxFeature } from "@cielo/core";
 import { Link } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { useCloud } from "./cloud";
@@ -14,7 +14,7 @@ import { setWriteAllowed } from "./write-guard";
 export function useAccess(): Access {
   const pilot = usePilot();
   const cloud = useCloud();
-  const a = accessFor(pilot, { signedIn: !!cloud.session });
+  const a = accessFor(pilot, { signedIn: !!cloud.session, noCardTrialDays: noCardTrialDays(process.env.NEXT_PUBLIC_NO_CARD_TRIAL_DAYS) });
   setWriteAllowed(a.canWrite);
   return a;
 }

@@ -3,6 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import { Platform } from "react-native";
 import {
   accessFor,
+  noCardTrialDays,
   flightRevision,
   stamp,
   type FlightRevision,
@@ -161,7 +162,7 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
 
   const value = useMemo<AppState | null>(() => {
     if (!store || !data) return null;
-    const access = accessFor(data.pilot, { signedIn: !!session });
+    const access = accessFor(data.pilot, { signedIn: !!session, noCardTrialDays: noCardTrialDays(process.env.EXPO_PUBLIC_NO_CARD_TRIAL_DAYS) });
     const put: AppState["put"] = async (table, row) => {
       // read-only without a live subscription (the pilot's own settings stay editable)
       if (!access.canWrite && table !== "pilots") throw new ReadOnlyError();

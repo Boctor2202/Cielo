@@ -26,7 +26,7 @@ const MATRIX: { row: string; basic: Cell; premium: Cell }[] = [
   { row: "layovers", basic: false, premium: true },
   { row: "radar", basic: false, premium: true },
   { row: "audit", basic: false, premium: true },
-  { row: "signature", basic: false, premium: true },
+  { row: "signature", basic: true, premium: true },
   { row: "scan", basic: false, premium: true },
   { row: "jobs", basic: false, premium: true },
 ];

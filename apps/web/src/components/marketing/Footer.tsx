@@ -4,6 +4,8 @@ import { SITE } from "@/config/site";
 import { Logo } from "../Logo";
 
 function Social({ href, label, d }: { href: string; label: string; d: string }) {
+  // a network without a page yet is not shown (no dead "#" link)
+  if (!href || href === "#") return null;
   return (
     <a href={href} aria-label={label} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-accent hover:text-accent" target="_blank" rel="noopener noreferrer">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d={d} /></svg>
@@ -43,6 +45,7 @@ export function Footer() {
           <Link href="/legal/confidentialite">{t("privacy")}</Link>
           <Link href="/legal/cgu">{t("terms")}</Link>
           <Link href="/legal/cookies">{t("cookies")}</Link>
+          <Link href="/vos-donnees">{t("yourData")}</Link>
         </FooterCol>
       </div>
       <div className="border-t border-border">

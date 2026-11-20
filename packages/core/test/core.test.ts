@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  noCardTrialDays,
   accessFor, analyseTable, DEFAULT_FTL_SETTINGS, analyseFtl, checkMapping, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
   detectMapping, formatDuration, icalToRosterEvent, licenseStatus, maxDailyFdp, parseCsv, parseDuration,
   parseFlexibleDate, parseIcal, rowsToFlights, sumFlights, sunElevation, type Airport, type Flight,
@@ -401,5 +402,26 @@ describe("phone numbers", () => {
     expect(formatPhoneIntl("0033612345678")).toBe("+33 6 12 34 56 78");
     expect(formatPhoneIntl("+34 612 345 678", "FR")).toBe("+34 612 34 56 78");
     expect(formatPhoneIntl("call me")).toBe("call me");
+  });
+});
+
+describe("plans", () => {
+  const p = (createdAt: string, tier?: string, exp?: string) => ({ createdAt, subscriptionTier: tier as never, subscriptionExpiresAt: exp });
+  const now = new Date("2026-11-20T00:00:00Z");
+  it("signature is in Basic, the roster stays in Max", () => {
+    const basic = accessFor(p("2026-01-01T00:00:00Z", "basic", "2026-12-01T00:00:00Z"), { signedIn: true, now });
+    expect(basic.has("signature")).toBe(true);
+    expect(basic.has("roster")).toBe(false);
+    expect(accessFor(p("2026-01-01T00:00:00Z", "free"), { signedIn: true, now }).has("signature")).toBe(false);
+  });
+  it("no-card trial: off by default, 14 days from account creation when configured, never over a subscription", () => {
+    const fresh = p("2026-11-10T00:00:00Z", "free");
+    expect(accessFor(fresh, { signedIn: true, now }).plan).toBeNull();
+    const t = accessFor(fresh, { signedIn: true, now, noCardTrialDays: noCardTrialDays("14") });
+    expect(t).toMatchObject({ plan: "premium", trial: true, daysLeft: 4 });
+    expect(accessFor(p("2026-11-01T00:00:00Z", "free"), { signedIn: true, now, noCardTrialDays: 14 }).plan).toBeNull();
+    expect(accessFor(p("2026-11-10T00:00:00Z", "basic", "2027-01-01T00:00:00Z"), { signedIn: true, now, noCardTrialDays: 14 }).plan).toBe("basic");
+    expect(noCardTrialDays(undefined)).toBe(0);
+    expect(noCardTrialDays("abc")).toBe(0);
   });
 });
