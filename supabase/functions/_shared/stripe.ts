@@ -8,19 +8,30 @@ const STRIPE_API = "https://api.stripe.com/v1";
 export type Plan = "basic" | "premium" | "student";
 export type Interval = "monthly" | "yearly";
 
-/** Price id configured for a plan + interval (env STRIPE_PRICE_<PLAN>_<INTERVAL>). */
+/**
+ * Prices for new subscribers (Stripe price ids are not secrets: they show in every checkout page). They win over
+ * the STRIPE_PRICE_<PLAN>_<INTERVAL> secrets, which keep the earlier prices: those stay recognised, so a subscriber
+ * who signed up at the old price keeps the right plan at every renewal.
+ */
+const CURRENT_PRICES: Partial<Record<`${Plan}_${Interval}`, string>> = {
+  basic_yearly: "price_1Udb75CeThANvNanODCcsPcu", // 39,99 € / an
+  basic_monthly: "price_1UdtkXCeThANvNanTcURhdfG", // 3,99 € / mois
+  student_yearly: "price_1UdtQ3CeThANvNanBlpthNty", // 19,99 € / an
+};
+
+/** Price id for a plan + interval: the current price above, else the env secret. */
 export function priceIdFor(plan: Plan, interval: Interval): string {
-  return requireEnv(`STRIPE_PRICE_${plan.toUpperCase()}_${interval.toUpperCase()}`);
+  return CURRENT_PRICES[`${plan}_${interval}`] ?? requireEnv(`STRIPE_PRICE_${plan.toUpperCase()}_${interval.toUpperCase()}`);
 }
 
-/** Maps a Stripe price id back to a Geardown tier (null when unknown). */
+/** Maps a Stripe price id back to a Geardown tier (null when unknown): current, earlier and student prices. */
 export function tierForPrice(priceId: string | null | undefined): Tier | null {
   if (!priceId) return null;
+  for (const [key, id] of Object.entries(CURRENT_PRICES)) if (id === priceId) return key.startsWith("premium") ? "premium" : "basic";
   for (const plan of ["basic", "premium"] as const) {
     for (const interval of ["monthly", "yearly"] as const) {
-      if (Deno.env.get(`STRIPE_PRICE_${plan.toUpperCase()}_${interval.toUpperCase()}`) === priceId) return plan;
-      // the prices the first subscribers signed up at stay recognised (they keep them while subscribed)
-      if (Deno.env.get(`STRIPE_PRICE_${plan.toUpperCase()}_${interval.toUpperCase()}_LEGACY`) === priceId) return plan;
+      const name = `STRIPE_PRICE_${plan.toUpperCase()}_${interval.toUpperCase()}`;
+      if (Deno.env.get(name) === priceId || Deno.env.get(`${name}_LEGACY`) === priceId) return plan;
     }
   }
   if (Deno.env.get("STRIPE_PRICE_STUDENT_YEARLY") === priceId) return "basic";
