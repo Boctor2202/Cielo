@@ -208,11 +208,11 @@
       "oneDevice": "1 appareil"
     },
     "vat": "Prix TTC. Mensuel : facturé chaque mois. Annuel : facturé une fois par an. Sans engagement. Sans abonnement, votre carnet reste consultable et exportable.",
-    "trialNote": "Carte bancaire demandée à l'inscription. Aucun prélèvement pendant 7 jours, annulable en un clic avant la fin de l'essai.",
+    "trialNote": "Aucune carte bancaire pendant l'essai de %TRIAL% jours. La carte n'est demandée que si vous choisissez de vous abonner. Sans abonnement à la fin de l'essai, votre carnet passe en lecture seule : il reste consultable et exportable, et rien n'est supprimé.",
     "twoMonthsFree": "2 mois offerts",
     "perMonthEquiv": "soit {price}/mois",
     "orYearly": "ou {price}/an, 2 mois offerts",
-    "trialNoteNoCard": "Aucune carte bancaire demandée pendant l'essai de %TRIAL% jours. À la fin, choisissez Basic ou Max pour continuer à écrire ; sinon votre carnet reste consultable et exportable."
+    "trialNoteNoCard": "Aucune carte bancaire pendant l'essai de %TRIAL% jours. La carte n'est demandée que si vous choisissez de vous abonner. Sans abonnement à la fin de l'essai, votre carnet passe en lecture seule : il reste consultable et exportable, et rien n'est supprimé."
   },
   "testimonials": {
     "title": "Ils volent avec Geardown",
@@ -1834,7 +1834,8 @@
       "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces ADS-B, audit et scan sont inclus dans Max (8,99 €/mois).",
       "haveAccount": "Déjà abonné ? Se connecter",
       "demoAccount": "Compte de démonstration : pilote et données fictifs (Thomas Mercier, Skyline Airways).",
-      "demoLocal": "Démonstration — données fictives — modifications locales, sur ce navigateur uniquement. En créant un compte, elles sont effacées : votre carnet démarre vide (ou avec vos propres données)."
+      "demoLocal": "Démonstration — données fictives — modifications locales, sur ce navigateur uniquement. En créant un compte, elles sont effacées : votre carnet démarre vide (ou avec vos propres données).",
+      "trial": "Essai gratuit, sans carte : {days, plural, one {encore # jour} other {encore # jours}}. Ensuite, sans abonnement, votre carnet passe en lecture seule ; rien n'est supprimé."
     },
     "photo": {
       "alt": "Photo de l'appareil {reg}",

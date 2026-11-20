@@ -208,11 +208,11 @@
       "oneDevice": "1 device"
     },
     "vat": "Prices incl. VAT. Monthly: billed every month. Yearly: billed once a year. No commitment. Without a subscription, your logbook stays readable and exportable.",
-    "trialNote": "Card required at sign-up. Nothing is charged for 7 days; cancel in one click before the trial ends.",
+    "trialNote": "No card during the %TRIAL%-day trial. A card is only asked if you choose to subscribe. Without a subscription when the trial ends, your logbook becomes read-only: it stays readable and exportable, and nothing is deleted.",
     "twoMonthsFree": "2 months free",
     "perMonthEquiv": "that is {price}/month",
     "orYearly": "or {price}/year, 2 months free",
-    "trialNoteNoCard": "No card needed for the %TRIAL%-day trial. At the end, choose Basic or Max to keep writing; otherwise your logbook stays readable and exportable."
+    "trialNoteNoCard": "No card during the %TRIAL%-day trial. A card is only asked if you choose to subscribe. Without a subscription when the trial ends, your logbook becomes read-only: it stays readable and exportable, and nothing is deleted."
   },
   "testimonials": {
     "title": "They fly with Geardown",
@@ -1834,7 +1834,8 @@
       "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, ADS-B tracks, audit and scan are included in Max (€8.99/month).",
       "haveAccount": "Already subscribed? Sign in",
       "demoAccount": "Demo account: fictional pilot and data (Thomas Mercier, Skyline Airways).",
-      "demoLocal": "Demo — fictional data — local changes, in this browser only. Creating an account erases them: your logbook starts empty (or with your own data)."
+      "demoLocal": "Demo — fictional data — local changes, in this browser only. Creating an account erases them: your logbook starts empty (or with your own data).",
+      "trial": "Free trial, no card: {days, plural, one {# day} other {# days}} left. After that, without a subscription, your logbook becomes read-only; nothing is deleted."
     },
     "photo": {
       "alt": "Photo of aircraft {reg}",

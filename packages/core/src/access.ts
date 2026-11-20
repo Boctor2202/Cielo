@@ -1,11 +1,12 @@
 import type { Pilot } from "./types";
 
 /**
- * Who may do what. No free plan: a 7-day trial (Stripe / App Store trial with a card, or 7 days of
- * local use before signing up), then Basic or Max. Without a live subscription the logbook stays
- * readable and exportable (GDPR portability) but nothing new can be written.
+ * Who may do what. No free plan: a 30-day trial without a card, counted from the account's creation (or from the
+ * first local use before signing up), with everything in Max; then Basic, Student or Max. Without a live
+ * subscription the logbook stays readable and exportable (GDPR portability), nothing is ever deleted, but nothing
+ * new can be written.
  */
-export const TRIAL_DAYS = 7;
+export const TRIAL_DAYS = 30;
 export const PRICES_EUR = { basic: 4.99, premium: 8.99 } as const;
 /** The yearly prices: two months free (10 months paid). */
 export const YEARLY_PRICES_EUR = { basic: 49.99, premium: 89.99 } as const;
@@ -18,14 +19,18 @@ export const BASIC_FEATURES = ["signature"] as const;
 export type MaxFeature = (typeof MAX_FEATURES)[number] | (typeof BASIC_FEATURES)[number];
 
 /**
- * Trial without a card (off unless configured): a signed-in pilot with no subscription gets Max for this many
- * days from account creation. 0 = the current trial (store or Stripe trial with a card).
- * Web: NEXT_PUBLIC_NO_CARD_TRIAL_DAYS, app: EXPO_PUBLIC_NO_CARD_TRIAL_DAYS, server: NO_CARD_TRIAL_DAYS.
+ * Trial without a card: a signed-in pilot with no subscription gets Max for this many days from account creation.
+ * TRIAL_DAYS unless configured (Web: NEXT_PUBLIC_NO_CARD_TRIAL_DAYS, app: EXPO_PUBLIC_NO_CARD_TRIAL_DAYS);
+ * "0" turns it off.
  */
 export function noCardTrialDays(raw: string | undefined): number {
+  if (raw === undefined || raw.trim() === "") return TRIAL_DAYS;
   const n = Number(raw);
-  return Number.isFinite(n) && n > 0 && n <= 60 ? Math.floor(n) : 0;
+  return Number.isFinite(n) && n >= 0 && n <= 90 ? Math.floor(n) : TRIAL_DAYS;
 }
+
+/** End of a pilot's trial (ISO), from the account's creation. */
+export const trialEndsAt = (createdAt: string, days = TRIAL_DAYS) => new Date(Date.parse(createdAt) + days * 86400_000).toISOString();
 
 export interface Access {
   /** plan currently granted: basic, premium (Max) or null (read-only) */

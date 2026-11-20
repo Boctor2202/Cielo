@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { reportAiFailure } from "@/lib/server/anthropic";
-import { accessFor, ep5Legs, parseAirFranceEp5, parseFlightReport, tableSignature, type LogbookLeg, type StoredMapping } from "@cielo/core";
+import { accessFor, noCardTrialDays, ep5Legs, parseAirFranceEp5, parseFlightReport, tableSignature, type LogbookLeg, type StoredMapping } from "@cielo/core";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { pdfText } from "@/lib/server/pdf";
 import { extractLegs, ImportAiError, mapTable } from "@/lib/server/importAi";
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
 
   // 2. anything else: Claude (Max plan)
   const { data: p } = db ? await db.from("pilots").select("created_at, subscription_tier, subscription_expires_at").eq("id", user.id).maybeSingle() : { data: null };
-  const access = accessFor(p ? { createdAt: p.created_at, subscriptionTier: p.subscription_tier, subscriptionExpiresAt: p.subscription_expires_at } : undefined, { signedIn: true });
+  const access = accessFor(p ? { createdAt: p.created_at, subscriptionTier: p.subscription_tier, subscriptionExpiresAt: p.subscription_expires_at } : undefined, { signedIn: true, noCardTrialDays: noCardTrialDays(process.env.NEXT_PUBLIC_NO_CARD_TRIAL_DAYS) });
   if (!(access.plan === "premium" && !access.demo) && !isAdminId(user.id)) return Response.json({ error: "plan" }, { status: 403 });
   if (!process.env.ANTHROPIC_API_KEY) return Response.json({ error: "unsupported" }, { status: 422 });
 

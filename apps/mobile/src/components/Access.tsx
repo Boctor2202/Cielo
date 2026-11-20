@@ -34,6 +34,14 @@ export function Requires({ feature, children }: { feature: MaxFeature; children:
 export function AccessBanner() {
   const { t, access } = useApp();
   const c = useTheme();
+  if (access.trial && access.daysLeft) {
+    return (
+      <Card>
+        <Txt>{t("access.trial", { n: access.daysLeft })}</Txt>
+        <Button kind="secondary" title={t("access.subscribe")} onPress={() => router.push("/subscription")} />
+      </Card>
+    );
+  }
   if (access.demo && access.daysLeft) {
     return (
       <Card>

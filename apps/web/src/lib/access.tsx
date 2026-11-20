@@ -61,6 +61,14 @@ export function AccessBanner() {
       </div>
     );
   }
+  if (a.trial && a.daysLeft) {
+    return (
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-accent/12 px-4 py-2.5 text-sm">
+        <span>{t("trial", { days: a.daysLeft })}</span>
+        <Link href="/app/parametres" className="btn btn-secondary btn-sm">{t("subscribe")}</Link>
+      </div>
+    );
+  }
   if (!a.canWrite) {
     return (
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[var(--caution)]/15 px-4 py-2.5 text-sm">
@@ -72,13 +80,17 @@ export function AccessBanner() {
   return null;
 }
 
-/** After sign-up from the pricing page: open the Stripe checkout (7-day trial, card required) once. */
+/**
+ * After sign-up from the pricing page. With the trial without a card (the default), nothing opens: the pilot starts
+ * the trial and subscribes later from the settings. Only when that trial is turned off does the checkout open.
+ */
 export function usePendingCheckout() {
   const cloud = useCloud();
   const pilot = usePilot();
   const locale = useLocale();
   useEffect(() => {
     if (!cloud.session || !pilot || pilot.subscriptionTier !== "free") return;
+    if (noCardTrialDays(process.env.NEXT_PUBLIC_NO_CARD_TRIAL_DAYS) > 0) return;
     let plan: string | null = null;
     let interval = "monthly";
     try {
