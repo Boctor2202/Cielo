@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { ensurePilot } from "@/lib/repo";
 import { loadAirports } from "@/lib/airports";
 import { loadDemo } from "@/lib/demo";
+import { track } from "@/lib/metrics";
 import { db } from "@/lib/db";
 import { LogoMark } from "./Logo";
 
@@ -52,7 +53,10 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
   async function local(withDemo: boolean) {
     setState("busy");
     await ensurePilot(locale);
-    if (withDemo && (await db().t("flights").count()) === 0) await loadDemo(await loadAirports(), locale);
+    if (withDemo && (await db().t("flights").count()) === 0) {
+      await loadDemo(await loadAirports(), locale);
+      track("demo_open");
+    }
     router.push("/app");
   }
 

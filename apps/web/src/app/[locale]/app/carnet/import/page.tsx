@@ -18,6 +18,7 @@ import { useAirlineDirectory } from "@/lib/airlines";
 import { operatorIndex } from "@cielo/core";
 import { DropZone } from "@/components/app/DropZone";
 import { Paywall, useAccess } from "@/lib/access";
+import { track } from "@/lib/metrics";
 
 type Tab = "file" | "roster" | "scan";
 
@@ -241,6 +242,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     }
     setBusy(false);
     toast(t("done", { count: built.length }) + (skipped ? ` · ${t("skipped", { count: skipped })}` : ""));
+    track(built.length ? "import_success" : "import_fail");
     setRows(null);
     setMapping(null);
     setPdfRows(null);
