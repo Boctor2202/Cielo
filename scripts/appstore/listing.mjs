@@ -15,6 +15,8 @@ const SHOT_LOCALE = { "fr-FR": "fr", "en-US": "en" };
 
 const TEXT = {
   "fr-FR": {
+    subtitle: "Carnet de vol, FTL, CV, emploi",
+    keywords: "logbook,pilote,heures de vol,licence,médical,roster,escales,radar,badges,EASA,FAA,import,aviation",
     privacyPolicyUrl: "https://geardown.app/fr/legal/confidentialite",
     supportUrl: "https://geardown.app/fr/contact",
     marketingUrl: "https://geardown.app/fr",
@@ -46,6 +48,8 @@ Conditions d'utilisation : https://geardown.app/fr/legal/cgu
 Politique de confidentialité : https://geardown.app/fr/legal/confidentialite`,
   },
   "en-US": {
+    subtitle: "Logbook, FTL, CV & pilot jobs",
+    keywords: "pilot,flight hours,licence,medical,roster,layovers,radar,EASA,FAA,airline,currency,import,badges",
     privacyPolicyUrl: "https://geardown.app/en/legal/privacy",
     supportUrl: "https://geardown.app/en/contact",
     marketingUrl: "https://geardown.app/en",
@@ -122,9 +126,9 @@ async function main() {
     const l = infoLocs.find((x) => x.attributes.locale === locale);
     log(`  ${locale}: name "${l?.attributes.name ?? "-"}", privacy policy ${l?.attributes.privacyPolicyUrl ?? "none"}`);
     if (CHECK) continue;
-    if (l) await api("PATCH", `/v1/appInfoLocalizations/${l.id}`, { data: { type: "appInfoLocalizations", id: l.id, attributes: { privacyPolicyUrl: t.privacyPolicyUrl } } });
-    else await api("POST", "/v1/appInfoLocalizations", { data: { type: "appInfoLocalizations", attributes: { locale, name: app.attributes.name, privacyPolicyUrl: t.privacyPolicyUrl }, relationships: { appInfo: { data: { type: "appInfos", id: info.id } } } } });
-    log(`  ${locale}: privacy policy set`);
+    if (l) await api("PATCH", `/v1/appInfoLocalizations/${l.id}`, { data: { type: "appInfoLocalizations", id: l.id, attributes: { privacyPolicyUrl: t.privacyPolicyUrl, subtitle: t.subtitle } } });
+    else await api("POST", "/v1/appInfoLocalizations", { data: { type: "appInfoLocalizations", attributes: { locale, name: app.attributes.name, privacyPolicyUrl: t.privacyPolicyUrl, subtitle: t.subtitle }, relationships: { appInfo: { data: { type: "appInfos", id: info.id } } } } });
+    log(`  ${locale}: privacy policy and subtitle "${t.subtitle}" set`);
   }
 
   // description: on the iOS version being prepared
@@ -140,10 +144,10 @@ async function main() {
     const l = locs.find((x) => x.attributes.locale === locale);
     log(`\n${locale} current description (${l?.attributes.description?.length ?? 0} chars):\n${l?.attributes.description ?? "(none)"}\n`);
     if (CHECK) continue;
-    const attributes = { description: t.description, supportUrl: l?.attributes.supportUrl || t.supportUrl, marketingUrl: l?.attributes.marketingUrl || t.marketingUrl };
+    const attributes = { description: t.description, keywords: t.keywords, supportUrl: l?.attributes.supportUrl || t.supportUrl, marketingUrl: l?.attributes.marketingUrl || t.marketingUrl };
     if (l) await api("PATCH", `/v1/appStoreVersionLocalizations/${l.id}`, { data: { type: "appStoreVersionLocalizations", id: l.id, attributes } });
     else await api("POST", "/v1/appStoreVersionLocalizations", { data: { type: "appStoreVersionLocalizations", attributes: { locale, ...attributes }, relationships: { appStoreVersion: { data: { type: "appStoreVersions", id: version.id } } } } });
-    log(`${locale}: description, support and marketing URLs set`);
+    log(`${locale}: description, keywords, support and marketing URLs set`);
   }
   if (SHOTS) await screenshots(version.id);
 }
