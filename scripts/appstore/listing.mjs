@@ -177,9 +177,12 @@ async function reviewSetup(app, info, version) {
   await step(`copyright "${COPYRIGHT}"`, () => api("PATCH", `/v1/appStoreVersions/${version.id}`, { data: { type: "appStoreVersions", id: version.id, attributes: { copyright: COPYRIGHT } } }));
   await step("age rating 4+", async () => {
     const decl = (await api("GET", `/v1/appInfos/${info.id}/ageRatingDeclaration`)).data;
-    const none = ["alcoholTobaccoOrDrugUseOrReferences", "contests", "gamblingSimulated", "horrorOrFearThemes", "matureOrSuggestiveThemes", "medicalOrTreatmentInformation", "profanityOrCrudeHumor", "sexualContentGraphicAndNudity", "sexualContentOrNudity", "violenceCartoonOrFantasy", "violenceRealistic", "violenceRealisticProlongedGraphicOrSadistic"];
+    const none = ["gunsOrOtherWeapons", "alcoholTobaccoOrDrugUseOrReferences", "contests", "gamblingSimulated", "horrorOrFearThemes", "matureOrSuggestiveThemes", "medicalOrTreatmentInformation", "profanityOrCrudeHumor", "sexualContentGraphicAndNudity", "sexualContentOrNudity", "violenceCartoonOrFantasy", "violenceRealistic", "violenceRealisticProlongedGraphicOrSadistic"];
     const attributes = Object.fromEntries(none.map((k) => [k, "NONE"]));
-    Object.assign(attributes, { gambling: false, unrestrictedWebAccess: false });
+    Object.assign(attributes, {
+      gambling: false, unrestrictedWebAccess: false, lootBox: false, ageAssurance: false, parentalControls: false,
+      userGeneratedContent: false, messagingAndChat: false, socialMedia: false, advertising: false, healthOrWellnessTopics: false,
+    });
     await api("PATCH", `/v1/ageRatingDeclarations/${decl.id}`, { data: { type: "ageRatingDeclarations", id: decl.id, attributes } });
   });
   await step("App Review notes (demo account required)", async () => {
