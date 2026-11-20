@@ -27,6 +27,8 @@ export interface RawPosting {
   location?: string;
   country?: string;
   postedAt?: string;
+  /** last change the employer made to the posting (not a publication date) */
+  updatedAt?: string;
   employment?: string;
   /** Plain text of the posting, used for extraction then dropped */
   text: string;
@@ -36,8 +38,21 @@ export interface RawPosting {
 export type Position = "CPT" | "FO" | "SO" | "CADET" | "FI" | "OTHER";
 export type LicenceLevel = "ATPL" | "FATPL" | "MPL" | "CPL" | "PPL";
 
+export type HourKey = "totalHours" | "picHours" | "onTypeHours" | "multiPilotHours" | "turbineHours" | "jetHours";
+/** What the PIC hours must be on, when the ad says so ("300 h PIC on jet or multi-engine turboprop") */
+export type PicQualifier = "jet" | "jetOrMeTurboprop" | "turbine" | "multiEngine";
+
 export interface Requirements {
+  /** the lowest licence the ad accepts (see licenceAlternatives) */
   licence?: LicenceLevel;
+  /** every licence the ad accepts when it lists alternatives ("Frozen ATPL or CPL/IR") */
+  licenceAlternatives?: LicenceLevel[];
+  /** PIC hours qualified by aircraft kind; absent = PIC on any aircraft */
+  picQualifier?: PicQualifier;
+  /** requirements the ad gives as preferred / an advantage, not mandatory */
+  preferred?: HourKey[];
+  /** short excerpt of the ad each figure was read from (≤ 140 characters), so the pilot can check it */
+  evidence?: Partial<Record<HourKey | "licence", string>>;
   /** EASA / FAA / … when stated */
   authority?: string;
   totalHours?: number;
@@ -82,21 +97,43 @@ export interface Job {
   region: RegionId;
   authority: Authority;
   employment?: string;
+  /** publication date as the employer gives it; absent when unknown (never replaced by today) */
   postedAt?: string;
+  /** last change the employer made to the posting, when given */
+  updatedAt?: string;
   url: string;
   requirements: Requirements;
   salary?: Salary;
+  /** when Geardown last read the offer in the employer's feed (it was still published then) */
   fetchedAt: string;
+  /** a precise post, or a call for applications to a pool ("talent pool", "candidature spontanée") */
+  kind?: "position" | "pool";
+  /** other copies of the same offer (another language, a republication), folded into this one */
+  variants?: number;
+  /** what Geardown could not read with confidence, for internal review */
+  ambiguous?: ("position" | "aircraft" | "hours")[];
 }
 
 /** The subscriber's experience, computed on their device from the logbook and licences. */
 export interface PilotProfile {
   totalMin: number;
+  /** pilot-in-command time only; PICUS is never counted as PIC for a requirement */
   picMin: number;
+  /** PIC under supervision, apart */
+  picusMin?: number;
+  /** PIC on jet or on multi-engine turboprop */
+  picJetOrMeTurbopropMin?: number;
+  /** figures Geardown could not classify (unknown engine, carry-forwards without type or PICUS detail) */
+  unknown?: { engineMin: number; openingNoTypeMin: number; openingPicMin: number };
   multiPilotMin: number;
   multiEngineMin: number;
   turbineMin: number;
   jetMin: number;
+  picTurbineMin?: number;
+  picMultiEngineMin?: number;
+  picJetMin?: number;
+  /** the pilot stated their work rights (otherwise workRegions are only guessed from the licence) */
+  workRegionsDeclared?: boolean;
   /** block minutes per ICAO type */
   typeMin: Record<string, number>;
   /** ICAO types the pilot holds a rating on (from licences/ratings or logged on type) */

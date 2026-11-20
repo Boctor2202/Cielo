@@ -2,7 +2,7 @@
 
 import { addDays, distanceNm, isoDate, type FlightFormInput, type PilotFunction } from "@cielo/core";
 import type { AirportIndex } from "@cielo/reference-data";
-import { db } from "./db";
+import { db, DEMO_META, localStore } from "./db";
 import { buildFlight, ensurePilot, saveAircraft, saveLayover, saveLicense, saveOpening, saveRosterEvent, updatePilot, REFERENCE_TYPES } from "./repo";
 
 /** Deterministic pseudo-random generator so the demo looks the same everywhere. */
@@ -15,19 +15,21 @@ function rng(seed: number) {
 
 const DESTS = ["LFMN", "LFML", "LFBO", "LFBD", "LIRF", "LEMD", "LEBL", "EGLL", "EDDF", "LSGG", "LPPT", "EHAM", "LIMC", "LGAV", "GMMN", "LFRS", "LFLL", "EIDW"];
 const CAPTAINS = ["Cdt A. Moreau", "Cdt L. Garnier", "Cdt S. Laurent", "Cdt J. Petit", "Cdt M. Roux"];
-const REGS = ["F-HCLA", "F-HCLB", "F-HCLC", "F-HCLD"];
+// the same fictional pilot as the demo account: Thomas Mercier, A320 first officer at Skyline Airways, Orly
+const REGS = ["F-HGDN", "F-HGDW", "F-HGDX", "F-HGDY"];
 
 const clock = (ms: number) => new Date(ms).toISOString().slice(11, 16);
 
 export async function loadDemo(airports: AirportIndex, locale: "fr" | "en") {
   const rand = rng(42);
   const pilot = await ensurePilot(locale);
+  await localStore.setMeta(DEMO_META, "1");
   await updatePilot({
-    fullName: "Camille Martin",
-    displayName: "Camille",
-    email: "camille.martin@example.com",
+    fullName: "Thomas Mercier",
+    displayName: "Thomas",
+    email: "thomas.mercier@example.com",
     licenceNumber: "FRA.FCL.PA.012345",
-    homeBaseIcao: "LFPG",
+    homeBaseIcao: "LFPO",
     defaultFunction: "SIC",
     defaultIfr: "ask",
     subscriptionTier: "premium",
@@ -35,7 +37,7 @@ export async function loadDemo(airports: AirportIndex, locale: "fr" | "en") {
 
   const a320 = REFERENCE_TYPES.find((t) => t.icao === "A320")!;
   const dr40 = REFERENCE_TYPES.find((t) => t.icao === "DR40")!;
-  for (const r of REGS) await saveAircraft({ registration: r, aircraftTypeId: a320.id, defaultOperation: "multi_pilot", operator: "Demo Air", variant: "214" });
+  for (const r of REGS) await saveAircraft({ registration: r, aircraftTypeId: a320.id, defaultOperation: "multi_pilot", operator: "Skyline Airways", variant: "214" });
   await saveAircraft({ registration: "F-GSTR", aircraftTypeId: dr40.id, defaultOperation: "single_pilot", operator: "Aéroclub" });
 
   const today = isoDate(new Date());
@@ -67,7 +69,14 @@ export async function loadDemo(airports: AirportIndex, locale: "fr" | "en") {
     let t = Date.parse(`${date}T${String(startHour).padStart(2, "0")}:${rand() > 0.5 ? "10" : "40"}:00Z`);
     // Keep at least 14 h between the end of the previous duty and the next off-block.
     if (t < lastRelease + 14 * 3600_000) continue;
-    const route = legs === 4 ? ["LFPG", dest, "LFPG", DESTS[Math.floor(rand() * DESTS.length)]!, "LFPG"] : ["LFPG", dest, "LFPG"];
+    // a four-sector day stays on short sectors, as a real roster would, so the demo duties keep within the FDP limit
+    const near = DESTS.filter((d) => {
+      const a = airports.get(d);
+      const home = airports.get("LFPO");
+      return a && home && distanceNm(home, a) <= 450;
+    });
+    const pick = () => near[Math.floor(rand() * near.length)]!;
+    const route = legs === 4 && near.length ? ["LFPO", pick(), "LFPO", pick(), "LFPO"] : ["LFPO", dest, "LFPO"];
     for (let i = 0; i < route.length - 1; i++) {
       const dep = airports.get(route[i]!);
       const arr = airports.get(route[i + 1]!);
@@ -118,15 +127,15 @@ export async function loadDemo(airports: AirportIndex, locale: "fr" | "en") {
 
   // Upcoming roster
   const plan: [number, string, string, string, string?][] = [
-    [1, "FLIGHT", "06:20", "08:05", "LFPG-LIRF"],
-    [1, "FLIGHT", "09:10", "11:15", "LIRF-LFPG"],
+    [1, "FLIGHT", "06:20", "08:05", "LFPO-LIRF"],
+    [1, "FLIGHT", "09:10", "11:15", "LIRF-LFPO"],
     [2, "STANDBY", "05:00", "17:00"],
     [3, "OFF", "00:00", "23:59"],
-    [4, "FLIGHT", "13:40", "15:55", "LFPG-LPPT"],
-    [5, "FLIGHT", "08:30", "10:35", "LPPT-LFPG"],
+    [4, "FLIGHT", "13:40", "15:55", "LFPO-LPPT"],
+    [5, "FLIGHT", "08:30", "10:35", "LPPT-LFPO"],
     [7, "SIM", "06:00", "10:00"],
-    [9, "FLIGHT", "05:55", "07:20", "LFPG-EGLL"],
-    [9, "FLIGHT", "08:25", "09:40", "EGLL-LFPG"],
+    [9, "FLIGHT", "05:55", "07:20", "LFPO-EGLL"],
+    [9, "FLIGHT", "08:25", "09:40", "EGLL-LFPO"],
   ];
   for (const [d, kind, s, e, route] of plan) {
     const date = addDays(today, d);

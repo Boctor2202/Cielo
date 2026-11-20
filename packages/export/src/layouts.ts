@@ -66,6 +66,8 @@ const EASA: Layout = {
     { group: "9 LANDINGS", sub: "NIGHT", w: 2.6, align: "right", value: (f) => n(f.landingsNight), sum: (x) => x.landingsNight, sumKind: "count" },
     { group: "10 OPERATIONAL CONDITION TIME", sub: "NIGHT", w: 3.8, align: "right", value: (f, fmt) => t(f.nightMin, fmt), sum: (x) => x.nightMin },
     { group: "10 OPERATIONAL CONDITION TIME", sub: "IFR", w: 3.8, align: "right", value: (f, fmt) => t(f.ifrMin, fmt), sum: (x) => x.ifrMin },
+    // AMC1 FCL.050: PICUS is logged as PIC time (the PIC signs it); kept in this column on purpose. Everywhere else in
+    // Geardown (cockpit, CV, job matching) PIC means PIC only — see docs/definitions-heures.md.
     { group: "11 PILOT FUNCTION TIME", sub: "PILOT-IN-COMMAND", w: 4.2, align: "right", value: (f, fmt) => t(f.picMin + f.picusMin, fmt), sum: (x) => x.picMin + x.picusMin },
     { group: "11 PILOT FUNCTION TIME", sub: "CO-PILOT", w: 3.8, align: "right", value: (f, fmt) => t(f.copilotMin, fmt), sum: (x) => x.copilotMin },
     { group: "11 PILOT FUNCTION TIME", sub: "DUAL", w: 3.8, align: "right", value: (f, fmt) => t(f.dualMin, fmt), sum: (x) => x.dualMin },
@@ -105,6 +107,7 @@ const FAA: Layout = {
     { sub: "GROUND TRNG", w: 3.2, align: "right", value: (f, fmt) => t(f.groundTrainingMin ?? 0, fmt), sum: (x) => x.groundTrainingMin },
     { group: "TYPE OF PILOTING TIME", sub: "DUAL RECEIVED", w: 3.4, align: "right", value: (f, fmt) => t(f.dualMin, fmt), sum: (x) => x.dualMin },
     { group: "TYPE OF PILOTING TIME", sub: "SOLO", w: 3, align: "right", value: (f, fmt) => t(f.soloMin ?? 0, fmt), sum: (x) => x.soloMin },
+    // PICUS has no FAA column: it is printed with PIC, as it was. Open question, see docs/definitions-heures.md.
     { group: "TYPE OF PILOTING TIME", sub: "PIC", w: 3.4, align: "right", value: (f, fmt) => t(f.picMin + f.picusMin, fmt), sum: (x) => x.picMin + x.picusMin },
     { group: "TYPE OF PILOTING TIME", sub: "SIC", w: 3.4, align: "right", value: (f, fmt) => t(f.copilotMin, fmt), sum: (x) => x.copilotMin },
     { group: "TYPE OF PILOTING TIME", sub: "AS FLIGHT INSTR.", w: 3.4, align: "right", value: (f, fmt) => t(f.instructorMin + f.examinerMin, fmt), sum: (x) => x.instructorMin + x.examinerMin },
@@ -171,6 +174,7 @@ const TCCA: Layout = {
     { group: "ROUTE", sub: "STOPS", w: 4.6, align: "left", value: (f) => (f.via ?? []).join(" ") },
     { group: "ROUTE", sub: "TO", w: 3.6, align: "center", value: (f) => (fl(f) ? f.arrIcao : "") },
     { group: "POSITION / TIME", sub: "DUAL", w: 3, align: "right", value: (f, fmt) => t(f.dualMin, fmt), sum: (x) => x.dualMin },
+    // PIC under supervision printed with PIC, as it was. Open question, see docs/definitions-heures.md.
     { group: "POSITION / TIME", sub: "PIC", w: 3, align: "right", value: (f, fmt) => t(f.picMin + f.picusMin, fmt), sum: (x) => x.picMin + x.picusMin },
     { group: "POSITION / TIME", sub: "CO-PILOT", w: 3, align: "right", value: (f, fmt) => t(f.copilotMin, fmt), sum: (x) => x.copilotMin },
     { group: "POSITION / TIME", sub: "INSTR.", w: 3, align: "right", value: (f, fmt) => t(f.instructorMin + f.examinerMin, fmt), sum: (x) => x.instructorMin + x.examinerMin },

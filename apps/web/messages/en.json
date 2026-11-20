@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Geardown — the electronic pilot logbook",
-    "description": "EASA, FAA and CASA compliant electronic logbook: fast entry, automatic night time, official exports, licences, FTL and roster. For airline, business and private pilots."
+    "description": "Electronic logbook with exports in EASA, FAA and CASA format: fast entry, automatic night time, licences, FTL and roster. For airline, business and private pilots."
   },
   "nav": {
     "features": "Features",
@@ -9,7 +9,7 @@
     "airlines": "For airlines",
     "blog": "Blog",
     "login": "Log in",
-    "trial": "7-day trial",
+    "trial": "%TRIAL%-day trial",
     "openApp": "Open app",
     "menu": "Menu",
     "theme": "Toggle theme",
@@ -18,12 +18,12 @@
   "hero": {
     "eyebrow": "Built by pilots · EASA · FAA · CASA",
     "title": "The logbook that works for your career",
-    "subtitle": "Log a flight in 20 seconds and Geardown does the rest: night time, FTL limits, licences and medical. Your CV updates itself and the jobs that fit you come to you.",
-    "ctaTrial": "Try 7 days",
+    "subtitle": "Log a flight in seconds and Geardown works out the rest: night time, FTL limits, licences and medical. Your CV follows your logbook and job offers are ranked against your experience.",
+    "ctaTrial": "Try %TRIAL% days",
     "ctaDemo": "See the demo",
-    "note": "7-day trial · No commitment · Your data stays yours",
-    "appStore": "Download on the App Store",
-    "playStore": "Get it on Google Play",
+    "note": "%TRIAL%-day trial · No commitment · Your data stays yours",
+    "appStore": "Coming to the App Store",
+    "playStore": "Coming to Google Play",
     "comingSoon": "Coming soon",
     "readoutNight": "Night computed",
     "readoutRoute": "LFPG → LFMN",
@@ -48,7 +48,7 @@
     "subtitle": "Ten tools, one source of truth for your flying experience.",
     "items": {
       "logbook": {
-        "title": "Logbook and official exports",
+        "title": "Logbook and exports in authority formats",
         "text": "Every AMC1 FCL.050 column, page totals and automatic carry-forward. PDF export in EASA, FAA and CASA formats, plus CSV and Excel.",
         "points": [
           "Night time from civil twilight",
@@ -79,7 +79,7 @@
         "text": "Licences, medical certificate, SEP, MEP, TR, IR, FI, LPE… Alerts 90, 30 and 7 days before every expiry, by notification and e-mail.",
         "points": [
           "FCL.060 recent experience computed",
-          "Encrypted document scans",
+          "Scans of your documents in private storage",
           "Custom alert thresholds"
         ]
       },
@@ -105,9 +105,9 @@
         "title": "Digital flight signature",
         "text": "Have a flight signed by your instructor or captain right on the screen. The entry is locked and its fingerprint sealed.",
         "points": [
-          "SHA-256 fingerprint of the content",
+          "SHA-256 fingerprint: any change after signing is detected",
           "Any change voids the signature",
-          "Shown in the official export"
+          "Shown in the PDF export"
         ]
       },
       "offline": {
@@ -116,12 +116,12 @@
         "points": [
           "Local database on each device",
           "Hosted in the European Union",
-          "Automatic encrypted backup"
+          "Automatic backup to your account"
         ]
       },
       "jobs": {
         "title": "Pilot jobs",
-        "text": "Openings posted by airlines and operators on their own careers pages, sorted by world region, required experience and salary when stated. Geardown works out your match percentage from your logbook, on your device.",
+        "text": "Openings posted by airlines and operators on their own careers pages, sorted by world region, required experience and salary when stated. Geardown works out your match percentage from your logbook, on your device. Coverage is first of all Europe and business aviation; other regions are still thinly covered.",
         "points": [
           "Sorted by region: licence and right to work taken into account",
           "Required hours, type rating and salary read from the posting",
@@ -133,7 +133,7 @@
         "text": "A CV built from your logbook, with your hours by category (total, PIC, multi-pilot, turbine, night, IFR, per type) and a layout designed for the screening software airlines use.",
         "points": [
           "Hours by category and by type, always up to date",
-          "Pre-submission check for applicant tracking systems (ATS)",
+          "Readability check for applicant tracking systems (ATS), with no guaranteed outcome",
           "PDF, text and JSON Resume export, in English or French"
         ]
       }
@@ -141,14 +141,14 @@
   },
   "pricing": {
     "title": "Simple pricing",
-    "subtitle": "A 7-day trial on the plan of your choice, then a monthly or yearly subscription (2 months free), no commitment.",
+    "subtitle": "A %TRIAL%-day trial on the plan of your choice, then a monthly or yearly subscription (2 months free), no commitment.",
     "monthly": "Monthly",
     "yearly": "Yearly",
     "perMonth": "/month",
     "perYear": "/year",
     "billedYearly": "that's {price} per month",
     "popular": "Most complete",
-    "cta": "Try 7 days",
+    "cta": "Try %TRIAL% days",
     "ctaFree": "Create my logbook",
     "plans": {
       "basic": {
@@ -157,25 +157,26 @@
       },
       "premium": {
         "name": "Max",
-        "desc": "For airline and business-jet pilots: roster, FTL, job offers, CV, layovers, radar and real tracks."
+        "desc": "For airline and business pilots: roster, FTL, job offers, CV, layovers, radar and ADS-B tracks."
       }
     },
     "highlights": {
       "basic": [
         "Unlimited flights, night time computed automatically",
-        "Import your old logbook (CSV, Excel), columns recognised automatically",
-        "Official EASA, FAA, CASA PDF export, plus CSV / Excel",
+        "Import your old logbook (CSV, Excel), columns detected then checked by you",
+        "PDF export in EASA, FAA, CASA format, plus CSV / Excel",
         "Licences, medical and FCL.060 recency, with expiry reminders",
         "Statistics and a map of your routes",
-        "Web and mobile in sync, works offline"
+        "Web and mobile in sync, works offline",
+        "Digital signature of your flights"
       ],
       "premium": [
         "Everything in Basic",
         "Pilot job offers ranked for your profile, and a pilot CV",
         "Airline roster import and ORO.FTL limits",
-        "Logbook audit (17 checks) and digital signatures",
+        "Logbook audit (17 checks)",
         "Layovers: the best places around the crew hotel",
-        "Live radar and the real track of every flight",
+        "Live radar and the ADS-B track of your flights where coverage allows",
         "Paper logbook photo scan (beta)"
       ]
     },
@@ -186,7 +187,7 @@
       "night": "Automatic night time",
       "airports": "Airport and aircraft type database",
       "csv": "Automatic import (CSV, Excel) and CSV / Excel export",
-      "pdf": "Official PDF export (EASA, FAA, CASA)",
+      "pdf": "PDF export in EASA, FAA, CASA format",
       "carry": "Paper logbook carried-forward totals",
       "licenses": "Licences, medical and expiry reminders",
       "recency": "FCL.060 recent experience",
@@ -196,7 +197,7 @@
       "roster": "Roster import (iCal, CSV)",
       "ftl": "ORO.FTL flight time limitations",
       "layovers": "Layovers: best places around the hotel",
-      "radar": "Live radar and real flight tracks",
+      "radar": "Live radar and ADS-B tracks (coverage permitting)",
       "audit": "Automatic logbook audit (17 checks)",
       "signature": "Digital signature",
       "scan": "Paper logbook photo scan (beta)"
@@ -206,11 +207,12 @@
       "unlimited": "Unlimited",
       "oneDevice": "1 device"
     },
-    "vat": "Prices incl. VAT, billed monthly. No commitment. Without a subscription your logbook stays viewable and exportable.",
+    "vat": "Prices incl. VAT. Monthly: billed every month. Yearly: billed once a year. No commitment. Without a subscription, your logbook stays readable and exportable.",
     "trialNote": "Card required at sign-up. Nothing is charged for 7 days; cancel in one click before the trial ends.",
     "twoMonthsFree": "2 months free",
     "perMonthEquiv": "that is {price}/month",
-    "orYearly": "or {price}/year, 2 months free"
+    "orYearly": "or {price}/year, 2 months free",
+    "trialNoteNoCard": "No card needed for the %TRIAL%-day trial. At the end, choose Basic or Max to keep writing; otherwise your logbook stays readable and exportable."
   },
   "testimonials": {
     "title": "They fly with Geardown",
@@ -225,8 +227,8 @@
         "a": "Your data is stored on your device first, then synced to servers located in the European Union. Traffic is encrypted (TLS), attachments are kept in a private space and each account can only access its own data. We never sell or share your data."
       },
       {
-        "q": "Is Geardown EASA compliant?",
-        "a": "The logbook records all the information required by FCL.050 in the AMC1 FCL.050 layout. Night time follows the EASA definition (civil twilight). An electronic logbook is acceptable provided the data is accurate and available on request: you can print or show the official PDF export at any time."
+        "q": "Are Geardown exports in EASA format?",
+        "a": "The logbook records all the information required by FCL.050 in the AMC1 FCL.050 layout. Night time follows the EASA definition (civil twilight). An electronic logbook is acceptable provided the data is accurate and available on request: you can print or show the PDF export in AMC1 FCL.050 format at any time. Whether an electronic logbook is accepted remains your authority's decision."
       },
       {
         "q": "Can I export my logbook?",
@@ -249,7 +251,7 @@
   "cta": {
     "title": "Ready for your next flight?",
     "text": "Create your logbook in under a minute. Import your history whenever you like.",
-    "button": "Try 7 days"
+    "button": "Try %TRIAL% days"
   },
   "footer": {
     "tagline": "The electronic logbook built by and for pilots.",
@@ -262,11 +264,12 @@
     "cookies": "Cookies",
     "contact": "Contact",
     "rights": "All rights reserved.",
-    "disclaimer": "Geardown is an aid. The pilot remains responsible for the accuracy of their logbook and compliance with applicable regulations."
+    "disclaimer": "Geardown is an aid. The pilot remains responsible for the accuracy of their logbook and compliance with applicable regulations.",
+    "yourData": "Your data"
   },
   "airlines": {
     "title": "Geardown for airlines and flight schools",
-    "subtitle": "Give your crews a modern logbook, filled automatically from your crew planning system.",
+    "subtitle": "Give your crews a modern logbook, fed by importing your rosters (iCal calendar, PDF).",
     "points": [
       {
         "t": "Native roster import",
@@ -790,7 +793,7 @@
       "copy": "Copy",
       "copied": "Copied",
       "linkErr": "The link could not be created. Wait for the flight to sync, then try again.",
-      "linkPlan": "Signing links are part of the Max plan."
+      "linkPlan": "Signing links are included in Basic and Max."
     },
     "import": {
       "title": "Import flights",
@@ -843,7 +846,10 @@
         "multiPilot": "Multi-pilot time",
         "remarks": "Remarks",
         "fstdType": "FSTD type",
-        "fstdTime": "FSTD time"
+        "fstdTime": "FSTD time",
+        "picus": "PICUS time",
+        "singleEngine": "Single-pilot SE time",
+        "multiEngine": "Single-pilot ME time"
       },
       "autoDetected": "{count} of {total} columns recognised automatically. Check the preview below, then import.",
       "checkColumns": "Check or fix the columns",
@@ -906,12 +912,36 @@
         "unknownAirport": "Unknown airport: {icao}",
         "missingAircraft": "Aircraft missing",
         "missingPicName": "PIC name missing"
-      }
+      },
+      "why": {
+        "missingTimes": "Without block times, total, night and FTL limits cannot be worked out. Add at least off-block and on-block.",
+        "timesOrder": "The order is off-block, take-off, landing, on-block. Usually a wrong date or time zone.",
+        "overlap": "Two flights cannot overlap. Check the times, or a flight entered twice.",
+        "duplicate": "Same date, route, time and registration as another flight: delete one if it is a double import.",
+        "continuity": "Just a reminder: positioning or a flight not logged often explains it. Nothing to fix if that is normal.",
+        "nightExceedsTotal": "Night time is part of total time: it cannot exceed it.",
+        "ifrExceedsTotal": "IFR time is part of total time: it cannot exceed it.",
+        "functionMismatch": "PIC, PICUS, co-pilot and dual share the flight time and cannot exceed it. Instructor or examiner time is logged on top (it may cover the whole flight); a flight with no function counts nowhere.",
+        "pilotTimeMismatch": "Single-pilot SE + single-pilot ME + multi-pilot should equal total time. Empty columns are common after an import; fill them if your format needs them.",
+        "noLandings": "Pilot flying without a landing: FCL.060 recency will not count it.",
+        "landingsWithoutPF": "Usually only the pilot flying logs the landing. Worth a check, nothing serious.",
+        "futureDate": "A flight dated in the future skews totals and limits. Check the year.",
+        "longBlock": "Over 20 h block: possible on a very long flight, otherwise a date or time error.",
+        "implausibleSpeed": "Distance between the airports over flight time gives an unrealistic speed. Often a wrong airport or a flight time too short.",
+        "unknownAirport": "Code not in the aerodrome database: night time and map not worked out for this flight. Check the ICAO code.",
+        "missingAircraft": "Without a registration, hours by type and the export stay incomplete.",
+        "missingPicName": "The EASA format asks for the PIC's name when you are not the PIC."
+      },
+      "explain": "Explain",
+      "explainPrompt": "Why is this normal? (e.g. positioning, private flight)",
+      "explainedTitle": "Explained by you",
+      "explainedNote": "Explained on {date}: {note}",
+      "unexplain": "Show again"
     },
     "export": {
       "title": "Export logbook",
       "format": "Format",
-      "pdfEasa": "Official EASA PDF (AMC1 FCL.050)",
+      "pdfEasa": "PDF in EASA format (AMC1 FCL.050)",
       "pdfFaa": "FAA PDF (14 CFR 61.51)",
       "pdfCasa": "CASA PDF (CASR 61.345)",
       "csv": "CSV",
@@ -1085,7 +1115,7 @@
     "ftl": {
       "title": "Flight time limitations (FTL)",
       "subtitle": "Indicative calculation under EASA ORO.FTL for an acclimatised crew member, from your flights and roster.",
-      "disclaimer": "An aid only: it doesn't replace your operator's FTL monitoring system. Estimated results: the logbook has no report or release times (set alongside). A ground wait of 3 h or more is treated as split duty; an overrun of less than 1 h shows as a warning (an extension may cover it). Not covered: augmented crew, unknown acclimatisation state, standby.",
+      "disclaimer": "A helper: it does not replace your operator's FTL system. The logbook has no report or release times: they are estimated from the settings opposite. A long wait on the ground is never treated as split duty by default: it shows as a \"possible split\", and the extension counts only if your operator applies split duty and you confirm it (or the roster says so). Not covered: augmented crew, unknown acclimatisation, standby.",
       "cumulative": "Cumulative",
       "duty7d": "Duty time · 7 days",
       "duty14d": "Duty time · 14 days",
@@ -1133,7 +1163,28 @@
       },
       "splitBadge": "split +{m}",
       "splitDetail": "Split duty: {b} break, max FDP +{m} (CS FTL.1.220)",
-      "splitHotel": "suitable accommodation required (without it: +{m})"
+      "splitHotel": "suitable accommodation required (without it: +{m})",
+      "applied": "Scheme applied: {regime}",
+      "base": "base {base}",
+      "noBase": "No home base: the reference time and rest at base cannot be determined. Limits are shown as an indication.",
+      "basis": {
+        "confirmed": "Confirmed",
+        "estimated": "Estimated",
+        "notDeterminable": "Not determinable"
+      },
+      "assumption": {
+        "noBase": "no home base",
+        "noScheme": "no scheme chosen",
+        "reportEstimated": "report estimated",
+        "releaseEstimated": "release estimated"
+      },
+      "splitPossible": "possible split",
+      "splitPossibleDetail": "Break of {b}: could extend the FDP by {m} if your operator applies split duty and this break was planned as one (CS FTL.1.220). Not applied.",
+      "splitConfirm": "Confirm",
+      "splitUnconfirm": "Undo confirmation",
+      "withinIfSplit": "covered if the split duty is confirmed",
+      "splitScheme": "My operator applies split duty (CS FTL.1.220)",
+      "splitSchemeHint": "Without it, no extension is applied. With it, confirm each break concerned (or let the roster say so: a \"SPLIT\", \"BREAK\" or hotel event)."
     },
     "documents": {
       "title": "Licences, medical and ratings",
@@ -1461,7 +1512,40 @@
       },
       "regionFilter": {
         "title": "Regions shown"
-      }
+      },
+      "crit": {
+        "title": "Criteria stated in the ad",
+        "summary": "{met} met · {unmet} not met · {unknown} to verify",
+        "none": "The ad states no criteria Geardown can read: check it on the employer's site.",
+        "met": "Met",
+        "unmet": "Not met",
+        "unknown": "To verify",
+        "preferred": "preferred",
+        "gap": "{value} short",
+        "source": "From the ad",
+        "scoreNote": "The % is only an indicator: rely on the criteria above first.",
+        "q": {
+          "jet": "on jet",
+          "jetOrMeTurboprop": "on jet or multi-engine turboprop",
+          "turbine": "on turbine",
+          "multiEngine": "on multi-engine"
+        },
+        "why": {
+          "noLicence": "No licence in your profile",
+          "noEnglish": "English level not entered",
+          "noAuthority": "Licence authority not entered",
+          "openingPic": "Part of it comes from paper carry-forwards, which may include PICUS",
+          "unclassified": "Some of your hours are not classified (unknown type or carry-forward without type)",
+          "workRightsNotDeclared": "Enter your work rights to evaluate this",
+          "workRightsCountry": "The right to work depends on the country, not the region",
+          "visaSponsored": "Visa sponsored by the employer",
+          "familyRating": "Rated on a type of the same family: to confirm",
+          "authorityFromCountry": "Inferred from the job's country"
+        }
+      },
+      "postedNone": "Posting date not stated",
+      "checked": "Checked {date}",
+      "pool": "Application pool (not a specific post)"
     },
     "cv": {
       "title": "Pilot CV",
@@ -1738,7 +1822,7 @@
       "fromFa": "The actual track is fetched automatically for flights of the last 24 h (ADS-B network)."
     },
     "access": {
-      "demo": "Demo: {days, plural, one {# day} other {# days}} left to try everything. Create your account to continue with a 7-day trial.",
+      "demo": "Demo: {days, plural, one {# day} other {# days}} left to try everything. Create your account to continue with a %TRIAL%-day trial.",
       "startTrial": "Start the trial",
       "readOnlyBanner": "Your logbook is read-only: subscribe to log new flights. Your data stays viewable and exportable.",
       "subscribe": "Choose a plan",
@@ -1747,8 +1831,10 @@
       "readOnlyTitle": "Subscription required",
       "readOnlyText": "Without an active subscription your logbook stays viewable and exportable, but logging is off. Basic €4.99/month, Max €8.99/month.",
       "maxTitle": "Max feature",
-      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, real tracks, audit, signatures and scan are included in Max (€8.99/month).",
-      "haveAccount": "Already subscribed? Sign in"
+      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, ADS-B tracks, audit and scan are included in Max (€8.99/month).",
+      "haveAccount": "Already subscribed? Sign in",
+      "demoAccount": "Demo account: fictional pilot and data (Thomas Mercier, Skyline Airways).",
+      "demoLocal": "Demo — fictional data — local changes, in this browser only. Creating an account erases them: your logbook starts empty (or with your own data)."
     },
     "photo": {
       "alt": "Photo of aircraft {reg}",
@@ -2251,7 +2337,7 @@
     "title": "Built like a flight instrument",
     "items": [
       {
-        "t": "EASA, FAA and CASA compliant",
+        "t": "In EASA, FAA and CASA format",
         "d": "AMC1 FCL.050 columns, the EASA night definition and FCL.060 recent experience. FAA and CASA exports included."
       },
       {
@@ -2270,7 +2356,7 @@
   },
   "how": {
     "label": "3 steps",
-    "title": "From your paper logbook to the official export",
+    "title": "From your paper logbook to an EASA-format export",
     "steps": [
       {
         "t": "Import",
@@ -2328,7 +2414,7 @@
     "c3": {
       "label": "04 · Compliance",
       "title": "Ready for the check ride.",
-      "text": "Automatic logbook audit, licences and medical tracked, FTL limits, official EASA, FAA or CASA PDF export. Your logbook is right, and you can prove it.",
+      "text": "Automatic logbook audit, licences and medical tracked, FTL limits, PDF export in EASA, FAA or CASA format. Your logbook is right, and you can prove it.",
       "cta": "Create my logbook"
     },
     "hud": {
@@ -2363,7 +2449,7 @@
   "seo": {
     "home": {
       "title": "Geardown — Electronic pilot logbook (EASA, FAA, CASA)",
-      "description": "EASA, FAA and CASA compliant electronic pilot logbook: automatic night time, official PDF export, licences, FTL, roster, pilot jobs and pilot CV. Free trial, web, iOS and Android."
+      "description": "Electronic pilot logbook, PDF export in EASA, FAA and CASA format: automatic night time, licences, FTL, roster, pilot jobs and pilot CV. Free trial, on the web; iPhone app in preparation."
     },
     "features": {
       "title": "Electronic pilot logbook features",
@@ -2371,11 +2457,11 @@
     },
     "pricing": {
       "title": "Pricing — electronic pilot logbook from €4.99/month",
-      "description": "Basic at €4.99/month for private and student pilots, Max at €8.99/month for professional pilots (roster, FTL, layovers, radar). 7-day trial, no commitment."
+      "description": "Basic at €4.99/month for private and student pilots, Max at €8.99/month for professional pilots (roster, FTL, layovers, radar). %TRIAL%-day trial, no commitment."
     },
     "airlines": {
       "title": "Electronic logbook for airlines and flight schools",
-      "description": "Geardown for airlines, business aviation operators and flight schools: imported rosters, crew licence tracking, EASA, FAA and CASA compliance, official exports."
+      "description": "Geardown for airlines, business aviation operators and flight schools: imported rosters, crew licence tracking, exports in EASA, FAA and CASA format."
     },
     "blog": {
       "title": "Blog — EASA rules and pilot life",
@@ -2437,5 +2523,44 @@
       "rate_limited": "Too many attempts: wait a minute.",
       "generic": "Something went wrong. Try again."
     }
+  },
+  "yourData": {
+    "title": "Your data is yours",
+    "lead": "What Geardown keeps, where, who sees it, and how to take it back or erase it.",
+    "items": [
+      {
+        "h": "Your logbook lives on your device first",
+        "p": "The logbook is saved on your phone and in your browser and works offline. With an account it syncs between your devices through our servers."
+      },
+      {
+        "h": "Full export at any time",
+        "p": "CSV, Excel, PDF in EASA, FAA or CASA format, and all your data as JSON from Settings › My data. Without a subscription, the logbook stays readable and exportable."
+      },
+      {
+        "h": "Account deletion",
+        "p": "From the website or app settings, you delete your account and your data. Deletion is final."
+      },
+      {
+        "h": "Job matching stays with you",
+        "p": "Job offers are ranked on your device: your logbook is not sent for it."
+      },
+      {
+        "h": "No ads, no resale",
+        "p": "No data is sold or used for advertising. No advertising cookies, no third-party analytics."
+      },
+      {
+        "h": "What you don't fill in doesn't exist",
+        "p": "For the medical, Geardown keeps only the class and dates. Optional fields (photo, CV, documents) are stored only if you add them."
+      }
+    ],
+    "thirdTitle": "What third-party services receive",
+    "thirdParties": [
+      "Payment: Stripe (web), Apple (App Store); they process your payment, Geardown never sees your card.",
+      "Actual flight times (ADS-B): the registration and date are sent to the open ADS-B network adsb.lol, without your name.",
+      "Maps: map tiles are loaded from Google Maps or a tile provider, which sees the area shown.",
+      "Email: a sending service delivers sign-in codes and the alerts you turned on."
+    ],
+    "more": "The legal detail (legal bases, retention, your rights) is in the",
+    "privacyLink": "privacy policy."
   }
 }

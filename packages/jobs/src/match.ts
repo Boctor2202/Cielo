@@ -1,4 +1,6 @@
-import { sameFamily, typeInfo } from "./aircraft";
+import { experience } from "@cielo/core";
+import { sameFamily } from "./aircraft";
+import { evaluateJob, type Evaluation } from "./evaluate";
 import { authorityFromText, defaultWorkRegions, type Authority, type RegionId } from "./regions";
 import type { Job, LicenceLevel, PilotProfile } from "./types";
 
@@ -29,6 +31,8 @@ export interface Match {
   canWork: boolean;
   /** the pilot holds the licence regime the job's country requires */
   licenceValid: boolean;
+  /** criterion by criterion (met / unmet / unknown): what the UI shows first; the score is secondary */
+  evaluation: Evaluation;
 }
 
 const RANK: Record<LicenceLevel, number> = { PPL: 0, CPL: 1, MPL: 2, FATPL: 2, ATPL: 3 };
@@ -50,16 +54,24 @@ export function matchJob(job: Job, me: PilotProfile): Match {
   const typeMin = job.aircraft.reduce((s, t) => s + (me.typeMin[t] ?? 0), 0);
   const rated = job.aircraft.some((t) => me.ratedTypes.includes(t) || (me.typeMin[t] ?? 0) > 0);
   const familyRated = !rated && job.aircraft.some((t) => me.ratedTypes.some((x) => sameFamily(t, x)));
-  const jobMultiPilot = job.aircraft.some((t) => typeInfo(t)?.multiPilot);
+  const evaluation = evaluateJob(job, me);
+  const verdict = (code: GapCode) => evaluation.criteria.find((c) => c.code === code)?.verdict;
 
+  // PIC on what the ad asks for (jet, multi-engine turboprop…), PIC strict
+  const picHave =
+    r.picQualifier === "jet" ? me.picJetMin ?? 0
+    : r.picQualifier === "jetOrMeTurboprop" ? me.picJetOrMeTurbopropMin ?? 0
+    : r.picQualifier === "turbine" ? me.picTurbineMin ?? 0
+    : r.picQualifier === "multiEngine" ? me.picMultiEngineMin ?? 0
+    : me.picMin;
   const crit: Criterion[] = [
     {
       code: "licence", weight: 15,
-      ratio: r.licence ? (me.licence ? (RANK[me.licence] >= RANK[r.licence] ? 1 : RANK[me.licence] + 1 >= RANK[r.licence] ? 0.5 : 0) : 0.3) : null,
+      ratio: r.licence ? (me.licence ? (RANK[me.licence] >= Math.min(...(r.licenceAlternatives ?? [r.licence]).map((l) => RANK[l])) ? 1 : RANK[me.licence] + 1 >= RANK[r.licence] ? 0.5 : 0) : 0.3) : null,
       required: r.licence, have: me.licence ?? "—",
     },
     { code: "totalHours", weight: 25, ratio: ratio(me.totalMin, r.totalHours && r.totalHours * 60), required: r.totalHours, have: h(me.totalMin) },
-    { code: "picHours", weight: 12, ratio: ratio(me.picMin, r.picHours && r.picHours * 60), required: r.picHours, have: h(me.picMin) },
+    { code: "picHours", weight: 12, ratio: ratio(picHave, r.picHours && r.picHours * 60), required: r.picHours, have: h(picHave) },
     { code: "onTypeHours", weight: 10, ratio: ratio(typeMin, r.onTypeHours && r.onTypeHours * 60), required: r.onTypeHours, have: h(typeMin) },
     { code: "multiPilotHours", weight: 8, ratio: ratio(me.multiPilotMin, r.multiPilotHours && r.multiPilotHours * 60), required: r.multiPilotHours, have: h(me.multiPilotMin) },
     { code: "jetHours", weight: 8, ratio: ratio(me.jetMin, r.jetHours && r.jetHours * 60), required: r.jetHours, have: h(me.jetMin) },
@@ -80,9 +92,7 @@ export function matchJob(job: Job, me: PilotProfile): Match {
   if (known && me.authorities.length) crit.push({ code: "licenceAuthority", weight: 15, ratio: licenceValid ? 1 : 0.15, required: job.authority, have: me.authorities.join(", ") });
   if (job.region !== "OTHER" && me.workRegions.length) crit.push({ code: "workRights", weight: 15, ratio: canWork ? 1 : 0, required: job.region, have: me.workRegions.join(", ") });
 
-  // Position realism when nothing else is stated: a captain seat with little PIC time is a long shot.
-  if (job.position === "CPT" && !r.picHours) crit.push({ code: "picHours", weight: 10, ratio: Math.min(1, me.picMin / (1500 * 60)), required: 1500, have: h(me.picMin) });
-  if (jobMultiPilot && !r.multiPilotHours) crit.push({ code: "multiPilotHours", weight: 5, ratio: Math.min(1, me.multiPilotMin / (500 * 60)), required: 500, have: h(me.multiPilotMin) });
+  // Nothing the ad does not state is assumed (no "a captain needs 1,500 h"): only stated criteria count.
 
   // Instructor and examiner posts need the rating or certificate itself: hours alone do not qualify.
   const title = job.title;
@@ -113,42 +123,30 @@ export function matchJob(job: Job, me: PilotProfile): Match {
   const trust = 0.4 + 0.6 * confidence;
   const score = Math.round(Math.min(cap, raw * trust + 0.6 * (1 - trust)) * 100);
 
-  return { score, confidence, gaps, met, onType: rated, canWork, licenceValid };
+  // unknowns never count as met: the score cannot exceed the share of criteria actually met or unclear
+  return { score, confidence, gaps, met, onType: rated, canWork: verdict("workRights") !== "unmet" && canWork, licenceValid: verdict("licenceAuthority") !== "unmet" && licenceValid, evaluation };
 }
 
 /** Builds the profile from logbook rows (kept generic so web and mobile share it). */
 export function buildProfile(
-  flights: { totalMin: number; picMin: number; picusMin: number; multiPilotMin: number; singlePilotMeMin: number; aircraftTypeIcao?: string; isFstd: boolean; deletedAt?: string | null }[],
+  flights: { totalMin: number; picMin: number; picusMin: number; multiPilotMin: number; singlePilotMeMin: number; aircraftTypeIcao?: string; isFstd: boolean; deletedAt?: string | null; copilotMin?: number }[],
   opening: { totalMin: number; picMin: number; multiPilotMin: number; singlePilotMeMin: number; aircraftTypeIcao?: string | null; deletedAt?: string | null }[],
   licences: { code: string; kind: string; authority?: string; deletedAt?: string | null; validUntil?: string | null }[],
   engineTypeOf: (icao: string) => string | undefined,
   icaoFromRating: (code: string) => string[],
   opts: { framework?: string; workRegions?: RegionId[] } = {},
 ): PilotProfile {
-  const p: PilotProfile = { totalMin: 0, picMin: 0, multiPilotMin: 0, multiEngineMin: 0, turbineMin: 0, jetMin: 0, typeMin: {}, ratedTypes: [], authorities: [], workRegions: [] };
-  const add = (icao: string | null | undefined, min: number) => {
-    if (!icao) return;
-    p.typeMin[icao] = (p.typeMin[icao] ?? 0) + min;
-    const e = engineTypeOf(icao);
-    if (e === "jet") p.jetMin += min;
-    if (e === "jet" || e === "turboprop" || e === "turboshaft") p.turbineMin += min;
+  // one definition of each figure, shared with the app and the CV (PIC strict, PICUS apart): see core experience.ts
+  const x = experience(flights, opening, engineTypeOf);
+  const typeMin: Record<string, number> = {};
+  for (const [icao, r] of Object.entries(x.byType)) typeMin[icao] = r.totalMin;
+  const p: PilotProfile = {
+    totalMin: x.totalMin, picMin: x.picMin, picusMin: x.picusMin, picJetOrMeTurbopropMin: x.picJetOrMeTurbopropMin,
+    picJetMin: x.picJetMin, picTurbineMin: x.picTurbineMin, picMultiEngineMin: x.picMultiEngineMin,
+    multiPilotMin: x.multiPilotMin, multiEngineMin: x.multiEngineMin, turbineMin: x.turbineMin, jetMin: x.jetMin,
+    typeMin, ratedTypes: [], authorities: [], workRegions: [],
+    unknown: { engineMin: x.unknown.engineMin, openingNoTypeMin: x.unknown.openingNoTypeMin, openingPicMin: x.unknown.openingPicMin },
   };
-  for (const f of flights) {
-    if (f.deletedAt || f.isFstd) continue;
-    p.totalMin += f.totalMin;
-    p.picMin += f.picMin + f.picusMin;
-    p.multiPilotMin += f.multiPilotMin;
-    p.multiEngineMin += f.singlePilotMeMin + f.multiPilotMin;
-    add(f.aircraftTypeIcao, f.totalMin);
-  }
-  for (const o of opening) {
-    if (o.deletedAt) continue;
-    p.totalMin += o.totalMin;
-    p.picMin += o.picMin;
-    p.multiPilotMin += o.multiPilotMin;
-    p.multiEngineMin += o.singlePilotMeMin + o.multiPilotMin;
-    add(o.aircraftTypeIcao, o.totalMin);
-  }
   for (const l of licences) {
     if (l.deletedAt) continue;
     const c = l.code.toUpperCase();
@@ -172,6 +170,7 @@ export function buildProfile(
     const a = ({ EASA: "EASA", FAA: "FAA", CASA: "CASA" } as Record<string, Authority>)[opts.framework];
     if (a) p.authorities.push(a);
   }
+  p.workRegionsDeclared = !!opts.workRegions?.length;
   p.workRegions = opts.workRegions?.length ? opts.workRegions : defaultWorkRegions(p.authorities);
   return p;
 }

@@ -56,6 +56,11 @@ export default function FtlPage() {
     });
   };
 
+  const toggleSplit = (id: string) => {
+    const list = settings.confirmedSplits ?? [];
+    update({ ...settings, confirmedSplits: list.includes(id) ? list.filter((x) => x !== id) : [...list, id] });
+  };
+
   // the scheme is a pilot setting (synced with the phone); the rest of the settings stay on this device
   const regime: FtlRegime = pilot?.ftlRegime ?? "oro";
   const eff = useMemo(() => ({ ...settings, regime }), [settings, regime]);
@@ -85,6 +90,14 @@ export default function FtlPage() {
       <PageTitle title={t("title")} subtitle={t("subtitle")} />
       <p className="mb-5 flex gap-2 rounded-lg border border-border bg-surface px-4 py-3 text-sm text-muted"><Info size={16} className="mt-0.5 shrink-0 text-accent" /> {t("disclaimer")}</p>
 
+      <p className="mb-3 text-sm">
+        <span className="font-semibold">{t("applied", { regime: t(`regimes.${regime}`) })}</span>
+        {settings.homeBaseIcao ? <span className="text-muted"> · {t("base", { base: settings.homeBaseIcao })} · {settings.homeTimezone}</span> : null}
+      </p>
+      {report.missingBase && regime !== "none" ? (
+        <p className="mb-5 flex gap-2 rounded-lg border border-caution/40 bg-caution/10 px-4 py-3 text-sm"><AlertOctagon size={16} className="mt-0.5 shrink-0 text-caution" /> {t("noBase")}</p>
+      ) : null}
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {cumul.map(([k, v, max]) => {
           const lvl = cumulativeLevel(v, max);
@@ -110,7 +123,7 @@ export default function FtlPage() {
                     <AlertOctagon size={16} className={`mt-0.5 shrink-0 ${v.severity === "warning" ? "text-caution" : "text-warning"}`} />
                     <div>
                       <p className="font-medium">{t(`codes.${v.code}`, { actual: f(v.actualMin), limit: f(v.limitMin) })}</p>
-                      <p className="num text-xs text-muted">{fd(v.atUtc, { dateStyle: "medium", timeStyle: "short" })} UTC{v.atUtc > now ? " · roster" : ""}{v.severity === "warning" && v.code === "fdpExceeded" ? ` · ${t("withinExtension")}` : ""}</p>
+                      <p className="num text-xs text-muted">{fd(v.atUtc, { dateStyle: "medium", timeStyle: "short" })} UTC{v.atUtc > now ? " · roster" : ""}{v.basis ? ` · ${t(`basis.${v.basis}`)}` : ""}{v.code === "fdpExceeded" && report.duties.find((d) => d.duty.id === v.dutyId)?.withinIfSplit ? ` · ${t("withinIfSplit")}` : v.severity === "warning" && v.code === "fdpExceeded" ? ` · ${t("withinExtension")}` : ""}</p>
                     </div>
                   </li>
                 ))}
@@ -136,14 +149,26 @@ export default function FtlPage() {
                         <td className={`text-right font-semibold ${over ? "text-warning" : ""}`}>{f(a.fdpMin)}</td>
                         <td className="text-right text-muted">
                           {Number.isFinite(a.maxFdpMin) ? f(a.maxFdpMin) : "—"}
-                          {a.split ? (
+                          {a.split && a.splitStatus === "confirmed" ? (
                             <span
                               className="ml-1.5 inline-block rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-300"
                               title={`${t("splitDetail", { b: f(a.split.breakMin), m: f(a.split.extensionMin) })}${a.split.accommodationRequired ? ` · ${t("splitHotel", { m: f(a.split.extensionWithoutAccommodationMin) })}` : ""}`}
                             >
                               {t("splitBadge", { m: f(a.split.extensionMin) })}{a.split.accommodationRequired ? " 🛏" : ""}
                             </span>
+                          ) : a.split ? (
+                            <span className="ml-1.5 inline-block rounded-full border border-border px-1.5 py-0.5 text-[11px] font-semibold text-muted" title={t("splitPossibleDetail", { b: f(a.split.breakMin), m: f(a.split.extensionMin) })}>
+                              {t("splitPossible")}
+                            </span>
                           ) : null}
+                          {a.split && settings.splitDuty && !a.duty.breakMarked ? (
+                            <button type="button" className="ml-1.5 text-[11px] font-semibold text-accent underline" onClick={() => toggleSplit(a.duty.id)}>
+                              {a.splitStatus === "confirmed" ? t("splitUnconfirm") : t("splitConfirm")}
+                            </button>
+                          ) : null}
+                          <span className={`ml-1.5 inline-block rounded px-1 text-[10px] font-semibold ${a.basis === "confirmed" ? "text-success" : a.basis === "estimated" ? "text-muted" : "text-caution"}`} title={a.assumptions.map((x) => t(`assumption.${x}`)).join(" · ")}>
+                            {t(`basis.${a.basis}`)}
+                          </span>
                         </td>
                         <td className={`text-right ${restShort ? "font-semibold text-warning" : "text-muted"}`}>{a.restBeforeMin !== undefined ? `${f(a.restBeforeMin)} (${t("minRest")} ${f(a.minRestBeforeMin ?? 0)})` : "—"}</td>
                       </tr>
@@ -175,6 +200,10 @@ export default function FtlPage() {
             />
             <Field label={t("timezone")}><input className="input num" value={settings.homeTimezone} onChange={(e) => update({ ...settings, homeTimezone: e.target.value }, true)} /></Field>
             <Toggle checked={includeRoster} onChange={setIncludeRoster} label={t("includeRoster")} />
+            <div>
+              <Toggle checked={!!settings.splitDuty} onChange={(v) => update({ ...settings, splitDuty: v })} label={t("splitScheme")} />
+              <p className="mt-1 text-xs text-muted">{t("splitSchemeHint")}</p>
+            </div>
           </div>
         </Card>
       </div>

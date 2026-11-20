@@ -70,12 +70,17 @@ export function auditLogbook(all: Flight[], opts: AuditOptions): AuditIssue[] {
     if (f.nightMin > f.totalMin) push(f, "nightExceedsTotal", "error");
     if (f.ifrMin > f.totalMin) push(f, "ifrExceedsTotal", "error");
 
-    const fn = f.picMin + f.picusMin + f.copilotMin + f.dualMin + f.instructorMin + f.examinerMin;
-    if (f.totalMin > 0 && fn === 0) push(f, "functionMismatch", "warning");
-    if (fn > f.totalMin * 1) push(f, "functionMismatch", "error");
+    // The seat functions (PIC, PICUS, co-pilot, dual) share the block time; instructor and examiner time are logged
+    // on top of them (an instructor logs PIC and instructor time for the same flight), so they are checked apart.
+    const seat = f.picMin + f.picusMin + f.copilotMin + f.dualMin;
+    const any = seat + f.instructorMin + f.examinerMin;
+    if (f.totalMin > 0 && any === 0) push(f, "functionMismatch", "warning", { kind: "none" });
+    if (seat > f.totalMin) push(f, "functionMismatch", "error", { kind: "seat", sum: seat, total: f.totalMin });
+    else if (f.instructorMin > f.totalMin || f.examinerMin > f.totalMin) push(f, "functionMismatch", "error", { kind: "instructor", total: f.totalMin });
 
+    // SE / ME / multi-pilot columns: none filled (often an import without them) is to check, a wrong sum is a warning
     const op = f.singlePilotSeMin + f.singlePilotMeMin + f.multiPilotMin;
-    if (op !== f.totalMin) push(f, "pilotTimeMismatch", "warning", { sum: op, total: f.totalMin });
+    if (op !== f.totalMin) push(f, "pilotTimeMismatch", op === 0 ? "info" : "warning", { sum: op, total: f.totalMin });
 
     const ldgs = f.landingsDay + f.landingsNight;
     if (f.pilotFlying && ldgs === 0) push(f, "noLandings", "warning");
@@ -106,7 +111,11 @@ export function auditLogbook(all: Flight[], opts: AuditOptions): AuditIssue[] {
         push(f, "overlap", "error", { other: prevFlight.id });
       }
       const gapH = prevEnd && thisStart ? minutesBetween(prevEnd, thisStart) / 60 : Infinity;
-      if (prevFlight.arrIcao !== f.depIcao && gapH < 36) {
+      // only within one rotation: the same aircraft, or the same operator within the day. A line flight at CDG and
+      // a club flight at Toussus the next morning are two separate activities, not a broken chain.
+      const sameAircraft = !!f.registration && f.registration === prevFlight.registration;
+      const sameOperator = !!f.operator && f.operator === prevFlight.operator;
+      if (prevFlight.arrIcao !== f.depIcao && (sameAircraft ? gapH < 36 : sameOperator && gapH < 12)) {
         push(f, "continuity", "info", { prev: prevFlight.arrIcao, dep: f.depIcao });
       }
     }
@@ -114,3 +123,16 @@ export function auditLogbook(all: Flight[], opts: AuditOptions): AuditIssue[] {
   }
   return issues;
 }
+
+/**
+ * Key of an issue as explained by the pilot: it holds the flight's last change, so an explanation stops applying
+ * (the issue shows again) as soon as the flight is edited and the check runs on new data.
+ */
+export const auditKey = (i: AuditIssue, flight: { updatedAt?: string } | undefined) => `${i.flightId}|${i.code}|${flight?.updatedAt ?? ""}`;
+
+/** Every check the audit runs, for the documentation and the "N checks" wording. */
+export const AUDIT_CHECKS: AuditCode[] = [
+  "missingTimes", "timesOrder", "overlap", "duplicate", "continuity", "nightExceedsTotal", "ifrExceedsTotal", "functionMismatch",
+  "pilotTimeMismatch", "noLandings", "landingsWithoutPF", "futureDate", "longBlock", "implausibleSpeed", "unknownAirport",
+  "missingAircraft", "missingPicName",
+];

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  noCardTrialDays,
+  AUDIT_CHECKS,
   accessFor, analyseTable, DEFAULT_FTL_SETTINGS, analyseFtl, checkMapping, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
   detectMapping, formatDuration, icalToRosterEvent, licenseStatus, maxDailyFdp, parseCsv, parseDuration,
   parseFlexibleDate, parseIcal, rowsToFlights, sumFlights, sunElevation, type Airport, type Flight,
@@ -129,6 +131,27 @@ describe("audit", () => {
     expect(codes).toContain("b:nightExceedsTotal");
     expect(codes).toContain("c:duplicate");
   });
+  it("an instructor's PIC and instructor time on the same flight is not an error; seat time over the total is", () => {
+    const fi = flight({ id: "fi", outUtc: "2026-06-02T10:00:00Z", inUtc: "2026-06-02T11:30:00Z", totalMin: 90, picMin: 90, instructorMin: 90, singlePilotSeMin: 90 });
+    const bad = flight({ id: "bad", outUtc: "2026-06-03T10:00:00Z", inUtc: "2026-06-03T11:30:00Z", totalMin: 90, picMin: 90, copilotMin: 30, singlePilotSeMin: 90 });
+    const issues = auditLogbook([fi, bad], { today: "2026-11-10", airports });
+    expect(issues.filter((i) => i.flightId === "fi" && i.code === "functionMismatch")).toEqual([]);
+    expect(issues.find((i) => i.flightId === "bad" && i.code === "functionMismatch")?.severity).toBe("error");
+  });
+  it("continuity: same aircraft chain is checked, a line flight then a club flight is not", () => {
+    const line = flight({ id: "l", depIcao: "LFPG", arrIcao: "LFPG", outUtc: "2026-06-05T08:00:00Z", inUtc: "2026-06-05T10:00:00Z", registration: "F-HGDN", operator: "Skyline Airways" });
+    const club = flight({ id: "c", depIcao: "LFPN", arrIcao: "LFPN", outUtc: "2026-06-06T09:00:00Z", inUtc: "2026-06-06T10:00:00Z", registration: "F-GSTR" });
+    expect(auditLogbook([line, club], { today: "2026-11-10", airports }).some((i) => i.code === "continuity")).toBe(false);
+    const next = flight({ id: "n", depIcao: "LFML", arrIcao: "LFPG", outUtc: "2026-06-05T12:00:00Z", inUtc: "2026-06-05T13:30:00Z", registration: "F-HGDN", operator: "Skyline Airways" });
+    expect(auditLogbook([line, next], { today: "2026-11-10", airports }).some((i) => i.code === "continuity")).toBe(true);
+  });
+  it("lists exactly the checks it runs", () => {
+    expect(AUDIT_CHECKS).toHaveLength(17);
+  });
+  it("operation columns left empty (an import without them) are to check, not a warning", () => {
+    const f = flight({ id: "e", outUtc: "2026-06-04T10:00:00Z", inUtc: "2026-06-04T11:30:00Z", totalMin: 90, picMin: 90, singlePilotSeMin: 0, singlePilotMeMin: 0, multiPilotMin: 0 });
+    expect(auditLogbook([f], { today: "2026-11-10", airports }).find((i) => i.code === "pilotTimeMismatch")?.severity).toBe("info");
+  });
 });
 
 describe("ftl", () => {
@@ -153,7 +176,7 @@ describe("ftl", () => {
     // 11:30 of rest after a 14:30 duty
     expect(r.violations.find((v) => v.code === "restTooShort")?.limitMin).toBe(14 * 60 + 30);
   });
-  it("treats a long wait on the ground as split duty, not as a rest", () => {
+  it("keeps a long wait on the ground in the duty; split duty only when the scheme has it and it is confirmed", () => {
     const flights = [
       flight({ id: "1", outUtc: "2026-11-01T07:00:00Z", inUtc: "2026-11-01T09:00:00Z", totalMin: 120 }),
       flight({ id: "1b", outUtc: "2026-11-01T07:00:00Z", inUtc: "2026-11-01T09:00:00Z", totalMin: 120 }), // logged twice
@@ -163,9 +186,19 @@ describe("ftl", () => {
     expect(duties).toHaveLength(1);
     expect(duties[0]!.sectors).toBe(2);
     const r = analyseFtl(duties, "2026-11-10T00:00:00Z", { ...DEFAULT_FTL_SETTINGS, homeTimezone: "UTC" });
-    // FDP 06:00→17:00 = 11:00; max 13:00 + (6:00 − 0:30) / 2
-    expect(r.duties[0]!.splitExtensionMin).toBe(165);
+    // FDP 06:00→17:00 = 11:00: within 13:00 without any split duty; the break is only a possible split duty
+    expect(r.duties[0]!.splitExtensionMin).toBe(0);
+    expect(r.duties[0]!.splitStatus).toBe("possible");
+    expect(r.duties[0]!.basis).toBe("notDeterminable"); // no home base
     expect(r.violations).toEqual([]);
+    // the scheme provides split duty, but this break is not confirmed: still nothing applied
+    const s2 = { ...DEFAULT_FTL_SETTINGS, homeTimezone: "UTC", homeBaseIcao: "LFPG", splitDuty: true };
+    expect(analyseFtl(duties, "2026-11-10T00:00:00Z", s2).duties[0]!.splitExtensionMin).toBe(0);
+    // confirmed by the pilot: max 13:00 + (6:00 − 0:30) / 2; logbook times → estimated
+    const c = analyseFtl(duties, "2026-11-10T00:00:00Z", { ...s2, confirmedSplits: [duties[0]!.id] }).duties[0]!;
+    expect(c.splitExtensionMin).toBe(165);
+    expect(c.splitStatus).toBe("confirmed");
+    expect(c.basis).toBe("estimated");
   });
   it("warns rather than errs on an overrun within the 1 h extension", () => {
     const flights = [flight({ id: "1", outUtc: "2026-11-01T07:00:00Z", inUtc: "2026-11-01T19:30:00Z", totalMin: 750 })];
@@ -391,5 +424,26 @@ describe("phone numbers", () => {
     expect(formatPhoneIntl("0033612345678")).toBe("+33 6 12 34 56 78");
     expect(formatPhoneIntl("+34 612 345 678", "FR")).toBe("+34 612 34 56 78");
     expect(formatPhoneIntl("call me")).toBe("call me");
+  });
+});
+
+describe("plans", () => {
+  const p = (createdAt: string, tier?: string, exp?: string) => ({ createdAt, subscriptionTier: tier as never, subscriptionExpiresAt: exp });
+  const now = new Date("2026-11-20T00:00:00Z");
+  it("signature is in Basic, the roster stays in Max", () => {
+    const basic = accessFor(p("2026-01-01T00:00:00Z", "basic", "2026-12-01T00:00:00Z"), { signedIn: true, now });
+    expect(basic.has("signature")).toBe(true);
+    expect(basic.has("roster")).toBe(false);
+    expect(accessFor(p("2026-01-01T00:00:00Z", "free"), { signedIn: true, now }).has("signature")).toBe(false);
+  });
+  it("no-card trial: off by default, 14 days from account creation when configured, never over a subscription", () => {
+    const fresh = p("2026-11-10T00:00:00Z", "free");
+    expect(accessFor(fresh, { signedIn: true, now }).plan).toBeNull();
+    const t = accessFor(fresh, { signedIn: true, now, noCardTrialDays: noCardTrialDays("14") });
+    expect(t).toMatchObject({ plan: "premium", trial: true, daysLeft: 4 });
+    expect(accessFor(p("2026-11-01T00:00:00Z", "free"), { signedIn: true, now, noCardTrialDays: 14 }).plan).toBeNull();
+    expect(accessFor(p("2026-11-10T00:00:00Z", "basic", "2027-01-01T00:00:00Z"), { signedIn: true, now, noCardTrialDays: 14 }).plan).toBe("basic");
+    expect(noCardTrialDays(undefined)).toBe(0);
+    expect(noCardTrialDays("abc")).toBe(0);
   });
 });

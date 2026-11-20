@@ -34,7 +34,7 @@ export function flightExperience(flights: Flight[], opening: OpeningBalance[], t
   const typeRow = (icao: string, t: TypeInfo | undefined) => {
     let row = types.get(icao);
     if (!row) {
-      row = { icao, name: t ? `${t.manufacturer} ${t.model}` : icao, category: t?.category ?? "airplane", engineType: t?.engineType ?? "", multiPilot: !!t?.multiPilot, totalMin: 0, picMin: 0, copilotMin: 0 };
+      row = { icao, name: t ? `${t.manufacturer} ${t.model}` : icao, category: t?.category ?? "airplane", engineType: t?.engineType ?? "", multiPilot: !!t?.multiPilot, totalMin: 0, picMin: 0, picusMin: 0, copilotMin: 0 };
       types.set(icao, row);
     }
     return row;
@@ -68,7 +68,8 @@ export function flightExperience(flights: Flight[], opening: OpeningBalance[], t
     if (f.aircraftTypeIcao) {
       const row = typeRow(f.aircraftTypeIcao, t);
       row.totalMin += f.totalMin;
-      row.picMin += f.picMin + f.picusMin;
+      row.picMin += f.picMin;
+      row.picusMin = (row.picusMin ?? 0) + f.picusMin;
       row.copilotMin += f.copilotMin;
       if (!row.lastFlown || f.date > row.lastFlown) row.lastFlown = f.date;
     }

@@ -205,7 +205,7 @@ export function buildCvDocument(cv: CvData): CvDocument {
         title: `${x.name} (${x.icao})`,
         value: fmtH(x.totalMin, locale),
         ratio: x.totalMin / Math.max(1, ...types.map((y) => y.totalMin)),
-        meta: [`${fmtH(x.totalMin, locale)} ${t.onType}`, x.picMin ? `${fmtH(x.picMin, locale)} ${t.asPic}` : "", x.copilotMin ? `${fmtH(x.copilotMin, locale)} ${t.asCopilot}` : "", x.lastFlown ? `${t.lastFlown} ${month(x.lastFlown, locale)}` : ""]
+        meta: [`${fmtH(x.totalMin, locale)} ${t.onType}`, x.picMin ? `${fmtH(x.picMin, locale)} ${t.asPic}` : "", x.picusMin ? `${fmtH(x.picusMin, locale)} PICUS` : "", x.copilotMin ? `${fmtH(x.copilotMin, locale)} ${t.asCopilot}` : "", x.lastFlown ? `${t.lastFlown} ${month(x.lastFlown, locale)}` : ""]
           .filter(Boolean)
           .join(" · "),
       })),

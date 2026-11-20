@@ -37,7 +37,7 @@ export function atsReport(cv: CvData, doc: CvDocument, text: string, today: stri
   const words = p.summary?.trim().split(/\s+/).length ?? 0;
   if (words) add("summaryLength", words >= 25 && words <= 90, "warn", String(words));
   add("totalHours", h.totalMin > 0);
-  add("picHours", h.picMin + h.picusMin > 0, "warn");
+  add("picHours", h.picMin > 0, "warn");
   add("typeHours", h.byType.length > 0, "warn");
   add("licence", lic.some((l) => l.kind === "licence"));
   add("licenceNumber", lic.some((l) => l.kind === "licence" && !!l.number), "warn");

@@ -35,7 +35,8 @@ export function goalValue(kind: GoalKind, flights: Flight[], opening: OpeningBal
     case "total":
       return sum(real, (f) => f.totalMin) + osum(open, (o) => o.totalMin);
     case "pic":
-      return sum(real, (f) => f.picMin + (f.picusMin ?? 0)) + osum(open, (o) => o.picMin);
+      // PIC strict: PICUS is a separate figure (see experience.ts)
+      return sum(real, (f) => f.picMin) + osum(open, (o) => o.picMin);
     case "type": {
       const t = (opts.icao ?? "").toUpperCase();
       return sum(real.filter((f) => (f.aircraftTypeIcao ?? "").toUpperCase() === t), (f) => f.totalMin) + osum(open.filter((o) => (o.aircraftTypeIcao ?? "").toUpperCase() === t), (o) => o.totalMin);

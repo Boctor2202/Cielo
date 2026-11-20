@@ -3,8 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseSync, type SupabaseSync, type SyncResult } from "@cielo/sync";
-import { localStore } from "./db";
-import { adoptPilotId, dedupeAircraft, dedupeFlights } from "./repo";
+import { DEMO_META, localStore } from "./db";
+import { adoptPilotId, dedupeAircraft, dedupeFlights, deleteAllLocal } from "./repo";
 import { supabase } from "./supabase";
 
 interface CloudState {
@@ -49,6 +49,8 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     if (!sb || !session) return;
     let stopped = false;
     (async () => {
+      // the fictional demo logbook stays out of a real account: this browser starts again from the account's data
+      if ((await localStore.getMeta(DEMO_META)) === "1") await deleteAllLocal();
       const merged = await adoptPilotId(session.user.id, session.user.email ?? undefined);
       if (stopped) return;
       let cleaned = !merged;

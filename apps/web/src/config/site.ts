@@ -17,6 +17,7 @@ export const SITE = {
      * "premium" is the Max plan */
     basic: { monthly: 4.99, yearly: 49.99 },
     premium: { monthly: 8.99, yearly: 89.99 },
+    /** see src/i18n/trial.ts: 7 (card) or the no-card trial when configured */
     trialDays: 7,
   },
   stores: {

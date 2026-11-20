@@ -29,11 +29,56 @@ export function toJob(raw: RawPosting, src: Source, now = new Date().toISOString
     authority: authorityOf(country),
     employment: raw.employment,
     postedAt: raw.postedAt,
+    updatedAt: raw.updatedAt,
     url: raw.url,
     requirements,
     salary,
     fetchedAt: now,
+    kind: isPool(raw.title, raw.text) ? "pool" : "position",
+    ...ambiguity(raw, requirements),
   };
+}
+
+/** A call for applications to a pool, not a precise post. */
+export function isPool(title: string, text = ""): boolean {
+  return /\b(talent ?pool|pool|open application|spontaneous application|unsolicited|candidature spontan[ée]e|vivier|initiativbewerbung|future opportunities|expression of interest)\b/i.test(title) ||
+    /\b(this is (?:not a|an?) (?:specific|open) (?:vacancy|position)|for our talent pool|pour notre vivier)\b/i.test(text);
+}
+
+function ambiguity(raw: RawPosting, r: Job["requirements"]): Pick<Job, "ambiguous"> {
+  const a: NonNullable<Job["ambiguous"]> = [];
+  if (detectPosition(raw.title, raw.text) === "OTHER") a.push("position");
+  if (!extractAircraft(raw.title, raw.text).length) a.push("aircraft");
+  // figures followed by "hours" in the text, but none read as a requirement
+  if (/\d{2,5}\s*(?:h|hrs?|hours|heures|stunden)\b/i.test(raw.text) && r.totalHours === undefined && r.picHours === undefined && r.onTypeHours === undefined && r.jetHours === undefined && r.turbineHours === undefined && r.multiPilotHours === undefined) a.push("hours");
+  return a.length ? { ambiguous: a } : {};
+}
+
+/** Title without the gender / language markers employers add ("(m/w/d)", "H/F", "- EN"), to find copies. */
+export const titleKey = (t: string) =>
+  t
+    .toLowerCase()
+    .replace(/\((?:m|f|w|d|h|x|all genders?)(?:\s*[/|,]\s*(?:m|f|w|d|h|x))*\)|\b[hfm]\s*\/\s*[hfm]\b|\b(?:m|w|d)\/(?:m|w|d)\/(?:m|w|d)\b/g, " ")
+    .replace(/\b(?:en|fr|de|es|it)\b\s*$/g, " ")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+/** Folds copies of one offer (republished, or posted in several languages) into the earliest one. */
+export function foldCopies(jobs: Job[]): Job[] {
+  const groups = new Map<string, Job[]>();
+  for (const j of jobs) {
+    const k = `${j.company.toLowerCase()}|${j.country ?? ""}|${j.position}|${[...j.aircraft].sort().join(",")}|${titleKey(j.title)}`;
+    const g = groups.get(k);
+    if (g) g.push(j);
+    else groups.set(k, [j]);
+  }
+  return [...groups.values()].map((g) => {
+    if (g.length === 1) return g[0]!;
+    const first = [...g].sort((a, b) => (a.postedAt ?? "9999").localeCompare(b.postedAt ?? "9999"))[0]!;
+    return { ...first, variants: g.length - 1 };
+  });
 }
 
 export interface CollectResult {
@@ -73,7 +118,7 @@ export async function collectJobs(sources: Source[] = SOURCES, concurrency = 4, 
   }
   // an offer published for several bases comes back several times with the same id: keep one
   const ids = new Set<string>();
-  out.jobs = out.jobs.filter((j) => !ids.has(j.id) && !!ids.add(j.id));
+  out.jobs = foldCopies(out.jobs.filter((j) => !ids.has(j.id) && !!ids.add(j.id)));
   out.jobs.sort((a, b) => (b.postedAt ?? "").localeCompare(a.postedAt ?? ""));
   return out;
 }

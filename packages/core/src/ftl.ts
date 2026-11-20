@@ -6,6 +6,12 @@
  * FDP overruns within the 1 h extension (ORO.FTL.205(d)) shown as warnings.
  * Not covered yet: in-flight rest / augmented crew, unknown acclimatisation state, standby counting rules and
  * operator-specific schemes. A logbook has no report or release times: results are estimates.
+ *
+ * Split duty is never inferred from a gap alone: a long time on the ground is shown as a *possible* split duty,
+ * and its extension counts only when the operator's scheme provides split duty (settings.splitDuty) and the break
+ * is confirmed (by the pilot, or marked as a break / hotel in the roster). Each duty says how sure its limit is:
+ * confirmed (roster report and release, home base known), estimated (report or release worked out from the
+ * settings) or not determinable (no home base, or no FTL scheme).
  */
 import { minutesBetween } from "./time";
 import type { Flight, FtlRegime, RosterEvent } from "./types";
@@ -20,6 +26,10 @@ export interface FtlSettings {
   homeTimezone: string;
   /** "oro" (default): EASA ORO.FTL; "subq": EU-OPS Subpart Q (air taxi, business aviation, single pilot) */
   regime?: FtlRegime;
+  /** the operator's FTL scheme provides split duty (CS FTL.1.220): without it, no extension is ever applied */
+  splitDuty?: boolean;
+  /** duties whose break the pilot confirmed as a planned split duty (duty ids) */
+  confirmedSplits?: string[];
 }
 
 export const DEFAULT_FTL_SETTINGS: FtlSettings = {
@@ -45,7 +55,17 @@ export interface DutyPeriod {
   /** on-block and off-block around that longest time on the ground */
   breakFromUtc?: string;
   breakToUtc?: string;
+  /** the report time comes from the roster (not worked out from the settings) */
+  reportKnown?: boolean;
+  /** the release time comes from the roster */
+  releaseKnown?: boolean;
+  /** the roster marks the break itself (a "split", "break" or hotel event in it) */
+  breakMarked?: boolean;
 }
+
+/** How sure a limit is: from the roster with a known base, worked out from the settings, or not determinable. */
+export type FtlBasis = "confirmed" | "estimated" | "notDeterminable";
+export type FtlAssumption = "noBase" | "noScheme" | "reportEstimated" | "releaseEstimated";
 
 /** A split duty break (CS FTL.1.220), worked out from the on-block before it and the off-block after it. */
 export interface SplitBreak {
@@ -238,8 +258,11 @@ export function dutyPeriodsFromRoster(events: RosterEvent[], settings: FtlSettin
     .filter((e) => minutesBetween(e.startUtc, e.endUtc) < ALL_DAY_MIN)
     .filter((e) => e.kind !== "FLIGHT" || (e.depIcao && e.arrIcao))
     .sort((a, b) => a.startUtc.localeCompare(b.startUtc));
+  // a roster event that names the break itself ("SPLIT", "BREAK", "PAUSE", hotel)
+  const marker = (e: RosterEvent) => /\b(split|break|pause|coupure|htl|hotel|h[oô]tel|day ?room)\b/i.test(`${e.title ?? ""}`);
+  const markers = events.filter((e) => !e.deletedAt && marker(e));
   let cur: DutyPeriod | null = null;
-  for (const e of sorted) {
+  for (const e of sorted.filter((x) => !marker(x))) {
     const isSector = e.kind === "FLIGHT";
     const report = e.reportUtc ?? shift(e.startUtc, -settings.reportBeforeMin);
     // the same duty unless the time between the release and the next report leaves room for the shortest legal
@@ -250,9 +273,12 @@ export function dutyPeriodsFromRoster(events: RosterEvent[], settings: FtlSettin
         cur.longestBreakMin = gap;
         cur.breakFromUtc = cur.fdpEndUtc;
         cur.breakToUtc = e.startUtc;
+        const from = cur.fdpEndUtc;
+        cur.breakMarked = markers.some((m) => m.startUtc < e.startUtc && m.endUtc > from);
       }
       cur.fdpEndUtc = e.endUtc;
       cur.releaseUtc = e.debriefUtc ?? shift(e.endUtc, settings.releaseAfterMin);
+      cur.releaseKnown = !!e.debriefUtc;
       if (isSector) {
         cur.sectors++;
         cur.flightMin += minutesBetween(e.startUtc, e.endUtc);
@@ -271,6 +297,8 @@ export function dutyPeriodsFromRoster(events: RosterEvent[], settings: FtlSettin
         startIcao: e.depIcao,
         endIcao: e.arrIcao,
         flightIds: e.flightId ? [e.flightId] : [],
+        reportKnown: !!e.reportUtc,
+        releaseKnown: !!e.debriefUtc,
       };
       duties.push(cur);
     }
@@ -292,6 +320,8 @@ export type FtlViolationCode =
 export interface FtlViolation {
   code: FtlViolationCode;
   severity: "error" | "warning";
+  /** how sure the finding is (an estimated duty gives an estimated finding) */
+  basis?: FtlBasis;
   dutyId?: string;
   atUtc: string;
   actualMin: number;
@@ -301,18 +331,28 @@ export interface FtlViolation {
 export interface DutyAnalysis {
   duty: DutyPeriod;
   fdpMin: number;
-  /** max FDP including the split duty extension */
+  /** max FDP, with the split duty extension only when that split duty is confirmed */
   maxFdpMin: number;
-  /** of which split duty extension */
+  /** split duty extension applied (0 unless confirmed) */
   splitExtensionMin: number;
-  /** the split duty break, when there is one */
+  /** the break long enough to be a split duty, when there is one */
   split?: SplitBreak;
+  /** confirmed: applied; possible: shown only (not confirmed, or the scheme has no split duty) */
+  splitStatus?: "confirmed" | "possible";
+  /** the FDP would be within the limit with the possible split duty extension */
+  withinIfSplit?: boolean;
+  basis: FtlBasis;
+  assumptions: FtlAssumption[];
   dutyMin: number;
   restBeforeMin?: number;
   minRestBeforeMin?: number;
 }
 
 export interface FtlReport {
+  /** the scheme the limits come from */
+  regime: FtlRegime;
+  /** no home base: reference time and rest at home cannot be determined */
+  missingBase: boolean;
   duties: DutyAnalysis[];
   violations: FtlViolation[];
   cumulative: {
@@ -354,14 +394,26 @@ export function analyseFtl(duties: DutyPeriod[], nowUtc: string, settings: FtlSe
     const fdpMin = minutesBetween(d.reportUtc, d.fdpEndUtc);
     const dutyMin = minutesBetween(d.reportUtc, d.releaseUtc);
     const split = d.breakFromUtc && d.breakToUtc ? splitBreak(d.breakFromUtc, d.breakToUtc, settings.homeTimezone) : undefined;
-    const splitExtensionMin = split?.extensionMin ?? splitDutyExtension(d.longestBreakMin);
+    const possibleExt = split?.extensionMin ?? splitDutyExtension(d.longestBreakMin);
+    // split duty only when the scheme has it and this break is confirmed: never from the gap alone
+    const confirmed = !!settings.splitDuty && (d.breakMarked || (settings.confirmedSplits ?? []).includes(d.id));
+    const splitExtensionMin = confirmed ? possibleExt : 0;
     const startLocal = localMinuteOfDay(d.reportUtc, settings.homeTimezone);
     const base = settings.regime === "subq" ? subpartQMaxFdp(startLocal, fdpMin, d.sectors) : maxDailyFdp(startLocal, d.sectors);
     const maxFdpMin = d.kind === "FDP" && settings.regime !== "none" ? base + splitExtensionMin : Infinity;
-    const a: DutyAnalysis = { duty: d, fdpMin, maxFdpMin, splitExtensionMin, dutyMin, ...(split ? { split } : {}) };
+    const assumptions: FtlAssumption[] = [];
+    if (!settings.homeBaseIcao) assumptions.push("noBase");
+    if (settings.regime === "none") assumptions.push("noScheme");
+    if (!d.reportKnown) assumptions.push("reportEstimated");
+    if (!d.releaseKnown) assumptions.push("releaseEstimated");
+    const basis: FtlBasis = assumptions.includes("noBase") || assumptions.includes("noScheme") ? "notDeterminable" : assumptions.length ? "estimated" : "confirmed";
+    const a: DutyAnalysis = { duty: d, fdpMin, maxFdpMin, splitExtensionMin, dutyMin, basis, assumptions, ...(split ? { split, splitStatus: confirmed ? "confirmed" : "possible" } : possibleExt > 0 ? { splitStatus: confirmed ? "confirmed" : "possible" } : {}) };
+    if (!confirmed && possibleExt > 0 && d.kind === "FDP" && fdpMin > maxFdpMin && fdpMin <= maxFdpMin + possibleExt) a.withinIfSplit = true;
     if (d.kind === "FDP" && fdpMin > maxFdpMin) {
-      const severity = fdpMin - maxFdpMin <= FDP_EXTENSION_MAX ? "warning" : "error";
-      violations.push({ code: "fdpExceeded", severity, dutyId: d.id, atUtc: d.reportUtc, actualMin: fdpMin, limitMin: maxFdpMin });
+      // an overrun that a possible (unconfirmed) split duty would cover, or on a duty whose limit is not determinable,
+      // is a warning to check, not a breach
+      const severity = fdpMin - maxFdpMin <= FDP_EXTENSION_MAX || a.withinIfSplit || basis === "notDeterminable" ? "warning" : "error";
+      violations.push({ code: "fdpExceeded", severity, basis, dutyId: d.id, atUtc: d.reportUtc, actualMin: fdpMin, limitMin: maxFdpMin });
     }
     const prev = sorted[i - 1];
     if (prev) {
@@ -373,7 +425,7 @@ export function analyseFtl(duties: DutyPeriod[], nowUtc: string, settings: FtlSe
       a.restBeforeMin = rest;
       a.minRestBeforeMin = minRest;
       if (rest < minRest && settings.regime !== "none") {
-        violations.push({ code: "restTooShort", severity: "error", dutyId: d.id, atUtc: d.reportUtc, actualMin: rest, limitMin: minRest });
+        violations.push({ code: "restTooShort", severity: basis === "notDeterminable" ? "warning" : "error", basis, dutyId: d.id, atUtc: d.reportUtc, actualMin: rest, limitMin: minRest });
       }
     }
     analyses.push(a);
@@ -443,6 +495,8 @@ export function analyseFtl(duties: DutyPeriod[], nowUtc: string, settings: FtlSe
   }
 
   return {
+    regime: settings.regime ?? "oro",
+    missingBase: !settings.homeBaseIcao,
     duties: analyses,
     violations: violations.sort((a, b) => b.atUtc.localeCompare(a.atUtc)),
     cumulative: {

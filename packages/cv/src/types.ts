@@ -42,7 +42,9 @@ export interface TypeHours {
   engineType: string;
   multiPilot: boolean;
   totalMin: number;
+  /** PIC only (PICUS apart) */
   picMin: number;
+  picusMin?: number;
   copilotMin: number;
   lastFlown?: string;
 }

@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { Image } from "expo-image";
+import { isDemoAccount } from "@cielo/core";
 import { api } from "../api";
 import { useApp } from "../state";
 import { Glass, Row, Txt } from "./ui";
@@ -25,11 +26,13 @@ interface Photo {
 const metadata = new Map<string, Photo | null>();
 
 export function AircraftPhoto({ registration }: { registration?: string }) {
-  const { t } = useApp();
+  const { t, access, pilot } = useApp();
+  // demo data uses fictional registrations: a real aircraft wearing them would show the wrong photo
+  const fictional = access.demo || isDemoAccount(pilot.email);
   const reg = registration?.trim().toUpperCase();
   const [photo, setPhoto] = useState<Photo | null>(reg ? (metadata.get(reg) ?? null) : null);
   useEffect(() => {
-    if (!reg || reg.length < 3) return setPhoto(null);
+    if (fictional || !reg || reg.length < 3) return setPhoto(null);
     if (metadata.has(reg)) return setPhoto(metadata.get(reg)!);
     let alive = true;
     api<{ photo: Photo | null }>(`/api/aircraft-photo?reg=${encodeURIComponent(reg)}`)
@@ -41,7 +44,7 @@ export function AircraftPhoto({ registration }: { registration?: string }) {
     return () => {
       alive = false;
     };
-  }, [reg]);
+  }, [reg, fictional]);
   if (!photo) return null;
   const open = () => void Linking.openURL(photo.link);
   // Planespotters' largest free size is about 420 px wide: shown at 160 pt it stays sharp on a Retina screen,

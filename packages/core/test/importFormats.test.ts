@@ -39,3 +39,18 @@ describe("logbook files from other apps", () => {
     expect(row!.explicit.total).toBe(72);
   });
 });
+
+describe("PICUS and SE / ME columns", () => {
+  it("a PICUS column is its own field, never PIC nor a block time; SE / ME are not block times", async () => {
+    const { analyseTable, rowsToFlights } = await import("../src");
+    for (const h of [["Date", "From", "To", "Total", "PIC", "PICUS", "SIC"], ["Date", "Dep", "Arr", "Total time", "P1", "P1 U/S", "P2"], ["Date", "From", "To", "Total", "PIC time", "PICUS time", "SE", "ME"]]) {
+      const a = analyseTable([h, ["2026-01-01", "LFPG", "LFML", "1:30", "0:00", "1:30", "0:00", "0:00"]]);
+      expect(a.mapping.picus).toBe(5);
+      expect(a.mapping.pic).toBe(4);
+      expect(a.mapping.out).toBe(-1);
+      expect(a.mapping.in).toBe(-1);
+      const rows = rowsToFlights(a.rows, a.mapping, { dateOrder: a.dateOrder });
+      expect(rows[0]!.input?.function).toBe("PICUS");
+    }
+  });
+});

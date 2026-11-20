@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { href: "/compagnies", priority: 0.7, freq: "monthly" },
     { href: "/blog", priority: 0.7, freq: "weekly" },
     { href: "/contact", priority: 0.4, freq: "yearly" },
+    { href: "/vos-donnees", priority: 0.5, freq: "yearly" },
     { href: "/legal/mentions-legales", priority: 0.2, freq: "yearly" },
     { href: "/legal/confidentialite", priority: 0.2, freq: "yearly" },
     { href: "/legal/cgu", priority: 0.2, freq: "yearly" },

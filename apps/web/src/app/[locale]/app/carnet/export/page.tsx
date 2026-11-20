@@ -9,6 +9,7 @@ import { buildLogbookPdf, flightsToCsv, flightsToRows, layoutForAuthority, TABUL
 import { Card, Field, PageTitle, Toggle } from "@/components/app/ui";
 import { useFlights, usePilot, useTable } from "@/lib/hooks";
 import { downloadBlob } from "@/lib/download";
+import { track } from "@/lib/metrics";
 
 type Format = LayoutId | "csv" | "xlsx";
 
@@ -36,6 +37,7 @@ export default function ExportPage() {
     try {
       if (format === "csv") {
         downloadBlob(flightsToCsv(selected, { decimal }), `${name}.csv`, "text/csv;charset=utf-8");
+        track("export");
       } else if (format === "xlsx") {
         const { default: writeXlsxFile } = await import("write-excel-file/browser");
         const data = [[...TABULAR_HEADERS].map((h) => ({ value: h, fontWeight: "bold" as const })), ...flightsToRows(selected, { decimal }).map((r) => r.map((v) => ({ value: v === "" ? null : v })))];
@@ -59,6 +61,7 @@ export default function ExportPage() {
           holderDetails: format === "HKCAD" && pilot?.employer ? [["Employer", pilot.employer]] : undefined,
         });
         downloadBlob(bytes as BlobPart, `${name}-${format}.pdf`, "application/pdf");
+        track("export");
       }
     } finally {
       setBusy(false);

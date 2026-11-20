@@ -77,7 +77,7 @@ function Ring({ ratio, label, sub }: { ratio: number; label: string; sub: string
 /** PIC / night / IFR, coloured, with their share of the total. */
 function Chips({ items }: { items: { icon: typeof Plane; color: string; label: string; value: string; share: number }[] }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 16 }}>
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`, gap: 8, marginTop: 16 }}>
       {items.map(({ icon: Icon, color, label, value, share }) => (
         <div key={label} style={{ padding: "9px 10px", borderRadius: 12, background: `color-mix(in srgb, ${color} 13%, transparent)`, display: "grid", gap: 4, minWidth: 0 }}>
           <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: `color-mix(in srgb, ${color} 58%, currentColor)` }}>
@@ -117,7 +117,9 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
     const openingTotal = opening.filter((o) => !o.deletedAt).reduce((s, o) => s + o.totalMin, 0);
     const openingPic = opening.filter((o) => !o.deletedAt).reduce((s, o) => s + o.picMin, 0);
     const total = sum(realFlights, "totalMin") + openingTotal;
-    const pic = realFlights.reduce((s, f) => s + f.picMin + f.picusMin, 0) + openingPic;
+    // PIC strict; PICUS shown apart (definitions in @cielo/core experience.ts)
+    const pic = realFlights.reduce((s, f) => s + f.picMin, 0) + openingPic;
+    const picus = realFlights.reduce((s, f) => s + (f.picusMin ?? 0), 0);
     const night = sum(realFlights, "nightMin") + opening.filter((o) => !o.deletedAt).reduce((s, o) => s + (o.nightMin ?? 0), 0);
     const ifr = realFlights.reduce((s, f) => s + (f.ifrMin ?? 0), 0) + opening.filter((o) => !o.deletedAt).reduce((s, o) => s + (o.ifrMin ?? 0), 0);
 
@@ -288,6 +290,7 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
     return {
       total,
       pic,
+      picus,
       night,
       ifr,
       ring,
@@ -339,6 +342,7 @@ export function GlassCockpit({ flights, opening, licenses, pilot, today, auditIs
             { icon: Award, color: GREEN, label: "PIC", value: dur(data.pic), share: data.total ? data.pic / data.total : 0 },
             { icon: Moon, color: INDIGO, label: g.night ?? "Night", value: dur(data.night), share: data.total ? data.night / data.total : 0 },
             { icon: Cloud, color: SKY, label: "IFR", value: dur(data.ifr), share: data.total ? data.ifr / data.total : 0 },
+            ...(data.picus > 0 ? [{ icon: Award, color: SKY, label: "PICUS", value: dur(data.picus), share: data.total ? data.picus / data.total : 0 }] : []),
           ]}
         />
       }

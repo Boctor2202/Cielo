@@ -15,6 +15,10 @@ export type FtlPrefs = Partial<Pick<FtlSettings, "reportBeforeMin" | "releaseAft
 const KEY = "ftlSettings";
 
 let prefs: FtlPrefs = {};
+/** split duty: whether the operator's scheme has it, and the breaks the pilot confirmed (this device only) */
+export type SplitPrefs = Pick<FtlSettings, "splitDuty" | "confirmedSplits">;
+const SPLIT_KEY = "ftlSplit";
+let split: SplitPrefs = {};
 let loadedFor: string | null = null;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((f) => f());
@@ -49,7 +53,21 @@ async function load(store: SqliteStore, owner: string) {
     next = {};
   }
   prefs = next;
+  try {
+    const raw = await store.getMeta(SPLIT_KEY);
+    const v = raw ? (JSON.parse(raw) as SplitPrefs) : {};
+    split = { splitDuty: v.splitDuty === true, confirmedSplits: Array.isArray(v.confirmedSplits) ? v.confirmedSplits.filter((x) => typeof x === "string") : [] };
+  } catch {
+    split = {};
+  }
   emit();
+}
+
+/** Saves the split duty choices on this device. */
+export async function saveSplitPrefs(store: SqliteStore, patch: SplitPrefs): Promise<void> {
+  split = { ...split, ...patch };
+  emit();
+  await store.setMeta(SPLIT_KEY, JSON.stringify(split));
 }
 
 /** The pilot's synced choices, then what this device saved before they synced. */
@@ -88,9 +106,10 @@ export function autoTimezone(pilot: Pilot): string {
 }
 
 /** FTL settings for the computation: the pilot's rules and base, this device's report/release times and zone. */
-export function ftlSettingsFor(pilot: Pilot, local: FtlPrefs = prefs): FtlSettings {
+export function ftlSettingsFor(pilot: Pilot, local: FtlPrefs = prefs, sp: SplitPrefs = split): FtlSettings {
   const p = effectivePrefs(pilot, local);
   return {
+    ...sp,
     ...DEFAULT_FTL_SETTINGS,
     reportBeforeMin: p.reportBeforeMin ?? DEFAULT_FTL_SETTINGS.reportBeforeMin,
     releaseAfterMin: p.releaseAfterMin ?? DEFAULT_FTL_SETTINGS.releaseAfterMin,
@@ -106,7 +125,8 @@ export function useFtlSettings(): { settings: FtlSettings; prefs: FtlPrefs } {
   // reloaded when the local pilot changes (sign-in, or a wipe of the phone's data)
   useEffect(() => void load(store, pilot.id), [store, pilot.id]);
   const local = useSyncExternalStore(subscribe, () => prefs);
-  const settings = useMemo(() => ftlSettingsFor(pilot, local), [pilot, local]);
+  const sp = useSyncExternalStore(subscribe, () => split);
+  const settings = useMemo(() => ftlSettingsFor(pilot, local, sp), [pilot, local, sp]);
   const p = useMemo(() => effectivePrefs(pilot, local), [pilot, local]);
   return { settings, prefs: p };
 }
