@@ -232,7 +232,9 @@
     "refund": "Pas convaincu ? Écrivez-nous dans les {days} jours qui suivent votre premier paiement sur le site : nous vous remboursons. Abonnement pris sur l'App Store : le remboursement se demande à Apple (reportaproblem.apple.com), qui en décide.",
     "basicAndStudent": "Élève · Basic",
     "included": "Inclus",
-    "notIncluded": "Non inclus"
+    "notIncluded": "Non inclus",
+    "billedMonthly": "facturé chaque mois",
+    "orYearly": "ou {price}/an, facturé une fois par an"
   },
   "faq": {
     "title": "Questions fréquentes",
@@ -1438,7 +1440,8 @@
       "exportEverythingHint": "PDF au format de votre autorité, CSV de tous vos vols et toutes vos données (JSON). Possible à tout moment, avec ou sans abonnement, même après la fin de l'essai ou une résiliation.",
       "studentDeclare": "Je suis élève pilote (formule Élève)",
       "studentUntil": "Licence prévue le",
-      "studentHint": "Sur déclaration : la formule Élève est proposée jusqu'à la date de licence prévue, 24 mois au plus. Un justificatif peut être demandé au renouvellement."
+      "studentHint": "Sur déclaration : la formule Élève est proposée jusqu'à la date de licence prévue, 24 mois au plus. Un justificatif peut être demandé au renouvellement.",
+      "trialPlan": "Essai gratuit, toutes les fonctions ({days} j restants)"
     },
     "functions": {
       "PIC": "Commandant de bord (PIC)",

@@ -51,39 +51,68 @@ export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
   const money = (v: number) => new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-IE", { style: "currency", currency: SITE.pricing.currency }).format(v);
   const plans: Plan[] = ["student", "basic", "premium"];
   const seats = useFounderSeats();
+  const [yearly, setYearly] = useState(true);
 
   return (
     <section id="pricing" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-2xl text-center">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
         <p className="mt-4 text-lg text-muted">{t("subtitle")}</p>
+        {/* yearly or monthly: every plan shows its price for the chosen period, and the other one beneath */}
+        <div className="mt-8 inline-flex rounded-full border border-border bg-surface p-1" role="group">
+          {([true, false] as const).map((y) => (
+            <button
+              key={String(y)}
+              type="button"
+              aria-pressed={yearly === y}
+              onClick={() => setYearly(y)}
+              className={`rounded-full px-5 py-1.5 text-sm font-semibold transition ${yearly === y ? "bg-accent text-accent-contrast" : "text-muted hover:text-text"}`}
+            >
+              {y ? t("yearly") : t("monthly")}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="mx-auto mt-12 grid max-w-5xl gap-5 md:grid-cols-3">
         {plans.map((p) => {
-          const { monthly, yearly } = SITE.pricing[p];
-          const saving = yearlySaving(monthly, yearly);
+          const { monthly } = SITE.pricing[p];
+          const saving = yearlySaving(monthly, SITE.pricing[p].yearly);
           const popular = p === "premium";
           return (
             <div key={p} className={`relative flex flex-col rounded-2xl border p-7 ${popular ? "border-accent bg-surface shadow-[0_0_0_1px_var(--accent)]" : "border-border bg-bg"}`}>
               {popular && <span className="absolute -top-3 left-7 rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-accent-contrast">{t("popular")}</span>}
               <h3 className="text-lg font-bold">{t(`plans.${p}.name`)}</h3>
               <p className="mt-1 min-h-10 text-sm text-muted">{t(`plans.${p}.desc`)}</p>
-              {/* the yearly price first, then the monthly one if the plan has it, then what paying yearly really saves */}
-              <div className="mt-6 flex items-baseline gap-1">
-                <span className="num text-4xl font-semibold tracking-tight">{money(yearly)}</span>
-                <span className="text-muted">{t("perYear")}</span>
-              </div>
-              <p className="mt-1 text-sm text-muted">{t("billedOncePerYear")}</p>
-              {monthly ? (
-                <p className="mt-2 text-sm">
-                  {t("orMonthly", { price: money(monthly) })}
-                  {saving > 0 && (
-                    <span className="mt-0.5 block font-semibold text-accent">{t("saving", { pct: saving, full: money(monthly * 12), yearly: money(yearly) })}</span>
+              {/* the price of the chosen period, then the other one and what paying yearly really saves */}
+              {yearly || !monthly ? (
+                <>
+                  <div className="mt-6 flex items-baseline gap-1">
+                    <span className="num text-4xl font-semibold tracking-tight">{money(SITE.pricing[p].yearly)}</span>
+                    <span className="text-muted">{t("perYear")}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted">{t("billedOncePerYear")}</p>
+                  {monthly ? (
+                    <p className="mt-2 text-sm">
+                      {t("orMonthly", { price: money(monthly) })}
+                      {saving > 0 && <span className="mt-0.5 block font-semibold text-accent">{t("saving", { pct: saving, full: money(monthly * 12), yearly: money(SITE.pricing[p].yearly) })}</span>}
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-sm text-muted">{t("yearlyOnly")}</p>
                   )}
-                </p>
+                </>
               ) : (
-                <p className="mt-2 text-sm text-muted">{t("yearlyOnly")}</p>
+                <>
+                  <div className="mt-6 flex items-baseline gap-1">
+                    <span className="num text-4xl font-semibold tracking-tight">{money(monthly)}</span>
+                    <span className="text-muted">{t("perMonth")}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted">{t("billedMonthly")}</p>
+                  <p className="mt-2 text-sm">
+                    {t("orYearly", { price: money(SITE.pricing[p].yearly) })}
+                    {saving > 0 && <span className="mt-0.5 block font-semibold text-accent">{t("saving", { pct: saving, full: money(monthly * 12), yearly: money(SITE.pricing[p].yearly) })}</span>}
+                  </p>
+                </>
               )}
               <ul className="mt-6 flex-1 space-y-2.5 text-[15px]">
                 {messages.pricing.highlights[p].map((h) => (
@@ -93,7 +122,7 @@ export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
                   </li>
                 ))}
               </ul>
-              <Link href={{ pathname: "/inscription", query: { plan: p } }} className={`btn mt-8 w-full ${popular ? "btn-primary" : "btn-secondary"}`}>
+              <Link href={{ pathname: "/inscription", query: { plan: p, interval: yearly || !monthly ? "yearly" : "monthly" } }} className={`btn mt-8 w-full ${popular ? "btn-primary" : "btn-secondary"}`}>
                 {t("cta")}
               </Link>
             </div>

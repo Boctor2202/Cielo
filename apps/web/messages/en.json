@@ -232,7 +232,9 @@
     "refund": "Not convinced? Write to us within {days} days of your first payment on the website and we refund you. Subscribed on the App Store: refunds are requested from Apple (reportaproblem.apple.com), who decides.",
     "basicAndStudent": "Student · Basic",
     "included": "Included",
-    "notIncluded": "Not included"
+    "notIncluded": "Not included",
+    "billedMonthly": "billed every month",
+    "orYearly": "or {price}/year, billed once a year"
   },
   "faq": {
     "title": "Frequently asked questions",
@@ -1438,7 +1440,8 @@
       "exportEverythingHint": "PDF in your authority's format, CSV of all your flights and all your data (JSON). Possible at any time, with or without a subscription, even after the trial or a cancellation.",
       "studentDeclare": "I am a student pilot (Student plan)",
       "studentUntil": "Licence expected on",
-      "studentHint": "Self-declared: the Student plan is offered until the expected licence date, 24 months at most. A proof may be asked at renewal."
+      "studentHint": "Self-declared: the Student plan is offered until the expected licence date, 24 months at most. A proof may be asked at renewal.",
+      "trialPlan": "Free trial, every feature ({days} days left)"
     },
     "functions": {
       "PIC": "Pilot in command (PIC)",

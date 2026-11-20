@@ -159,7 +159,7 @@ export default function SettingsPage() {
         <Card title={t("subscription")}>
           {/* the plan actually granted now (server tier once signed in, demo or nothing otherwise) */}
           <p className="text-sm">
-            {t("currentPlan", { plan: access.demo ? t("demoPlan", { days: access.daysLeft ?? 0 }) : access.plan ? tp(access.plan) : tp("free") })}
+            {t("currentPlan", { plan: access.demo ? t("demoPlan", { days: access.daysLeft ?? 0 }) : access.trial ? t("trialPlan", { days: access.daysLeft ?? 0 }) : access.plan ? tp(access.plan) : tp("free") })}
             {!access.demo && access.plan && v.subscriptionExpiresAt && <span className="text-muted"> · {t("until", { date: new Date(v.subscriptionExpiresAt).toLocaleDateString(locale) })}</span>}
           </p>
           {!cloud.enabled ? (
