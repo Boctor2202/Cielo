@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Pressable, View, type StyleProp, type ViewStyle } from "react-native";
+import { Pressable, Switch, View, type StyleProp, type ViewStyle } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { FTL_LIMITS, analyseFtl, buildDutyPeriods, cumulativeLevel, formatDuration, limitApplies, type FtlRegime } from "@cielo/core";
 import { Card, Chip, Field, Row, Screen, Segmented, Txt, statusColor } from "../../src/components/ui";
@@ -9,7 +9,7 @@ import { AirportField } from "../../src/components/AirportField";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { useApp } from "../../src/state";
 import { lookupAirport } from "../../src/airports";
-import { autoTimezone, saveFtlPrefs, timeZones, useFtlSettings } from "../../src/ftlSettings";
+import { autoTimezone, saveFtlPrefs, saveSplitPrefs, timeZones, useFtlSettings } from "../../src/ftlSettings";
 import { space, useTheme } from "../../src/theme";
 
 const KEYS = ["duty7d", "duty14d", "duty28d", "flight28d", "flightYear", "flight12m"] as const;
@@ -31,11 +31,21 @@ function Ftl() {
   const report = useMemo(() => analyseFtl(buildDutyPeriods(flights, settings), new Date().toISOString(), settings), [flights, settings]);
   const duties = report.duties.slice(-20).reverse();
   const hm = (iso: string) => iso.slice(11, 16);
+  const toggleSplit = (id: string) => {
+    const list = settings.confirmedSplits ?? [];
+    void saveSplitPrefs(app.store, { confirmedSplits: list.includes(id) ? list.filter((x) => x !== id) : [...list, id] });
+  };
+  const basisColor = (b: string) => (b === "confirmed" ? c.success : b === "estimated" ? c.muted : c.caution);
 
   return (
     <Screen columns>
       <Card>
         <Txt variant="h2">{t("dash.ftl")}</Txt>
+        <Txt variant="small" style={{ fontWeight: "700" }}>
+          {t("ftl.applied", { regime: settings.regime === "subq" ? "Subpart Q" : settings.regime === "none" ? t("ftl.regimeNone") : "EASA ORO.FTL" })}
+          {settings.homeBaseIcao ? ` · ${settings.homeBaseIcao} · ${settings.homeTimezone}` : ""}
+        </Txt>
+        {report.missingBase && settings.regime !== "none" ? <Txt variant="small" color={c.caution}>{t("ftl.noBase")}</Txt> : null}
         {KEYS.filter((k) => limitApplies(k, settings.regime)).map((k) => {
           const actual = report.cumulative[k];
           const limit = FTL_LIMITS[k];
@@ -61,7 +71,8 @@ function Ftl() {
             <View style={{ flex: 1 }}>
               <Txt>{t(`ftl.code.${v.code}` as I18nKey, { actual: f(v.actualMin), limit: f(v.limitMin) })}</Txt>
               <Txt variant="small" mono>
-                {formatDate(v.atUtc.slice(0, 10), locale)} · {hm(v.atUtc)} UTC{v.severity === "warning" && v.code === "fdpExceeded" ? ` · ${t("ftl.withinExtension")}` : ""}
+                {formatDate(v.atUtc.slice(0, 10), locale)} · {hm(v.atUtc)} UTC{v.basis ? ` · ${t(`ftl.basis.${v.basis}` as I18nKey)}` : ""}
+                {v.code === "fdpExceeded" && report.duties.find((d) => d.duty.id === v.dutyId)?.withinIfSplit ? ` · ${t("ftl.withinIfSplit")}` : v.severity === "warning" && v.code === "fdpExceeded" ? ` · ${t("ftl.withinExtension")}` : ""}
               </Txt>
             </View>
           </Row>
@@ -87,9 +98,11 @@ function Ftl() {
               <Txt variant="small" mono color={restShort ? c.warning : c.muted}>
                 {t("ftl.sectors", { n: a.duty.sectors })}
                 {a.splitExtensionMin && !a.split ? ` · ${t("ftl.split", { m: f(a.splitExtensionMin) })}` : ""}
+                {" · "}
+                <Txt variant="small" color={basisColor(a.basis)}>{t(`ftl.basis.${a.basis}` as I18nKey)}</Txt>
                 {a.restBeforeMin !== undefined ? ` · ${t("ftl.rest", { r: f(a.restBeforeMin), min: f(a.minRestBeforeMin ?? 0) })}` : ""}
               </Txt>
-              {a.split ? (
+              {a.split && a.splitStatus === "confirmed" ? (
                 <View style={{ alignSelf: "flex-start", flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: "#F59E0B26" }}>
                   <Txt variant="small" color="#F59E0B" style={{ fontWeight: "700" }}>
                     {t("ftl.splitDetail", { b: f(a.split.breakMin), m: f(a.split.extensionMin) })}
@@ -100,6 +113,13 @@ function Ftl() {
                     </Txt>
                   ) : null}
                 </View>
+              ) : a.split ? (
+                <Txt variant="small">{t("ftl.splitPossible", { b: f(a.split.breakMin), m: f(a.split.extensionMin) })}</Txt>
+              ) : null}
+              {a.split && settings.splitDuty && !a.duty.breakMarked ? (
+                <Pressable onPress={() => toggleSplit(a.duty.id)} hitSlop={8}>
+                  <Txt variant="small" color={c.accent} style={{ fontWeight: "700" }}>{a.splitStatus === "confirmed" ? t("ftl.splitUnconfirm") : t("ftl.splitConfirm")}</Txt>
+                </Pressable>
               ) : null}
             </View>
           );
@@ -133,6 +153,11 @@ function Ftl() {
           }}
         />
         <TimeZonePicker value={settings.homeTimezone} chosen={prefs.homeTimezone} auto={autoTimezone(pilot)} onChange={(tz) => void saveFtlPrefs(app, { homeTimezone: tz })} />
+        <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <Txt style={{ flex: 1 }}>{t("ftl.splitScheme")}</Txt>
+          <Switch value={!!settings.splitDuty} onValueChange={(v) => void saveSplitPrefs(app.store, { splitDuty: v })} />
+        </Row>
+        <Txt variant="small">{t("ftl.splitSchemeHint")}</Txt>
         <Txt variant="small">{t("ftl.assumptions", { report: settings.reportBeforeMin, release: settings.releaseAfterMin, tz: settings.homeTimezone })}</Txt>
         <Txt variant="small">{t("ftl.settingsLocal")}</Txt>
       </Card>

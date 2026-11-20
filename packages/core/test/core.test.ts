@@ -153,7 +153,7 @@ describe("ftl", () => {
     // 11:30 of rest after a 14:30 duty
     expect(r.violations.find((v) => v.code === "restTooShort")?.limitMin).toBe(14 * 60 + 30);
   });
-  it("treats a long wait on the ground as split duty, not as a rest", () => {
+  it("keeps a long wait on the ground in the duty; split duty only when the scheme has it and it is confirmed", () => {
     const flights = [
       flight({ id: "1", outUtc: "2026-11-01T07:00:00Z", inUtc: "2026-11-01T09:00:00Z", totalMin: 120 }),
       flight({ id: "1b", outUtc: "2026-11-01T07:00:00Z", inUtc: "2026-11-01T09:00:00Z", totalMin: 120 }), // logged twice
@@ -163,9 +163,19 @@ describe("ftl", () => {
     expect(duties).toHaveLength(1);
     expect(duties[0]!.sectors).toBe(2);
     const r = analyseFtl(duties, "2026-11-10T00:00:00Z", { ...DEFAULT_FTL_SETTINGS, homeTimezone: "UTC" });
-    // FDP 06:00→17:00 = 11:00; max 13:00 + (6:00 − 0:30) / 2
-    expect(r.duties[0]!.splitExtensionMin).toBe(165);
+    // FDP 06:00→17:00 = 11:00: within 13:00 without any split duty; the break is only a possible split duty
+    expect(r.duties[0]!.splitExtensionMin).toBe(0);
+    expect(r.duties[0]!.splitStatus).toBe("possible");
+    expect(r.duties[0]!.basis).toBe("notDeterminable"); // no home base
     expect(r.violations).toEqual([]);
+    // the scheme provides split duty, but this break is not confirmed: still nothing applied
+    const s2 = { ...DEFAULT_FTL_SETTINGS, homeTimezone: "UTC", homeBaseIcao: "LFPG", splitDuty: true };
+    expect(analyseFtl(duties, "2026-11-10T00:00:00Z", s2).duties[0]!.splitExtensionMin).toBe(0);
+    // confirmed by the pilot: max 13:00 + (6:00 − 0:30) / 2; logbook times → estimated
+    const c = analyseFtl(duties, "2026-11-10T00:00:00Z", { ...s2, confirmedSplits: [duties[0]!.id] }).duties[0]!;
+    expect(c.splitExtensionMin).toBe(165);
+    expect(c.splitStatus).toBe("confirmed");
+    expect(c.basis).toBe("estimated");
   });
   it("warns rather than errs on an overrun within the 1 h extension", () => {
     const flights = [flight({ id: "1", outUtc: "2026-11-01T07:00:00Z", inUtc: "2026-11-01T19:30:00Z", totalMin: 750 })];

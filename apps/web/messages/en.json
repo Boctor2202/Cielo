@@ -1085,7 +1085,7 @@
     "ftl": {
       "title": "Flight time limitations (FTL)",
       "subtitle": "Indicative calculation under EASA ORO.FTL for an acclimatised crew member, from your flights and roster.",
-      "disclaimer": "An aid only: it doesn't replace your operator's FTL monitoring system. Estimated results: the logbook has no report or release times (set alongside). A ground wait of 3 h or more is treated as split duty; an overrun of less than 1 h shows as a warning (an extension may cover it). Not covered: augmented crew, unknown acclimatisation state, standby.",
+      "disclaimer": "A helper: it does not replace your operator's FTL system. The logbook has no report or release times: they are estimated from the settings opposite. A long wait on the ground is never treated as split duty by default: it shows as a \"possible split\", and the extension counts only if your operator applies split duty and you confirm it (or the roster says so). Not covered: augmented crew, unknown acclimatisation, standby.",
       "cumulative": "Cumulative",
       "duty7d": "Duty time · 7 days",
       "duty14d": "Duty time · 14 days",
@@ -1133,7 +1133,28 @@
       },
       "splitBadge": "split +{m}",
       "splitDetail": "Split duty: {b} break, max FDP +{m} (CS FTL.1.220)",
-      "splitHotel": "suitable accommodation required (without it: +{m})"
+      "splitHotel": "suitable accommodation required (without it: +{m})",
+      "applied": "Scheme applied: {regime}",
+      "base": "base {base}",
+      "noBase": "No home base: the reference time and rest at base cannot be determined. Limits are shown as an indication.",
+      "basis": {
+        "confirmed": "Confirmed",
+        "estimated": "Estimated",
+        "notDeterminable": "Not determinable"
+      },
+      "assumption": {
+        "noBase": "no home base",
+        "noScheme": "no scheme chosen",
+        "reportEstimated": "report estimated",
+        "releaseEstimated": "release estimated"
+      },
+      "splitPossible": "possible split",
+      "splitPossibleDetail": "Break of {b}: could extend the FDP by {m} if your operator applies split duty and this break was planned as one (CS FTL.1.220). Not applied.",
+      "splitConfirm": "Confirm",
+      "splitUnconfirm": "Undo confirmation",
+      "withinIfSplit": "covered if the split duty is confirmed",
+      "splitScheme": "My operator applies split duty (CS FTL.1.220)",
+      "splitSchemeHint": "Without it, no extension is applied. With it, confirm each break concerned (or let the roster say so: a \"SPLIT\", \"BREAK\" or hotel event)."
     },
     "documents": {
       "title": "Licences, medical and ratings",

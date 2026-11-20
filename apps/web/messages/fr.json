@@ -1085,7 +1085,7 @@
     "ftl": {
       "title": "Limites de temps de vol (FTL)",
       "subtitle": "Calcul indicatif selon EASA ORO.FTL pour un membre d'équipage acclimaté, à partir de vos vols et de votre roster.",
-      "disclaimer": "Outil d'aide : il ne remplace pas le système de suivi FTL de votre exploitant. Résultats estimés : le carnet ne contient pas vos heures de présentation et de fin de service (réglées ci-contre). Une attente au sol de 3 h ou plus est traitée en service fractionné ; un dépassement de moins d'1 h apparaît en avertissement (prolongation possible). Non couverts : équipage renforcé, état d'acclimatation inconnu, réserve.",
+      "disclaimer": "Outil d'aide : il ne remplace pas le système de suivi FTL de votre exploitant. Le carnet ne contient pas vos heures de présentation et de fin de service : elles sont estimées à partir des réglages ci-contre. Une longue attente au sol n'est jamais traitée d'office en service fractionné : elle apparaît comme « split possible », et l'extension ne compte que si votre exploitant applique le split duty et que vous la confirmez (ou que le roster l'indique). Non couverts : équipage renforcé, état d'acclimatation inconnu, réserve.",
       "cumulative": "Cumuls",
       "duty7d": "Temps de service · 7 jours",
       "duty14d": "Temps de service · 14 jours",
@@ -1133,7 +1133,28 @@
       },
       "splitBadge": "split +{m}",
       "splitDetail": "Split duty : pause de {b}, FDP max +{m} (CS FTL.1.220)",
-      "splitHotel": "hébergement adapté requis (sans : +{m})"
+      "splitHotel": "hébergement adapté requis (sans : +{m})",
+      "applied": "Réglementation appliquée : {regime}",
+      "base": "base {base}",
+      "noBase": "Base d'affectation non renseignée : l'heure de référence et le repos à la base ne peuvent pas être déterminés. Les limites sont affichées à titre indicatif.",
+      "basis": {
+        "confirmed": "Confirmé",
+        "estimated": "Estimé",
+        "notDeterminable": "Non déterminable"
+      },
+      "assumption": {
+        "noBase": "base non renseignée",
+        "noScheme": "aucune réglementation choisie",
+        "reportEstimated": "présentation estimée",
+        "releaseEstimated": "fin de service estimée"
+      },
+      "splitPossible": "split possible",
+      "splitPossibleDetail": "Pause de {b} : pourrait étendre la FDP de {m} si votre exploitant applique le split duty et que cette pause était prévue comme telle (CS FTL.1.220). Non appliqué.",
+      "splitConfirm": "Confirmer",
+      "splitUnconfirm": "Annuler la confirmation",
+      "withinIfSplit": "couvert si le split duty est confirmé",
+      "splitScheme": "Mon exploitant applique le split duty (CS FTL.1.220)",
+      "splitSchemeHint": "Sans cela, aucune extension n'est appliquée. Avec, confirmez chaque pause concernée (ou laissez le roster l'indiquer : événement « SPLIT », « BREAK », hôtel)."
     },
     "documents": {
       "title": "Licences, médical et qualifications",

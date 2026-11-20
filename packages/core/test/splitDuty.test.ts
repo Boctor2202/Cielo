@@ -21,7 +21,7 @@ describe("split duty (CS FTL.1.220)", () => {
     expect(night.accommodationRequired).toBe(true);
     expect(night.extensionWithoutAccommodationMin).toBe(0);
   });
-  it("keeps a roster day with a long wait as one duty, with the extension", () => {
+  it("keeps a roster day with a long wait as one duty; the extension needs the scheme and a confirmation", () => {
     const roster = [
       ev("1", "LFPB", "EDLV", "2026-11-24T06:00:00Z", "2026-11-24T07:15:00Z"),
       ev("2", "EDLV", "LFPB", "2026-11-24T18:00:00Z", "2026-11-24T19:15:00Z"),
@@ -30,8 +30,34 @@ describe("split duty (CS FTL.1.220)", () => {
     expect(duties).toHaveLength(1);
     const a = analyseFtl(duties, "2026-11-20T00:00:00Z").duties[0]!;
     expect(a.split?.breakMin).toBe(615);
-    expect(a.splitExtensionMin).toBe(308);
-    expect(a.split?.accommodationRequired).toBe(true);
+    expect(a.splitExtensionMin).toBe(0);
+    expect(a.splitStatus).toBe("possible");
+    // 06:00 report → 19:15: over the 13 h max, but a possible split duty would cover it → a warning to check
+    expect(a.withinIfSplit).toBe(true);
+    const v = analyseFtl(duties, "2026-11-20T00:00:00Z").violations.find((x) => x.code === "fdpExceeded")!;
+    expect(v.severity).toBe("warning");
+    const ok = analyseFtl(duties, "2026-11-20T00:00:00Z", { ...DEFAULT_FTL_SETTINGS, splitDuty: true, confirmedSplits: [duties[0]!.id] }).duties[0]!;
+    expect(ok.splitExtensionMin).toBe(308);
+    expect(ok.split?.accommodationRequired).toBe(true);
+  });
+  it("a roster that marks the break confirms the split duty, when the scheme has it", () => {
+    const marked = [
+      ev("1", "LFPB", "EDLV", "2026-11-24T06:00:00Z", "2026-11-24T07:15:00Z"),
+      { ...ev("h", "", "", "2026-11-24T08:00:00Z", "2026-11-24T17:00:00Z"), kind: "GROUND", title: "SPLIT DUTY HOTEL", depIcao: undefined, arrIcao: undefined } as RosterEvent,
+      ev("2", "EDLV", "LFPB", "2026-11-24T18:00:00Z", "2026-11-24T19:15:00Z"),
+    ];
+    const d = dutyPeriodsFromRoster(marked, DEFAULT_FTL_SETTINGS);
+    expect(d).toHaveLength(1);
+    expect(d[0]!.breakMarked).toBe(true);
+    expect(analyseFtl(d, "2026-11-20T00:00:00Z").duties[0]!.splitExtensionMin).toBe(0);
+    expect(analyseFtl(d, "2026-11-20T00:00:00Z", { ...DEFAULT_FTL_SETTINGS, splitDuty: true }).duties[0]!.splitExtensionMin).toBe(308);
+  });
+  it("roster report and debrief with a base give a confirmed limit", () => {
+    const e = { ...ev("1", "LFPO", "LFML", "2026-11-24T06:00:00Z", "2026-11-24T07:15:00Z"), reportUtc: "2026-11-24T05:00:00Z", debriefUtc: "2026-11-24T07:45:00Z" };
+    const a = analyseFtl(dutyPeriodsFromRoster([e]), "2026-11-20T00:00:00Z", { ...DEFAULT_FTL_SETTINGS, homeBaseIcao: "LFPO" });
+    expect(a.duties[0]!.basis).toBe("confirmed");
+    expect(a.missingBase).toBe(false);
+    expect(a.regime).toBe("oro");
   });
 });
 
