@@ -1,3 +1,4 @@
+import { experience } from "@cielo/core";
 import { sameFamily, typeInfo } from "./aircraft";
 import { authorityFromText, defaultWorkRegions, type Authority, type RegionId } from "./regions";
 import type { Job, LicenceLevel, PilotProfile } from "./types";
@@ -118,37 +119,23 @@ export function matchJob(job: Job, me: PilotProfile): Match {
 
 /** Builds the profile from logbook rows (kept generic so web and mobile share it). */
 export function buildProfile(
-  flights: { totalMin: number; picMin: number; picusMin: number; multiPilotMin: number; singlePilotMeMin: number; aircraftTypeIcao?: string; isFstd: boolean; deletedAt?: string | null }[],
+  flights: { totalMin: number; picMin: number; picusMin: number; multiPilotMin: number; singlePilotMeMin: number; aircraftTypeIcao?: string; isFstd: boolean; deletedAt?: string | null; copilotMin?: number }[],
   opening: { totalMin: number; picMin: number; multiPilotMin: number; singlePilotMeMin: number; aircraftTypeIcao?: string | null; deletedAt?: string | null }[],
   licences: { code: string; kind: string; authority?: string; deletedAt?: string | null; validUntil?: string | null }[],
   engineTypeOf: (icao: string) => string | undefined,
   icaoFromRating: (code: string) => string[],
   opts: { framework?: string; workRegions?: RegionId[] } = {},
 ): PilotProfile {
-  const p: PilotProfile = { totalMin: 0, picMin: 0, multiPilotMin: 0, multiEngineMin: 0, turbineMin: 0, jetMin: 0, typeMin: {}, ratedTypes: [], authorities: [], workRegions: [] };
-  const add = (icao: string | null | undefined, min: number) => {
-    if (!icao) return;
-    p.typeMin[icao] = (p.typeMin[icao] ?? 0) + min;
-    const e = engineTypeOf(icao);
-    if (e === "jet") p.jetMin += min;
-    if (e === "jet" || e === "turboprop" || e === "turboshaft") p.turbineMin += min;
+  // one definition of each figure, shared with the app and the CV (PIC strict, PICUS apart): see core experience.ts
+  const x = experience(flights, opening, engineTypeOf);
+  const typeMin: Record<string, number> = {};
+  for (const [icao, r] of Object.entries(x.byType)) typeMin[icao] = r.totalMin;
+  const p: PilotProfile = {
+    totalMin: x.totalMin, picMin: x.picMin, picusMin: x.picusMin, picJetOrMeTurbopropMin: x.picJetOrMeTurbopropMin,
+    multiPilotMin: x.multiPilotMin, multiEngineMin: x.multiEngineMin, turbineMin: x.turbineMin, jetMin: x.jetMin,
+    typeMin, ratedTypes: [], authorities: [], workRegions: [],
+    unknown: { engineMin: x.unknown.engineMin, openingNoTypeMin: x.unknown.openingNoTypeMin, openingPicMin: x.unknown.openingPicMin },
   };
-  for (const f of flights) {
-    if (f.deletedAt || f.isFstd) continue;
-    p.totalMin += f.totalMin;
-    p.picMin += f.picMin + f.picusMin;
-    p.multiPilotMin += f.multiPilotMin;
-    p.multiEngineMin += f.singlePilotMeMin + f.multiPilotMin;
-    add(f.aircraftTypeIcao, f.totalMin);
-  }
-  for (const o of opening) {
-    if (o.deletedAt) continue;
-    p.totalMin += o.totalMin;
-    p.picMin += o.picMin;
-    p.multiPilotMin += o.multiPilotMin;
-    p.multiEngineMin += o.singlePilotMeMin + o.multiPilotMin;
-    add(o.aircraftTypeIcao, o.totalMin);
-  }
   for (const l of licences) {
     if (l.deletedAt) continue;
     const c = l.code.toUpperCase();

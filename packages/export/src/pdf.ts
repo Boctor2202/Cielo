@@ -65,7 +65,9 @@ export async function buildLogbookPdf(flights: Flight[], opts: LogbookPdfOptions
       ["Period", opts.periodLabel ?? "—"],
       ["Entries", `${sorted.length}`],
       ["Total time (incl. brought forward)", fmt(all.totalMin)],
-      ["PIC", fmt(all.picMin + all.picusMin)],
+      // the logbook formats print PICUS in the PIC column; the summary says so and gives PICUS apart
+      ["PIC (incl. PICUS)", fmt(all.picMin + all.picusMin)],
+      ...(all.picusMin > 0 ? ([["of which PICUS", fmt(all.picusMin)]] as [string, string][]) : []),
       ["Night", fmt(all.nightMin)],
       ["IFR", fmt(all.ifrMin)],
       ["Landings day / night", `${all.landingsDay} / ${all.landingsNight}`],

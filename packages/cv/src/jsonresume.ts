@@ -41,7 +41,7 @@ export function toJsonResume(cv: CvData) {
       last12Months: hrs(h.last12mMin),
       last90Days: hrs(h.last90dMin),
       lastFlight: h.lastFlight,
-      byType: h.byType.map((t) => ({ icao: t.icao, name: t.name, total: hrs(t.totalMin), pilotInCommand: hrs(t.picMin), coPilot: hrs(t.copilotMin), lastFlown: t.lastFlown })),
+      byType: h.byType.map((t) => ({ icao: t.icao, name: t.name, total: hrs(t.totalMin), pilotInCommand: hrs(t.picMin), picUnderSupervision: hrs(t.picusMin ?? 0), coPilot: hrs(t.copilotMin), lastFlown: t.lastFlown })),
     },
     meta: { lastModified: new Date().toISOString() },
   };

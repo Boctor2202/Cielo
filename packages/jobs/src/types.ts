@@ -92,7 +92,14 @@ export interface Job {
 /** The subscriber's experience, computed on their device from the logbook and licences. */
 export interface PilotProfile {
   totalMin: number;
+  /** pilot-in-command time only; PICUS is never counted as PIC for a requirement */
   picMin: number;
+  /** PIC under supervision, apart */
+  picusMin?: number;
+  /** PIC on jet or on multi-engine turboprop */
+  picJetOrMeTurbopropMin?: number;
+  /** figures Geardown could not classify (unknown engine, carry-forwards without type or PICUS detail) */
+  unknown?: { engineMin: number; openingNoTypeMin: number; openingPicMin: number };
   multiPilotMin: number;
   multiEngineMin: number;
   turbineMin: number;

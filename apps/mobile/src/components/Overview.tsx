@@ -139,10 +139,11 @@ export function HeroCard({ all, flights, goal, timeDisplay, t, monthLabel, local
           ) : null}
         </Row>
         <Row gap={8}>
-          <Chip3 icon="ribbon" color={GREEN} label="PIC" value={fmt(all.picMin + all.picusMin)} share={(all.picMin + all.picusMin) / total} />
+          <Chip3 icon="ribbon" color={GREEN} label="PIC" value={fmt(all.picMin)} share={all.picMin / total} />
           <Chip3 icon="moon" color={INDIGO} label={t("dash.night" as never)} value={fmt(all.nightMin)} share={all.nightMin / total} />
           <Chip3 icon="cloud" color={SKY} label="IFR" value={fmt(all.ifrMin)} share={all.ifrMin / total} />
         </Row>
+        {all.picusMin > 0 ? <Txt variant="small">{t("dash.picusApart" as never, { h: fmt(all.picusMin) })}</Txt> : null}
         {w > 0 ? (
           <View style={{ gap: 4 }}>
             <Row style={{ justifyContent: "space-between" }}>
