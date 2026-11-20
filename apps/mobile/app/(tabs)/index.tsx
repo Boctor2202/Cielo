@@ -34,7 +34,7 @@ import {
   type WidgetPlacement,
   isDemoAccount,
 } from "@cielo/core";
-import { Button, Card, Dot, Fab, Row, Screen, Txt, statusColor } from "../../src/components/ui";
+import { Button, Card, Dot, Row, Screen, Txt, statusColor } from "../../src/components/ui";
 import { Track } from "../../src/components/Bars";
 import { DutyCard, HeroCard, LastFlightCard, PeriodTiles } from "../../src/components/Overview";
 import { formatDate, type I18nKey } from "../../src/i18n";
@@ -51,7 +51,14 @@ import { Emblem } from "../../src/components/Achievements";
 const FTL_KEYS = ["duty7d", "duty14d", "duty28d", "flight28d", "flightYear", "flight12m"] as const;
 
 export default function Dashboard() {
-  const { t, locale, flights, balances, licenses, pilot, session, access, rosterEvents, layovers, savePilot } = useApp();
+  const { t, locale, flights, balances, licenses, pilot, session, access, rosterEvents, layovers, savePilot, store } = useApp();
+  // signed out without having asked (session expired, or revoked from another device): the logbook on the phone
+  // still belongs to an account, so ask to sign back in rather than offer to "find the website's flights"
+  const [hadAccount, setHadAccount] = useState(false);
+  useEffect(() => {
+    if (session || !store) return;
+    void store.getMeta("sync.accountOwner").then((v) => setHadAccount(!!v)).catch(() => undefined);
+  }, [session, store]);
   // the pilot's widgets (synced with the website); while customising, a draft
   const saved = useMemo(() => dashboardWidgets(pilot), [pilot]);
   const [draft, setDraft] = useState<WidgetPlacement[] | null>(null);
@@ -387,8 +394,8 @@ export default function Dashboard() {
 
         {isCloudEnabled && !session ? (
           <Card>
-            <Txt variant="h2">{t("dash.signInTitle")}</Txt>
-            <Txt variant="muted">{t("dash.signInText")}</Txt>
+            <Txt variant="h2">{t(hadAccount ? "dash.expiredTitle" : "dash.signInTitle")}</Txt>
+            <Txt variant="muted">{t(hadAccount ? "dash.expiredText" : "dash.signInText")}</Txt>
             <Button title={t("dash.signIn")} onPress={() => router.push("/auth")} />
           </Card>
         ) : null}
@@ -438,7 +445,6 @@ export default function Dashboard() {
         ) : null}
         {editing ? <Button kind="ghost" title={t("dash.customCancel")} onPress={() => setDraft(null)} /> : null}
       </Screen>
-      <Fab label={t("flight.new")} onPress={() => router.push(access.canWrite ? "/flight/new" : "/subscription")} />
     </View>
   );
 }

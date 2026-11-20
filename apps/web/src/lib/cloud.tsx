@@ -133,7 +133,8 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     } catch {}
     engine.current?.stop();
     engine.current = null;
-    await sb?.auth.signOut();
+    // this browser only: the phone app stays signed in
+    await sb?.auth.signOut({ scope: "local" });
     await deleteAllLocal();
     const lang = window.location.pathname.split("/")[1] === "en" ? "en" : "fr";
     window.location.assign(`/${lang}/${lang === "en" ? "login" : "connexion"}`);
