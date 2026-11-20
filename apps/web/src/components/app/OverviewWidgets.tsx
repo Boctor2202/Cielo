@@ -178,7 +178,23 @@ export function OverviewWidgets({
 
   const locked = (id: WidgetId) => !!widgetSpec(id).max && !canMax && (id === "jobs" || id === "nextLayover");
   const card = (w: WidgetPlacement) => {
-    if (w.id === "hero" && w.size === "l") return cockpit;
+    // the full cockpit needs the whole width: while customising, a compact preview stands in for it
+    if (w.id === "hero" && w.size === "l" && !editing) return cockpit;
+    if (w.id === "hero" && w.size === "l")
+      return (
+        <section className="card flex min-h-40 items-center justify-between gap-6 p-6">
+          <div>
+            <p className="mono-label !text-[10px]">{widgetLabel("hero", locale)}</p>
+            <p className="num mt-1.5 text-4xl font-bold">{d(periods.all.totalMin)}</p>
+            <p className="text-sm text-muted">{t("cockpitPreview")}</p>
+          </div>
+          <div className="hidden h-16 flex-1 items-end gap-1.5 sm:flex" aria-hidden>
+            {[40, 55, 70, 62, 80, 90, 75, 66, 58, 72, 60, 35].map((h, i) => (
+              <span key={i} className="flex-1 rounded-sm bg-accent/70" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+        </section>
+      );
     const b = body[w.id];
     const inner = (
       <section className="card h-full min-w-0 p-5">

@@ -571,7 +571,8 @@
         "noOperator": "Sans opérateur",
         "noLayover": "aucune prévue",
         "jobsValue": "Offres pilote",
-        "jobsSub": "selon ton carnet"
+        "jobsSub": "selon ton carnet",
+        "cockpitPreview": "Le cockpit complet : temps total, objectif, heures des 12 derniers mois, derniers vols et objectifs."
       }
     },
     "logbook": {
