@@ -44,7 +44,8 @@ function useFounderSeats() {
   return left;
 }
 
-export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
+export function Pricing({ showCompare = true, asPageTitle = false }: { showCompare?: boolean; asPageTitle?: boolean }) {
+  const Heading = asPageTitle ? "h1" : "h2";
   const t = useTranslations("pricing");
   const locale = useLocale();
   const messages = useMessages() as { pricing: { highlights: Record<Plan, string[]> } };
@@ -56,7 +57,7 @@ export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
   return (
     <section id="pricing" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
+        <Heading className="text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</Heading>
         <p className="mt-4 text-lg text-muted">{t("subtitle")}</p>
         {/* yearly or monthly: every plan shows its price for the chosen period, and the other one beneath */}
         <div className="mt-8 inline-flex rounded-full border border-border bg-surface p-1" role="group">
