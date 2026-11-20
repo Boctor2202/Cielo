@@ -20,6 +20,8 @@ export interface FoundFlight {
   blocked?: boolean;
   diverted?: boolean;
   cancelled?: boolean;
+  /** where the times come from: ADS-B (adsb.lol, free, last 24 h) or FlightAware */
+  source?: "adsb" | "flightaware";
 }
 
 export class FlightAwareError extends Error {

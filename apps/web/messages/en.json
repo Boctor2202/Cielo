@@ -707,19 +707,21 @@
       "sign": "Get it signed",
       "fromRoster": "Prefilled from roster",
       "flightaware": {
-        "button": "Fill from FlightAware",
+        "button": "Fill actual times",
         "needReg": "Enter the registration and date first",
         "title": "Flights of {reg} that day",
-        "loading": "Searching FlightAware…",
-        "none": "No flight found for this registration on that date (aircraft blocked, not tracked or another date).",
-        "error": "FlightAware is unavailable right now.",
+        "loading": "Looking up the actual times…",
+        "none": "No flight found for this registration on this date (not received, transponder hidden or another date).",
+        "error": "The lookup is unavailable right now.",
         "notConfigured": "FlightAware lookup isn't switched on yet.",
         "close": "Close",
         "diverted": "diverted",
         "attribution": "Actual UTC times (block / runway) from FlightAware. Check them before saving.",
-        "signin": "Sign in to use FlightAware.",
-        "limit": "Daily FlightAware limit reached, try again tomorrow.",
-        "history": "Only flights from the last 10 days are available from FlightAware for now."
+        "signin": "Sign in to fill the times automatically.",
+        "limit": "Daily limit reached, try again tomorrow.",
+        "history": "Only flights from the last 10 days are available from FlightAware for now.",
+        "window": "Automatic actual times are available for today's and yesterday's flights.",
+        "attributionAdsb": "UTC times from ADS-B signals (adsb.lol, ODbL). Block times are missing when receivers do not see the aircraft on the ground: fill them in and check before saving."
       },
       "extra": {
         "title": "Other entries",

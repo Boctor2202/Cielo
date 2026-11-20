@@ -9,6 +9,7 @@ import { Row, Txt, tap } from "./ui";
 export interface FoundFlight {
   id: string;
   ident?: string;
+  source?: "adsb" | "flightaware";
   dep?: string;
   arr?: string;
   out?: string;
@@ -27,7 +28,7 @@ const hhmm = (iso?: string) => (iso ? iso.slice(11, 16) : "—");
 export function FlightAwareFill({ registration, date, onPick }: { registration?: string; date: string; onPick: (f: FoundFlight) => void }) {
   const { t, session } = useApp();
   const c = useTheme();
-  const [state, setState] = useState<"idle" | "loading" | "list" | "none" | "error" | "off" | "signin" | "limit" | "history">("idle");
+  const [state, setState] = useState<"idle" | "loading" | "list" | "none" | "error" | "off" | "signin" | "limit" | "history" | "window">("idle");
   const [flights, setFlights] = useState<FoundFlight[]>([]);
   const ready = !!registration && registration.length >= 3 && /^\d{4}-\d{2}-\d{2}$/.test(date);
 
@@ -40,7 +41,7 @@ export function FlightAwareFill({ registration, date, onPick }: { registration?:
         headers: { Accept: "application/json", Authorization: `Bearer ${session.access_token}` },
       });
       const d = (await r.json().catch(() => ({}))) as { flights?: FoundFlight[]; error?: string };
-      if (!r.ok) return setState(d.error === "not_configured" ? "off" : d.error === "signin" ? "signin" : d.error === "history_off" ? "history" : r.status === 429 ? "limit" : "error");
+      if (!r.ok) return setState(d.error === "not_configured" ? "off" : d.error === "signin" ? "signin" : d.error === "history_off" ? "history" : d.error === "adsb_window" ? "window" : r.status === 429 ? "limit" : "error");
       setFlights(d.flights ?? []);
       setState(d.flights?.length ? "list" : "none");
     } catch {
@@ -64,6 +65,7 @@ export function FlightAwareFill({ registration, date, onPick }: { registration?:
       {state === "off" ? <Txt variant="small">{t("fa.off")}</Txt> : null}
       {state === "signin" ? <Txt variant="small">{t("fa.signin")}</Txt> : null}
       {state === "limit" ? <Txt variant="small">{t("fa.limit")}</Txt> : null}
+      {state === "window" ? <Txt variant="small">{t("fa.window")}</Txt> : null}
       {state === "history" ? <Txt variant="small">{t("fa.history")}</Txt> : null}
       {state === "list"
         ? flights.map((f) => (
@@ -84,7 +86,7 @@ export function FlightAwareFill({ registration, date, onPick }: { registration?:
             </Pressable>
           ))
         : null}
-      {state === "list" ? <Txt variant="small" style={{ fontSize: 11 }}>{t("fa.attribution")}</Txt> : null}
+      {state === "list" ? <Txt variant="small" style={{ fontSize: 11 }}>{t(flights[0]?.source === "adsb" ? "fa.attributionAdsb" : "fa.attribution")}</Txt> : null}
     </View>
   );
 }

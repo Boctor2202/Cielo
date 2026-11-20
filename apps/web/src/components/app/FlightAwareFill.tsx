@@ -23,7 +23,7 @@ export function FlightAwareFill({
 }) {
   const t = useTranslations("app.form.flightaware");
   const [open, setOpen] = useState(false);
-  const [state, setState] = useState<"idle" | "loading" | "error" | "not_configured" | "none" | "signin" | "limit" | "history">("idle");
+  const [state, setState] = useState<"idle" | "loading" | "error" | "not_configured" | "none" | "signin" | "limit" | "history" | "window">("idle");
   const [flights, setFlights] = useState<FoundFlight[]>([]);
   const ready = !!registration && registration.length >= 3 && !!date;
 
@@ -33,7 +33,7 @@ export function FlightAwareFill({
     try {
       const r = await apiFetch(`/api/flight-lookup?reg=${encodeURIComponent(registration!)}&date=${date}`);
       const d = (await r.json()) as { flights?: FoundFlight[]; error?: string };
-      if (!r.ok) return setState(d.error === "not_configured" ? "not_configured" : d.error === "signin" ? "signin" : d.error === "rate_limited" ? "limit" : d.error === "history_off" ? "history" : "error");
+      if (!r.ok) return setState(d.error === "not_configured" ? "not_configured" : d.error === "signin" ? "signin" : d.error === "rate_limited" ? "limit" : d.error === "history_off" ? "history" : d.error === "adsb_window" ? "window" : "error");
       setFlights(d.flights ?? []);
       setState(d.flights?.length ? "idle" : "none");
     } catch {
@@ -65,6 +65,7 @@ export function FlightAwareFill({
           {state === "signin" && <p className="px-2 py-2 text-sm text-muted">{t("signin")}</p>}
           {state === "limit" && <p className="px-2 py-2 text-sm text-muted">{t("limit")}</p>}
           {state === "history" && <p className="px-2 py-2 text-sm text-muted">{t("history")}</p>}
+          {state === "window" && <p className="px-2 py-2 text-sm text-muted">{t("window")}</p>}
           {state === "idle" &&
             flights.map((f) => (
               <button
@@ -92,7 +93,7 @@ export function FlightAwareFill({
                 </span>
               </button>
             ))}
-          {state === "idle" && flights.length > 0 && <p className="px-2 pt-1 text-[10px] text-muted">{t("attribution")}</p>}
+          {state === "idle" && flights.length > 0 && <p className="px-2 pt-1 text-[10px] text-muted">{t(flights[0]?.source === "adsb" ? "attributionAdsb" : "attribution")}</p>}
         </div>
       )}
     </div>

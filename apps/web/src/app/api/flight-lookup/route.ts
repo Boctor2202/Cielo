@@ -1,6 +1,7 @@
 import { FlightAwareError, flightsForRegistration, stillGood, type FoundFlight } from "@/lib/flightaware";
 import { rateLimited } from "@/lib/places";
 import { adminDb, userFrom } from "@/lib/server/admin";
+import { adsbFlights } from "@/lib/adsbTimes";
 
 export const dynamic = "force-dynamic";
 
@@ -9,8 +10,9 @@ const cache = new Map<string, { at: number; ttl: number; flights: FoundFlight[] 
 
 
 /**
- * GET /api/flight-lookup?reg=F-HBXA&date=2026-11-09 — actual times of that aircraft's flights that day.
- * Each call costs a FlightAware query: signed-in pilots only, 40 a day each, and answers are reused.
+ * GET /api/flight-lookup?reg=F-HBXA&date=2026-11-09[&hex=3986e0] — actual times of that aircraft's flights that day.
+ * First from its ADS-B trace (adsb.lol: free, the last 24 h or so), then from FlightAware when configured (each
+ * call costs a query: 40 a day per pilot, and answers are reused). Signed-in pilots only.
  */
 export async function GET(req: Request) {
   const u = new URL(req.url);
@@ -22,6 +24,24 @@ export async function GET(req: Request) {
   }
   const user = await userFrom(req).catch(() => null);
   if (!user) return Response.json({ error: "signin" }, { status: 401 });
+
+  // ADS-B first: free, for flights of today and yesterday (adsb.lol keeps about a day)
+  const recent = Date.parse(today) - Date.parse(date) <= 86_400_000;
+  if (recent) {
+    const adsbKey = `adsb|${reg}|${date}`;
+    const seen = cache.get(adsbKey);
+    if (seen && Date.now() - seen.at < seen.ttl && seen.flights.length) return Response.json({ flights: seen.flights, source: "adsb", cached: true }, { headers: { "Cache-Control": "no-store" } });
+    if (!rateLimited(`adsb:${user.id}`, 60, 86_400_000)) {
+      const hex = (u.searchParams.get("hex") ?? "").toLowerCase();
+      const found = await adsbFlights(reg, date, /^[0-9a-f]{6}$/.test(hex) ? hex : undefined).catch(() => []);
+      if (found.length) {
+        cache.set(adsbKey, { at: Date.now(), ttl: 5 * 60_000, flights: found });
+        return Response.json({ flights: found, source: "adsb" }, { headers: { "Cache-Control": "no-store" } });
+      }
+    }
+  }
+  // nothing from ADS-B: FlightAware, if it is set up; otherwise say why
+  if (!process.env.FLIGHTAWARE_API_KEY) return Response.json(recent ? { flights: [] } : { error: "adsb_window" }, { status: recent ? 200 : 404 });
 
   const ident = reg.replace(/[^A-Z0-9]/g, "");
   const key = `${ident}|${date}`;

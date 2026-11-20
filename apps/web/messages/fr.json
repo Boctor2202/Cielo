@@ -707,19 +707,21 @@
       "sign": "Faire signer",
       "fromRoster": "Pré-rempli depuis le roster",
       "flightaware": {
-        "button": "Remplir depuis FlightAware",
+        "button": "Remplir les heures réelles",
         "needReg": "Saisissez d'abord l'immatriculation et la date",
         "title": "Vols de {reg} ce jour-là",
-        "loading": "Recherche sur FlightAware…",
-        "none": "Aucun vol trouvé pour cette immatriculation à cette date (avion masqué, non suivi ou date différente).",
-        "error": "FlightAware est indisponible pour le moment.",
+        "loading": "Recherche des heures réelles…",
+        "none": "Aucun vol trouvé pour cette immatriculation à cette date (avion non capté, transpondeur masqué ou date différente).",
+        "error": "La recherche est indisponible pour le moment.",
         "notConfigured": "La recherche FlightAware n'est pas encore activée.",
         "close": "Fermer",
         "diverted": "dérouté",
         "attribution": "Heures réelles UTC (cales / piste) fournies par FlightAware. Vérifiez-les avant d'enregistrer.",
-        "signin": "Connecte-toi pour utiliser FlightAware.",
-        "limit": "Limite quotidienne FlightAware atteinte, réessaie demain.",
-        "history": "Seuls les vols des 10 derniers jours sont disponibles via FlightAware pour le moment."
+        "signin": "Connecte-toi pour remplir les heures automatiquement.",
+        "limit": "Limite quotidienne atteinte, réessaie demain.",
+        "history": "Seuls les vols des 10 derniers jours sont disponibles via FlightAware pour le moment.",
+        "window": "Les heures réelles automatiques sont disponibles pour les vols d'aujourd'hui et d'hier.",
+        "attributionAdsb": "Heures UTC tirées des signaux ADS-B (adsb.lol, ODbL). Les heures de cales manquent quand les récepteurs ne voient pas l'avion au sol : complète-les et vérifie avant d'enregistrer."
       },
       "extra": {
         "title": "Autres informations",
