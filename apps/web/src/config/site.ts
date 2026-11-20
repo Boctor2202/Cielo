@@ -38,7 +38,12 @@ export const SITE = {
     address: "[Adresse du siège]",
     registration: "[RCS / SIREN]",
     publisher: "[Directeur de la publication]",
-    host: "[Hébergeur — nom, adresse]",
+    /** site and server functions; the logbook database is a separate processor (see dataHost) */
+    host: "Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, USA (vercel.com)",
+    dataHost: "Supabase Inc., 970 Toa Payoh North #07-04, Singapour 318992 (supabase.com), sur des serveurs situés à Londres (Royaume-Uni)",
+    dataHostEn: "Supabase Inc., 970 Toa Payoh North #07-04, Singapore 318992 (supabase.com), on servers located in London (United Kingdom)",
+    /** consumer mediator (Code de la consommation, art. L612-1): name, address and website once joined */
+    mediator: "[Médiateur de la consommation — nom, adresse, site]",
   },
 };
 
