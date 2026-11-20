@@ -30,8 +30,8 @@ export default function Letter() {
   const [cv, setCv] = useState<CvProfile | null>(null);
 
   useEffect(() => {
-    void store.getMeta("cv").then((raw) => setCv({ ...EMPTY, fullName: pilot.fullName, ...(raw ? (JSON.parse(raw) as CvProfile) : {}) }));
-  }, [store, pilot.fullName]);
+    void store.getMeta("cv").then((raw) => setCv({ ...EMPTY, fullName: pilot.fullName, ...((pilot.cv as CvProfile | null | undefined) ?? (raw ? (JSON.parse(raw) as CvProfile) : {})) }));
+  }, [store, pilot.fullName, pilot.cv]);
 
   const data: CvData | null = useMemo(() => {
     if (!cv) return null;

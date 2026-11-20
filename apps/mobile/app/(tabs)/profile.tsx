@@ -26,8 +26,11 @@ export default function Profile() {
   // what the app already knows elsewhere: the licence document, its authority's country, the CV draft
   const [cvPhone, setCvPhone] = useState<string | undefined>();
   useEffect(() => {
-    void store.getMeta("cv").then((raw) => raw && setCvPhone((JSON.parse(raw) as { phone?: string }).phone || undefined));
-  }, [store]);
+    void store.getMeta("cv").then((raw) => {
+      const cv = (pilot.cv as { phone?: string } | null | undefined) ?? (raw ? (JSON.parse(raw) as { phone?: string }) : null);
+      setCvPhone(cv?.phone || undefined);
+    });
+  }, [store, pilot.cv]);
   const known = useMemo(() => {
     const lic = licenses.find((l) => !l.deletedAt && l.kind === "licence" && l.number);
     const auth = licenses.map((l) => AUTHORITIES.find((a) => a.label === l.authority)).find((a) => a && a.country !== "EU");

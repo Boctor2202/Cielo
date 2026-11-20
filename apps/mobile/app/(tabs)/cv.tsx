@@ -65,7 +65,7 @@ export default function CvScreen() {
 }
 
 function Cv() {
-  const { t, store, pilot, flights, balances, licenses, aircraftTypes, aircraft, locale: uiLocale } = useApp();
+  const { t, store, pilot, flights, balances, licenses, aircraftTypes, aircraft, locale: uiLocale, savePilot } = useApp();
   // the operators of the logbook, ready to become experiences
   const ops = useMemo(() => operatorIndex(flights, aircraft, airlines()), [flights, aircraft]);
   const unassigned = useMemo(() => flights.filter((f) => !f.deletedAt && !f.isFstd && !ops.of(f)).length, [flights, ops]);
@@ -79,8 +79,9 @@ function Cv() {
   useEffect(() => {
     if (loaded.current) return;
     loaded.current = true;
+    // the CV draft lives on the pilot record (synced with the web); an older draft kept on this phone is the fallback
     void store.getMeta("cv").then((raw) => {
-      const saved = raw ? (JSON.parse(raw) as CvProfile) : null;
+      const saved = (pilot.cv as CvProfile | null | undefined) ?? (raw ? (JSON.parse(raw) as CvProfile) : null);
       // what the profile already knows fills the empty CV fields
       const known = { fullName: pilot.fullName, email: pilot.email || undefined, phone: formatPhoneIntl(pilot.phone, pilot.nationality) || undefined, nationality: pilot.nationality ? countryName(pilot.nationality, uiLocale) : undefined };
       const merged = { ...EMPTY, ...known, ...saved };
@@ -88,9 +89,21 @@ function Cv() {
       setProfile(merged);
     });
   }, [store, pilot]);
+  // saved on the pilot record a moment after the last change (then sent to the server and the web)
+  const lastSaved = useRef<string | null>(null);
   useEffect(() => {
-    if (profile) void store.setMeta("cv", JSON.stringify(profile));
-  }, [profile, store]);
+    if (!profile) return;
+    const json = JSON.stringify(profile);
+    if (lastSaved.current === null) lastSaved.current = JSON.stringify(pilot.cv ?? null) === json ? json : "";
+    if (json === lastSaved.current) return;
+    const timer = setTimeout(() => {
+      lastSaved.current = json;
+      void store.setMeta("cv", json);
+      void savePilot({ cv: profile as unknown as Record<string, unknown> });
+    }, 1200);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
   const set = <K extends keyof CvProfile>(k: K, v: CvProfile[K]) => setProfile((p) => (p ? { ...p, [k]: v } : p));
 
   const data: CvData | null = useMemo(() => {

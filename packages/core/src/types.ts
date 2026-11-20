@@ -63,6 +63,8 @@ export interface Pilot extends SyncedRecord {
   birthDate?: ISODate | null;
   /** aircraft types the pilot currently flies (ICAO designators), chosen by the pilot */
   currentTypes?: string[] | null;
+  /** the CV draft (a CvProfile from @cielo/cv), synced between devices */
+  cv?: Record<string, unknown> | null;
   phone?: string;
   bio?: string;
   subscriptionTier: SubscriptionTier;
