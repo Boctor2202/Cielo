@@ -10,6 +10,14 @@ import { fileURLToPath } from "node:url";
 const BUNDLE_ID = "app.geardown.logbook";
 const CHECK = process.argv.includes("--check");
 const SHOTS = process.argv.includes("--screenshots");
+const COPYRIGHT = "2026 Geardown";
+const REVIEW_NOTES = `Geardown is an electronic logbook for professional pilots.
+
+Demo account: the sign-in e-mail and password are in the fields above. It belongs to a fictional A320 first officer (Thomas Mercier) with one year of flights, licences and a medical already filled in. All data is fictional.
+
+Subscriptions: the account has no subscription, so the logbook is read-only and the Max features are locked. To review the purchase, open More > Subscription and start the 7-day free trial of Basic or Max (sandbox). Everything unlocks at once.
+
+Sign-in is by e-mail and password (no third-party login). Account deletion: More > Account > Delete my account (also in the web app settings).`;
 const SHOT_DIR = join(dirname(fileURLToPath(import.meta.url)), "shots/final");
 const SHOT_LOCALE = { "fr-FR": "fr", "en-US": "en" };
 
@@ -149,7 +157,37 @@ async function main() {
     else await api("POST", "/v1/appStoreVersionLocalizations", { data: { type: "appStoreVersionLocalizations", attributes: { locale, ...attributes }, relationships: { appStoreVersion: { data: { type: "appStoreVersions", id: version.id } } } } });
     log(`${locale}: description, keywords, support and marketing URLs set`);
   }
+  if (!CHECK) await reviewSetup(app, info, version);
   if (SHOTS) await screenshots(version.id);
+}
+
+/** Category, copyright, age rating (nothing objectionable: 4+) and the notes for App Review. */
+async function reviewSetup(app, info, version) {
+  const step = async (label, fn) => {
+    try {
+      await fn();
+      log(`${label}: set`);
+    } catch (e) {
+      log(`${label}: ${e.message}`);
+    }
+  };
+  await step("category Productivity / Travel", () =>
+    api("PATCH", `/v1/appInfos/${info.id}`, { data: { type: "appInfos", id: info.id, relationships: { primaryCategory: { data: { type: "appCategories", id: "PRODUCTIVITY" } }, secondaryCategory: { data: { type: "appCategories", id: "TRAVEL" } } } } }),
+  );
+  await step(`copyright "${COPYRIGHT}"`, () => api("PATCH", `/v1/appStoreVersions/${version.id}`, { data: { type: "appStoreVersions", id: version.id, attributes: { copyright: COPYRIGHT } } }));
+  await step("age rating 4+", async () => {
+    const decl = (await api("GET", `/v1/appInfos/${info.id}/ageRatingDeclaration`)).data;
+    const none = ["alcoholTobaccoOrDrugUseOrReferences", "contests", "gamblingSimulated", "horrorOrFearThemes", "matureOrSuggestiveThemes", "medicalOrTreatmentInformation", "profanityOrCrudeHumor", "sexualContentGraphicAndNudity", "sexualContentOrNudity", "violenceCartoonOrFantasy", "violenceRealistic", "violenceRealisticProlongedGraphicOrSadistic"];
+    const attributes = Object.fromEntries(none.map((k) => [k, "NONE"]));
+    Object.assign(attributes, { gambling: false, unrestrictedWebAccess: false });
+    await api("PATCH", `/v1/ageRatingDeclarations/${decl.id}`, { data: { type: "ageRatingDeclarations", id: decl.id, attributes } });
+  });
+  await step("App Review notes (demo account required)", async () => {
+    const cur = await api("GET", `/v1/appStoreVersions/${version.id}/appStoreReviewDetail`).catch(() => ({ data: null }));
+    const attributes = { notes: REVIEW_NOTES, demoAccountRequired: true, demoAccountName: cur.data?.attributes.demoAccountName || "demo@geardown.app" };
+    if (cur.data) await api("PATCH", `/v1/appStoreReviewDetails/${cur.data.id}`, { data: { type: "appStoreReviewDetails", id: cur.data.id, attributes } });
+    else await api("POST", "/v1/appStoreReviewDetails", { data: { type: "appStoreReviewDetails", attributes, relationships: { appStoreVersion: { data: { type: "appStoreVersions", id: version.id } } } } });
+  });
 }
 
 /** The App Store screenshots (iPhone 6.9"/6.7", 1290 × 2796) from shots/final/<fr|en>/1..n.jpg, replacing what is there. */

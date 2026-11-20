@@ -16,13 +16,14 @@ import { CancelledNotice } from "../src/components/CancelledNotice";
  * or cancelled where it was taken (App Store, Google Play, or the Stripe space for a card subscription).
  */
 export default function Account() {
-  const { t, session, pilot, locale } = useApp();
+  const app = useApp();
+  const { t, session, pilot, locale } = app;
   const c = useTheme();
   const email = session?.user.email ?? pilot.email;
   const [newEmail, setNewEmail] = useState("");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
-  const [busy, setBusy] = useState<"email" | "pw" | "sub" | null>(null);
+  const [busy, setBusy] = useState<"email" | "pw" | "sub" | "delete" | null>(null);
   const [emailSent, setEmailSent] = useState<string | null>(null);
 
   const changeEmail = async () => {
@@ -64,6 +65,29 @@ export default function Account() {
     await WebBrowser.openAuthSessionAsync(data.url, "geardown://account");
     setTick((n) => n + 1);
   };
+
+  /** Deletes the account and everything in it on the server (as on the website), then clears this phone. */
+  const deleteAccount = () =>
+    Alert.alert(t("account.deleteTitle"), `${t("account.deleteBody")}${source === "apple" || source === "google" ? `\n\n${t("account.deleteStore")}` : ""}`, [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("account.deleteConfirm"),
+        style: "destructive",
+        onPress: async () => {
+          if (!supabase) return;
+          setBusy("delete");
+          const { error } = await supabase.functions.invoke("gdpr-delete", { body: { confirm: "DELETE" } });
+          if (error) {
+            setBusy(null);
+            return Alert.alert(t("account.deleteTitle"), t("account.error"));
+          }
+          await app.signOut().catch(() => undefined);
+          setBusy(null);
+          Alert.alert(t("account.deleteTitle"), t("account.deleteDone"));
+          router.replace("/");
+        },
+      },
+    ]);
 
   if (!session) {
     return (
@@ -129,6 +153,14 @@ export default function Account() {
           <Txt variant="small">{t("account.subNoneActive")}</Txt>
         )}
         <Button kind="ghost" title={t("more.subscription")} onPress={() => router.push("/subscription")} />
+      </Card>
+      <Card>
+        <Row style={{ alignItems: "center", gap: 8 }}>
+          <Ionicons name="trash-outline" size={18} color={c.warning} />
+          <Txt variant="h2">{t("account.deleteTitle")}</Txt>
+        </Row>
+        <Txt variant="small">{t("account.deleteHint")}</Txt>
+        <Button kind="secondary" title={t("account.deleteButton")} loading={busy === "delete"} onPress={deleteAccount} />
       </Card>
       <View style={{ height: 40 }} />
     </Screen>
