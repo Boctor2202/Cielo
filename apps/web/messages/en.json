@@ -713,13 +713,13 @@
         "loading": "Looking up the actual times…",
         "none": "No flight found for this registration on this date (not received, transponder hidden or another date).",
         "error": "The lookup is unavailable right now.",
-        "notConfigured": "FlightAware lookup isn't switched on yet.",
+        "notConfigured": "Actual times are not available for this flight.",
         "close": "Close",
         "diverted": "diverted",
         "attribution": "Actual UTC times (block / runway) from FlightAware. Check them before saving.",
         "signin": "Sign in to fill the times automatically.",
         "limit": "Daily limit reached, try again tomorrow.",
-        "history": "Only flights from the last 10 days are available from FlightAware for now.",
+        "history": "This flight is too old to find its actual times automatically.",
         "window": "Automatic actual times are available for today's and yesterday's flights.",
         "attributionAdsb": "UTC times from ADS-B signals (adsb.lol, ODbL). Block times are missing when receivers do not see the aircraft on the ground: fill them in and check before saving."
       },
@@ -1738,7 +1738,7 @@
       "source": "ADS-B track of aircraft {hex} · data",
       "pending": "The actual track is saved automatically once the ADS-B network has it (within 30 h of the flight).",
       "needData": "Enter the registration and block times to save the actual track.",
-      "tooOld": "No track saved: the ADS-B network keeps it for about 24 h. Older flights will come with FlightAware.",
+      "tooOld": "Track not recorded: the ADS-B network keeps it for about 24 h only.",
       "fetch": "Fetch the track now",
       "window": "{from} → {to} UTC",
       "maxAlt": "Max altitude {ft} ft",
@@ -1751,12 +1751,12 @@
         "no_match": "No track of {reg} matches this flight's block times (check they are in UTC).",
         "quota": "Data quota reached, will retry later.",
         "error": "Track unavailable right now.",
-        "signin": "Sign in to fetch tracks from FlightAware.",
-        "fa_off": "FlightAware is not switched on yet.",
-        "history_off": "Only flights from the last 10 days are available from FlightAware for now."
+        "signin": "Sign in to fetch the actual track.",
+        "fa_off": "The track is no longer available: the ADS-B network keeps it for about 24 h only.",
+        "history_off": "This flight is too old to find its track."
       },
       "sourceFa": "Track recorded by",
-      "fromFa": "Fetch this flight's actual track from FlightAware (any date)."
+      "fromFa": "The actual track is fetched automatically for flights of the last 24 h (ADS-B network)."
     },
     "access": {
       "demo": "Demo: {days, plural, one {# day} other {# days}} left to try everything. Create your account to continue with a 7-day trial.",

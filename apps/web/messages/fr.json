@@ -713,13 +713,13 @@
         "loading": "Recherche des heures réelles…",
         "none": "Aucun vol trouvé pour cette immatriculation à cette date (avion non capté, transpondeur masqué ou date différente).",
         "error": "La recherche est indisponible pour le moment.",
-        "notConfigured": "La recherche FlightAware n'est pas encore activée.",
+        "notConfigured": "La recherche des heures réelles n'est pas disponible pour ce vol.",
         "close": "Fermer",
         "diverted": "dérouté",
         "attribution": "Heures réelles UTC (cales / piste) fournies par FlightAware. Vérifiez-les avant d'enregistrer.",
         "signin": "Connecte-toi pour remplir les heures automatiquement.",
         "limit": "Limite quotidienne atteinte, réessaie demain.",
-        "history": "Seuls les vols des 10 derniers jours sont disponibles via FlightAware pour le moment.",
+        "history": "Ce vol est trop ancien pour retrouver ses heures réelles automatiquement.",
         "window": "Les heures réelles automatiques sont disponibles pour les vols d'aujourd'hui et d'hier.",
         "attributionAdsb": "Heures UTC tirées des signaux ADS-B (adsb.lol, ODbL). Les heures de cales manquent quand les récepteurs ne voient pas l'avion au sol : complète-les et vérifie avant d'enregistrer."
       },
@@ -1738,7 +1738,7 @@
       "source": "Trace ADS-B de l'appareil {hex} · données",
       "pending": "La trace réelle sera enregistrée automatiquement dès que le réseau ADS-B l'aura reçue (dans les 30 h suivant le vol).",
       "needData": "Renseignez l'immatriculation et les heures bloc pour enregistrer la trace réelle.",
-      "tooOld": "Trace non enregistrée : le réseau ADS-B ne la conserve que 24 h environ. La récupération des vols anciens arrivera avec FlightAware.",
+      "tooOld": "Trace non enregistrée : le réseau ADS-B ne la conserve qu'environ 24 h.",
       "fetch": "Récupérer la trace maintenant",
       "window": "{from} → {to} UTC",
       "maxAlt": "Altitude max {ft} ft",
@@ -1751,12 +1751,12 @@
         "no_match": "Aucune trace de {reg} ne correspond aux heures bloc de ce vol (vérifiez qu'elles sont en UTC).",
         "quota": "Quota de données atteint, nouvel essai plus tard.",
         "error": "Trace indisponible pour le moment.",
-        "signin": "Connecte-toi pour récupérer les traces depuis FlightAware.",
-        "fa_off": "FlightAware n'est pas encore activé.",
-        "history_off": "Seuls les vols des 10 derniers jours sont disponibles via FlightAware pour le moment."
+        "signin": "Connecte-toi pour récupérer la trace réelle.",
+        "fa_off": "La trace n'est plus disponible : le réseau ADS-B ne la conserve qu'environ 24 h.",
+        "history_off": "Ce vol est trop ancien pour retrouver sa trace."
       },
       "sourceFa": "Trace enregistrée par",
-      "fromFa": "Récupère la trace réelle de ce vol depuis FlightAware (à n'importe quelle date)."
+      "fromFa": "La trace réelle se récupère automatiquement pour les vols des dernières 24 h (réseau ADS-B)."
     },
     "access": {
       "demo": "Démo : {days, plural, one {encore # jour} other {encore # jours}} pour tout essayer. Créez votre compte pour continuer avec 7 jours d'essai.",
