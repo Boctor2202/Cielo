@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Linking, Pressable, View } from "react-native";
+import { Alert, Linking, Platform, Pressable, View } from "react-native";
 import type { CustomerInfo, PurchasesPackage } from "react-native-purchases";
 import { PRICES_EUR, YEARLY_PRICES_EUR } from "@cielo/core";
 import { router } from "expo-router";
@@ -126,7 +126,7 @@ export default function Subscription() {
                   loading={busy === plan}
                   onPress={() => pkg && run(plan, () => purchase(pkg))}
                 />
-                <Txt variant="small" style={{ textAlign: "center" }}>{t(interval === "yearly" ? "sub.trialYear" : "sub.trial", { price })}</Txt>
+                <Txt variant="small" style={{ textAlign: "center" }}>{t(Platform.OS === "android" ? (interval === "yearly" ? "sub.trialYear.android" : "sub.trial.android") : interval === "yearly" ? "sub.trialYear" : "sub.trial", { price })}</Txt>
               </View>
             ) : null}
           </Card>
@@ -134,7 +134,7 @@ export default function Subscription() {
       })}
 
       {isPurchasesEnabled ? <Button kind="ghost" title={t("sub.restore")} loading={busy === "restore"} onPress={() => run("restore", restore)} /> : null}
-      <Txt variant="small">{t("sub.legal")}</Txt>
+      <Txt variant="small">{t(Platform.OS === "android" ? "sub.legal.android" : "sub.legal")}</Txt>
       <Row style={{ justifyContent: "center" }} gap={16}>
         <Pressable onPress={() => void Linking.openURL(`${API_URL}/${locale === "fr" ? "fr/legal/cgu" : "en/legal/terms"}`)} hitSlop={8}>
           <Txt variant="small" color={c.accent}>{t("sub.terms")}</Txt>
@@ -144,7 +144,7 @@ export default function Subscription() {
         </Pressable>
       </Row>
       <Txt variant="small">{t("sub.founder")}</Txt>
-      <Txt variant="small">{t("sub.refund")}</Txt>
+      <Txt variant="small">{t(Platform.OS === "android" ? "sub.refund.android" : "sub.refund")}</Txt>
     </Screen>
   );
 }

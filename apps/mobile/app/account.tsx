@@ -68,7 +68,7 @@ export default function Account() {
 
   /** Deletes the account and everything in it on the server (as on the website), then clears this phone. */
   const deleteAccount = () =>
-    Alert.alert(t("account.deleteTitle"), `${t("account.deleteBody")}${source === "apple" || source === "google" ? `\n\n${t("account.deleteStore")}` : ""}`, [
+    Alert.alert(t("account.deleteTitle"), `${t("account.deleteBody")}${source === "apple" ? `\n\n${t("account.deleteStore")}` : source === "google" ? `\n\n${t("account.deleteStore.google")}` : ""}`, [
       { text: t("common.cancel"), style: "cancel" },
       {
         text: t("account.deleteConfirm"),
