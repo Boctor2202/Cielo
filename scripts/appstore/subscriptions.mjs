@@ -16,6 +16,9 @@ const GROUP = "Geardown";
 const BASE_TERRITORY = "FRA";
 const CHECK = process.argv.includes("--check");
 const NEW_SCREENSHOT = process.argv.includes("--replace-screenshot");
+// --update-prices: a plan whose French price differs from PLANS gets the new price in every country, for new
+// subscribers only (existing subscribers keep the price they signed up at: preserveCurrentPrice)
+const UPDATE_PRICES = process.argv.includes("--update-prices");
 
 const REVIEW_NOTE =
   "Geardown is a pilot e-logbook. Basic unlocks the unlimited logbook, official exports, licence and recency tracking, statistics and web/mobile sync. Max adds roster import and FTL monitoring, layovers, live radar, audit, signatures, job offers and the pilot CV. Both plans start with a 7-day free trial. The subscription screen is in the app under More › Subscription.";
@@ -32,12 +35,12 @@ const PLANS = [
     en: ["Geardown Max – Monthly", "All of Basic + roster, FTL, radar, CV, signatures."],
   },
   {
-    productId: "geardown_basic_yearly", ref: "Basic annuel", period: "ONE_YEAR", level: 3, price: "49.99",
+    productId: "geardown_basic_yearly", ref: "Basic annuel", period: "ONE_YEAR", level: 3, price: "39.99",
     fr: ["Geardown Basic – Annuel", "Carnet illimité et exports. 2 mois offerts."],
     en: ["Geardown Basic – Yearly", "Unlimited logbook and exports. 2 months free."],
   },
   {
-    productId: "geardown_basic_monthly", ref: "Basic mensuel", period: "ONE_MONTH", level: 4, price: "4.99",
+    productId: "geardown_basic_monthly", ref: "Basic mensuel", period: "ONE_MONTH", level: 4, price: "3.99",
     fr: ["Geardown Basic – Mensuel", "Carnet illimité, exports officiels et synchro."],
     en: ["Geardown Basic – Monthly", "Unlimited logbook, official exports and sync."],
   },
@@ -128,6 +131,12 @@ async function main() {
     for (const l of gl) log(`  group text ${l.attributes.locale}: ${JSON.stringify(l.attributes)}`);
     {
     }
+    return;
+  }
+
+  if (UPDATE_PRICES) {
+    if (!group) throw new Error(`Group "${GROUP}" missing`);
+    await updatePrices(existing);
     return;
   }
 
@@ -268,6 +277,60 @@ async function main() {
 
   log("\nState:");
   for (const s of await all(`/v1/subscriptionGroups/${group.id}/subscriptions?limit=200`)) log(`  ${s.attributes.productId}: ${s.attributes.state}`);
+}
+
+/** New prices for new subscribers, every country (from the French price point and its equalizations). */
+async function updatePrices(existing) {
+  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  for (const p of PLANS) {
+    const sub = existing.find((x) => x.attributes.productId === p.productId);
+    if (!sub) {
+      log(`${p.productId}: missing, skipped`);
+      continue;
+    }
+    const cur = await api("GET", `/v1/subscriptions/${sub.id}/prices?filter[territory]=${BASE_TERRITORY}&include=subscriptionPricePoint&limit=50`);
+    const now = (cur.included ?? []).map((x) => Number(x.attributes?.customerPrice)).filter((x) => !Number.isNaN(x));
+    if (now.includes(Number(p.price)) && now.length === 1) {
+      log(`${p.productId}: already ${p.price} €`);
+      continue;
+    }
+    log(`${p.productId}: ${now.join(" / ") || "?"} € → ${p.price} € (state ${sub.attributes.state})`);
+    const points = await all(`/v1/subscriptions/${sub.id}/pricePoints?filter[territory]=${BASE_TERRITORY}&limit=200`);
+    const base = points.find((x) => Number(x.attributes.customerPrice) === Number(p.price));
+    if (!base) throw new Error(`No ${p.price} € price point in France`);
+    const eq = await all(`/v1/subscriptionPricePoints/${base.id}/equalizations?include=territory&limit=200`);
+    const targets = [{ territory: BASE_TERRITORY, point: base.id }, ...eq.map((x) => ({ territory: x.relationships?.territory?.data?.id, point: x.id }))].filter((x) => x.territory);
+    let n = 0;
+    let dated = false;
+    for (const t of targets) {
+      const body = (startDate) => ({
+        data: {
+          type: "subscriptionPrices",
+          attributes: { preserveCurrentPrice: true, ...(startDate ? { startDate } : {}) },
+          relationships: { subscription: rel("subscriptions", sub.id), subscriptionPricePoint: rel("subscriptionPricePoints", t.point), territory: rel("territories", t.territory) },
+        },
+      });
+      try {
+        await api("POST", "/v1/subscriptionPrices", body(dated ? tomorrow : null));
+        n++;
+      } catch (e) {
+        // a plan already on sale needs a start date in the future: from tomorrow then
+        if (!dated && /startDate|start date|future/i.test(e.message)) {
+          dated = true;
+          try {
+            await api("POST", "/v1/subscriptionPrices", body(tomorrow));
+            n++;
+            continue;
+          } catch (e2) {
+            log(`  ${t.territory}: ${e2.message}`);
+            continue;
+          }
+        }
+        log(`  ${t.territory}: ${e.message}`);
+      }
+    }
+    log(`  ${n}/${targets.length} countries${dated ? ` from ${tomorrow}` : ""}, existing subscribers keep their price`);
+  }
 }
 
 main().catch((e) => {
