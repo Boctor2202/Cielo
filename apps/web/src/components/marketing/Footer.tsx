@@ -3,12 +3,12 @@ import { Link } from "@/i18n/navigation";
 import { SITE } from "@/config/site";
 import { Logo } from "../Logo";
 
-function Social({ href, label, d }: { href: string; label: string; d: string }) {
+function Social({ href, label, d, evenOdd }: { href: string; label: string; d: string; evenOdd?: boolean }) {
   // a network without a page yet is not shown (no dead "#" link)
   if (!href || href === "#") return null;
   return (
     <a href={href} aria-label={label} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:border-accent hover:text-accent" target="_blank" rel="noopener noreferrer">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d={d} /></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d={d} fillRule={evenOdd ? "evenodd" : undefined} /></svg>
     </a>
   );
 }
@@ -25,7 +25,7 @@ export function Footer() {
           <p className="mt-4 max-w-xs text-sm text-muted">{t("tagline")}</p>
           <div className="mt-5 flex gap-2">
             <Social href={SITE.social.linkedin} label="LinkedIn" d="M4.98 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1 0-5zM3 9h4v12H3zm7 0h3.8v1.7h.1c.5-1 1.8-2 3.8-2 4 0 4.8 2.6 4.8 6V21h-4v-5.6c0-1.3 0-3-1.9-3s-2.2 1.5-2.2 3V21h-4z" />
-            <Social href={SITE.social.instagram} label="Instagram" d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4zM17.3 5.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zM12 2c-2.7 0-3 0-4.1.1C3.7 2.3 2.3 3.7 2.1 7.9 2 9 2 9.3 2 12s0 3 .1 4.1c.2 4.2 1.6 5.6 5.8 5.8 1.1.1 1.4.1 4.1.1s3 0 4.1-.1c4.2-.2 5.6-1.6 5.8-5.8.1-1.1.1-1.4.1-4.1s0-3-.1-4.1c-.2-4.2-1.6-5.6-5.8-5.8C15 2 14.7 2 12 2z" />
+            <Social href={SITE.social.instagram} label="Instagram" evenOdd d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zM7.5 4h9A3.5 3.5 0 0 1 20 7.5v9a3.5 3.5 0 0 1-3.5 3.5h-9A3.5 3.5 0 0 1 4 16.5v-9A3.5 3.5 0 0 1 7.5 4zM12 7.5a4.5 4.5 0 1 0 0 9a4.5 4.5 0 1 0 0-9zM12 9.3a2.7 2.7 0 1 0 0 5.4a2.7 2.7 0 1 0 0-5.4zM17.3 5.6a1.1 1.1 0 1 0 0 2.2a1.1 1.1 0 1 0 0-2.2z" />
             <Social href={SITE.social.youtube} label="YouTube" d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.7 15V9l5.8 3z" />
             <Social href={SITE.social.x} label="X" d="M17.8 3h3.1l-6.8 7.7L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.2-8.2L1.8 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.6z" />
           </div>
