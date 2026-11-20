@@ -3,7 +3,7 @@ import { Alert, Pressable, ScrollView, SectionList, StyleSheet, TextInput, View 
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { PRIVATE_OPERATOR, TRAINING_OPERATOR, formatClock, formatDuration, operatorIndex, sumFlights, type Flight } from "@cielo/core";
-import { useWide, Chip, EmptyState, Fab, Row, Segmented, Txt, tap } from "../../src/components/ui";
+import { useWide, Button, Chip, EmptyState, Row, Segmented, Txt, tap } from "../../src/components/ui";
 import { LogbookCalendar } from "../../src/components/LogbookCalendar";
 import Storage from "expo-sqlite/kv-store";
 import { formatDate, formatMonth } from "../../src/i18n";
@@ -273,7 +273,7 @@ export default function Logbook() {
             </View>
           ) : undefined
         }
-        ListEmptyComponent={view === "calendar" && flights.length ? undefined : q.trim() || filtersOn ? <EmptyState title={t("log.noMatch")} /> : <EmptyState title={t("log.empty")} hint={t("log.emptyHint")} />}
+        ListEmptyComponent={view === "calendar" && flights.length ? undefined : q.trim() || filtersOn ? <EmptyState title={t("log.noMatch")} /> : <EmptyState title={t("log.empty")} hint={t("log.emptyHint")} action={<Button kind="secondary" title={t("uimp.title")} onPress={() => router.push("/import" as never)} />} />}
         renderSectionHeader={({ section }) => (
           <Row style={{ justifyContent: "space-between", marginHorizontal: space.md + 4, marginTop: space.lg, paddingHorizontal: 4, paddingVertical: 6 }}>
             <Txt variant="h2" style={{ fontSize: 20, fontWeight: "700", textTransform: "capitalize" }}>
@@ -458,9 +458,7 @@ export default function Logbook() {
             </Pressable>
           </Row>
         </View>
-      ) : (
-        <Fab label={t("flight.new")} onPress={() => router.push(access.canWrite ? "/flight/new" : "/subscription")} />
-      )}
+      ) : null}
     </View>
   );
 }

@@ -12,7 +12,6 @@ import { layoutForAuthority } from "@cielo/export";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf, exportLogbookXlsx } from "../../src/exporters";
 import { isCloudEnabled } from "../../src/auth";
-import { pickAndImportCsv } from "../../src/importer";
 import { sendReport } from "../../src/api";
 import { useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
@@ -62,14 +61,6 @@ export default function More() {
       },
     ]);
 
-  const importCsv = () =>
-    run("import", async () => {
-      const r = await pickAndImportCsv(store, pilot, app.aircraftTypes, flights);
-      if (!r) return;
-      await app.reload();
-      Alert.alert(t("more.import"), r.imported || r.duplicates ? t("more.importDone", { n: r.imported, d: r.duplicates, s: r.skipped }) : t("more.importEmpty"));
-    });
-
   const [report, setReport] = useState("");
   const [reportKind, setReportKind] = useState<"bug" | "idea">("bug");
   const send = () =>
@@ -90,14 +81,12 @@ export default function More() {
 
       {/* Activity (roster, FTL, layovers, time zones, radar, map) and Career (experience, goals, jobs, CV) have their own tabs */}
       <MenuGroup title={t("more.g.logbook")}>
+        <MenuRow icon={<Ionicons name="download" size={17} color="#fff" />} color="#22C55E" label={t("uimp.title")} value={t("more.importKinds")} onPress={() => router.push("/import" as never)} />
         <MenuRow icon={<Ionicons name="airplane" size={17} color="#fff" />} color="#5E5CE6" label={t("more.aircraft")} onPress={() => router.navigate("/aircraft")} />
         <MenuRow icon={<Ionicons name="funnel" size={17} color="#fff" />} color="#0A84FF" label={t("more.reports")} onPress={() => router.navigate("/reports")} />
         <MenuRow icon={<Ionicons name="checkmark-done" size={17} color="#fff" />} color="#34C759" label={t("more.audit")} onPress={() => router.navigate("/audit")} />
-        <MenuRow icon={<Ionicons name="sparkles" size={17} color="#fff" />} color="#22C55E" label={t("uimp.title")} onPress={() => router.push("/import" as never)} />
-        <MenuRow icon={<Ionicons name="download" size={17} color="#fff" />} color="#8E8E93" label={t("more.import")} loading={busy === "import"} onPress={importCsv} />
         <MenuRow icon={<Ionicons name="albums" size={17} color="#fff" />} color="#BF5AF2" label={t("more.opening")} onPress={() => router.navigate("/opening")} />
       </MenuGroup>
-      <Txt variant="small" style={{ marginTop: -8, marginHorizontal: 14 }}>{t("more.importHint")}</Txt>
 
 
 

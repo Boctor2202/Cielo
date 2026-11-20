@@ -133,7 +133,8 @@ export async function signInWithApple(): Promise<Session | null> {
 
 export async function signOut(): Promise<void> {
   if (!supabase) return;
-  await supabase.auth.signOut();
+  // this phone only: signing out here must not sign the pilot out of the website or another device
+  await supabase.auth.signOut({ scope: "local" });
 }
 
 /** Sign-in methods switched on in Supabase (Apple / Google each need their own setup there). */
