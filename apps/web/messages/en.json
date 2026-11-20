@@ -141,23 +141,26 @@
   },
   "pricing": {
     "title": "Simple pricing",
-    "subtitle": "A %TRIAL%-day trial on the plan of your choice, then a monthly or yearly subscription (2 months free), no commitment.",
+    "subtitle": "%TRIAL%-day trial with no card, with every feature. Then the plan that suits you, no commitment.",
     "monthly": "Monthly",
     "yearly": "Yearly",
     "perMonth": "/month",
     "perYear": "/year",
-    "billedYearly": "that's {price} per month",
     "popular": "Most complete",
-    "cta": "Try %TRIAL% days",
+    "cta": "Start the free trial",
     "ctaFree": "Create my logbook",
     "plans": {
       "basic": {
         "name": "Basic",
-        "desc": "For private pilots, students and instructors."
+        "desc": "For private pilots and instructors: a complete, accurate, exportable logbook."
       },
       "premium": {
         "name": "Max",
         "desc": "For airline and business pilots: roster, FTL, job offers, CV, layovers, radar and ADS-B tracks."
+      },
+      "student": {
+        "name": "Student",
+        "desc": "For student pilots, until the licence. Basic's features."
       }
     },
     "highlights": {
@@ -178,6 +181,11 @@
         "Layovers: the best places around the crew hotel",
         "Live radar and the ADS-B track of your flights where coverage allows",
         "Paper logbook photo scan (beta)"
+      ],
+      "student": [
+        "Everything in Basic",
+        "Price for student pilots (self-declared), until the expected licence date (24 months at most)",
+        "Then moves to Basic at the Basic price"
       ]
     },
     "compareTitle": "Detailed comparison",
@@ -207,12 +215,22 @@
       "unlimited": "Unlimited",
       "oneDevice": "1 device"
     },
-    "vat": "Prices incl. VAT. Monthly: billed every month. Yearly: billed once a year. No commitment. Without a subscription, your logbook stays readable and exportable.",
+    "vat": "Prices incl. VAT for new subscribers. Renews automatically at the same interval, cancel any time: cancelling takes effect at the end of the period paid. Without a subscription, your logbook stays readable and exportable.",
     "trialNote": "No card during the %TRIAL%-day trial. A card is only asked if you choose to subscribe. Without a subscription when the trial ends, your logbook becomes read-only: it stays readable and exportable, and nothing is deleted.",
-    "twoMonthsFree": "2 months free",
-    "perMonthEquiv": "that is {price}/month",
-    "orYearly": "or {price}/year, 2 months free",
-    "trialNoteNoCard": "No card during the %TRIAL%-day trial. A card is only asked if you choose to subscribe. Without a subscription when the trial ends, your logbook becomes read-only: it stays readable and exportable, and nothing is deleted."
+    "twoMonthsFree": "−16%",
+    "trialNoteNoCard": "No card during the %TRIAL%-day trial. A card is only asked if you choose to subscribe. Without a subscription when the trial ends, your logbook becomes read-only: it stays readable and exportable, and nothing is deleted.",
+    "billedOncePerYear": "billed once a year",
+    "orMonthly": "or {price}/month, billed every month",
+    "saving": "Save {pct}% yearly: {yearly} instead of {full}",
+    "yearlyOnly": "Yearly plan only",
+    "founderTitle": "Founder price.",
+    "founder": "The first {seats} subscribers keep their price as long as they stay subscribed.",
+    "founderSeats": "The first {seats} subscribers keep their price as long as they stay subscribed: {left} seats left.",
+    "refundTitle": "{days}-day money-back guarantee.",
+    "refund": "Not convinced? Write to us within {days} days of your first payment on the website and we refund you. Subscribed on the App Store: refunds are requested from Apple (reportaproblem.apple.com), who decides.",
+    "basicAndStudent": "Student · Basic",
+    "included": "Included",
+    "notIncluded": "Not included"
   },
   "testimonials": {
     "title": "They fly with Geardown",
@@ -1420,7 +1438,10 @@
       "cancelledTitle": "Subscription cancelled: access until {date}",
       "cancelledHint": "Changed your mind? Renew it with the button below (“Renew subscription” in Stripe).",
       "exportEverything": "Export my whole logbook",
-      "exportEverythingHint": "PDF in your authority's format, CSV of all your flights and all your data (JSON). Possible at any time, with or without a subscription, even after the trial or a cancellation."
+      "exportEverythingHint": "PDF in your authority's format, CSV of all your flights and all your data (JSON). Possible at any time, with or without a subscription, even after the trial or a cancellation.",
+      "studentDeclare": "I am a student pilot (Student plan)",
+      "studentUntil": "Licence expected on",
+      "studentHint": "Self-declared: the Student plan is offered until the expected licence date, 24 months at most. A proof may be asked at renewal."
     },
     "functions": {
       "PIC": "Pilot in command (PIC)",
@@ -1862,9 +1883,9 @@
       "upgrade": "Upgrade to Max",
       "readOnlyShort": "Read-only: subscribe to save.",
       "readOnlyTitle": "Subscription required",
-      "readOnlyText": "Without an active subscription your logbook stays viewable and exportable, but logging is off. Basic €4.99/month, Max €8.99/month.",
+      "readOnlyText": "Without an active subscription, your logbook stays readable and exportable, but entry is off. Student €19.99/year, Basic €29.99/year or €2.99/month, Max €89.99/year or €8.99/month.",
       "maxTitle": "Max feature",
-      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, ADS-B tracks, audit and scan are included in Max (€8.99/month).",
+      "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, ADS-B tracks, audit and scan are included in Max (€89.99/year or €8.99/month).",
       "haveAccount": "Already subscribed? Sign in",
       "demoAccount": "Demo account: fictional pilot and data (Thomas Mercier, Skyline Airways).",
       "demoLocal": "Demo — fictional data — local changes, in this browser only. Creating an account erases them: your logbook starts empty (or with your own data).",
@@ -2490,8 +2511,8 @@
       "description": "Every AMC1 FCL.050 column, roster import, logbook audit, licence and medical tracking, FTL limits, statistics, signatures, offline mode, pilot jobs and pilot CV."
     },
     "pricing": {
-      "title": "Pricing — electronic pilot logbook from €4.99/month",
-      "description": "Basic at €4.99/month for private and student pilots, Max at €8.99/month for professional pilots (roster, FTL, layovers, radar). %TRIAL%-day trial, no commitment."
+      "title": "Pricing — electronic pilot logbook from €19.99/year",
+      "description": "Student €19.99/year, Basic €29.99/year, Max €89.99/year for professional pilots (roster, FTL, layovers, radar). %TRIAL%-day trial with no card, no commitment."
     },
     "airlines": {
       "title": "Electronic logbook for airlines and flight schools",

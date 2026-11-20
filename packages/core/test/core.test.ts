@@ -449,3 +449,26 @@ describe("plans", () => {
     expect(noCardTrialDays("14")).toBe(14);
   });
 });
+
+describe("pricing", () => {
+  it("states the real yearly saving", async () => {
+    const { yearlySaving, PRICES_EUR, YEARLY_PRICES_EUR } = await import("../src/access");
+    expect(yearlySaving(PRICES_EUR.basic, YEARLY_PRICES_EUR.basic)).toBe(16);
+    expect(yearlySaving(PRICES_EUR.premium, YEARLY_PRICES_EUR.premium)).toBe(16);
+    expect(yearlySaving(undefined, 19.99)).toBe(0);
+  });
+  it("offers the Student plan only when declared, within 24 months", async () => {
+    const { studentEligible } = await import("../src/access");
+    const now = new Date("2026-11-20T00:00:00Z");
+    expect(studentEligible("2027-09-01", now)).toBe(true);
+    expect(studentEligible("2026-10-01", now)).toBe(false);
+    expect(studentEligible("2029-06-01", now)).toBe(false);
+    expect(studentEligible(null, now)).toBe(false);
+  });
+  it("shows the founder seats left only from half taken", async () => {
+    const { founderSeatsShown } = await import("../src/access");
+    expect(founderSeatsShown(12)).toBeNull();
+    expect(founderSeatsShown(300)).toBe(200);
+    expect(founderSeatsShown(600)).toBe(0);
+  });
+});

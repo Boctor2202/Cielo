@@ -13,12 +13,12 @@ export const SITE = {
   },
   pricing: {
     currency: "EUR",
-    /** monthly, or yearly with two months free (10 months paid), after a 7-day trial (card required);
-     * "premium" is the Max plan */
-    basic: { monthly: 4.99, yearly: 49.99 },
-    premium: { monthly: 8.99, yearly: 89.99 },
-    /** see src/i18n/trial.ts: 7 (card) or the no-card trial when configured */
-    trialDays: 7,
+    /** prices for new subscribers, VAT included; existing subscribers keep theirs. "premium" is the Max plan.
+     * Student: Basic's features, yearly only, until the licence. Mirrors PRICES_EUR / YEARLY_PRICES_EUR in core. */
+    student: { monthly: undefined as number | undefined, yearly: 19.99 },
+    basic: { monthly: 2.99 as number | undefined, yearly: 29.99 },
+    premium: { monthly: 8.99 as number | undefined, yearly: 89.99 },
+    trialDays: 30,
   },
   stores: {
     appStoreUrl: "#", // https://apps.apple.com/app/id...

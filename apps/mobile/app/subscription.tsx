@@ -143,6 +143,8 @@ export default function Subscription() {
           <Txt variant="small" color={c.accent}>{t("sub.privacy")}</Txt>
         </Pressable>
       </Row>
+      <Txt variant="small">{t("sub.founder")}</Txt>
+      <Txt variant="small">{t("sub.refund")}</Txt>
     </Screen>
   );
 }

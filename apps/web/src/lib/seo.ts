@@ -71,16 +71,17 @@ export function softwareLd(locale: string, description: string) {
     name: SITE.name,
     applicationCategory: "BusinessApplication",
     applicationSubCategory: locale === "fr" ? "Carnet de vol électronique" : "Electronic pilot logbook",
-    operatingSystem: "Web, iOS, Android",
+    operatingSystem: "Web, iOS",
     description,
     url: absolute("/", locale),
     inLanguage: ["fr", "en"],
     publisher: { "@id": `${SITE_URL}/#organization` },
     offers: [
-      offer("Basic", p.basic.monthly, "MON"),
-      offer("Max", p.premium.monthly, "MON"),
+      offer("Student (yearly)", p.student.yearly, "ANN"),
       offer("Basic (yearly)", p.basic.yearly, "ANN"),
       offer("Max (yearly)", p.premium.yearly, "ANN"),
+      ...(p.basic.monthly ? [offer("Basic", p.basic.monthly, "MON")] : []),
+      ...(p.premium.monthly ? [offer("Max", p.premium.monthly, "MON")] : []),
     ],
   };
 }
