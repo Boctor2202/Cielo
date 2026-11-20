@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Roll } from "../../src/components/Roll";
 import { Pressable, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -358,6 +358,7 @@ export default function Dashboard() {
           </Card>
         ) : null}
 
+        <Clocks />
         <Row style={{ justifyContent: "flex-end", marginTop: -6 }}>
           <Pressable onPress={() => (editing ? void save() : setDraft(saved))} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: editing ? c.accent : "rgba(34,197,94,0.15)", borderWidth: 1, borderColor: "rgba(34,197,94,0.4)" }}>
             <Ionicons name={editing ? "checkmark" : "options-outline"} size={15} color={editing ? c.onAccent : c.accent} />
@@ -404,5 +405,40 @@ export default function Dashboard() {
       </Screen>
       <Fab label={t("flight.new")} onPress={() => router.push(access.canWrite ? "/flight/new" : "/subscription")} />
     </View>
+  );
+}
+
+/** The time now in UTC and where the pilot is (the phone's time zone), as on a cockpit clock. */
+function Clocks() {
+  const { t } = useApp();
+  const c = useTheme();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 15_000);
+    return () => clearInterval(id);
+  }, []);
+  const hm = (tz?: string) => new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, ...(tz ? { timeZone: tz } : {}) }).format(now);
+  let zone: string | undefined;
+  try {
+    zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    zone = undefined;
+  }
+  const city = zone?.split("/").pop()?.replace(/_/g, " ");
+  const offsetMin = -now.getTimezoneOffset();
+  const offset = `UTC${offsetMin >= 0 ? "+" : "−"}${Math.floor(Math.abs(offsetMin) / 60)}${Math.abs(offsetMin) % 60 ? `:${String(Math.abs(offsetMin) % 60).padStart(2, "0")}` : ""}`;
+  const box = { flex: 1, flexDirection: "row" as const, alignItems: "baseline" as const, gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, borderWidth: 1, borderColor: "rgba(148,163,184,0.22)", backgroundColor: "rgba(15,23,42,0.55)" };
+  return (
+    <Row style={{ gap: 8 }}>
+      <View style={box}>
+        <Txt variant="small" style={{ fontWeight: "700", fontSize: 10.5, letterSpacing: 0.8 }}>UTC</Txt>
+        <Txt mono style={{ fontSize: 20, fontWeight: "700" }}>{hm("UTC")}</Txt>
+      </View>
+      <View style={box}>
+        <Txt variant="small" style={{ fontWeight: "700", fontSize: 10.5, letterSpacing: 0.8 }}>{t("dash.localTime")}</Txt>
+        <Txt mono style={{ fontSize: 20, fontWeight: "700" }}>{hm()}</Txt>
+        <Txt variant="small" numberOfLines={1} style={{ flexShrink: 1 }} color={c.muted}>{city ? `${city} · ${offset}` : offset}</Txt>
+      </View>
+    </Row>
   );
 }
