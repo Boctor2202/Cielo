@@ -14,6 +14,8 @@ import { useAirports } from "@/lib/airports";
 import { useDuration, useFlights, useFormatDate, usePilot, useTable, useToday } from "@/lib/hooks";
 import { loadDemo } from "@/lib/demo";
 import { GlassCockpit } from "@/components/app/GlassCockpit";
+import { OverviewWidgets } from "@/components/app/OverviewWidgets";
+import { useAccess } from "@/lib/access";
 
 export default function Dashboard() {
   const t = useTranslations("app.dashboard");
@@ -31,6 +33,7 @@ export default function Dashboard() {
   const d = useDuration();
   const fd = useFormatDate();
   const [busy, setBusy] = useState(false);
+  const access = useAccess();
 
   const data = useMemo(() => {
     if (!flights || !balances) return null;
@@ -102,17 +105,27 @@ export default function Dashboard() {
 
 
   return (
-    <>
-      <GlassCockpit
-        flights={flights}
-        opening={balances ?? []}
-        licenses={licenses ?? []}
-        pilot={pilot}
-        today={today}
-        auditIssues={data.issues}
-        auditHref={`/${locale}/app/${locale === "fr" ? "carnet" : "logbook"}/audit`}
-      />
-    </>
+    <OverviewWidgets
+      pilot={pilot}
+      flights={flights}
+      licenses={licenses ?? []}
+      today={today}
+      periods={p}
+      recency={recency}
+      ftl={data.ftl}
+      canMax={access.has("jobs")}
+      cockpit={
+        <GlassCockpit
+          flights={flights}
+          opening={balances ?? []}
+          licenses={licenses ?? []}
+          pilot={pilot}
+          today={today}
+          auditIssues={data.issues}
+          auditHref={`/${locale}/app/${locale === "fr" ? "carnet" : "logbook"}/audit`}
+        />
+      }
+    />
   );
 }
 

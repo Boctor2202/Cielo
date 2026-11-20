@@ -539,6 +539,39 @@
         "greet_morning": "Good morning {name}",
         "greet_afternoon": "Good afternoon {name}",
         "greet_evening": "Good evening {name}"
+      },
+      "widgets": {
+        "customize": "Customise",
+        "done": "Done",
+        "cancel": "Cancel",
+        "panel": "Widgets",
+        "panelHint": "Switch widgets on or off, drag them to reorder. The layout is the same in the app.",
+        "left": "Move left",
+        "right": "Move right",
+        "resize": "Small / large",
+        "remove": "Remove",
+        "flights": "{n, plural, one {# flight} other {# flights}}",
+        "d28": "28 days",
+        "d90": "90 days",
+        "m12": "12 months",
+        "nothing": "Nothing to show yet",
+        "current": "Current",
+        "notCurrent": "Not current",
+        "until": "until {date}",
+        "pax": "Passengers (3 in 90 days)",
+        "night": "Night",
+        "ftl28": "flight time, 28 days",
+        "ftl": {
+          "flight28d": "Flight time, 28 days",
+          "flightYear": "Flight time, calendar year",
+          "flight12m": "Flight time, 12 months",
+          "duty28d": "Duty, 28 days"
+        },
+        "places": "countries · {a} airports",
+        "noOperator": "No operator",
+        "noLayover": "none planned",
+        "jobsValue": "Pilot jobs",
+        "jobsSub": "matched to your logbook"
       }
     },
     "logbook": {

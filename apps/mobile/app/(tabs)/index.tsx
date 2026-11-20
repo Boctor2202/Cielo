@@ -1,6 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Roll } from "../../src/components/Roll";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useIsFocused } from "expo-router";
 import {
   FTL_LIMITS,
@@ -16,7 +17,21 @@ import {
   pilotFirstName,
   dayPart,
   licenseStatus,
+  closestBadge,
+  dashboardValue,
+  dashboardWidgets,
+  discoveryBadges,
+  hiddenWidgets,
+  hoursByOperator,
+  hoursByType,
+  moveWidget,
+  nextLayover,
+  placesVisited,
+  widgetLabel,
+  widgetSpec,
   type Totals,
+  type WidgetId,
+  type WidgetPlacement,
 } from "@cielo/core";
 import { Button, Card, Dot, Fab, Row, Screen, Txt, statusColor } from "../../src/components/ui";
 import { Track } from "../../src/components/Bars";
@@ -29,11 +44,16 @@ import { useFtlSettings } from "../../src/ftlSettings";
 import { loadDismissed, pendingDrafts } from "../../src/flightDrafts";
 import { useCurrency } from "../../src/currency";
 import { space, useTheme } from "../../src/theme";
+import { lookupAirport } from "../../src/airports";
 
 const FTL_KEYS = ["duty7d", "duty14d", "duty28d", "flight28d", "flightYear", "flight12m"] as const;
 
 export default function Dashboard() {
-  const { t, locale, flights, balances, licenses, pilot, session, access, rosterEvents } = useApp();
+  const { t, locale, flights, balances, licenses, pilot, session, access, rosterEvents, layovers, savePilot } = useApp();
+  // the pilot's widgets (synced with the website); while customising, a draft
+  const saved = useMemo(() => dashboardWidgets(pilot), [pilot]);
+  const [draft, setDraft] = useState<WidgetPlacement[] | null>(null);
+  const widgets = draft ?? saved;
   // roster flights that ended and are not logged yet
   // recomputed when coming back to the dashboard (a draft may have been ignored meanwhile)
   const focused = useIsFocused();
@@ -74,6 +94,11 @@ export default function Dashboard() {
     const g = (pilot.goals ?? []).find((x) => x.kind === "total") ?? defaultGoals(flights, balances)[0];
     return g ? goalProgress(g, flights, balances, today) : undefined;
   }, [pilot.goals, flights, balances, today]);
+  const byType = useMemo(() => hoursByType(flights), [flights]);
+  const byOperator = useMemo(() => hoursByOperator(flights), [flights]);
+  const places = useMemo(() => placesVisited(flights, (i) => lookupAirport(i)?.country), [flights]);
+  const badge = useMemo(() => closestBadge(discoveryBadges(flights, lookupAirport)), [flights]);
+  const layover = useMemo(() => nextLayover(layovers, new Date().toISOString()), [layovers]);
   const inWords = (iso: string) => {
     const h = Math.round((Date.parse(iso) - Date.now()) / 3_600_000);
     return h < 24 ? t("dash.inHours", { n: Math.max(0, h) }) : t("dash.inDays", { n: Math.round(h / 24) });
@@ -94,6 +119,209 @@ export default function Dashboard() {
             : t("dash.notCurrent", { t: r.takeoffs, l: r.landings })}
         </Txt>
       </View>
+    </Row>
+  );
+
+  // each widget in its large form (the Overview as it was) and its small tile
+  const ftlLimit = (k: (typeof FTL_KEYS)[number]) => ({ actual: ftl.cumulative[k], limit: FTL_LIMITS[k] });
+  const large: Partial<Record<WidgetId, React.ReactNode>> = {
+    hero: (
+      <HeroCard
+          all={periods.all}
+          flights={flights}
+          goal={goal}
+          timeDisplay={pilot.timeDisplay}
+          t={t as never}
+          monthLabel={t("dash.m12")}
+          locale={locale}
+        />
+    ),
+    periods: (
+      <PeriodTiles items={[period(t("dash.d28"), periods.d28, "#38BDF8"), period(t("dash.d90"), periods.d90, "#818CF8"), period(t("dash.m12"), periods.m12, "#22C55E")]} />
+    ),
+    nextDuty: nextDuty ? (
+          <DutyCard
+            title={t("dash.nextDuty")}
+            from={nextDuty.depIcao ?? undefined}
+            to={nextDuty.arrIcao ?? undefined}
+            label={nextDuty.title || t(`roster.kind.${nextDuty.kind}` as I18nKey)}
+            countdown={inWords(nextDuty.reportUtc ?? nextDuty.startUtc)}
+            chips={[
+              formatDate(nextDuty.startUtc.slice(0, 10), locale),
+              `${nextDuty.startUtc.slice(11, 16)} UTC`,
+              ...(nextDuty.reportUtc ? [`${t("dash.report")} ${nextDuty.reportUtc.slice(11, 16)}`] : []),
+              ...(nextDuty.flightNumber ? [nextDuty.flightNumber] : []),
+            ]}
+            onPress={() => router.navigate("/roster")}
+          />
+        ) : null,
+    lastFlight: lastFlight ? (
+          <LastFlightCard
+            title={t("dash.lastFlightTitle")}
+            f={lastFlight}
+            time={fmt(lastFlight.totalMin)}
+            date={formatDate(lastFlight.date, locale)}
+            onPress={() => router.push({ pathname: "/flight/[id]", params: { id: lastFlight.id } })}
+          />
+        ) : null,
+    recency: (
+      <Card onPress={() => router.navigate("/currency")}>
+          <Row style={{ justifyContent: "space-between", alignItems: "baseline" }}>
+            <Txt variant="h2">{t("dash.recency")}</Txt>
+            <Txt variant="small" color={currency.alerts.length ? c.warning : c.success} style={{ fontWeight: "700" }}>
+              {currency.items.length ? (currency.alerts.length ? t("cur.alerts", { n: currency.alerts.length }) : t("cur.allGood")) : ""}
+            </Txt>
+          </Row>
+          {currency.items.length
+            ? (currency.alerts.length ? currency.alerts : currency.items.filter((i) => i.kind === "passengers")).slice(0, 3).map((i) =>
+                recencyRow(`${t(`cur.kind.${i.kind}` as I18nKey)}${i.group === "all" ? "" : ` · ${i.group}`}`, i),
+              )
+            : <>
+                {recencyRow(t("dash.recencyPax"), recency.passengers)}
+                {recencyRow(t("dash.recencyNight"), recency.night)}
+              </>}
+          {recency.lastFlightDate ? (
+            <Txt variant="small">
+              {t("dash.lastFlight", { date: formatDate(recency.lastFlightDate, locale), n: recency.daysSinceLastFlight ?? 0 })}
+            </Txt>
+          ) : (
+            <View style={{ gap: space.sm }}>
+              <Txt variant="muted">{t("dash.noFlights")}</Txt>
+              <Button title={t("dash.addFirst")} onPress={() => router.push("/flight/new")} />
+            </View>
+          )}
+        </Card>
+    ),
+    expiries: (
+      <Card onPress={() => router.navigate("/documents")}>
+          <Txt variant="h2">{t("dash.expiries")}</Txt>
+          {expiries.length === 0 ? <Txt variant="muted">{t("dash.noDocuments")}</Txt> : null}
+          {expiries.map(({ l, s }) => (
+            <Row key={l.id} style={{ justifyContent: "space-between" }}>
+              <Row style={{ flex: 1 }}>
+                <Dot color={statusColor(c, s.state)} />
+                <Txt numberOfLines={1} style={{ flex: 1 }}>
+                  {l.code}
+                </Txt>
+              </Row>
+              <Txt mono variant="small" color={statusColor(c, s.state)}>
+                {formatDate(l.validUntil!, locale)}
+              </Txt>
+            </Row>
+          ))}
+        </Card>
+    ),
+    ftl: (
+      <Card>
+          <Txt variant="h2">{t("dash.ftl")}</Txt>
+          {FTL_KEYS.filter((k) => limitApplies(k, pilot.ftlRegime ?? "oro")).map((k) => {
+            const actual = ftl.cumulative[k];
+            const limit = FTL_LIMITS[k];
+            const level = cumulativeLevel(actual, limit);
+            const pct = Math.min(1, limit ? actual / limit : 0);
+            return (
+              <View key={k} style={{ gap: 4 }}>
+                <Row style={{ justifyContent: "space-between" }}>
+                  <Txt variant="muted">{t(`dash.ftl.${k}` as I18nKey)}</Txt>
+                  <Txt mono variant="small" color={statusColor(c, level)}>
+                    {formatDuration(actual)} / {formatDuration(limit)}
+                  </Txt>
+                </Row>
+                <Track ratio={pct} color={statusColor(c, level)} />
+              </View>
+            );
+          })}
+          <Txt variant="small">{t("dash.ftl.note")}</Txt>
+        </Card>
+    ),
+    byType: byType.length ? (
+      <Card onPress={() => router.navigate("/stats")}>
+        <Txt variant="h2">{widgetLabel("byType", locale)}</Txt>
+        {byType.map((x) => (
+          <View key={x.key} style={{ gap: 4 }}>
+            <Row style={{ justifyContent: "space-between" }}>
+              <Txt mono style={{ fontWeight: "700" }}>{x.key}</Txt>
+              <Txt mono variant="small">{fmt(x.minutes)} · {t("dash.flights", { n: x.flights })}</Txt>
+            </Row>
+            <Track ratio={x.minutes / (byType[0]?.minutes || 1)} color={c.accent} />
+          </View>
+        ))}
+      </Card>
+    ) : null,
+    byOperator: byOperator.length ? (
+      <Card onPress={() => router.navigate("/logbook")}>
+        <Txt variant="h2">{widgetLabel("byOperator", locale)}</Txt>
+        {byOperator.map((x) => (
+          <View key={x.key} style={{ gap: 4 }}>
+            <Row style={{ justifyContent: "space-between" }}>
+              <Txt numberOfLines={1} style={{ flex: 1, fontWeight: "700" }}>{x.key === "—" ? t("dash.noOperator") : x.key}</Txt>
+              <Txt mono variant="small">{fmt(x.minutes)}</Txt>
+            </Row>
+            <Track ratio={x.minutes / (byOperator[0]?.minutes || 1)} color="#818CF8" />
+          </View>
+        ))}
+      </Card>
+    ) : null,
+  };
+  // the small tiles: a figure and what it is
+  const small: Partial<Record<WidgetId, { value: string; sub?: string; color?: string; go?: () => void }>> = {
+    hero: { value: fmt(periods.all.totalMin), sub: t("dash.flights", { n: periods.all.flights }), go: () => router.navigate("/stats") },
+    periods: { value: fmt(periods.d28.totalMin), sub: t("dash.d28"), color: "#38BDF8" },
+    nextDuty: nextDuty ? { value: nextDuty.depIcao && nextDuty.arrIcao ? `${nextDuty.depIcao} → ${nextDuty.arrIcao}` : nextDuty.title || t(`roster.kind.${nextDuty.kind}` as I18nKey), sub: inWords(nextDuty.reportUtc ?? nextDuty.startUtc), go: () => router.navigate("/roster") } : undefined,
+    lastFlight: lastFlight ? { value: `${lastFlight.depIcao} → ${lastFlight.arrIcao}`, sub: `${fmt(lastFlight.totalMin)} · ${formatDate(lastFlight.date, locale)}`, go: () => router.push({ pathname: "/flight/[id]", params: { id: lastFlight.id } }) } : undefined,
+    recency: { value: currency.alerts.length ? t("cur.alerts", { n: currency.alerts.length }) : t("cur.allGood"), color: currency.alerts.length ? c.warning : c.success, go: () => router.navigate("/currency") },
+    expiries: expiries[0] ? { value: expiries[0].l.code, sub: formatDate(expiries[0].l.validUntil!, locale), color: statusColor(c, expiries[0].s.state), go: () => router.navigate("/documents") } : undefined,
+    ftl: { value: `${formatDuration(ftlLimit("flight28d").actual)} / ${formatDuration(ftlLimit("flight28d").limit)}`, sub: t("dash.ftl.flight28d"), color: statusColor(c, cumulativeLevel(ftlLimit("flight28d").actual, ftlLimit("flight28d").limit)) },
+    byType: byType[0] ? { value: byType[0].key, sub: fmt(byType[0].minutes), go: () => router.navigate("/stats") } : undefined,
+    countries: { value: String(places.countries.length), sub: t("dash.places", { a: places.airports }), color: c.accent, go: () => router.navigate("/stats") },
+    byOperator: byOperator[0] ? { value: byOperator[0].key === "—" ? t("dash.noOperator") : byOperator[0].key, sub: fmt(byOperator[0].minutes) } : undefined,
+    nextLayover: layover ? { value: layover.airportIcao, sub: layover.arrivalUtc ? formatDate(layover.arrivalUtc.slice(0, 10), locale) : layover.hotelName, go: () => router.navigate("/layovers") } : { value: "—", sub: t("dash.noLayover") },
+    nextBadge: badge ? { value: t(`badges.d.${badge.id}` as I18nKey), sub: `${badge.value} / ${badge.target}`, color: "#A78BFA", go: () => router.navigate("/stats") } : undefined,
+    jobs: { value: t("dash.jobsValue"), sub: t("dash.jobsSub"), color: c.accent, go: () => router.navigate("/jobs") },
+  };
+  const tile = (id: WidgetId) => {
+    const x = small[id];
+    if (!x) return null;
+    const locked = !!widgetSpec(id).max && !access.has("jobs");
+    return (
+      <Card onPress={locked ? () => router.push("/subscription") : x.go} style={{ flex: 1, minHeight: 92, gap: 2 }}>
+        <Txt variant="small" numberOfLines={1} style={{ fontWeight: "700", letterSpacing: 0.6, textTransform: "uppercase", fontSize: 10.5 }}>{widgetLabel(id, locale)}</Txt>
+        <Txt numberOfLines={1} style={{ fontSize: 20, fontWeight: "800" }} color={locked ? c.muted : x.color}>{locked ? "Max" : x.value}</Txt>
+        {x.sub && !locked ? <Txt variant="small" numberOfLines={1}>{x.sub}</Txt> : null}
+      </Card>
+    );
+  };
+  // a large widget without a large form (or nothing to show) falls back to its tile
+  const block = (w: WidgetPlacement) => (w.size === "l" ? (large[w.id] ?? tile(w.id)) : tile(w.id));
+  // small tiles side by side, two per row
+  const rows: WidgetPlacement[][] = [];
+  for (const w of widgets) {
+    const lastRow = rows[rows.length - 1];
+    if (w.size === "s" && lastRow && lastRow.length === 1 && lastRow[0]!.size === "s") lastRow.push(w);
+    else rows.push([w]);
+  }
+  const editing = draft !== null;
+  const save = async () => {
+    if (draft) await savePilot({ dashboard: dashboardValue(draft) });
+    setDraft(null);
+  };
+  const edit = (i: number, w: WidgetPlacement) => (
+    <Row style={{ justifyContent: "space-between", alignItems: "center", paddingHorizontal: 4, marginBottom: -4 }}>
+      <Txt variant="small" style={{ fontWeight: "700", flex: 1 }} numberOfLines={1}>{widgetLabel(w.id, locale)}</Txt>
+      <Row style={{ gap: 6 }}>
+        {[
+          { icon: "arrow-up" as const, on: () => setDraft(moveWidget(widgets, i, i - 1)), off: i === 0, danger: false },
+          { icon: "arrow-down" as const, on: () => setDraft(moveWidget(widgets, i, i + 1)), off: i === widgets.length - 1, danger: false },
+          ...(widgetSpec(w.id).sizes.length > 1
+            ? [{ icon: (w.size === "l" ? "contract" : "expand") as "contract" | "expand", on: () => setDraft(widgets.map((x, j) => (j === i ? { ...x, size: x.size === "l" ? ("s" as const) : ("l" as const) } : x))), off: false, danger: false }]
+            : []),
+          { icon: "remove" as const, on: () => setDraft(widgets.filter((_, j) => j !== i)), off: false, danger: true },
+        ].map((b, k) => (
+          <Pressable key={k} disabled={b.off} onPress={b.on} hitSlop={6} style={{ width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: b.danger ? "#EF4444" : "rgba(148,163,184,0.25)", opacity: b.off ? 0.3 : 1 }}>
+            <Ionicons name={b.icon} size={16} color="#fff" />
+          </Pressable>
+        ))}
+      </Row>
     </Row>
   );
 
@@ -130,111 +358,49 @@ export default function Dashboard() {
           </Card>
         ) : null}
 
-        <HeroCard
-          all={periods.all}
-          flights={flights}
-          goal={goal}
-          timeDisplay={pilot.timeDisplay}
-          t={t as never}
-          monthLabel={t("dash.m12")}
-          locale={locale}
-        />
+        <Row style={{ justifyContent: "flex-end", marginTop: -6 }}>
+          <Pressable onPress={() => (editing ? void save() : setDraft(saved))} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: editing ? c.accent : "rgba(34,197,94,0.15)", borderWidth: 1, borderColor: "rgba(34,197,94,0.4)" }}>
+            <Ionicons name={editing ? "checkmark" : "options-outline"} size={15} color={editing ? c.onAccent : c.accent} />
+            <Txt style={{ fontWeight: "700", fontSize: 13 }} color={editing ? c.onAccent : c.accent}>{t(editing ? "dash.customDone" : "dash.customize")}</Txt>
+          </Pressable>
+        </Row>
 
-        <PeriodTiles items={[period(t("dash.d28"), periods.d28, "#38BDF8"), period(t("dash.d90"), periods.d90, "#818CF8"), period(t("dash.m12"), periods.m12, "#22C55E")]} />
-
-        {nextDuty ? (
-          <DutyCard
-            title={t("dash.nextDuty")}
-            from={nextDuty.depIcao ?? undefined}
-            to={nextDuty.arrIcao ?? undefined}
-            label={nextDuty.title || t(`roster.kind.${nextDuty.kind}` as I18nKey)}
-            countdown={inWords(nextDuty.reportUtc ?? nextDuty.startUtc)}
-            chips={[
-              formatDate(nextDuty.startUtc.slice(0, 10), locale),
-              `${nextDuty.startUtc.slice(11, 16)} UTC`,
-              ...(nextDuty.reportUtc ? [`${t("dash.report")} ${nextDuty.reportUtc.slice(11, 16)}`] : []),
-              ...(nextDuty.flightNumber ? [nextDuty.flightNumber] : []),
-            ]}
-            onPress={() => router.navigate("/roster")}
-          />
-        ) : null}
-
-        {lastFlight ? (
-          <LastFlightCard
-            title={t("dash.lastFlightTitle")}
-            f={lastFlight}
-            time={fmt(lastFlight.totalMin)}
-            date={formatDate(lastFlight.date, locale)}
-            onPress={() => router.push({ pathname: "/flight/[id]", params: { id: lastFlight.id } })}
-          />
-        ) : null}
-
-        <Card onPress={() => router.navigate("/currency")}>
-          <Row style={{ justifyContent: "space-between", alignItems: "baseline" }}>
-            <Txt variant="h2">{t("dash.recency")}</Txt>
-            <Txt variant="small" color={currency.alerts.length ? c.warning : c.success} style={{ fontWeight: "700" }}>
-              {currency.items.length ? (currency.alerts.length ? t("cur.alerts", { n: currency.alerts.length }) : t("cur.allGood")) : ""}
-            </Txt>
-          </Row>
-          {currency.items.length
-            ? (currency.alerts.length ? currency.alerts : currency.items.filter((i) => i.kind === "passengers")).slice(0, 3).map((i) =>
-                recencyRow(`${t(`cur.kind.${i.kind}` as I18nKey)}${i.group === "all" ? "" : ` · ${i.group}`}`, i),
-              )
-            : <>
-                {recencyRow(t("dash.recencyPax"), recency.passengers)}
-                {recencyRow(t("dash.recencyNight"), recency.night)}
-              </>}
-          {recency.lastFlightDate ? (
-            <Txt variant="small">
-              {t("dash.lastFlight", { date: formatDate(recency.lastFlightDate, locale), n: recency.daysSinceLastFlight ?? 0 })}
-            </Txt>
-          ) : (
-            <View style={{ gap: space.sm }}>
-              <Txt variant="muted">{t("dash.noFlights")}</Txt>
-              <Button title={t("dash.addFirst")} onPress={() => router.push("/flight/new")} />
-            </View>
-          )}
-        </Card>
-
-        <Card onPress={() => router.navigate("/documents")}>
-          <Txt variant="h2">{t("dash.expiries")}</Txt>
-          {expiries.length === 0 ? <Txt variant="muted">{t("dash.noDocuments")}</Txt> : null}
-          {expiries.map(({ l, s }) => (
-            <Row key={l.id} style={{ justifyContent: "space-between" }}>
-              <Row style={{ flex: 1 }}>
-                <Dot color={statusColor(c, s.state)} />
-                <Txt numberOfLines={1} style={{ flex: 1 }}>
-                  {l.code}
-                </Txt>
-              </Row>
-              <Txt mono variant="small" color={statusColor(c, s.state)}>
-                {formatDate(l.validUntil!, locale)}
-              </Txt>
-            </Row>
-          ))}
-        </Card>
-
-        <Card>
-          <Txt variant="h2">{t("dash.ftl")}</Txt>
-          {FTL_KEYS.filter((k) => limitApplies(k, pilot.ftlRegime ?? "oro")).map((k) => {
-            const actual = ftl.cumulative[k];
-            const limit = FTL_LIMITS[k];
-            const level = cumulativeLevel(actual, limit);
-            const pct = Math.min(1, limit ? actual / limit : 0);
-            return (
-              <View key={k} style={{ gap: 4 }}>
-                <Row style={{ justifyContent: "space-between" }}>
-                  <Txt variant="muted">{t(`dash.ftl.${k}` as I18nKey)}</Txt>
-                  <Txt mono variant="small" color={statusColor(c, level)}>
-                    {formatDuration(actual)} / {formatDuration(limit)}
-                  </Txt>
-                </Row>
-                <Track ratio={pct} color={statusColor(c, level)} />
+        {editing
+          ? widgets.map((w, i) => (
+              <View key={w.id} style={{ gap: 8, borderWidth: 1.5, borderStyle: "dashed", borderColor: "rgba(74,222,128,0.5)", borderRadius: 22, padding: 6 }}>
+                {edit(i, w)}
+                <View pointerEvents="none">{block(w) ?? <Card><Txt variant="muted">{t("dash.widgetEmpty")}</Txt></Card>}</View>
               </View>
-            );
-          })}
-          <Txt variant="small">{t("dash.ftl.note")}</Txt>
-        </Card>
+            ))
+          : rows.map((r) =>
+              r.length === 2 ? (
+                <Row key={r.map((w) => w.id).join("-")} style={{ gap: space.md, alignItems: "stretch" }}>
+                  {r.map((w) => <View key={w.id} style={{ flex: 1 }}>{block(w)}</View>)}
+                </Row>
+              ) : r[0]!.size === "s" ? (
+                <Row key={r[0]!.id} style={{ gap: space.md }}>
+                  <View style={{ flex: 1 }}>{block(r[0]!)}</View>
+                  <View style={{ flex: 1 }} />
+                </Row>
+              ) : (
+                <React.Fragment key={r[0]!.id}>{block(r[0]!)}</React.Fragment>
+              ),
+            )}
+
+        {editing && hiddenWidgets(widgets).length ? (
+          <Card>
+            <Txt variant="h2">{t("dash.addWidget")}</Txt>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {hiddenWidgets(widgets).map((w) => (
+                <Pressable key={w.id} onPress={() => setDraft([...widgets, { id: w.id, size: w.sizes[0]! }])} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: "rgba(148,163,184,0.4)" }}>
+                  <Ionicons name="add" size={14} color={c.accent} />
+                  <Txt variant="small" style={{ fontWeight: "600" }}>{widgetLabel(w.id, locale)}</Txt>
+                </Pressable>
+              ))}
+            </View>
+          </Card>
+        ) : null}
+        {editing ? <Button kind="ghost" title={t("dash.customCancel")} onPress={() => setDraft(null)} /> : null}
       </Screen>
       <Fab label={t("flight.new")} onPress={() => router.push(access.canWrite ? "/flight/new" : "/subscription")} />
     </View>

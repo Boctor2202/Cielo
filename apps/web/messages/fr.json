@@ -539,6 +539,39 @@
         "greet_morning": "Bonjour {name}",
         "greet_afternoon": "Bon après-midi {name}",
         "greet_evening": "Bonsoir {name}"
+      },
+      "widgets": {
+        "customize": "Personnaliser",
+        "done": "Terminé",
+        "cancel": "Annuler",
+        "panel": "Widgets",
+        "panelHint": "Active ou masque les widgets, fais-les glisser pour les réordonner. La disposition est la même dans l'app.",
+        "left": "Vers la gauche",
+        "right": "Vers la droite",
+        "resize": "Petit / grand",
+        "remove": "Retirer",
+        "flights": "{n, plural, one {# vol} other {# vols}}",
+        "d28": "28 jours",
+        "d90": "90 jours",
+        "m12": "12 mois",
+        "nothing": "Rien à afficher pour l'instant",
+        "current": "À jour",
+        "notCurrent": "Pas à jour",
+        "until": "jusqu'au {date}",
+        "pax": "Passagers (3 en 90 jours)",
+        "night": "Nuit",
+        "ftl28": "temps de vol, 28 jours",
+        "ftl": {
+          "flight28d": "Temps de vol, 28 jours",
+          "flightYear": "Temps de vol, année civile",
+          "flight12m": "Temps de vol, 12 mois",
+          "duty28d": "Service, 28 jours"
+        },
+        "places": "pays · {a} aéroports",
+        "noOperator": "Sans opérateur",
+        "noLayover": "aucune prévue",
+        "jobsValue": "Offres pilote",
+        "jobsSub": "selon ton carnet"
       }
     },
     "logbook": {

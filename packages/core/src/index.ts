@@ -41,3 +41,4 @@ export * from "./operators";
 export * from "./gains";
 export * from "./airportName";
 export * from "./badgeEmblem";
+export * from "./dashboard";
