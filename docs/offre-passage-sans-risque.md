@@ -10,8 +10,8 @@ Ces migrations sont réversibles, et je ne les applique que sur votre ordre.
 
 | Migration | Contenu | Annulation |
 |---|---|---|
-| 0025 | journal des rappels d'essai | `drop table trial_reminder_log` |
-| 0026 | `pilots.student_until` | `alter table pilots drop column student_until` |
+| 0025 ✅ appliquée le 20/11 | journal des rappels d'essai | `drop table trial_reminder_log` |
+| 0026 ✅ appliquée le 20/11 | `pilots.student_until` | `alter table pilots drop column student_until` |
 | 0024 (déjà préparée) | compteurs de mesure | — |
 
 ### 2. Fonctions Supabase (déploiement à me demander)
