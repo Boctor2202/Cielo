@@ -159,7 +159,9 @@ export function createSupabaseSync(options: SupabaseSyncOptions): SupabaseSync {
     let watermark: string | undefined;
     for (let i = 0; i < rows.length; i += pushBatchSize) {
       const batch = rows.slice(i, i + pushBatchSize);
-      const { error } = await supabase.from(table).upsert(batch.map(rowToDb), { onConflict: "id" });
+      // columns the server requires (NOT NULL with a default) that older local rows may lack
+      const payload = batch.map(rowToDb).map((r) => (table === "roster_events" ? { ...r, tentative: r.tentative === true } : r));
+      const { error } = await supabase.from(table).upsert(payload, { onConflict: "id", defaultToNull: false });
       if (error) {
         // Keep the progress made so far; the failed batch is retried next run.
         if (watermark) await store.setMeta(lastPushKey(table), watermark);
