@@ -1,6 +1,6 @@
 // Creates Geardown's subscriptions in App Store Connect through Apple's API, so nobody has to fill the forms:
 // the group, the five plans (Basic / Max, monthly / yearly, and Student yearly), their French and English texts, their prices in every
-// country (from the French price, as App Store Connect does), the 7-day free trial, the review screenshot and notes.
+// country (from the French price, as App Store Connect does), no store free trial (the 30-day trial runs on the account), the review screenshot and notes.
 // Safe to run again: whatever already exists is kept and only what is missing is added.
 //
 // Needs an App Store Connect API key (Users and Access › Integrations › App Store Connect API, role "App Manager"):
@@ -21,7 +21,7 @@ const NEW_SCREENSHOT = process.argv.includes("--replace-screenshot");
 const UPDATE_PRICES = process.argv.includes("--update-prices");
 
 const REVIEW_NOTE =
-  "Geardown is a pilot e-logbook. Basic unlocks the unlimited logbook, exports in authority formats (EASA, FAA, CASA), licence and recency tracking, statistics and web/mobile sync. Student is Basic at a lower yearly price for student pilots (self-declared in the app, until their licence). Max adds roster import and FTL monitoring, layovers, live radar, audit, job offers and the pilot CV. Both plans start with a 7-day free trial. The subscription screen is in the app under More › Subscription.";
+  "Geardown is a pilot e-logbook. Basic unlocks the unlimited logbook, exports in authority formats (EASA, FAA, CASA), licence and recency tracking, statistics and web/mobile sync. Student is Basic at a lower yearly price for student pilots (self-declared in the app, until their licence). Max adds roster import and FTL monitoring, layovers, live radar, audit, job offers and the pilot CV. Every new account gets a 30-day free trial with all features, without any payment details; the subscriptions themselves have no free trial. The subscription screen is in the app under More › Subscription.";
 
 const PLANS = [
   {
@@ -235,25 +235,18 @@ async function main() {
     log(`  prices: ${p.price} € in France, ${n} countries added (${priced.size} already set)`);
 
     // 7-day free trial, every country
-    const offers = await all(`/v1/subscriptions/${sub.id}/introductoryOffers?include=territory&limit=200`).catch(() => []);
-    const offered = new Set(offers.map((x) => x.relationships?.territory?.data?.id).filter(Boolean));
-    let o = 0;
-    for (const territory of territories) {
-      if (offered.has(territory)) continue;
+    // no store trial: the 30-day trial without a card runs on the Geardown account (any one left over is removed)
+    const offers = await all(`/v1/subscriptions/${sub.id}/introductoryOffers?limit=200`).catch(() => []);
+    let removed = 0;
+    for (const o of offers) {
       try {
-        await api("POST", "/v1/subscriptionIntroductoryOffers", {
-          data: {
-            type: "subscriptionIntroductoryOffers",
-            attributes: { duration: "ONE_WEEK", offerMode: "FREE_TRIAL", numberOfPeriods: 1 },
-            relationships: { subscription: rel("subscriptions", sub.id), territory: rel("territories", territory) },
-          },
-        });
-        o++;
+        await api("DELETE", `/v1/subscriptionIntroductoryOffers/${o.id}`);
+        removed++;
       } catch (e) {
-        if (e.status !== 409) log(`  trial ${territory}: ${e.message}`);
+        log(`  trial ${o.id}: ${e.message}`);
       }
     }
-    log(`  free trial 1 week: ${o} countries added (${offered.size} already set)`);
+    log(`  store free trial: ${removed} of ${offers.length} countries removed`);
 
     // review screenshot
     const shot = shots[p.period] ?? shots.ONE_YEAR;
