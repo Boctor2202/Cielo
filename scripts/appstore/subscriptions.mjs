@@ -15,6 +15,7 @@ const BUNDLE_ID = "app.geardown.logbook";
 const GROUP = "Geardown";
 const BASE_TERRITORY = "FRA";
 const CHECK = process.argv.includes("--check");
+const NEW_SCREENSHOT = process.argv.includes("--replace-screenshot");
 
 const REVIEW_NOTE =
   "Geardown is a pilot e-logbook. Basic unlocks the unlimited logbook, official exports, licence and recency tracking, statistics and web/mobile sync. Max adds roster import and FTL monitoring, layovers, live radar, audit, signatures, job offers and the pilot CV. Both plans start with a 7-day free trial. The subscription screen is in the app under More › Subscription.";
@@ -235,10 +236,10 @@ async function main() {
     // review screenshot
     const current = await api("GET", `/v1/subscriptions/${sub.id}/appStoreReviewScreenshot`).catch(() => ({ data: null }));
     // a screenshot Apple refused (e.g. wrong size) is replaced
-    if (current.data && current.data.attributes.assetDeliveryState?.state === "FAILED") {
+    if (current.data && (NEW_SCREENSHOT || current.data.attributes.assetDeliveryState?.state === "FAILED")) {
       await api("DELETE", `/v1/subscriptionAppStoreReviewScreenshots/${current.data.id}`);
       current.data = null;
-      log("  refused screenshot removed");
+      log(NEW_SCREENSHOT ? "  previous screenshot removed" : "  refused screenshot removed");
     }
     if (!current.data) {
       const res = (await api("POST", "/v1/subscriptionAppStoreReviewScreenshots", {
