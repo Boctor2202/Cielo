@@ -78,6 +78,7 @@ export function ImmersiveHome() {
     let inView = true;
     let scene: FlightScene | null = null;
     readoutsAt(p.get(), readouts.current);
+    const phone = window.innerWidth < 900;
     const cancelLoad = afterFirstPaint(() => void (async () => {
       const mod = await import("./scene");
       if (disposed || !mod.webglAvailable()) return;
@@ -90,7 +91,7 @@ export function ImmersiveHome() {
       scene.setProgress((p.get() - GLOBE_FROM) / (1 - GLOBE_FROM));
       sceneRef.current = scene;
       syncScene.current();
-    })());
+    })(), phone);
     const sync = () => (inView && nearGlobe.current && document.visibilityState === "visible" ? scene?.start() : scene?.stop());
     syncScene.current = sync;
     const io = new IntersectionObserver(([e]) => {
@@ -270,7 +271,7 @@ const FILM = { base: "/immersive/film/landing", poster: "/immersive/film/landing
  * Runs `cb` once the page has finished loading and the main thread is idle, or at the first scroll / touch,
  * whichever comes first: the heavy parts of the hero (film frames, WebGL Earth) never compete with the first paint.
  */
-function afterFirstPaint(cb: () => void): () => void {
+function afterFirstPaint(cb: () => void, onInteractionOnly = false): () => void {
   let done = false;
   let idle = 0;
   let timer = 0;
@@ -294,8 +295,11 @@ function afterFirstPaint(cb: () => void): () => void {
     if (timer) clearTimeout(timer);
   };
   events.forEach((e) => window.addEventListener(e, run, { once: true, passive: true }));
-  if (document.readyState === "complete") schedule();
-  else window.addEventListener("load", schedule, { once: true });
+  // on phones the heavy parts wait for the visitor to scroll or touch: the poster frame is shown until then
+  if (!onInteractionOnly) {
+    if (document.readyState === "complete") schedule();
+    else window.addEventListener("load", schedule, { once: true });
+  }
   return () => {
     done = true;
     cleanup();
@@ -349,7 +353,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
     // fewer parallel downloads on phones and slow links, so the page stays responsive
     const cancel = afterFirstPaint(() => {
       for (let w = 0; w < (small ? 3 : 6); w++) void worker();
-    });
+    }, !!small);
     return () => {
       alive = false;
       cancel();
