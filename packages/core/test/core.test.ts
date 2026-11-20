@@ -130,6 +130,17 @@ describe("audit", () => {
     expect(codes).toContain("b:nightExceedsTotal");
     expect(codes).toContain("c:duplicate");
   });
+  it("an instructor's PIC and instructor time on the same flight is not an error; seat time over the total is", () => {
+    const fi = flight({ id: "fi", outUtc: "2026-06-02T10:00:00Z", inUtc: "2026-06-02T11:30:00Z", totalMin: 90, picMin: 90, instructorMin: 90, singlePilotSeMin: 90 });
+    const bad = flight({ id: "bad", outUtc: "2026-06-03T10:00:00Z", inUtc: "2026-06-03T11:30:00Z", totalMin: 90, picMin: 90, copilotMin: 30, singlePilotSeMin: 90 });
+    const issues = auditLogbook([fi, bad], { today: "2026-11-10", airports });
+    expect(issues.filter((i) => i.flightId === "fi" && i.code === "functionMismatch")).toEqual([]);
+    expect(issues.find((i) => i.flightId === "bad" && i.code === "functionMismatch")?.severity).toBe("error");
+  });
+  it("operation columns left empty (an import without them) are to check, not a warning", () => {
+    const f = flight({ id: "e", outUtc: "2026-06-04T10:00:00Z", inUtc: "2026-06-04T11:30:00Z", totalMin: 90, picMin: 90, singlePilotSeMin: 0, singlePilotMeMin: 0, multiPilotMin: 0 });
+    expect(auditLogbook([f], { today: "2026-11-10", airports }).find((i) => i.code === "pilotTimeMismatch")?.severity).toBe("info");
+  });
 });
 
 describe("ftl", () => {

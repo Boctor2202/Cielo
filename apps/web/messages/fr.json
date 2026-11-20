@@ -846,7 +846,10 @@
         "multiPilot": "Temps multipilote",
         "remarks": "Remarques",
         "fstdType": "Type FSTD",
-        "fstdTime": "Temps FSTD"
+        "fstdTime": "Temps FSTD",
+        "picus": "Temps PICUS",
+        "singleEngine": "Temps monopilote SE",
+        "multiEngine": "Temps monopilote ME"
       },
       "autoDetected": "{count} colonnes sur {total} reconnues automatiquement. Vérifiez l'aperçu ci-dessous puis importez.",
       "checkColumns": "Vérifier ou corriger les colonnes",
@@ -909,6 +912,25 @@
         "unknownAirport": "Aéroport inconnu : {icao}",
         "missingAircraft": "Appareil non renseigné",
         "missingPicName": "Nom du commandant de bord manquant"
+      },
+      "why": {
+        "missingTimes": "Sans heures bloc, le temps total, la nuit et les limites FTL ne peuvent pas être calculés. Ajoutez au moins l'off-block et l'on-block.",
+        "timesOrder": "L'ordre doit être off-block, décollage, atterrissage, on-block. Souvent une date ou un fuseau mal saisi.",
+        "overlap": "Deux vols ne peuvent pas se chevaucher. Vérifiez les heures, ou un vol saisi deux fois.",
+        "duplicate": "Même date, route, heure et immatriculation qu'un autre vol : supprimez l'un des deux s'il s'agit d'un double import.",
+        "continuity": "Simple rappel : une mise en place ou un vol non saisi explique souvent l'écart. Rien à corriger si c'est normal.",
+        "nightExceedsTotal": "Le temps de nuit fait partie du temps total : il ne peut pas le dépasser.",
+        "ifrExceedsTotal": "Le temps IFR fait partie du temps total : il ne peut pas le dépasser.",
+        "functionMismatch": "PIC, PICUS, copilote et double commande se partagent le temps de vol et ne peuvent pas le dépasser. Le temps instructeur ou examinateur se logue en plus (il peut couvrir tout le vol) ; un vol sans aucune fonction ne compte nulle part.",
+        "pilotTimeMismatch": "Monopilote SE + monopilote ME + multipilote doit égaler le temps total. Colonnes vides : fréquent après un import ; à compléter si votre format l'exige.",
+        "noLandings": "Pilote aux commandes sans atterrissage : l'expérience récente (FCL.060) n'en tiendra pas compte.",
+        "landingsWithoutPF": "Normalement, seul le pilote aux commandes compte l'atterrissage. À vérifier, sans gravité.",
+        "futureDate": "Un vol daté dans le futur fausse les totaux et les limites. Vérifiez l'année.",
+        "longBlock": "Plus de 20 h de bloc : possible sur un vol très long, sinon une erreur de date ou d'heure.",
+        "implausibleSpeed": "Distance entre aéroports divisée par le temps de vol : vitesse peu réaliste. Souvent un mauvais aéroport ou un temps de vol trop court.",
+        "unknownAirport": "Code absent de la base d'aérodromes : temps de nuit et carte non calculés pour ce vol. Vérifiez le code OACI.",
+        "missingAircraft": "Sans immatriculation, les heures par type et l'export restent incomplets.",
+        "missingPicName": "Le format EASA demande le nom du commandant de bord quand vous ne l'êtes pas."
       }
     },
     "export": {

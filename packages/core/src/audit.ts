@@ -70,12 +70,17 @@ export function auditLogbook(all: Flight[], opts: AuditOptions): AuditIssue[] {
     if (f.nightMin > f.totalMin) push(f, "nightExceedsTotal", "error");
     if (f.ifrMin > f.totalMin) push(f, "ifrExceedsTotal", "error");
 
-    const fn = f.picMin + f.picusMin + f.copilotMin + f.dualMin + f.instructorMin + f.examinerMin;
-    if (f.totalMin > 0 && fn === 0) push(f, "functionMismatch", "warning");
-    if (fn > f.totalMin * 1) push(f, "functionMismatch", "error");
+    // The seat functions (PIC, PICUS, co-pilot, dual) share the block time; instructor and examiner time are logged
+    // on top of them (an instructor logs PIC and instructor time for the same flight), so they are checked apart.
+    const seat = f.picMin + f.picusMin + f.copilotMin + f.dualMin;
+    const any = seat + f.instructorMin + f.examinerMin;
+    if (f.totalMin > 0 && any === 0) push(f, "functionMismatch", "warning", { kind: "none" });
+    if (seat > f.totalMin) push(f, "functionMismatch", "error", { kind: "seat", sum: seat, total: f.totalMin });
+    else if (f.instructorMin > f.totalMin || f.examinerMin > f.totalMin) push(f, "functionMismatch", "error", { kind: "instructor", total: f.totalMin });
 
+    // SE / ME / multi-pilot columns: none filled (often an import without them) is to check, a wrong sum is a warning
     const op = f.singlePilotSeMin + f.singlePilotMeMin + f.multiPilotMin;
-    if (op !== f.totalMin) push(f, "pilotTimeMismatch", "warning", { sum: op, total: f.totalMin });
+    if (op !== f.totalMin) push(f, "pilotTimeMismatch", op === 0 ? "info" : "warning", { sum: op, total: f.totalMin });
 
     const ldgs = f.landingsDay + f.landingsNight;
     if (f.pilotFlying && ldgs === 0) push(f, "noLandings", "warning");

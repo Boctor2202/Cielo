@@ -45,6 +45,7 @@ export default function AuditPage() {
                       <li key={`${i.flightId}-${i.code}-${n}`} className="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-sm font-medium">{t(`codes.${i.code}`, (i.params ?? {}) as Record<string, string>)}</p>
+                          <p className="text-xs text-muted">{t(`why.${i.code}`)}</p>
                           {f && <p className="num text-xs text-muted">{fd(f.date)} · {f.isFstd ? "FSTD" : `${f.depIcao} → ${f.arrIcao}`} · {f.registration ?? ""}</p>}
                         </div>
                         <Link href={{ pathname: "/app/carnet/[id]", params: { id: i.flightId } }} className="btn btn-secondary btn-sm self-start">{t("open")}</Link>

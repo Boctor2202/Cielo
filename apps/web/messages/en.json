@@ -846,7 +846,10 @@
         "multiPilot": "Multi-pilot time",
         "remarks": "Remarks",
         "fstdType": "FSTD type",
-        "fstdTime": "FSTD time"
+        "fstdTime": "FSTD time",
+        "picus": "PICUS time",
+        "singleEngine": "Single-pilot SE time",
+        "multiEngine": "Single-pilot ME time"
       },
       "autoDetected": "{count} of {total} columns recognised automatically. Check the preview below, then import.",
       "checkColumns": "Check or fix the columns",
@@ -909,6 +912,25 @@
         "unknownAirport": "Unknown airport: {icao}",
         "missingAircraft": "Aircraft missing",
         "missingPicName": "PIC name missing"
+      },
+      "why": {
+        "missingTimes": "Without block times, total, night and FTL limits cannot be worked out. Add at least off-block and on-block.",
+        "timesOrder": "The order is off-block, take-off, landing, on-block. Usually a wrong date or time zone.",
+        "overlap": "Two flights cannot overlap. Check the times, or a flight entered twice.",
+        "duplicate": "Same date, route, time and registration as another flight: delete one if it is a double import.",
+        "continuity": "Just a reminder: positioning or a flight not logged often explains it. Nothing to fix if that is normal.",
+        "nightExceedsTotal": "Night time is part of total time: it cannot exceed it.",
+        "ifrExceedsTotal": "IFR time is part of total time: it cannot exceed it.",
+        "functionMismatch": "PIC, PICUS, co-pilot and dual share the flight time and cannot exceed it. Instructor or examiner time is logged on top (it may cover the whole flight); a flight with no function counts nowhere.",
+        "pilotTimeMismatch": "Single-pilot SE + single-pilot ME + multi-pilot should equal total time. Empty columns are common after an import; fill them if your format needs them.",
+        "noLandings": "Pilot flying without a landing: FCL.060 recency will not count it.",
+        "landingsWithoutPF": "Usually only the pilot flying logs the landing. Worth a check, nothing serious.",
+        "futureDate": "A flight dated in the future skews totals and limits. Check the year.",
+        "longBlock": "Over 20 h block: possible on a very long flight, otherwise a date or time error.",
+        "implausibleSpeed": "Distance between the airports over flight time gives an unrealistic speed. Often a wrong airport or a flight time too short.",
+        "unknownAirport": "Code not in the aerodrome database: night time and map not worked out for this flight. Check the ICAO code.",
+        "missingAircraft": "Without a registration, hours by type and the export stay incomplete.",
+        "missingPicName": "The EASA format asks for the PIC's name when you are not the PIC."
       }
     },
     "export": {

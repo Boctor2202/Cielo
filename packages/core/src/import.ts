@@ -7,12 +7,13 @@ import { prepareLogbookTable, type LogbookApp } from "./importFormats";
 export type ImportField =
   | "date" | "flightNumber" | "dep" | "arr" | "out" | "off" | "on" | "in" | "registration" | "type"
   | "function" | "picName" | "total" | "night" | "ifr" | "landingsDay" | "landingsNight" | "takeoffsDay"
-  | "takeoffsNight" | "pic" | "copilot" | "dual" | "instructor" | "multiPilot" | "remarks" | "fstdType" | "fstdTime";
+  | "takeoffsNight" | "pic" | "picus" | "copilot" | "dual" | "instructor" | "multiPilot" | "singleEngine" | "multiEngine"
+  | "remarks" | "fstdType" | "fstdTime";
 
 export const IMPORT_FIELDS: ImportField[] = [
   "date", "flightNumber", "dep", "arr", "out", "off", "on", "in", "registration", "type", "function", "picName",
-  "total", "night", "ifr", "takeoffsDay", "takeoffsNight", "landingsDay", "landingsNight", "pic", "copilot", "dual",
-  "instructor", "multiPilot", "remarks", "fstdType", "fstdTime",
+  "total", "night", "ifr", "takeoffsDay", "takeoffsNight", "landingsDay", "landingsNight", "pic", "picus", "copilot", "dual",
+  "instructor", "multiPilot", "singleEngine", "multiEngine", "remarks", "fstdType", "fstdTime",
 ];
 
 /**
@@ -41,6 +42,12 @@ const SYNONYMS: Record<ImportField, string[]> = {
   takeoffsDay: ["takeoffs day", "takeoff day", "tos day", "tkof day", "day takeoffs", "to day", "t o day", "decollages jour", "dec jour", "takeoffs"],
   takeoffsNight: ["takeoffs night", "takeoff night", "tos night", "tkof night", "night takeoffs", "to night", "t o night", "decollages nuit", "dec nuit"],
   pic: ["pic", "duration pic", "pic time", "time pic", "pilot function time pic", "temps cdb", "cdb temps", "commandant de bord", "p1"],
+  // PIC under supervision: its own column, never read as PIC (nor as a block time)
+  picus: ["picus", "picus time", "time picus", "duration picus", "pic us", "pic u s", "p1 us", "p1 u s", "p1us", "p1s", "pic under supervision", "puis", "cdb sous supervision", "temps picus"],
+  // single-pilot single / multi-engine time: recognised so they are not taken for block times; Geardown works them
+  // out from the aircraft type
+  singleEngine: ["se", "sp se", "single engine", "single pilot se", "single pilot single engine", "duration se", "time se", "mono se", "monomoteur", "sep time"],
+  multiEngine: ["me", "sp me", "multi engine", "single pilot me", "single pilot multi engine", "duration me", "time me", "mono me", "multimoteur", "mep time"],
   copilot: ["co pilot", "duration sic", "duration copilot", "duration co pilot", "copilot", "sic", "sic time", "time sic", "copilote", "fo", "pilot function time co pilot", "p2", "temps opl", "opl"],
   dual: ["dual", "duration dual", "dual received", "time dual", "double commande", "pilot function time dual", "instruction recue"],
   instructor: ["instructor", "duration instructor", "dual given", "time instructor", "instructeur", "pilot function time instructor", "fi time", "cfi"],
@@ -50,7 +57,7 @@ const SYNONYMS: Record<ImportField, string[]> = {
   fstdTime: ["fstd time", "duration simulator", "duration sim", "duration fstd", "simulator duration", "time simulator", "sim time", "simulator time", "time sim", "simulated flight", "temps simulateur", "fstd total", "fstd session total time of session", "total time of session"],
 };
 
-const DURATION_FIELDS: ImportField[] = ["total", "night", "ifr", "pic", "copilot", "dual", "instructor", "multiPilot", "fstdTime"];
+const DURATION_FIELDS: ImportField[] = ["total", "night", "ifr", "pic", "picus", "copilot", "dual", "instructor", "multiPilot", "singleEngine", "multiEngine", "fstdTime"];
 const COUNT_FIELDS: ImportField[] = ["landingsDay", "landingsNight", "takeoffsDay", "takeoffsNight"];
 const CLOCK_FIELDS: ImportField[] = ["out", "off", "on", "in"];
 /** Words that rule a header out for a field ("LDGS_NIGHT" is not night time, "TIME_BLOCK_START" is not the total). */
@@ -123,7 +130,8 @@ function fit(field: ImportField, p: Profile): number {
     case "registration": return Math.max(p.reg, p.actype * 0.3);
     case "type": return Math.max(p.actype, p.text * 0.6);
     case "function": return p.func;
-    case "total": case "night": case "ifr": case "pic": case "copilot": case "dual": case "instructor": case "multiPilot": case "fstdTime":
+    case "total": case "night": case "ifr": case "pic": case "picus": case "copilot": case "dual": case "instructor": case "multiPilot":
+    case "singleEngine": case "multiEngine": case "fstdTime":
       // a column of small whole numbers only (0, 1, 2…) is a count of landings, not a duration
       if (p.hm === 0 && p.int > 0.9) return 0.2;
       return Math.max(p.duration, p.clock * 0.9);
@@ -285,7 +293,7 @@ export function checkMapping(rows: string[][], mapping: Record<ImportField, numb
     }
     add("in", "blockTooLong", bad, n);
   }
-  for (const f of ["night", "ifr", "pic", "copilot", "dual", "instructor", "multiPilot"] as const) {
+  for (const f of ["night", "ifr", "pic", "picus", "copilot", "dual", "instructor", "multiPilot"] as const) {
     if (mapping[f] < 0 || mapping.total < 0) continue;
     let n = 0;
     let bad = 0;
@@ -465,7 +473,7 @@ export interface ImportedRow {
   rowIndex: number;
   input?: FlightFormInput;
   /** When the file provides totals, they win over computed values. */
-  explicit: { total?: number; night?: number; ifr?: number; pic?: number; copilot?: number; dual?: number; instructor?: number; multiPilot?: number };
+  explicit: { total?: number; night?: number; ifr?: number; pic?: number; picus?: number; copilot?: number; dual?: number; instructor?: number; multiPilot?: number };
   errors: string[];
 }
 
@@ -503,6 +511,7 @@ export function rowsToFlights(
       night: dur(get(r, "night")),
       ifr: dur(get(r, "ifr")),
       pic: dur(get(r, "pic")),
+      picus: dur(get(r, "picus")),
       copilot: dur(get(r, "copilot")),
       dual: dur(get(r, "dual")),
       instructor: dur(get(r, "instructor")),
@@ -511,6 +520,7 @@ export function rowsToFlights(
     let fn = parseFunction(get(r, "function"));
     if (!fn) {
       if (explicit.pic) fn = "PIC";
+      else if (explicit.picus) fn = "PICUS";
       else if (explicit.copilot) fn = "SIC";
       else if (explicit.dual) fn = "DUAL";
       else if (explicit.instructor) fn = "FI";

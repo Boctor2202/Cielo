@@ -61,6 +61,7 @@ export default function Audit() {
                           i.params as Record<string, string | number>,
                         )}
                       </Txt>
+                      <Txt variant="small">{t(`audit.why.${i.code}` as I18nKey)}</Txt>
                       {f ? (
                         <Txt variant="small" mono>
                           {formatDate(f.date, locale)} · {f.depIcao}→{f.arrIcao}
