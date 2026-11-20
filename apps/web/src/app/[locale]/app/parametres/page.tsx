@@ -238,7 +238,11 @@ export default function SettingsPage() {
                         setV({ ...v, studentUntil: e.target.value });
                         void patch({ studentUntil: e.target.value });
                       }} />
-                      <button type="button" className="btn btn-secondary btn-sm" disabled={!studentEligible(v.studentUntil) || stripeActive} onClick={() => checkout("student", "yearly")}>
+                      <button type="button" className="btn btn-secondary btn-sm" disabled={!studentEligible(v.studentUntil) || stripeActive} onClick={async () => {
+                        // the server checks the declaration: send it before opening the checkout (sync runs every minute)
+                        await cloud.syncNow();
+                        await checkout("student", "yearly");
+                      }}>
                         {tpr("plans.student.name")} · {SITE.pricing.student.yearly.toLocaleString(locale, { minimumFractionDigits: 2 })} €{tpr("perYear")}
                       </button>
                     </div>
