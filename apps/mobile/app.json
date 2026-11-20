@@ -94,7 +94,8 @@
           "locationWhenInUsePermission": "Geardown uses your position to centre the radar on the traffic around you."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "./plugins/withAndroidLintTranslations"
     ],
     "experiments": {
       "typedRoutes": true
