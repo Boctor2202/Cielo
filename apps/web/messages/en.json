@@ -1885,7 +1885,7 @@
       "upgrade": "Upgrade to Max",
       "readOnlyShort": "Read-only: subscribe to save.",
       "readOnlyTitle": "Subscription required",
-      "readOnlyText": "Without an active subscription, your logbook stays readable and exportable, but entry is off. Student €19.99/year, Basic €29.99/year or €2.99/month, Max €89.99/year or €8.99/month.",
+      "readOnlyText": "Without an active subscription, your logbook stays readable and exportable, but entry is off. Student €19.99/year, Basic €39.99/year or €3.99/month, Max €89.99/year or €8.99/month.",
       "maxTitle": "Max feature",
       "maxText": "Roster, FTL, job offers, pilot CV, layovers, radar, ADS-B tracks, audit and scan are included in Max (€89.99/year or €8.99/month).",
       "haveAccount": "Already subscribed? Sign in",
@@ -2514,7 +2514,7 @@
     },
     "pricing": {
       "title": "Pricing — electronic pilot logbook from €19.99/year",
-      "description": "Student €19.99/year, Basic €29.99/year, Max €89.99/year for professional pilots (roster, FTL, layovers, radar). %TRIAL%-day trial with no card, no commitment."
+      "description": "Student €19.99/year, Basic €39.99/year, Max €89.99/year for professional pilots (roster, FTL, layovers, radar). %TRIAL%-day trial with no card, no commitment."
     },
     "airlines": {
       "title": "Electronic logbook for airlines and flight schools",

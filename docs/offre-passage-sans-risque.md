@@ -21,8 +21,8 @@ Ces migrations sont réversibles, et je ne les applique que sur votre ordre.
 ### 3. Stripe
 Les abonnés existants gardent leur prix.
 1. Créez les nouveaux prix :
-   - Basic 29,99 €/an ;
-   - Basic 2,99 €/mois ;
+   - Basic 39,99 €/an ;
+   - Basic 3,99 €/mois ;
    - Élève 19,99 €/an.
    - Max reste inchangé.
 2. Variables de la fonction :
@@ -31,8 +31,8 @@ Les abonnés existants gardent leur prix.
 3. Remboursement sous 30 jours : dans Stripe › Paiements › le paiement › « Rembourser ».
 
 ### 4. App Store Connect et RevenueCat
-1. **Basic annuel** : nouveau prix de 29,99 €, en choisissant « conserver le prix actuel pour les abonnés existants ».
-2. **Basic mensuel** : nouveau prix de 2,99 €, avec la même option.
+1. **Basic annuel** : nouveau prix de 39,99 €, en choisissant « conserver le prix actuel pour les abonnés existants ».
+2. **Basic mensuel** : nouveau prix de 3,99 €, avec la même option.
 3. **Élève** : nouveau produit `geardown_student_yearly` à 19,99 €, rattaché dans RevenueCat à l'entitlement `basic`. L'achat dans l'app n'est pas encore codé.
 4. **Essai d'une semaine** : retirez-le (offre de lancement) des 4 abonnements. L'essai de 30 jours sans carte passe par le compte.
 5. **Remboursement App Store** : c'est Apple qui décide. Le texte le dit.

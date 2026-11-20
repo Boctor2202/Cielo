@@ -16,7 +16,7 @@ export const SITE = {
     /** prices for new subscribers, VAT included; existing subscribers keep theirs. "premium" is the Max plan.
      * Student: Basic's features, yearly only, until the licence. Mirrors PRICES_EUR / YEARLY_PRICES_EUR in core. */
     student: { monthly: undefined as number | undefined, yearly: 19.99 },
-    basic: { monthly: 2.99 as number | undefined, yearly: 29.99 },
+    basic: { monthly: 3.99 as number | undefined, yearly: 39.99 },
     premium: { monthly: 8.99 as number | undefined, yearly: 89.99 },
     trialDays: 30,
   },

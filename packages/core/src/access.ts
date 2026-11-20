@@ -8,9 +8,9 @@ import type { Pilot } from "./types";
  */
 export const TRIAL_DAYS = 30;
 /** Monthly prices for new subscribers (existing subscribers keep the price they signed up at). */
-export const PRICES_EUR = { basic: 2.99, premium: 8.99 } as const;
+export const PRICES_EUR = { basic: 3.99, premium: 8.99 } as const;
 /** The yearly prices: two months free (10 months paid). */
-export const YEARLY_PRICES_EUR = { basic: 29.99, premium: 89.99 } as const;
+export const YEARLY_PRICES_EUR = { basic: 39.99, premium: 89.99 } as const;
 /** Student plan: Basic's features, yearly only, until the licence (self-declared, at most 24 months). */
 export const STUDENT_YEARLY_EUR = 19.99;
 export const STUDENT_MAX_MONTHS = 24;
