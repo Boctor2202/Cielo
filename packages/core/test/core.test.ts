@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   noCardTrialDays,
+  AUDIT_CHECKS,
   accessFor, analyseTable, DEFAULT_FTL_SETTINGS, analyseFtl, checkMapping, auditLogbook, pickLeg, simplifyTrack, buildDutyPeriods, combineUtc, computeNight, computeRecency, deriveFlightTimes,
   detectMapping, formatDuration, icalToRosterEvent, licenseStatus, maxDailyFdp, parseCsv, parseDuration,
   parseFlexibleDate, parseIcal, rowsToFlights, sumFlights, sunElevation, type Airport, type Flight,
@@ -136,6 +137,16 @@ describe("audit", () => {
     const issues = auditLogbook([fi, bad], { today: "2026-11-10", airports });
     expect(issues.filter((i) => i.flightId === "fi" && i.code === "functionMismatch")).toEqual([]);
     expect(issues.find((i) => i.flightId === "bad" && i.code === "functionMismatch")?.severity).toBe("error");
+  });
+  it("continuity: same aircraft chain is checked, a line flight then a club flight is not", () => {
+    const line = flight({ id: "l", depIcao: "LFPG", arrIcao: "LFPG", outUtc: "2026-06-05T08:00:00Z", inUtc: "2026-06-05T10:00:00Z", registration: "F-HGDN", operator: "Skyline Airways" });
+    const club = flight({ id: "c", depIcao: "LFPN", arrIcao: "LFPN", outUtc: "2026-06-06T09:00:00Z", inUtc: "2026-06-06T10:00:00Z", registration: "F-GSTR" });
+    expect(auditLogbook([line, club], { today: "2026-11-10", airports }).some((i) => i.code === "continuity")).toBe(false);
+    const next = flight({ id: "n", depIcao: "LFML", arrIcao: "LFPG", outUtc: "2026-06-05T12:00:00Z", inUtc: "2026-06-05T13:30:00Z", registration: "F-HGDN", operator: "Skyline Airways" });
+    expect(auditLogbook([line, next], { today: "2026-11-10", airports }).some((i) => i.code === "continuity")).toBe(true);
+  });
+  it("lists exactly the checks it runs", () => {
+    expect(AUDIT_CHECKS).toHaveLength(17);
   });
   it("operation columns left empty (an import without them) are to check, not a warning", () => {
     const f = flight({ id: "e", outUtc: "2026-06-04T10:00:00Z", inUtc: "2026-06-04T11:30:00Z", totalMin: 90, picMin: 90, singlePilotSeMin: 0, singlePilotMeMin: 0, multiPilotMin: 0 });

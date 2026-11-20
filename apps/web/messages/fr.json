@@ -931,7 +931,12 @@
         "unknownAirport": "Code absent de la base d'aérodromes : temps de nuit et carte non calculés pour ce vol. Vérifiez le code OACI.",
         "missingAircraft": "Sans immatriculation, les heures par type et l'export restent incomplets.",
         "missingPicName": "Le format EASA demande le nom du commandant de bord quand vous ne l'êtes pas."
-      }
+      },
+      "explain": "Expliquer",
+      "explainPrompt": "Pourquoi ce point est-il normal ? (ex. mise en place, vol privé)",
+      "explainedTitle": "Expliqués par vous",
+      "explainedNote": "Expliqué le {date} : {note}",
+      "unexplain": "Réafficher"
     },
     "export": {
       "title": "Exporter le carnet",

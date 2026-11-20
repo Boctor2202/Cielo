@@ -111,7 +111,11 @@ export function auditLogbook(all: Flight[], opts: AuditOptions): AuditIssue[] {
         push(f, "overlap", "error", { other: prevFlight.id });
       }
       const gapH = prevEnd && thisStart ? minutesBetween(prevEnd, thisStart) / 60 : Infinity;
-      if (prevFlight.arrIcao !== f.depIcao && gapH < 36) {
+      // only within one rotation: the same aircraft, or the same operator within the day. A line flight at CDG and
+      // a club flight at Toussus the next morning are two separate activities, not a broken chain.
+      const sameAircraft = !!f.registration && f.registration === prevFlight.registration;
+      const sameOperator = !!f.operator && f.operator === prevFlight.operator;
+      if (prevFlight.arrIcao !== f.depIcao && (sameAircraft ? gapH < 36 : sameOperator && gapH < 12)) {
         push(f, "continuity", "info", { prev: prevFlight.arrIcao, dep: f.depIcao });
       }
     }
@@ -119,3 +123,16 @@ export function auditLogbook(all: Flight[], opts: AuditOptions): AuditIssue[] {
   }
   return issues;
 }
+
+/**
+ * Key of an issue as explained by the pilot: it holds the flight's last change, so an explanation stops applying
+ * (the issue shows again) as soon as the flight is edited and the check runs on new data.
+ */
+export const auditKey = (i: AuditIssue, flight: { updatedAt?: string } | undefined) => `${i.flightId}|${i.code}|${flight?.updatedAt ?? ""}`;
+
+/** Every check the audit runs, for the documentation and the "N checks" wording. */
+export const AUDIT_CHECKS: AuditCode[] = [
+  "missingTimes", "timesOrder", "overlap", "duplicate", "continuity", "nightExceedsTotal", "ifrExceedsTotal", "functionMismatch",
+  "pilotTimeMismatch", "noLandings", "landingsWithoutPF", "futureDate", "longBlock", "implausibleSpeed", "unknownAirport",
+  "missingAircraft", "missingPicName",
+];

@@ -931,7 +931,12 @@
         "unknownAirport": "Code not in the aerodrome database: night time and map not worked out for this flight. Check the ICAO code.",
         "missingAircraft": "Without a registration, hours by type and the export stay incomplete.",
         "missingPicName": "The EASA format asks for the PIC's name when you are not the PIC."
-      }
+      },
+      "explain": "Explain",
+      "explainPrompt": "Why is this normal? (e.g. positioning, private flight)",
+      "explainedTitle": "Explained by you",
+      "explainedNote": "Explained on {date}: {note}",
+      "unexplain": "Show again"
     },
     "export": {
       "title": "Export logbook",
