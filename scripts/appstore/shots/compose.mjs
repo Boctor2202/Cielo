@@ -11,7 +11,6 @@ const root = join(here, "../../..");
 const font = (p) => readFileSync(join(root, "node_modules/.pnpm", p)).toString("base64");
 const MANROPE = font("@fontsource-variable+manrope@5.3.0/node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2");
 const SKY = readFileSync(join(root, "apps/mobile/assets/backdrop.jpg")).toString("base64");
-const ICON = readFileSync(join(root, "apps/mobile/assets/icon.png")).toString("base64");
 const SHOTS = JSON.parse(readFileSync(join(here, "shots.json"), "utf8"));
 const W = 1290, H = 2796;
 
@@ -21,8 +20,9 @@ const page = (shot, t) => `<!doctype html><html><head><meta charset="utf-8"><sty
 body{width:${W}px;height:${H}px;overflow:hidden;font-family:Manrope,sans-serif;color:#fff;
  background:linear-gradient(180deg,rgba(6,12,24,.94) 0%,rgba(6,12,24,.72) 34%,rgba(6,12,24,.35) 62%,rgba(6,12,24,.85) 100%),url(data:image/jpeg;base64,${SKY}) center/cover}
 .top{position:absolute;top:150px;left:110px;right:110px}
-.brand{display:flex;align-items:center;gap:22px;font-weight:700;letter-spacing:.32em;font-size:34px;color:rgba(255,255,255,.75)}
-.brand img{width:68px;height:68px;border-radius:16px}
+.brand{display:inline-flex;align-items:baseline;font-weight:700;letter-spacing:.18em;font-size:46px;line-height:1;color:#fff}
+.brand .r{font-weight:400}
+.brand svg{position:relative;top:.29em;margin-right:.18em;width:1.3em;height:1.3em;flex-shrink:0}
 h1{margin-top:64px;font-size:112px;line-height:1.04;font-weight:800;letter-spacing:-.02em}
 h1 em{font-style:normal;color:#22c55e}
 p{margin-top:36px;font-size:46px;line-height:1.35;color:rgba(255,255,255,.72);font-weight:500;max-width:1000px}
@@ -32,7 +32,7 @@ p{margin-top:36px;font-size:46px;line-height:1.35;color:rgba(255,255,255,.72);fo
 .glow{position:absolute;left:50%;bottom:600px;width:1100px;height:700px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(34,197,94,.28),transparent);filter:blur(20px)}
 </style></head><body>
 <div class="glow"></div>
-<div class="top"><div class="brand"><img src="data:image/png;base64,${ICON}">GEARDOWN</div>
+<div class="top"><div class="brand" aria-label="Geardown"><span>GEAR</span><span class="r">D</span><svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17.3" stroke="currentColor" stroke-width="3.4"/><circle cx="20" cy="13.4" r="4.6" fill="#22C55E"/><circle cx="14" cy="23.8" r="4.6" fill="#22C55E"/><circle cx="26" cy="23.8" r="4.6" fill="#22C55E"/></svg><span class="r">WN</span></div>
 <h1>${t.title}</h1><p>${t.text}</p></div>
 <div class="phone"><img src="data:image/jpeg;base64,${shot}"></div>
 </body></html>`;
