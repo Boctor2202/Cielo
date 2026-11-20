@@ -1414,7 +1414,7 @@
       "req": {
         "licence": "Licence",
         "totalHours": "Heures totales",
-        "picHours": "Heures CDB",
+        "picHours": "Heures PIC (CDB)",
         "onTypeHours": "Heures sur type",
         "multiPilotHours": "Multipilote",
         "jetHours": "Heures jet",
@@ -1461,6 +1461,36 @@
       },
       "regionFilter": {
         "title": "Régions affichées"
+      },
+      "crit": {
+        "title": "Critères indiqués dans l'offre",
+        "summary": "{met} atteint(s) · {unmet} non atteint(s) · {unknown} à vérifier",
+        "none": "L'offre ne précise aucun critère lisible : vérifiez-la sur le site de l'employeur.",
+        "met": "Atteint",
+        "unmet": "Non atteint",
+        "unknown": "À vérifier",
+        "preferred": "souhaité",
+        "gap": "il manque {value}",
+        "source": "Extrait de l'offre",
+        "scoreNote": "Le % n'est qu'un indicateur : fiez-vous d'abord aux critères ci-dessus.",
+        "q": {
+          "jet": "sur jet",
+          "jetOrMeTurboprop": "sur jet ou turbopropulseur multimoteur",
+          "turbine": "sur turbine",
+          "multiEngine": "sur multimoteur"
+        },
+        "why": {
+          "noLicence": "Licence non renseignée dans votre profil",
+          "noEnglish": "Niveau d'anglais non renseigné",
+          "noAuthority": "Autorité de licence non renseignée",
+          "openingPic": "Une partie vient de reports papier, qui peuvent inclure du PICUS",
+          "unclassified": "Une partie de vos heures n'est pas classée (type inconnu ou report sans type)",
+          "workRightsNotDeclared": "Indiquez vos droits de travail pour l'évaluer",
+          "workRightsCountry": "Le droit de travailler dépend du pays, pas de la région",
+          "visaSponsored": "Visa parrainé par l'employeur",
+          "familyRating": "Qualification sur un type de la même famille : à confirmer",
+          "authorityFromCountry": "Déduit du pays de l'offre"
+        }
       }
     },
     "cv": {

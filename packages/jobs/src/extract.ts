@@ -1,5 +1,5 @@
 import { detectAircraft } from "./aircraft";
-import type { LicenceLevel, Position, Requirements, Salary } from "./types";
+import type { HourKey, LicenceLevel, PicQualifier, Position, Requirements, Salary } from "./types";
 
 /**
  * Turns a posting into structured facts (position, aircraft, required experience, salary).
@@ -31,15 +31,53 @@ export function isPilotJob(title: string): boolean {
     !/\b(drone|uav|rpas|ground|dispatcher|cabin|flight attendant|steward|engineer|technician|mechanic|recruit(er|ment)|assistant|coordinator|scheduler|planner|trainer \(ground\))\b/i.test(title);
 }
 
-function licence(text: string): { licence?: LicenceLevel; authority?: string } {
-  const out: { licence?: LicenceLevel; authority?: string } = {};
-  if (/\bfrozen ?ATPL\b|\bATPL ?(?:theory|theoretical|th[eé]orique|credits?)\b|\bATPL\(?\s?A?\)? frozen\b/i.test(text)) out.licence = "FATPL";
-  else if (/\bATPL\b/i.test(text)) out.licence = "ATPL";
-  else if (/\bMPL\b/.test(text)) out.licence = "MPL";
-  else if (/\bCPL\b/i.test(text)) out.licence = "CPL";
+const LEVELS: [RegExp, LicenceLevel][] = [
+  [/\bfrozen ?ATPL\b|\bATPL ?(?:theory|theoretical|th[eé]orique|credits?)\b|\bATPL\(?\s?A?\)? frozen\b/i, "FATPL"],
+  [/\bATPL\b/i, "ATPL"],
+  [/\bMPL\b/, "MPL"],
+  [/\bCPL\b/i, "CPL"],
+];
+const LEVEL_RANK: Record<LicenceLevel, number> = { PPL: 0, CPL: 1, MPL: 2, FATPL: 2, ATPL: 3 };
+
+function licence(text: string): Pick<Requirements, "licence" | "licenceAlternatives" | "authority" | "evidence"> {
+  const out: Pick<Requirements, "licence" | "licenceAlternatives" | "authority" | "evidence"> = {};
+  // a frozen ATPL is written "ATPL", so the plain ATPL only counts where it is not part of a frozen ATPL
+  const plain = text.replace(LEVELS[0]![0], " ");
+  const found = (re: RegExp, l: LicenceLevel) => (l === "ATPL" ? re.test(plain) : re.test(text));
+  const all = LEVELS.filter(([re, l]) => found(re, l)).map(([, l]) => l);
+  if (all.length) {
+    // "Frozen ATPL or CPL/IR", "ATPL ou CPL", "ATPL oder CPL": any of them is accepted → the lowest is the minimum
+    const alt = all.length > 1 && /\b(?:ATPL|CPL|MPL)\b[^.\n]{0,40}\b(?:or|ou|oder|\/)\s*(?:a |an |une? )?(?:frozen ?)?(?:ATPL|CPL|MPL)\b/i.test(text);
+    out.licence = alt ? all.reduce((a, b) => (LEVEL_RANK[b] < LEVEL_RANK[a] ? b : a)) : all[0]!;
+    if (alt) out.licenceAlternatives = all;
+    const at = text.search(/\b(?:frozen ?)?(?:ATPL|CPL|MPL)\b/i);
+    if (at >= 0) out.evidence = { licence: snippet(text, at) };
+  }
   const auth = text.match(/\b(EASA|FAA|UK CAA|CAA|TCCA|CASA|GCAA|DGAC)\b/i);
   if (auth) out.authority = auth[1]!.toUpperCase();
   return out;
+}
+
+/** The sentence or bullet around a position, trimmed to 140 characters. */
+function snippet(text: string, at: number): string {
+  const start = Math.max(text.lastIndexOf("\n", at), text.lastIndexOf(". ", at) >= 0 ? text.lastIndexOf(". ", at) + 1 : -1, at - 90) + 1;
+  const ends = [text.indexOf("\n", at), text.indexOf(". ", at)].filter((i) => i >= 0);
+  const end = Math.min(ends.length ? Math.min(...ends) : text.length, at + 110);
+  return text.slice(start, end).replace(/^[\s•\-–*]+/, "").trim().slice(0, 140);
+}
+
+const PREFERRED = /\b(preferred|preferable|desirable|desired|an? (?:advantage|asset|plus)|advantageous|ideally|nice to have|would be (?:a )?(?:plus|beneficial)|souhait[ée]e?s?|appr[ée]ci[ée]e?s?|serait un (?:plus|atout)|un atout|wünschenswert|von vorteil|idealerweise)\b/i;
+
+function picQualifier(near: string): PicQualifier | undefined {
+  const jet = /\bjets?\b/.test(near);
+  const tp = /turbo-?props?|turbopropulseur/.test(near);
+  const turbine = /\bturbines?\b/.test(near);
+  const me = /multi[- ]?engines?|\bme\b|\bmep\b|multimoteurs?|bimoteurs?|mehrmotorig/.test(near);
+  if (jet && tp) return me ? "jetOrMeTurboprop" : "turbine";
+  if (jet) return "jet";
+  if (turbine || tp) return "turbine";
+  if (me) return "multiEngine";
+  return undefined;
 }
 
 /**
@@ -48,39 +86,56 @@ function licence(text: string): { licence?: LicenceLevel; authority?: string } {
  */
 function hours(text: string): Partial<Requirements> {
   const out: Partial<Requirements> = {};
+  const evidence: NonNullable<Requirements["evidence"]> = {};
+  const preferred: HourKey[] = [];
   const re = /(\d{1,2}[ ,.’']?\d{3}|\d{2,5})\s*\+?\s*(?:(?:total|flight|flying|de vol|logged)\s+){0,2}(?:h\b|hrs?\b|hours?\b|heures?\b|hdv\b|flugstunden|stunden|std\.?)/gi;
   let m: RegExpExecArray | null;
+  const set = (k: HourKey, n: number, at: number) => {
+    if (out[k] !== undefined) return false;
+    out[k] = n;
+    evidence[k] = snippet(text, at);
+    if (PREFERRED.test(evidence[k]!)) preferred.push(k);
+    return true;
+  };
   while ((m = re.exec(text))) {
     const n = num(m[1]!);
     if (!Number.isFinite(n) || n < 50 || n > 30000) continue;
     const before = text.slice(Math.max(0, m.index - 70), m.index).toLowerCase();
     // context stops at the next figure or clause break, so "2,000 h total, including 1,000 on jet" stays two facts
-    const after = text.slice(m.index + m[0].length, m.index + m[0].length + 50).toLowerCase().split(/[\d,;•\n]|including|dont|davon|of which/)[0] ?? "";
+    const after = text.slice(m.index + m[0].length, m.index + m[0].length + 60).toLowerCase().split(/[\d,;•\n]|including|dont|davon|of which/)[0] ?? "";
     const near = `${before} ${after}`;
-    const set = (k: keyof Requirements) => {
-      if ((out as Record<string, unknown>)[k] === undefined) (out as Record<string, number>)[k] = n;
-    };
-    if (/\b(pic|command|commandant|cdb|captain|p1)\b/.test(after) || /\b(pic|in command|as captain|als kapit)/.test(before.slice(-30))) set("picHours");
-    else if (/\bon type\b|sur type|auf (dem )?muster|on the type|on (a|the)? ?(a3[2-5]0|b7\d7|atr|q400|citation|global|falcon|pc-?24)/.test(near)) set("onTypeHours");
-    else if (/\bjet\b/.test(after)) set("jetHours");
-    else if (/turbine|turbo/.test(after)) set("turbineHours");
-    else if (/multi[- ]?(pilot|crew)|\bmcc\b|multi[- ]?engine|\bmep\b|\bme\b/.test(after)) set("multiPilotHours");
-    else set("totalHours");
+    if (/\b(pic|command|commandant|cdb|captain|p1)\b/.test(after) || /\b(pic|in command|as captain|als kapit)/.test(before.slice(-30))) {
+      if (set("picHours", n, m.index)) {
+        const q = picQualifier(`${before.slice(-30)} ${after}`);
+        if (q) out.picQualifier = q;
+      }
+    } else if (/\bon type\b|sur type|auf (dem )?muster|on the type|on (a|the)? ?(a3[2-5]0|b7\d7|atr|q400|citation|global|falcon|pc-?24)/.test(near)) set("onTypeHours", n, m.index);
+    else if (/\bjet\b/.test(after)) set("jetHours", n, m.index);
+    else if (/turbine|turbo/.test(after)) set("turbineHours", n, m.index);
+    else if (/multi[- ]?(pilot|crew)|\bmcc\b/.test(after)) set("multiPilotHours", n, m.index);
+    // multi-engine hours are not multi-pilot hours: not read rather than read wrong
+    else if (/multi[- ]?engine|\bmep\b|\bme\b/.test(after)) continue;
+    else set("totalHours", n, m.index);
   }
   // "including 1,000 on jet aircraft" — a figure with no "h" right after it
-  const incl = text.match(/including\s+(\d[\d,. ]{2,6})\s+(?:hours?\s+)?on\s+(jet|turbine|type|multi)/i);
+  const incl = /including\s+(\d[\d,. ]{2,6})\s+(?:hours?\s+)?on\s+(jet|turbine|type|multi)/i.exec(text);
   if (incl) {
     const n = num(incl[1]!);
     const k = incl[2]!.toLowerCase();
-    const key: keyof Requirements = k === "jet" ? "jetHours" : k === "turbine" ? "turbineHours" : k === "type" ? "onTypeHours" : "multiPilotHours";
-    if ((out as Record<string, unknown>)[key] === undefined && Number.isFinite(n)) (out as Record<string, number>)[key] = n;
+    const key: HourKey = k === "jet" ? "jetHours" : k === "turbine" ? "turbineHours" : k === "type" ? "onTypeHours" : "multiPilotHours";
+    if (Number.isFinite(n)) set(key, n, incl.index);
   }
+  if (Object.keys(evidence).length) out.evidence = evidence;
+  if (preferred.length) out.preferred = preferred;
   return out;
 }
 
 export function extractRequirements(title: string, text: string): Requirements {
   const all = `${title}\n${text}`;
-  const req: Requirements = { ...licence(all), ...hours(text) };
+  const lic = licence(all);
+  const h = hours(text);
+  const req: Requirements = { ...lic, ...h };
+  if (lic.evidence || h.evidence) req.evidence = { ...lic.evidence, ...h.evidence };
   const provided = /\b(type rating (?:is )?(?:provided|offered|sponsored|financed|paid|included)|we (?:will )?(?:provide|offer|finance|sponsor) (?:the |a |your )?type rating|non[- ]type[- ]rated|non[- ]?TR\b|qualification de type (?:offerte|financ[ée]e|prise en charge)|type rating (?:will be|can be) (?:provided|financed|arranged))/i.test(all);
   const required = /\b(type rated|current on type|valid type rating|type rating(?: on [^.\n]{0,30})?(?: is)? (?:required|mandatory|essential)|type rating:|tr (?:required|valid)|qualifi[ée] sur|qualification de type (?:valide|requise|exig[ée]e)|g[üu]ltige(?:s)? (?:type rating|musterberechtigung))/i.test(all);
   if (provided) req.typeRatingProvided = true;

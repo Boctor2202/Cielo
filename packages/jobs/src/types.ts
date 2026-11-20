@@ -36,8 +36,21 @@ export interface RawPosting {
 export type Position = "CPT" | "FO" | "SO" | "CADET" | "FI" | "OTHER";
 export type LicenceLevel = "ATPL" | "FATPL" | "MPL" | "CPL" | "PPL";
 
+export type HourKey = "totalHours" | "picHours" | "onTypeHours" | "multiPilotHours" | "turbineHours" | "jetHours";
+/** What the PIC hours must be on, when the ad says so ("300 h PIC on jet or multi-engine turboprop") */
+export type PicQualifier = "jet" | "jetOrMeTurboprop" | "turbine" | "multiEngine";
+
 export interface Requirements {
+  /** the lowest licence the ad accepts (see licenceAlternatives) */
   licence?: LicenceLevel;
+  /** every licence the ad accepts when it lists alternatives ("Frozen ATPL or CPL/IR") */
+  licenceAlternatives?: LicenceLevel[];
+  /** PIC hours qualified by aircraft kind; absent = PIC on any aircraft */
+  picQualifier?: PicQualifier;
+  /** requirements the ad gives as preferred / an advantage, not mandatory */
+  preferred?: HourKey[];
+  /** short excerpt of the ad each figure was read from (≤ 140 characters), so the pilot can check it */
+  evidence?: Partial<Record<HourKey | "licence", string>>;
   /** EASA / FAA / … when stated */
   authority?: string;
   totalHours?: number;
@@ -104,6 +117,11 @@ export interface PilotProfile {
   multiEngineMin: number;
   turbineMin: number;
   jetMin: number;
+  picTurbineMin?: number;
+  picMultiEngineMin?: number;
+  picJetMin?: number;
+  /** the pilot stated their work rights (otherwise workRegions are only guessed from the licence) */
+  workRegionsDeclared?: boolean;
   /** block minutes per ICAO type */
   typeMin: Record<string, number>;
   /** ICAO types the pilot holds a rating on (from licences/ratings or logged on type) */

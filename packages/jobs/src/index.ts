@@ -7,3 +7,4 @@ export * from "./fetchers";
 export * from "./collect";
 export * from "./regions";
 export * from "./adzuna";
+export * from "./evaluate";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildProfile, countryFrom, regionOf, authorityOf, detectAircraft, detectPosition, extractRequirements, extractSalary, isPilotJob, matchJob, toJob, toText, type Job, type PilotProfile } from "../src";
+import { evaluateJob, buildProfile, countryFrom, regionOf, authorityOf, detectAircraft, detectPosition, extractRequirements, extractSalary, isPilotJob, matchJob, toJob, toText, type Job, type PilotProfile } from "../src";
 
 // Synthetic ads written for the tests (no real posting text is stored anywhere).
 const ADS = {
@@ -29,7 +29,8 @@ describe("extraction", () => {
   it("reads required experience", () => {
     expect(extractRequirements(ADS.globalFO.title, ADS.globalFO.text)).toMatchObject({ licence: "ATPL", authority: "EASA", totalHours: 2000, jetHours: 1000, typeRatingRequired: true, englishLevel: 5 });
     expect(extractRequirements(ADS.a320Cpt.title, ADS.a320Cpt.text)).toMatchObject({ licence: "ATPL", totalHours: 4000, picHours: 1500, typeRatingRequired: true });
-    expect(extractRequirements(ADS.cadet.title, ADS.cadet.text)).toMatchObject({ licence: "FATPL", totalHours: 200, typeRatingProvided: true });
+    // "Frozen ATPL or CPL/IR": either is accepted, so the minimum is the CPL
+    expect(extractRequirements(ADS.cadet.title, ADS.cadet.text)).toMatchObject({ licence: "CPL", licenceAlternatives: ["FATPL", "CPL"], totalHours: 200, typeRatingProvided: true });
     expect(extractRequirements(ADS.cadet.title, ADS.cadet.text).typeRatingRequired).toBeUndefined();
     expect(extractRequirements(ADS.de.title, ADS.de.text)).toMatchObject({ licence: "ATPL", totalHours: 3000, picHours: 500 });
   });
@@ -137,5 +138,60 @@ describe("instructor posts", () => {
     const me = { totalMin: 600000, picMin: 300000, multiPilotMin: 500000, multiEngineMin: 500000, turbineMin: 500000, jetMin: 500000, typeMin: {}, ratedTypes: [], authorities: ["EASA"], workRegions: ["EU"] } as never;
     expect(matchJob(job, me).score).toBeLessThanOrEqual(20);
     expect(matchJob(job, { ...(me as object), instructor: true, examiner: true } as never).score).toBeGreaterThan(50);
+  });
+});
+
+describe("criteria (met / unmet / to verify)", () => {
+  const src = { company: "Platoon", ats: "recruitee" as const, token: "t", segment: "business" as const, country: "DE" };
+  const pc24 = (text: string) => toJob({ id: "pc24", company: "Platoon", title: "Captain Pilatus PC-24", url: "u", text }, src);
+  const ENG: Record<string, string> = { C68A: "jet", PC12: "turboprop", BE20: "turboprop", A320: "jet", C172: "piston" };
+  const lic = [{ code: "ATPL(A)", kind: "licence", authority: "LBA" }];
+  const fl = (type: string, h: number, x: Record<string, number> = {}) => ({ totalMin: h * 60, picMin: 0, picusMin: 0, multiPilotMin: 0, singlePilotMeMin: 0, aircraftTypeIcao: type, isFstd: false, ...x });
+  const pic = (e: ReturnType<typeof evaluateJob>) => e.criteria.find((c) => c.code === "picHours")!;
+
+  it("reads a qualified PIC requirement with its source excerpt", () => {
+    for (const text of ["Minimum 300 hours PIC on jet or multi-engine turboprop aircraft.", "• 300 h PIC jet/turboprop multi-engine"]) {
+      const r = pc24(text).requirements;
+      expect(r.picHours).toBe(300);
+      expect(r.picQualifier).toBe("jetOrMeTurboprop");
+      expect(r.evidence?.picHours).toContain("300");
+    }
+  });
+  it("PC-24: PICUS and single-engine turboprop PIC do not count, multi-engine turboprop PIC does", () => {
+    const job = pc24("ATPL. Minimum 300 hours PIC on jet or multi-engine turboprop aircraft.");
+    // 250 h PIC on PC-12 (single engine), 400 h PICUS on A320: not met
+    const a = buildProfile([fl("PC12", 250, { picMin: 250 * 60 }), fl("A320", 400, { picusMin: 400 * 60, multiPilotMin: 400 * 60 })], [], lic, (i) => ENG[i], () => []);
+    expect(a.picMin).toBe(250 * 60);
+    expect(pic(evaluateJob(job, a)).verdict).toBe("unmet");
+    // 320 h PIC on a King Air in the ME column: met
+    const b = buildProfile([fl("BE20", 320, { picMin: 320 * 60, singlePilotMeMin: 320 * 60 })], [], lic, (i) => ENG[i], () => []);
+    expect(pic(evaluateJob(job, b)).verdict).toBe("met");
+  });
+  it("carry-forwards without type, unknown engines, paper PIC → to verify, never met", () => {
+    const job = pc24("Minimum 300 hours PIC on jet or multi-engine turboprop aircraft.");
+    const opening = [{ totalMin: 500 * 60, picMin: 400 * 60, multiPilotMin: 0, singlePilotMeMin: 500 * 60 }];
+    const p = buildProfile([fl("C68A", 100, { picMin: 100 * 60, multiPilotMin: 100 * 60 })], opening, lic, (i) => ENG[i], () => []);
+    expect(pic(evaluateJob(job, p))).toMatchObject({ verdict: "unknown", reason: "unclassified" });
+    const plain = buildProfile([], [{ totalMin: 2000 * 60, picMin: 1000 * 60, multiPilotMin: 0, singlePilotMeMin: 0 }], lic, (i) => ENG[i], () => []);
+    expect(pic(evaluateJob(pc24("500 hours PIC."), plain))).toMatchObject({ verdict: "unknown", reason: "openingPic" });
+  });
+  it("preferred requirements are not blockers", () => {
+    const job = pc24("2,000 hours total. 500 hours on type would be an advantage.");
+    expect(job.requirements.preferred).toEqual(["onTypeHours"]);
+    const p = buildProfile([fl("C68A", 2500, { picMin: 0, multiPilotMin: 2500 * 60 })], [], lic, (i) => ENG[i], () => []);
+    const e = evaluateJob(job, p);
+    expect(e.criteria.find((c) => c.code === "onTypeHours")).toMatchObject({ verdict: "unmet", mandatory: false });
+    expect(e.blockers).toHaveLength(0);
+  });
+  it("work rights: undeclared → to verify; region-wide only for EU/UK/US/CA", () => {
+    const p = buildProfile([fl("C68A", 2500)], [], lic, (i) => ENG[i], () => []);
+    expect(evaluateJob(pc24("ATPL"), p).criteria.find((c) => c.code === "workRights")).toMatchObject({ verdict: "unknown", reason: "workRightsNotDeclared" });
+    const declared = buildProfile([fl("C68A", 2500)], [], lic, (i) => ENG[i], () => [], { workRegions: ["EU", "ME"] });
+    expect(evaluateJob(pc24("ATPL"), declared).criteria.find((c) => c.code === "workRights")!.verdict).toBe("met");
+    const uae = toJob({ id: "ae", company: "T", title: "Captain A320", url: "u", text: "ATPL" }, { ...src, country: "AE" });
+    expect(evaluateJob(uae, declared).criteria.find((c) => c.code === "workRights")).toMatchObject({ verdict: "unknown", reason: "workRightsCountry" });
+  });
+  it("multi-engine hours are not read as multi-pilot hours", () => {
+    expect(pc24("500 hours multi-engine").requirements.multiPilotHours).toBeUndefined();
   });
 });

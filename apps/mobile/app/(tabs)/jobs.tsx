@@ -4,7 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { setLetterJob } from "../../src/letterJob";
-import { buildProfile, detectAircraft, matchJob, type Job, type Position } from "@cielo/jobs";
+import { buildProfile, detectAircraft, matchJob, type Evaluation, type Job, type Position } from "@cielo/jobs";
 import { Card, Chip, Row, Screen, Segmented, ToggleRow, Txt } from "../../src/components/ui";
 import { Requires } from "../../src/components/Access";
 import { api } from "../../src/api";
@@ -105,11 +105,7 @@ function Jobs() {
               </View>
             ) : null}
           </Row>
-          {hasLogbook && match.gaps.length ? (
-            <Txt variant="small" color={c.caution}>
-              {t("jobs.gaps")} : {match.gaps.map((g) => `${t(`jobs.req.${g.code}` as I18nKey)} ${g.required}${typeof g.have === "number" ? ` (${g.have})` : ""}`).join(" · ")}
-            </Txt>
-          ) : null}
+          {hasLogbook ? <CriteriaSummary evaluation={match.evaluation} /> : null}
           {job.source === "adzuna" ? (
             <Pressable onPress={() => void WebBrowser.openBrowserAsync("https://www.adzuna.com")}>
               <Txt variant="small" style={{ textDecorationLine: "underline" }}>Jobs by Adzuna</Txt>
@@ -141,5 +137,34 @@ function Jobs() {
         </Card>
       ))}
     </Screen>
+  );
+}
+
+/** The ad's criteria: how many are met, not met, to verify (never counted as met), then the ones that are not met. */
+function CriteriaSummary({ evaluation }: { evaluation: Evaluation }) {
+  const { t } = useApp();
+  const c = useTheme();
+  if (!evaluation.criteria.length) return <Txt variant="small">{t("jobs.crit.none")}</Txt>;
+  const open = evaluation.criteria.filter((x) => x.verdict !== "met");
+  const label = (x: Evaluation["criteria"][number]) => {
+    const hours = x.code.endsWith("Hours") && typeof x.required === "number";
+    const q = x.qualifier ? ` ${t(`jobs.crit.q.${x.qualifier}` as I18nKey)}` : "";
+    const pref = x.mandatory ? "" : ` (${t("jobs.crit.preferred")})`;
+    const have = x.have !== undefined ? ` · ${t("jobs.crit.you")} ${x.have}${hours ? " h" : ""}` : "";
+    return `${t(`jobs.req.${x.code}` as I18nKey)}${q}${pref} ${x.required}${hours ? " h" : ""}${have}`;
+  };
+  return (
+    <View style={{ gap: 2 }}>
+      <Txt variant="small" style={{ fontWeight: "700" }}>
+        {t("jobs.crit.summary", { met: evaluation.met, unmet: evaluation.unmet, unknown: evaluation.unknown })}
+      </Txt>
+      {open.slice(0, 4).map((x, i) => (
+        <Txt key={`${x.code}-${i}`} variant="small" color={x.verdict === "unmet" ? c.caution : c.accent}>
+          {x.verdict === "unmet" ? "✕ " : "? "}
+          {label(x)}
+          {x.reason ? ` — ${t(`jobs.crit.why.${x.reason}` as I18nKey)}` : ""}
+        </Txt>
+      ))}
+    </View>
   );
 }

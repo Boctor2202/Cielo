@@ -1461,6 +1461,36 @@
       },
       "regionFilter": {
         "title": "Regions shown"
+      },
+      "crit": {
+        "title": "Criteria stated in the ad",
+        "summary": "{met} met · {unmet} not met · {unknown} to verify",
+        "none": "The ad states no criteria Geardown can read: check it on the employer's site.",
+        "met": "Met",
+        "unmet": "Not met",
+        "unknown": "To verify",
+        "preferred": "preferred",
+        "gap": "{value} short",
+        "source": "From the ad",
+        "scoreNote": "The % is only an indicator: rely on the criteria above first.",
+        "q": {
+          "jet": "on jet",
+          "jetOrMeTurboprop": "on jet or multi-engine turboprop",
+          "turbine": "on turbine",
+          "multiEngine": "on multi-engine"
+        },
+        "why": {
+          "noLicence": "No licence in your profile",
+          "noEnglish": "English level not entered",
+          "noAuthority": "Licence authority not entered",
+          "openingPic": "Part of it comes from paper carry-forwards, which may include PICUS",
+          "unclassified": "Some of your hours are not classified (unknown type or carry-forward without type)",
+          "workRightsNotDeclared": "Enter your work rights to evaluate this",
+          "workRightsCountry": "The right to work depends on the country, not the region",
+          "visaSponsored": "Visa sponsored by the employer",
+          "familyRating": "Rated on a type of the same family: to confirm",
+          "authorityFromCountry": "Inferred from the job's country"
+        }
       }
     },
     "cv": {

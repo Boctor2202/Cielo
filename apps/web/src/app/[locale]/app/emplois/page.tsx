@@ -1,10 +1,10 @@
 "use client";
 
-import { Briefcase, Check, ExternalLink, Lock, MapPin, Plane, X } from "lucide-react";
+import { Briefcase, Check, ExternalLink, HelpCircle, Lock, MapPin, Plane, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Roll } from "@/components/ui/Roll";
 import { useLocale, useTranslations } from "next-intl";
-import { buildProfile, defaultWorkRegions, detectAircraft, matchJob, REGIONS, authorityFromText, type GapCode, type Job, type Match, type Position, type RegionId } from "@cielo/jobs";
+import { buildProfile, defaultWorkRegions, detectAircraft, matchJob, REGIONS, authorityFromText, type Evaluation, type GapCode, type Job, type Match, type Position, type RegionId } from "@cielo/jobs";
 
 import { Badge, Card, Empty, PageTitle, Segmented, Toggle, type Level } from "@/components/app/ui";
 import { useFlights, useFormatDate, usePilot, useTable, useTypes } from "@/lib/hooks";
@@ -217,7 +217,7 @@ export default function JobsPage() {
       ) : (
         <ul className="space-y-3">
           {rows.map(({ job, match }, i) => (
-            <JobCard key={`${job.id}-${i}`} job={job} match={match} showMatch={hasLogbook} profileHours={{ totalHours: profile.totalMin, picHours: profile.picMin, multiPilotHours: profile.multiPilotMin, jetHours: profile.jetMin, turbineHours: profile.turbineMin }} />
+            <JobCard key={`${job.id}-${i}`} job={job} match={match} showMatch={hasLogbook} />
           ))}
         </ul>
       )}
@@ -234,20 +234,19 @@ export default function JobsPage() {
   );
 }
 
-function JobCard({ job, match, showMatch, profileHours }: { job: Job; match: Match; showMatch: boolean; profileHours: Partial<Record<GapCode, number>> }) {
+function JobCard({ job, match, showMatch }: { job: Job; match: Match; showMatch: boolean }) {
   const t = useTranslations("app.jobs");
   const locale = useLocale();
   const fd = useFormatDate();
   const nf = new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-GB");
   const r = job.requirements;
   const level = levelFor(match.score);
-  const gapCodes = new Set(match.gaps.map((g) => g.code));
 
-  const reqs: { code: GapCode; value: string; you?: string }[] = [];
-  if (r.licence) reqs.push({ code: "licence", value: `${r.authority ? r.authority + " " : ""}${r.licence === "FATPL" ? "ATPL (frozen)" : r.licence}` });
+  const reqs: { code: GapCode; value: string }[] = [];
+  if (r.licence) reqs.push({ code: "licence", value: `${r.authority ? r.authority + " " : ""}${(r.licenceAlternatives ?? [r.licence]).map((l) => (l === "FATPL" ? "ATPL (frozen)" : l)).join(" / ")}` });
   for (const k of ["totalHours", "picHours", "onTypeHours", "multiPilotHours", "jetHours", "turbineHours"] as const) {
     const v = r[k];
-    if (v) reqs.push({ code: k, value: `${nf.format(v)} h`, you: profileHours[k] !== undefined ? `${nf.format(Math.round(profileHours[k]! / 60))} h` : undefined });
+    if (v) reqs.push({ code: k, value: `${nf.format(v)} h` });
   }
   if (r.englishLevel) reqs.push({ code: "english", value: `≥ ${r.englishLevel}` });
 
@@ -298,31 +297,31 @@ function JobCard({ job, match, showMatch, profileHours }: { job: Job; match: Mat
             </span>
           ))}
           {showMatch && match.onType && <Badge level="ok">{t("onType")}</Badge>}
-          {!match.canWork && <Badge level="warning">{t("work.noRights", { region: t(`regions.${job.region}`) })}</Badge>}
-          {match.canWork && !match.licenceValid && <Badge level="caution">{t("work.licenceNeeded", { authority: job.authority })}</Badge>}
+          {showMatch && match.evaluation.criteria.some((c) => c.code === "workRights" && c.verdict === "unmet") && <Badge level="warning">{t("work.noRights", { region: t(`regions.${job.region}`) })}</Badge>}
+          {showMatch && match.evaluation.criteria.some((c) => c.code === "licenceAuthority" && c.verdict === "unmet") && <Badge level="caution">{t("work.licenceNeeded", { authority: job.authority })}</Badge>}
           {r.visaSponsored && <Badge level="info">{t("work.visa")}</Badge>}
           {r.typeRatingRequired && <Badge level={showMatch && !match.onType ? "caution" : "neutral"}>{t("tr.required")}</Badge>}
           {r.typeRatingProvided && <Badge level="info">{t("tr.provided")}</Badge>}
         </div>
 
-        {reqs.length > 0 && (
-          <ul className="mt-3 grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
-            {reqs.map((q) => {
-              const ok = showMatch && !gapCodes.has(q.code);
-              return (
+        {showMatch ? (
+          <Criteria evaluation={match.evaluation} />
+        ) : (
+          reqs.length > 0 && (
+            <ul className="mt-3 grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+              {reqs.map((q) => (
                 <li key={q.code} className="flex items-center gap-2">
-                  {showMatch ? (ok ? <Check size={15} className="shrink-0 text-success" aria-label="OK" /> : <X size={15} className="shrink-0 text-caution" aria-label="—" />) : <span className="h-1.5 w-1.5 rounded-full bg-muted" aria-hidden />}
+                  <span className="h-1.5 w-1.5 rounded-full bg-muted" aria-hidden />
                   <span className="text-muted">{t(`req.${q.code}`)}</span>
                   <span className="num font-semibold">{q.value}</span>
-                  {showMatch && q.you && !ok && <span className="num text-xs text-muted">({t("you", { value: q.you })})</span>}
                 </li>
-              );
-            })}
-          </ul>
+              ))}
+            </ul>
+          )
         )}
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          {showMatch && match.confidence < 0.5 ? <p className="text-xs text-muted">{t("lowConfidence")}</p> : <span />}
+          {showMatch ? <p className="text-xs text-muted">{match.confidence < 0.5 ? `${t("lowConfidence")} · ` : ""}{t("crit.scoreNote")}</p> : <span />}
           <span className="flex items-center gap-3">
             {/* Adzuna's API terms: offers it provides are credited, with a link to Adzuna */}
             {job.source === "adzuna" && (
@@ -335,5 +334,56 @@ function JobCard({ job, match, showMatch, profileHours }: { job: Job; match: Mat
         </div>
       </div>
     </li>
+  );
+}
+
+/** The ad's criteria one by one: met, not met, or to verify (never counted as met), with the gap and the excerpt read. */
+function Criteria({ evaluation }: { evaluation: Evaluation }) {
+  const t = useTranslations("app.jobs");
+  const locale = useLocale();
+  const nf = new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-GB");
+  if (!evaluation.criteria.length) return <p className="mt-3 text-sm text-muted">{t("crit.none")}</p>;
+  const hoursCode = (c: string) => c.endsWith("Hours");
+  const order = { unmet: 0, unknown: 1, met: 2 } as const;
+  const list = [...evaluation.criteria].sort((a, b) => order[a.verdict] - order[b.verdict]);
+  return (
+    <div className="mt-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+        {t("crit.title")} · <span className="normal-case">{t("crit.summary", { met: evaluation.met, unmet: evaluation.unmet, unknown: evaluation.unknown })}</span>
+      </p>
+      <ul className="mt-2 grid gap-1.5 text-sm">
+        {list.map((c, i) => {
+          const hours = hoursCode(c.code) && typeof c.required === "number";
+          const short = hours && typeof c.have === "number" && c.verdict === "unmet" ? (c.required as number) - c.have : 0;
+          return (
+            <li key={`${c.code}-${i}`} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              {c.verdict === "met" ? (
+                <Check size={15} className="shrink-0 self-center text-success" aria-label={t("crit.met")} />
+              ) : c.verdict === "unmet" ? (
+                <X size={15} className="shrink-0 self-center text-caution" aria-label={t("crit.unmet")} />
+              ) : (
+                <HelpCircle size={15} className="shrink-0 self-center text-accent" aria-label={t("crit.unknown")} />
+              )}
+              <span className="text-muted">
+                {t(`req.${c.code}`)}
+                {c.qualifier ? ` ${t(`crit.q.${c.qualifier}`)}` : ""}
+                {!c.mandatory ? ` (${t("crit.preferred")})` : ""}
+              </span>
+              <span className="num font-semibold">{hours ? `${nf.format(c.required as number)} h` : String(c.required)}</span>
+              {c.have !== undefined && c.verdict !== "met" && (
+                <span className="num text-xs text-muted">({t("you", { value: hours ? `${nf.format(c.have as number)} h` : String(c.have) })})</span>
+              )}
+              {short > 0 && <span className="num text-xs font-semibold text-caution">{t("crit.gap", { value: `${nf.format(short)} h` })}</span>}
+              {c.reason && <span className="w-full pl-6 text-xs text-muted">{t(`crit.why.${c.reason}`)}</span>}
+              {c.evidence && (
+                <span className="w-full pl-6 text-xs italic text-muted">
+                  {t("crit.source")} : « {c.evidence} »
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

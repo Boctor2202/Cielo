@@ -42,6 +42,10 @@ export interface Experience {
   picMeTurbopropMin: number;
   /** PIC on jet or on multi-engine turboprop (the "300 h PIC jet / ME turboprop" requirement) */
   picJetOrMeTurbopropMin: number;
+  /** PIC on a turbine type (jet, turboprop, turboshaft) */
+  picTurbineMin: number;
+  /** PIC on a multi-engine column (single-pilot ME or multi-pilot) */
+  picMultiEngineMin: number;
   byType: Record<string, { totalMin: number; picMin: number; picusMin: number; sicMin: number }>;
   /** what could not be classified: these keep figures honest instead of guessing */
   unknown: {
@@ -64,7 +68,7 @@ export function experience(flights: Partial<FlightLike>[], opening: Partial<Open
   const x: Experience = {
     totalMin: 0, picMin: 0, picusMin: 0, sicMin: 0, dualMin: 0, instructorMin: 0, examinerMin: 0, simMin: 0,
     multiPilotMin: 0, singlePilotSeMin: 0, singlePilotMeMin: 0, multiEngineMin: 0, turbineMin: 0, jetMin: 0,
-    turbopropMin: 0, picJetMin: 0, picMeTurbopropMin: 0, picJetOrMeTurbopropMin: 0, byType: {},
+    turbopropMin: 0, picJetMin: 0, picMeTurbopropMin: 0, picJetOrMeTurbopropMin: 0, picTurbineMin: 0, picMultiEngineMin: 0, byType: {},
     unknown: { engineMin: 0, openingNoTypeMin: 0, openingPicMin: 0 },
   };
   const row = (icao: string) => (x.byType[icao] ??= { totalMin: 0, picMin: 0, picusMin: 0, sicMin: 0 });
@@ -83,6 +87,8 @@ export function experience(flights: Partial<FlightLike>[], opening: Partial<Open
     x.picJetMin += jet;
     x.picMeTurbopropMin += tp;
     x.picJetOrMeTurbopropMin += jet + tp;
+    if (turbine(e)) x.picTurbineMin += picMin;
+    x.picMultiEngineMin += Math.min(picMin, meMin);
   };
 
   for (const f of flights) {
