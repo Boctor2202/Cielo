@@ -1,4 +1,10 @@
 [
+  { "file": { "fr": "dashboard-en.jpg" },
+    "fr": { "title": "Votre carnet de vol, <em>toujours à jour</em>.", "text": "Heures, prochains vols, expérience récente : l'essentiel en un coup d'œil." },
+    "en": { "title": "Your logbook, <em>always up to date</em>.", "text": "Hours, next duties and recency: everything that matters at a glance." } },
+  { "file": { "fr": "badges-en.jpg" },
+    "fr": { "title": "Chaque heure de vol <em>compte</em>.", "text": "Aéroports, pays, atterrissages de nuit : débloquez vos distinctions." },
+    "en": { "title": "Every hour <em>counts</em>.", "text": "Airports, countries, night landings: unlock your distinctions." } },
   { "file": { "fr": "subscription-fr.jpg" },
     "fr": { "title": "Essayez <em>7 jours</em>, gratuitement.", "text": "Basic pour le carnet, Max pour tout Geardown. Au mois ou à l'année, résiliable à tout moment." },
     "en": { "title": "Try it <em>free</em> for 7 days.", "text": "Basic for the logbook, Max for all of Geardown. Monthly or yearly, cancel anytime." } }
