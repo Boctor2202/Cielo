@@ -11,7 +11,7 @@
     "ios": {
       "bundleIdentifier": "app.geardown.logbook",
       "buildNumber": "1",
-      "supportsTablet": true,
+      "supportsTablet": false,
       "usesAppleSignIn": true,
       "config": {
         "usesNonExemptEncryption": false
