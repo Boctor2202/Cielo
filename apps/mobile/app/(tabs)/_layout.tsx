@@ -45,18 +45,6 @@ export default function TabsLayout() {
       </Pressable>
     </View>
   );
-  // the logbook adds the import (paper pages, airline PDF, CSV, e-mail): one entry, in sight
-  const logbookRight = () => (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginRight: 14 }}>
-      <Pressable accessibilityRole="button" accessibilityLabel={t("uimp.title")} hitSlop={8} onPress={() => router.push("/import" as never)}>
-        <Ionicons name="download-outline" size={24} color={c.text} />
-      </Pressable>
-      <SyncBadge />
-      <Pressable accessibilityRole="button" accessibilityLabel={t("tabs.account")} hitSlop={8} onPress={() => router.navigate("/more")}>
-        <Ionicons name="person-circle-outline" size={28} color={c.text} />
-      </Pressable>
-    </View>
-  );
   const bar = () => <BlurView tint={g.tint} intensity={g.intensity + 20} style={[StyleSheet.absoluteFill, { backgroundColor: g.pane }]} />;
   return (
     <Tabs
@@ -78,7 +66,7 @@ export default function TabsLayout() {
     >
       {/* Home · Logbook · + · Activity · Career; the account (former "More") opens from the avatar, top right */}
       <Tabs.Screen name="index" options={{ title: t("tabs.home"), headerTitle: t("dash.title"), headerLeft: brand, tabBarIcon: icon("speedometer-outline"), headerRight: account }} />
-      <Tabs.Screen name="logbook" options={{ title: t("tabs.logbook"), headerTitle: t("log.title"), headerLeft: brand, tabBarIcon: icon("book-outline"), headerRight: logbookRight }} />
+      <Tabs.Screen name="logbook" options={{ title: t("tabs.logbook"), headerTitle: t("log.title"), headerLeft: brand, tabBarIcon: icon("book-outline"), headerRight: account }} />
       <Tabs.Screen
         name="new"
         options={{

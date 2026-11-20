@@ -169,7 +169,8 @@ export default function Logbook() {
                   { value: "calendar", label: t("cal.calendar") },
                 ]}
               />
-              <Row style={{ paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: glass(c).strong }}>
+              <Row style={{ alignItems: "center" }}>
+              <Row style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: glass(c).strong }}>
                 <Ionicons name="search" size={16} color={c.muted} />
                 <TextInput
                   style={{ flex: 1, color: c.text, ...font.regular, fontSize: 15 }}
@@ -182,6 +183,17 @@ export default function Logbook() {
                   clearButtonMode="while-editing"
                   returnKeyType="search"
                 />
+              </Row>
+              {/* the import (photos, airline PDF, CSV, e-mail): in sight beside the search */}
+              <Pressable
+                onPress={() => (tap(), router.push("/import" as never))}
+                accessibilityRole="button"
+                accessibilityLabel={t("uimp.title")}
+                style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, borderWidth: 1, borderColor: c.accent + "66", backgroundColor: c.accent + "1a" }}
+              >
+                <Ionicons name="download-outline" size={16} color={c.accent} />
+                <Txt style={{ fontWeight: "700", fontSize: 14 }} color={c.accent}>{t("log.import")}</Txt>
+              </Pressable>
               </Row>
               {unassigned > dismissedAt && fOp !== "-" && access.canWrite ? (
                 <Pressable
