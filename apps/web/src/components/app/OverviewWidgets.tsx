@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, Check, GripVertical, Maximize2, Minimize2, Minus, SlidersHorizontal, X } from "lucide-react";
-import React, { useMemo, useState, type ReactNode } from "react";
+import React, { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   FTL_LIMITS,
@@ -233,7 +233,9 @@ export function OverviewWidgets({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Clocks />
+        <div className="flex gap-2">
         {editing && (
           <button type="button" className="btn btn-ghost" onClick={() => setDraft(null)}>
             <X size={15} /> {t("cancel")}
@@ -242,6 +244,7 @@ export function OverviewWidgets({
         <button type="button" className={editing ? "btn btn-primary" : "btn btn-secondary"} onClick={() => (editing ? void save() : setDraft(saved))}>
           {editing ? <Check size={15} /> : <SlidersHorizontal size={15} />} {editing ? t("done") : t("customize")}
         </button>
+        </div>
       </div>
 
       <div className={editing ? "grid gap-4 lg:grid-cols-[1fr_260px]" : ""}>
@@ -307,6 +310,36 @@ export function OverviewWidgets({
           </aside>
         )}
       </div>
+    </div>
+  );
+}
+
+/** The time now in UTC and where the pilot is (the browser's time zone), as on a cockpit clock. */
+function Clocks() {
+  const t = useTranslations("app.dashboard.widgets");
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const id = setInterval(() => setNow(new Date()), 15_000);
+    return () => clearInterval(id);
+  }, []);
+  if (!now) return <span />;
+  const hm = (tz?: string) => new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz }).format(now);
+  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const city = zone?.split("/").pop()?.replace(/_/g, " ");
+  const offsetMin = -now.getTimezoneOffset();
+  const offset = `UTC${offsetMin >= 0 ? "+" : "−"}${Math.floor(Math.abs(offsetMin) / 60)}${Math.abs(offsetMin) % 60 ? `:${String(Math.abs(offsetMin) % 60).padStart(2, "0")}` : ""}`;
+  return (
+    <div className="flex items-center gap-2" aria-live="off">
+      <span className="flex items-baseline gap-2 rounded-xl border border-border bg-surface-2/60 px-3 py-1.5">
+        <span className="mono-label !text-[10px]">UTC</span>
+        <span className="num text-lg font-bold">{hm("UTC")}</span>
+      </span>
+      <span className="flex items-baseline gap-2 rounded-xl border border-border bg-surface-2/60 px-3 py-1.5" title={zone}>
+        <span className="mono-label !text-[10px]">{t("local")}</span>
+        <span className="num text-lg font-bold">{hm()}</span>
+        <span className="text-xs text-muted">{city ? `${city} · ` : ""}{offset}</span>
+      </span>
     </div>
   );
 }

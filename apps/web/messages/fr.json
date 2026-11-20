@@ -541,7 +541,7 @@
         "greet_evening": "Bonsoir {name}"
       },
       "widgets": {
-        "customize": "Personnaliser",
+        "customize": "Personnaliser les widgets",
         "done": "Terminé",
         "cancel": "Annuler",
         "panel": "Widgets",
@@ -572,7 +572,8 @@
         "noLayover": "aucune prévue",
         "jobsValue": "Offres pilote",
         "jobsSub": "selon ton carnet",
-        "cockpitPreview": "Le cockpit complet : temps total, objectif, heures des 12 derniers mois, derniers vols et objectifs."
+        "cockpitPreview": "Le cockpit complet : temps total, objectif, heures des 12 derniers mois, derniers vols et objectifs.",
+        "local": "Locale"
       }
     },
     "logbook": {

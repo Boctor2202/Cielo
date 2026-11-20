@@ -541,7 +541,7 @@
         "greet_evening": "Good evening {name}"
       },
       "widgets": {
-        "customize": "Customise",
+        "customize": "Customise widgets",
         "done": "Done",
         "cancel": "Cancel",
         "panel": "Widgets",
@@ -572,7 +572,8 @@
         "noLayover": "none planned",
         "jobsValue": "Pilot jobs",
         "jobsSub": "matched to your logbook",
-        "cockpitPreview": "The full cockpit: total time, goal, hours of the last 12 months, last flights and goals."
+        "cockpitPreview": "The full cockpit: total time, goal, hours of the last 12 months, last flights and goals.",
+        "local": "Local"
       }
     },
     "logbook": {
