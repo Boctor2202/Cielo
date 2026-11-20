@@ -84,3 +84,18 @@ export function nightPath(at: Date, north: number, south: number): string {
   const edge = decl > 0 ? (north - south).toFixed(1) : "0";
   return `M0 ${edge}L${pts.join("L")}L360 ${edge}Z`;
 }
+
+/** The night side as a closed [lon, lat] ring (for map polygons), between latitudes ±limit. */
+export function nightRing(at: Date, limit = 85): number[][] {
+  const day = (Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()) - Date.UTC(at.getUTCFullYear(), 0, 0)) / 86_400_000;
+  const decl = (-23.44 * Math.cos(((2 * Math.PI) / 365) * (day + 10)) * Math.PI) / 180;
+  const sunLon = (12 - (at.getUTCHours() + at.getUTCMinutes() / 60)) * 15;
+  const rad = Math.PI / 180;
+  const line: number[][] = [];
+  for (let lon = -180; lon <= 180; lon += 2) {
+    const lat = Math.atan(-Math.cos((lon - sunLon) * rad) / Math.tan(decl === 0 ? 1e-6 : decl)) / rad;
+    line.push([lon, Math.max(-limit, Math.min(limit, lat))]);
+  }
+  const pole = decl > 0 ? -limit : limit;
+  return [[-180, pole], ...line, [180, pole], [-180, pole]];
+}

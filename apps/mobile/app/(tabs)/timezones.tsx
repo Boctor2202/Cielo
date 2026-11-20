@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, View, useWindowDimensions } from "react-native";
-import { Image } from "expo-image";
-import Svg, { Circle, G, Path, Text as SvgText } from "react-native-svg";
-import { clockIn, formatOffset, nightPath, timezoneMap, zoneOffsetMin, type TimezoneMapData } from "@cielo/core";
+import { View, useWindowDimensions } from "react-native";
+import MapView, { Marker, Polygon } from "react-native-maps";
+import { clockIn, formatOffset, nightRing, timezoneMap, zoneOffsetMin, type TimezoneMapData } from "@cielo/core";
 import { Card, Row, Screen, Txt } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
 import { useApp } from "../../src/state";
@@ -10,8 +9,19 @@ import { useTheme } from "../../src/theme";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const MAP = timezoneMap(require("@cielo/reference-data/timezones.json") as TimezoneMapData);
-const ASPECT = 2048 / 819;
-const OFFSETS = Array.from({ length: 24 }, (_, i) => i - 11);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ZONES = require("@cielo/reference-data/timezones-polygons.json") as { features: { properties: { offset: number }; geometry: { coordinates: number[][][][] } }[] };
+type LatLng = { latitude: number; longitude: number };
+const ll = (ring: number[][]): LatLng[] => ring.map(([lon, lat]) => ({ latitude: lat!, longitude: lon! }));
+/** one polygon per piece of each offset zone, with its holes, and its colour */
+const POLYGONS = ZONES.features.flatMap((f, fi) =>
+  f.geometry.coordinates.map((poly, pi) => {
+    const h = f.properties.offset / 60;
+    const hue = (((h + 12) / 26) * 300 + 190) % 360;
+    const even = Math.round(h) % 2 === 0;
+    return { key: `${fi}-${pi}`, outer: ll(poly[0]!), holes: poly.slice(1).map(ll), fill: `hsla(${hue.toFixed(0)}, 55%, ${even ? 55 : 45}%, 0.32)` };
+  }),
+);
 
 /** The world's time zones: the map by UTC offset, the night side right now, and the pilot's airports with their local time. */
 export default function Timezones() {
@@ -19,7 +29,7 @@ export default function Timezones() {
   const c = useTheme();
   const { width } = useWindowDimensions();
   const [now, setNow] = useState(() => new Date());
-  const [picked, setPicked] = useState<{ x: number; y: number; zone: string } | null>(null);
+  const [picked, setPicked] = useState<{ lat: number; lon: number; zone: string } | null>(null);
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 15_000);
     return () => clearInterval(id);
@@ -42,13 +52,13 @@ export default function Timezones() {
   } catch {
     local = undefined;
   }
-  const mapW = width - 32;
-  const mapH = mapW / ASPECT;
-  const H = MAP.span;
-  const far = (i: number) => {
-    const p = MAP.xy(places[i]!.lat, places[i]!.lon);
-    return places.slice(0, i).every((b) => Math.hypot(MAP.xy(b.lat, b.lon).x - p.x, MAP.xy(b.lat, b.lon).y - p.y) > 14);
+  const slot = Math.floor(now.getTime() / 300_000);
+  const night = useMemo(() => ll(nightRing(new Date(slot * 300_000))), [slot]);
+  const pick = (lat: number, lon: number) => {
+    const zone = MAP.zoneAt(lat, lon);
+    setPicked(zone ? { lat, lon, zone } : null);
   };
+
 
   return (
     <Screen>
@@ -66,40 +76,31 @@ export default function Timezones() {
         ))}
       </Row>
 
-      <Pressable
-        style={{ width: mapW, height: mapH, borderRadius: 16, overflow: "hidden" }}
-        onPress={(e) => {
-          const x = (e.nativeEvent.locationX / mapW) * 360;
-          const y = (e.nativeEvent.locationY / mapH) * H;
-          const zone = MAP.zoneAt(MAP.north - y, x - 180);
-          setPicked(zone ? { x, y, zone } : null);
-        }}
-      >
-        <Image source={require("../../assets/timezones.png")} style={{ width: mapW, height: mapH }} contentFit="fill" />
-        <Svg width={mapW} height={mapH} viewBox={`0 0 360 ${H}`} preserveAspectRatio="none" style={{ position: "absolute", left: 0, top: 0 }}>
-          <Path d={MAP.land} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={0.3} />
-          <Path d={nightPath(now, MAP.north, MAP.south)} fill="rgba(2,6,23,0.42)" />
-          {OFFSETS.filter((o) => o % 3 === 0).map((o) => (
-            <SvgText key={o} x={o * 15 + 180} y={9} textAnchor="middle" fontSize={7} fontWeight="700" fill="#fff" opacity={0.85}>
-              {clockIn(`Etc/GMT${o > 0 ? "-" : "+"}${Math.abs(o)}`, now)}
-            </SvgText>
+      <View style={{ height: Math.round(width * 0.95), borderRadius: 16, overflow: "hidden" }}>
+        <MapView
+          style={{ flex: 1 }}
+          initialRegion={{ latitude: 35, longitude: 10, latitudeDelta: 120, longitudeDelta: 160 }}
+          userInterfaceStyle={c.scheme}
+          rotateEnabled={false}
+          pitchEnabled={false}
+          onPress={(e) => pick(e.nativeEvent.coordinate.latitude, e.nativeEvent.coordinate.longitude)}
+        >
+          {POLYGONS.map((p) => (
+            <Polygon key={p.key} coordinates={p.outer} holes={p.holes} fillColor={p.fill} strokeColor="rgba(203,213,225,0.55)" strokeWidth={0.6} tappable={false} />
           ))}
-          {places.map((a, i) => {
-            const p = MAP.xy(a.lat, a.lon);
-            return (
-              <G key={a.icao}>
-                <Circle cx={p.x} cy={p.y} r={i === 0 ? 2.6 : 1.8} fill={i === 0 ? "#22c55e" : "#fff"} stroke="#020617" strokeWidth={0.6} />
-                {i === 0 || far(i) ? (
-                  <SvgText x={p.x + 3.5} y={p.y + 2} fontSize={6} fontWeight="700" fill="#fff" stroke="#020617" strokeWidth={0.8}>
-                    {a.icao}
-                  </SvgText>
-                ) : null}
-              </G>
-            );
-          })}
-          {picked ? <Circle cx={picked.x} cy={picked.y} r={2.4} fill="#fbbf24" stroke="#020617" strokeWidth={0.6} /> : null}
-        </Svg>
-      </Pressable>
+          <Polygon coordinates={night} fillColor="rgba(2,6,23,0.35)" strokeWidth={0} tappable={false} />
+          {places.map((a, i) => (
+            <Marker
+              key={a.icao}
+              coordinate={{ latitude: a.lat, longitude: a.lon }}
+              pinColor={i === 0 ? "#22c55e" : undefined}
+              title={`${a.icao} · ${clockIn(a.timezone, now)}`}
+              description={formatOffset(zoneOffsetMin(a.timezone!, now))}
+            />
+          ))}
+          {picked ? <Marker coordinate={{ latitude: picked.lat, longitude: picked.lon }} pinColor="#fbbf24" /> : null}
+        </MapView>
+      </View>
 
       {picked ? (
         <Card>

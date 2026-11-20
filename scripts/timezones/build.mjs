@@ -104,5 +104,4 @@ const json = { north: NORTH, south: SOUTH, attribution: "Time zones: timezone-bo
 writeFileSync(join(root, "packages/reference-data/data/timezones.json"), JSON.stringify(json));
 mkdirSync(join(root, "apps/web/public/data"), { recursive: true });
 writeFileSync(join(root, "apps/web/public/data/timezones.png"), pngBuf);
-writeFileSync(join(root, "apps/mobile/assets/timezones.png"), pngBuf);
 console.log(`zones ${zones.length}, png ${(pngBuf.length / 1024).toFixed(0)} KB, json ${(JSON.stringify(json).length / 1024).toFixed(0)} KB`);

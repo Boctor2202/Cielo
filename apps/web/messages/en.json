@@ -2261,7 +2261,8 @@
       "mapAlt": "World map of time zones",
       "legend": "Colours: standard UTC offset (land bright, sea dark). Shaded: night right now. Top: the time in each 15° band. Click anywhere for its local time.",
       "airports": "Your airports",
-      "base": "Home base"
+      "base": "Home base",
+      "legendZoom": "Zoom and pan like any map. Colours: standard UTC offset. Shaded: night right now. Click anywhere for its local time."
     }
   },
   "why": {

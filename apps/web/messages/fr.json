@@ -2261,7 +2261,8 @@
       "mapAlt": "Carte du monde des fuseaux horaires",
       "legend": "Couleurs : décalage UTC standard (terres claires, mer sombre). En ombré : la nuit en ce moment. En haut : l'heure de chaque bande de 15°. Clique n'importe où pour son heure locale.",
       "airports": "Tes aéroports",
-      "base": "Base"
+      "base": "Base",
+      "legendZoom": "Zoome et déplace-toi comme sur n'importe quelle carte. Couleurs : décalage UTC standard. En ombré : la nuit en ce moment. Clique n'importe où pour son heure locale."
     }
   },
   "why": {

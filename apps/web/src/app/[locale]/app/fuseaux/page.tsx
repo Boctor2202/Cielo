@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { clockIn, formatOffset, nightPath, timezoneMap, zoneOffsetMin, type TimezoneMapData } from "@cielo/core";
+import { clockIn, formatOffset, nightPath, nightRing, timezoneMap, zoneOffsetMin, type TimezoneMapData } from "@cielo/core";
+import { TimezoneGoogleMap } from "@/components/app/TimezoneGoogleMap";
+import { MapThemeToggle } from "@/components/app/MapThemeToggle";
+import { useMapTheme } from "@/lib/mapTheme";
 import data from "@cielo/reference-data/timezones.json";
 import { Card, PageTitle } from "@/components/app/ui";
 import { useAirports } from "@/lib/airports";
@@ -20,6 +23,11 @@ export default function TimezonesPage() {
   const pilot = usePilot();
   const [now, setNow] = useState<Date | null>(null);
   const [picked, setPicked] = useState<{ x: number; y: number; zone: string } | null>(null);
+  // the zoomable Google map when the key is there, the static map otherwise (or if Google refuses)
+  const googleKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY;
+  const [googleFailed, setGoogleFailed] = useState(false);
+  const useGoogle = !!googleKey && !googleFailed;
+  const { dark, setMode } = useMapTheme();
   useEffect(() => {
     setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 15_000);
@@ -37,6 +45,11 @@ export default function TimezonesPage() {
     }
     return codes.map((c) => airports.get(c)).filter((a): a is NonNullable<typeof a> => !!a && !!a.timezone);
   }, [airports, flights, pilot?.homeBaseIcao]);
+
+  // the night side, redrawn every 5 minutes
+  const slot = now ? Math.floor(now.getTime() / 300_000) : 0;
+  const night = useMemo(() => nightRing(new Date(slot * 300_000)), [slot]);
+  const googlePlaces = useMemo(() => places.map((a, i) => ({ icao: a.icao, lat: a.lat, lon: a.lon, zone: a.timezone, base: i === 0 && pilot?.homeBaseIcao === a.icao })), [places, pilot?.homeBaseIcao]);
 
   if (!now) return <PageTitle title={t("title")} />;
   const local = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -59,6 +72,25 @@ export default function TimezonesPage() {
         ))}
       </div>
 
+      {useGoogle ? (
+        <Card pad={false}>
+          <div className="relative overflow-hidden rounded-2xl">
+            <TimezoneGoogleMap
+              apiKey={googleKey!}
+              lang={locale}
+              dark={dark}
+              night={night}
+              places={googlePlaces}
+              zoneAt={(la, lo) => MAP.zoneAt(la, lo)}
+              onError={() => setGoogleFailed(true)}
+            />
+            <div className="absolute left-3 top-3">
+              <MapThemeToggle dark={dark} onChange={(d) => setMode(d ? "dark" : "light")} />
+            </div>
+          </div>
+          <p className="px-5 py-3 text-xs text-muted">{t("legendZoom")}</p>
+        </Card>
+      ) : (
       <Card pad={false}>
         <div className="relative overflow-hidden rounded-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -109,6 +141,7 @@ export default function TimezonesPage() {
         </div>
         <p className="px-5 py-3 text-xs text-muted">{t("legend")}</p>
       </Card>
+      )}
 
       {places.length > 0 && (
         <Card title={t("airports")} className="mt-4">
