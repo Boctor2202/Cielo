@@ -17,11 +17,11 @@
   },
   "hero": {
     "eyebrow": "Conçu par des pilotes · EASA · FAA · CASA",
-    "title": "Le carnet de vol qui travaille pour votre carrière",
+    "title": "Votre carnet de vol complet, juste et à jour sur votre téléphone, sans rien ressaisir.",
     "subtitle": "Un vol saisi en quelques secondes, et Geardown calcule le reste : temps de nuit, limites FTL, licences et médical. Votre CV suit votre carnet et les offres sont classées selon votre expérience.",
     "ctaTrial": "Essayer %TRIAL% jours",
     "ctaDemo": "Voir la démo",
-    "note": "%TRIAL% jours d'essai · Sans engagement · Vos données restent à vous",
+    "note": "%TRIAL% jours d'essai sans carte bancaire · Sans engagement · Votre carnet vous appartient",
     "appStore": "Bientôt sur l'App Store",
     "playStore": "Bientôt sur Google Play",
     "comingSoon": "Bientôt",
@@ -35,7 +35,9 @@
       "Licences et médical",
       "CV et offres d'emploi",
       "Export EASA · FAA · CASA"
-    ]
+    ],
+    "betaJoin": "Rejoindre la bêta iPhone",
+    "betaNote": "Application iPhone en bêta (TestFlight), incluse pendant l'essai gratuit. Android : pas encore disponible."
   },
   "proof": {
     "hours": "heures loggées",
@@ -202,7 +204,7 @@
       "sync": "Web et mobile synchronisés, hors ligne",
       "stats": "Statistiques et carte des vols",
       "jobs": "Offres d'emploi pilote et CV pilote",
-      "roster": "Import roster (iCal, CSV)",
+      "roster": "Import roster (iCal, CSV, PDF)",
       "ftl": "Calcul FTL ORO.FTL",
       "layovers": "Escales : meilleures adresses autour de l'hôtel",
       "radar": "Radar en direct et traces ADS-B (selon la couverture)",
@@ -246,7 +248,7 @@
       },
       {
         "q": "Les exports Geardown sont-ils au format EASA ?",
-        "a": "Le carnet reprend toutes les informations exigées par FCL.050 et le format de l'AMC1 FCL.050. Le temps de nuit est calculé selon la définition EASA (crépuscule civil). Un carnet électronique est accepté sous réserve que les données soient exactes et disponibles sur demande : vous pouvez à tout moment imprimer ou présenter l'export PDF au format AMC1 FCL.050. L'acceptation d'un carnet électronique reste du ressort de votre autorité."
+        "a": "Le carnet contient les informations exigées par FCL.050, dans la présentation de l'AMC1 FCL.050. Le temps de nuit est calculé selon la définition EASA (crépuscule civil). Vous pouvez à tout moment imprimer ou présenter l'export PDF. Le pilote reste responsable de l'exactitude de son carnet, et Geardown ne prétend pas que l'export est accepté ou validé par une autorité ou une compagnie."
       },
       {
         "q": "Puis-je exporter mon carnet ?",
@@ -2626,5 +2628,27 @@
     "never": "Jamais revendues, jamais utilisées pour de la publicité. Rien n'est supprimé à la fin de l'essai.",
     "shutdown": "Si le service s'arrêtait un jour, toutes vos données vous seraient remises.",
     "more": "Ce que nous gardons, et comment le récupérer"
+  },
+  "rosterFormats": {
+    "title": "Import de planning (Max) : formats pris en charge",
+    "items": [
+      "Calendrier iCal (fichier .ics exporté de votre outil de planning)",
+      "Fichier CSV ou texte (date, vol, départ, arrivée, heures)",
+      "PDF de planning imprimé par Leon",
+      "Autres PDF de planning : lecture automatique, à vérifier avant d'enregistrer"
+    ],
+    "note": "Aucune compagnie n'est citée : un export peut changer d'une compagnie ou d'une version à l'autre. Essayez avec votre propre fichier pendant l'essai gratuit."
+  },
+  "offer": {
+    "title": "Passage sans risque",
+    "items": [
+      "%TRIAL% jours d'essai, sans carte bancaire",
+      "Importez votre ancien carnet et comparez vos totaux avant de payer",
+      "Bêta iPhone incluse",
+      "Votre carnet vous appartient : export complet à tout moment",
+      "Satisfait ou remboursé 30 jours"
+    ],
+    "cta": "Commencer l'essai gratuit",
+    "fine": "Le carnet contient les informations exigées par FCL.050 ; le pilote reste responsable de son exactitude."
   }
 }

@@ -1,10 +1,11 @@
 import { useLocale, useMessages, useTranslations } from "next-intl";
-import { ArrowRight, BadgeCheck, Briefcase, CalendarClock, CloudOff, FileDown, FileUser, Lock, Map, PenLine, ScanSearch, ShieldCheck, Upload } from "lucide-react";
+import { ArrowRight, BadgeCheck, Briefcase, CalendarClock, Check, CloudOff, FileDown, FileUser, Lock, Map, PenLine, ScanSearch, ShieldCheck, Upload } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { SITE } from "@/config/site";
 import { BrowserFrame, LaptopFrame, PhoneFrame, Shot } from "./Shot";
 import { FeatureTabs } from "./FeatureTabs";
 import { Reveal } from "./Reveal";
+import { TESTIMONIALS } from "@/content/testimonials";
 
 export const FEATURE_KEYS = ["logbook", "import", "audit", "licenses", "ftl", "stats", "signature", "offline", "jobs", "cv"] as const;
 const ICONS = { logbook: FileDown, import: Upload, audit: ScanSearch, licenses: BadgeCheck, ftl: CalendarClock, stats: Map, signature: PenLine, offline: CloudOff, jobs: Briefcase, cv: FileUser };
@@ -139,6 +140,15 @@ export function StoreBadges({ className = "" }: { className?: string }) {
   const t = useTranslations("hero");
   // Replace with the official Apple / Google badges (see their marketing guidelines) once the apps are live.
   const badge = "flex h-12 items-center gap-2.5 rounded-xl border border-border bg-text px-4 text-bg transition-opacity hover:opacity-90";
+  // the iPhone beta is open: one clear button instead of two « coming soon » badges
+  if (SITE.betaUrl) {
+    return (
+      <div className={`flex flex-col gap-1.5 ${className}`}>
+        <a href={SITE.betaUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary self-start">{t("betaJoin")}</a>
+        <span className="text-xs text-muted">{t("betaNote")}</span>
+      </div>
+    );
+  }
   return (
     <div className={`flex flex-wrap gap-3 ${className}`}>
       <StoreLink href={SITE.stores.appStoreUrl} className={badge} label={t("appStore")}>
@@ -233,25 +243,22 @@ export function Features({ detailed = false }: { detailed?: boolean }) {
   );
 }
 
+/** Real, consented testimonials (src/content/testimonials.ts); nothing at all while there are none. */
 export function Testimonials() {
   const t = useTranslations("testimonials");
+  const locale = useLocale() === "en" ? "en" : "fr";
+  if (!TESTIMONIALS.length) return null;
   return (
     <section className="border-y border-border bg-surface">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <h2 className="text-center text-3xl font-bold tracking-tight">{t("title")}</h2>
-        <p className="mt-3 text-center text-muted">{t("empty")}</p>
         <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            // Empty slots on purpose: real, consented testimonials only.
-            <figure key={i} className="flex min-h-40 flex-col justify-between rounded-xl border border-dashed border-border bg-bg p-6" aria-label={t("slot")}>
-              <div className="space-y-2">
-                <div className="h-2.5 w-11/12 rounded bg-surface-2" />
-                <div className="h-2.5 w-10/12 rounded bg-surface-2" />
-                <div className="h-2.5 w-7/12 rounded bg-surface-2" />
-              </div>
-              <figcaption className="mt-6 flex items-center gap-3">
-                <span className="h-9 w-9 rounded-full bg-surface-2" />
-                <span className="text-xs text-muted">{t("slot")}</span>
+          {TESTIMONIALS.map((x) => (
+            <figure key={x.name + x.consent.date} className="flex flex-col justify-between rounded-xl border border-border bg-bg p-6">
+              <blockquote className="leading-relaxed">« {x.quote[locale] ?? x.quote.fr} »</blockquote>
+              <figcaption className="mt-4 text-sm text-muted">
+                <strong className="text-text">{x.name}</strong>
+                {x.role ? ` · ${x.role[locale] ?? x.role.fr}` : ""}
               </figcaption>
             </figure>
           ))}
@@ -325,6 +332,47 @@ export function OwnershipBlock() {
           ))}
         </ul>
         <Link href="/vos-donnees" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent">{t("more")} <ArrowRight size={14} aria-hidden /></Link>
+      </div>
+    </section>
+  );
+}
+
+/** Roster import: the formats really supported (no airline named: an airline's export can change). */
+export function RosterFormats() {
+  const t = useTranslations("rosterFormats");
+  const items = t.raw("items") as string[];
+  return (
+    <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+      <div className="rounded-2xl border border-border bg-surface p-6">
+        <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight"><CalendarClock size={20} className="text-accent" aria-hidden /> {t("title")}</h2>
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+          {items.map((x) => (
+            <li key={x} className="flex gap-2 text-[15px]"><Check size={17} className="mt-0.5 shrink-0 text-accent" aria-hidden />{x}</li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs text-muted">{t("note")}</p>
+      </div>
+    </section>
+  );
+}
+
+/** « Switch without risk »: the offer in one box (home and pricing). */
+export function OfferBox() {
+  const t = useTranslations("offer");
+  const items = t.raw("items") as string[];
+  return (
+    <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
+      <div className="rounded-2xl border-2 border-accent bg-accent/5 p-7">
+        <h2 className="text-2xl font-bold tracking-tight">{t("title")}</h2>
+        <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((x) => (
+            <li key={x} className="flex gap-2.5 text-[15px] font-medium"><Check size={18} className="mt-0.5 shrink-0 text-accent" aria-hidden />{x}</li>
+          ))}
+        </ul>
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          <Link href="/inscription" className="btn btn-primary">{t("cta")}</Link>
+          <span className="text-xs text-muted">{t("fine")}</span>
+        </div>
       </div>
     </section>
   );

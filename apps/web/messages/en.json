@@ -17,11 +17,11 @@
   },
   "hero": {
     "eyebrow": "Built by pilots · EASA · FAA · CASA",
-    "title": "The logbook that works for your career",
+    "title": "Your complete, accurate, up-to-date logbook on your phone, without retyping anything.",
     "subtitle": "Log a flight in seconds and Geardown works out the rest: night time, FTL limits, licences and medical. Your CV follows your logbook and job offers are ranked against your experience.",
     "ctaTrial": "Try %TRIAL% days",
     "ctaDemo": "See the demo",
-    "note": "%TRIAL%-day trial · No commitment · Your data stays yours",
+    "note": "%TRIAL%-day trial with no card · No commitment · Your logbook is yours",
     "appStore": "Coming to the App Store",
     "playStore": "Coming to Google Play",
     "comingSoon": "Coming soon",
@@ -35,7 +35,9 @@
       "Licences and medical",
       "CV and job matches",
       "EASA · FAA · CASA export"
-    ]
+    ],
+    "betaJoin": "Join the iPhone beta",
+    "betaNote": "iPhone app in beta (TestFlight), included in the free trial. Android: not available yet."
   },
   "proof": {
     "hours": "hours logged",
@@ -202,7 +204,7 @@
       "sync": "Web and mobile in sync, offline",
       "stats": "Statistics and flight map",
       "jobs": "Pilot job offers and pilot CV",
-      "roster": "Roster import (iCal, CSV)",
+      "roster": "Import roster (iCal, CSV, PDF)",
       "ftl": "ORO.FTL flight time limitations",
       "layovers": "Layovers: best places around the hotel",
       "radar": "Live radar and ADS-B tracks (coverage permitting)",
@@ -246,7 +248,7 @@
       },
       {
         "q": "Are Geardown exports in EASA format?",
-        "a": "The logbook records all the information required by FCL.050 in the AMC1 FCL.050 layout. Night time follows the EASA definition (civil twilight). An electronic logbook is acceptable provided the data is accurate and available on request: you can print or show the PDF export in AMC1 FCL.050 format at any time. Whether an electronic logbook is accepted remains your authority's decision."
+        "a": "The logbook holds the information FCL.050 requires, in the AMC1 FCL.050 layout. Night time follows the EASA definition (civil twilight). You can print or show the PDF export at any time. The pilot remains responsible for the accuracy of their logbook, and Geardown does not claim the export is accepted or validated by an authority or an airline."
       },
       {
         "q": "Can I export my logbook?",
@@ -2626,5 +2628,27 @@
     "never": "Never sold, never used for advertising. Nothing is deleted when the trial ends.",
     "shutdown": "If the service ever shut down, all your data would be handed back to you.",
     "more": "What we keep, and how to get it back"
+  },
+  "rosterFormats": {
+    "title": "Roster import (Max): supported formats",
+    "items": [
+      "iCal calendar (.ics file exported from your rostering tool)",
+      "CSV or text file (date, flight, departure, arrival, times)",
+      "Roster PDF printed by Leon",
+      "Other roster PDFs: read automatically, to check before saving"
+    ],
+    "note": "No airline is named: an export can differ between airlines and versions. Try your own file during the free trial."
+  },
+  "offer": {
+    "title": "Switch without risk",
+    "items": [
+      "%TRIAL%-day trial, no card",
+      "Import your old logbook and compare your totals before paying",
+      "iPhone beta included",
+      "Your logbook is yours: full export at any time",
+      "30-day money-back guarantee"
+    ],
+    "cta": "Start the free trial",
+    "fine": "The logbook holds the information FCL.050 requires; the pilot remains responsible for its accuracy."
   }
 }
