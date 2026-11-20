@@ -146,7 +146,14 @@ async function main() {
 
   const territories = (await all("/v1/territories?limit=200")).map((t) => t.id);
   log(`${territories.length} countries`);
-  const shot = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "review-subscription.jpg"));
+  // the subscription screen on the matching tab: yearly plans, and monthly ones when that capture exists
+  const here = dirname(fileURLToPath(import.meta.url));
+  const shots = { ONE_YEAR: readFileSync(join(here, "review-subscription.jpg")) };
+  try {
+    shots.ONE_MONTH = readFileSync(join(here, "review-subscription-monthly.jpg"));
+  } catch {
+    shots.ONE_MONTH = shots.ONE_YEAR;
+  }
 
   for (const p of PLANS) {
     log(`\n— ${p.productId}`);
@@ -234,6 +241,7 @@ async function main() {
     log(`  free trial 1 week: ${o} countries added (${offered.size} already set)`);
 
     // review screenshot
+    const shot = shots[p.period] ?? shots.ONE_YEAR;
     const current = await api("GET", `/v1/subscriptions/${sub.id}/appStoreReviewScreenshot`).catch(() => ({ data: null }));
     // a screenshot Apple refused (e.g. wrong size) is replaced
     if (current.data && (NEW_SCREENSHOT || current.data.attributes.assetDeliveryState?.state === "FAILED")) {
