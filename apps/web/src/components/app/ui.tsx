@@ -74,7 +74,7 @@ export function Readout({ label, value, sub, level = "info", onClick }: { label:
         <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${LEVEL_BG[level]}`} />
         {label}
       </p>
-      <p className="num mt-3 text-[28px] font-normal leading-none tracking-[-0.03em] sm:text-[34px]"><Roll>{value}</Roll></p>
+      <p className="num mt-3 text-[clamp(19px,6vw,28px)] font-normal leading-none tracking-[-0.03em] sm:text-[34px]"><Roll>{value}</Roll></p>
       {sub && <div className="mt-2 text-xs text-muted">{sub}</div>}
     </Box>
   );

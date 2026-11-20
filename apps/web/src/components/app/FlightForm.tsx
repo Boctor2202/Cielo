@@ -198,7 +198,8 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
           {!flight && !v.isFstd && (
             <div className="mx-5 mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-accent/40 bg-accent/5 px-4 py-3">
               <Radar size={18} className="shrink-0 text-accent" aria-hidden />
-              <div className="min-w-0 flex-1">
+              {/* the explanation keeps a readable width: on a phone the field and the button go below it */}
+              <div className="min-w-[13rem] flex-1">
                 <p className="text-sm font-semibold">{t("adsbTitle")}</p>
                 <p className="text-xs text-muted">{t("adsbHint")}</p>
               </div>

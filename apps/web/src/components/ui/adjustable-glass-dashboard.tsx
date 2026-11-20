@@ -1516,6 +1516,7 @@ const styles = `
 }
 .gw-room-shade {
   position: absolute;
+  max-width: 100%;
   inset: 0;
   background: var(--gw-shade);
   z-index: -2;
@@ -2763,6 +2764,28 @@ const styles = `
     font-size: 8px;
   }
 }
+/* phones (iPhone mini to Pro Max): the dashboard must fit the screen, never push the page sideways */
+@media (max-width: 440px) {
+  .gw-workspace {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .gw-main {
+    padding: 18px 10px;
+  }
+  .gw-panel {
+    padding: 14px;
+  }
+  .gw-view-heading {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .gw-chart-summary {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
 @media (max-height: 550px) {
   .gw-material {
     top: 70px;

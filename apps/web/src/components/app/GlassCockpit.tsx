@@ -77,7 +77,7 @@ function Ring({ ratio, label, sub }: { ratio: number; label: string; sub: string
 /** PIC / night / IFR, coloured, with their share of the total. */
 function Chips({ items }: { items: { icon: typeof Plane; color: string; label: string; value: string; share: number }[] }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`, gap: 8, marginTop: 16 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(76px, 1fr))", gap: 8, marginTop: 16 }}>
       {items.map(({ icon: Icon, color, label, value, share }) => (
         <div key={label} style={{ padding: "9px 10px", borderRadius: 12, background: `color-mix(in srgb, ${color} 13%, transparent)`, display: "grid", gap: 4, minWidth: 0 }}>
           <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, color: `color-mix(in srgb, ${color} 58%, currentColor)` }}>
