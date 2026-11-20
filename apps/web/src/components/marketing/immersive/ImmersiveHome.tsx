@@ -78,7 +78,7 @@ export function ImmersiveHome() {
     let inView = true;
     let scene: FlightScene | null = null;
     readoutsAt(p.get(), readouts.current);
-    (async () => {
+    const cancelLoad = afterFirstPaint(() => void (async () => {
       const mod = await import("./scene");
       if (disposed || !mod.webglAvailable()) return;
       try {
@@ -90,7 +90,7 @@ export function ImmersiveHome() {
       scene.setProgress((p.get() - GLOBE_FROM) / (1 - GLOBE_FROM));
       sceneRef.current = scene;
       syncScene.current();
-    })();
+    })());
     const sync = () => (inView && nearGlobe.current && document.visibilityState === "visible" ? scene?.start() : scene?.stop());
     syncScene.current = sync;
     const io = new IntersectionObserver(([e]) => {
@@ -104,6 +104,7 @@ export function ImmersiveHome() {
     ro.observe(canvas.parentElement!);
     return () => {
       disposed = true;
+      cancelLoad();
       document.removeEventListener("visibilitychange", vis);
       io.disconnect();
       ro.disconnect();
@@ -264,6 +265,43 @@ const SHOT_IDS = Object.keys(SHOTS) as ShotId[];
 const FRAME_COUNT: Record<ShotId, number> = { descent: 193, final: 193 };
 const FILM = { base: "/immersive/film/landing", poster: "/immersive/film/landing/poster" };
 
+
+/**
+ * Runs `cb` once the page has finished loading and the main thread is idle, or at the first scroll / touch,
+ * whichever comes first: the heavy parts of the hero (film frames, WebGL Earth) never compete with the first paint.
+ */
+function afterFirstPaint(cb: () => void): () => void {
+  let done = false;
+  let idle = 0;
+  let timer = 0;
+  const events = ["scroll", "pointerdown", "touchstart", "keydown", "wheel"] as const;
+  const run = () => {
+    if (done) return;
+    done = true;
+    cleanup();
+    cb();
+  };
+  const schedule = () => {
+    const w = window as Window & { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) idle = w.requestIdleCallback(run, { timeout: 2500 });
+    else timer = window.setTimeout(run, 1200);
+  };
+  const cleanup = () => {
+    events.forEach((e) => window.removeEventListener(e, run));
+    window.removeEventListener("load", schedule);
+    const w = window as Window & { cancelIdleCallback?: (h: number) => void };
+    if (idle && w.cancelIdleCallback) w.cancelIdleCallback(idle);
+    if (timer) clearTimeout(timer);
+  };
+  events.forEach((e) => window.addEventListener(e, run, { once: true, passive: true }));
+  if (document.readyState === "complete") schedule();
+  else window.addEventListener("load", schedule, { once: true });
+  return () => {
+    done = true;
+    cleanup();
+  };
+}
+
 /**
  * The film is a sequence of still frames (24 per second of footage) drawn on a canvas: any scroll position
  * shows its frame at once, with no video seeking. Frames load coarse-to-fine (every 8th, then every 4th…)
@@ -308,9 +346,13 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         if (id === "descent" && i === 0) setReady(true);
       }
     };
-    for (let w = 0; w < 6; w++) void worker();
+    // fewer parallel downloads on phones and slow links, so the page stays responsive
+    const cancel = afterFirstPaint(() => {
+      for (let w = 0; w < (small ? 3 : 6); w++) void worker();
+    });
     return () => {
       alive = false;
+      cancel();
     };
   }, [base, reduce]);
 
