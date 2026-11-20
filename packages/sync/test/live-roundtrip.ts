@@ -28,8 +28,8 @@ const check = (label: string, ok: boolean, detail?: string) => results.push([lab
 const A = device();
 const B = device();
 await A.run(); // A starts from the server, like a phone already signed in
-const base = (await A.store.all("flights"))[0] as Record<string, unknown>;
-const ac = (await A.store.all("aircraft"))[0] as Record<string, unknown>;
+const base = (await A.store.all("flights"))[0] as unknown as Record<string, unknown>;
+const ac = (await A.store.all("aircraft"))[0] as unknown as Record<string, unknown>;
 
 // --- A writes one new row in every table
 const fId = id();
@@ -47,7 +47,7 @@ const rows: Partial<Record<TableName, Record<string, unknown>>> = {
 };
 for (const [t, r] of Object.entries(rows)) await A.store.bulkPut(t as TableName, [r as never]);
 // and the pilot profile (only the fields marked as changed are sent)
-const pilot = (await A.store.get("pilots", pid)) as Record<string, unknown>;
+const pilot = (await A.store.get("pilots", pid)) as unknown as Record<string, unknown>;
 await A.store.bulkPut("pilots", [{ ...pilot, bio: `e2e-sync ${now()}`, updatedAt: now() } as never]);
 await markPilotFields(A.store, ["bio"]);
 await A.run();
@@ -55,21 +55,21 @@ await A.run();
 // --- B, a fresh device, pulls everything
 await B.run();
 for (const [t, r] of Object.entries(rows)) {
-  const got = (await B.store.get(t as TableName, r!.id as string)) as Record<string, unknown> | undefined;
+  const got = (await B.store.get(t as TableName, r!.id as string)) as unknown as Record<string, unknown> | undefined;
   check(`A→B ${t}`, !!got, got ? undefined : "missing on B");
 }
-const bPilot = (await B.store.get("pilots", pid)) as Record<string, unknown>;
+const bPilot = (await B.store.get("pilots", pid)) as unknown as Record<string, unknown>;
 check("A→B pilots (profile)", String(bPilot?.bio ?? "").startsWith("e2e-sync"));
 
 // --- B edits the flight and deletes the layover; A must see both
-const bf = (await B.store.get("flights", fId)) as Record<string, unknown>;
+const bf = (await B.store.get("flights", fId)) as unknown as Record<string, unknown>;
 await B.store.bulkPut("flights", [{ ...bf, remarks: "e2e-sync edited on B", updatedAt: now() } as never]);
-const bl = (await B.store.get("layovers", rows.layovers!.id as string)) as Record<string, unknown>;
+const bl = (await B.store.get("layovers", rows.layovers!.id as string)) as unknown as Record<string, unknown>;
 await B.store.bulkPut("layovers", [{ ...bl, deletedAt: now(), updatedAt: now() } as never]);
 await B.run();
 await A.run();
-check("B→A edit (flight)", ((await A.store.get("flights", fId)) as Record<string, unknown>)?.remarks === "e2e-sync edited on B");
-check("B→A delete (layover)", !!((await A.store.get("layovers", rows.layovers!.id as string)) as Record<string, unknown>)?.deletedAt);
+check("B→A edit (flight)", ((await A.store.get("flights", fId)) as unknown as Record<string, unknown>)?.remarks === "e2e-sync edited on B");
+check("B→A delete (layover)", !!((await A.store.get("layovers", rows.layovers!.id as string)) as unknown as Record<string, unknown>)?.deletedAt);
 
 for (const [label, ok, detail] of results) console.log(`${ok ? "OK  " : "FAIL"} ${label}${detail ? ` (${detail})` : ""}`);
 console.log(`tables covered: ${SYNC_TABLES.filter((t) => t === "pilots" || t in rows).length}/${SYNC_TABLES.length}`);
