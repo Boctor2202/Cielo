@@ -409,7 +409,23 @@
       "admin": "Admin",
       "report": "Signaler un problème",
       "signIn": "Se connecter",
-      "timezones": "Fuseaux horaires"
+      "timezones": "Fuseaux horaires",
+      "home": "Accueil",
+      "flights": "Vols",
+      "import": "Importer",
+      "export": "Exporter",
+      "audit": "Audit",
+      "experience": "Expérience",
+      "cvFile": "CV et dossier",
+      "more": "Plus",
+      "groups": {
+        "home": "Accueil",
+        "logbook": "Carnet",
+        "activity": "Activité",
+        "career": "Carrière",
+        "account": "Compte",
+        "admin": "Admin"
+      }
     },
     "dashboard": {
       "hello": "Bonjour {name}",
@@ -716,7 +732,7 @@
       "sign": "Faire signer",
       "fromRoster": "Pré-rempli depuis le roster",
       "flightaware": {
-        "button": "Remplir les heures réelles",
+        "button": "Remplir depuis l'ADS-B",
         "needReg": "Saisissez d'abord l'immatriculation et la date",
         "title": "Vols de {reg} ce jour-là",
         "loading": "Recherche des heures réelles…",
@@ -770,7 +786,10 @@
       "kindFstd": "Simulateur",
       "operator": "Opérateur",
       "operatorPh": "Compagnie ou opérateur",
-      "operatorRecognised": "Reconnu automatiquement : tapez pour le changer"
+      "operatorRecognised": "Reconnu automatiquement : tapez pour le changer",
+      "adsbTitle": "Vol d'aujourd'hui ou d'hier ?",
+      "adsbHint": "Saisissez l'immatriculation : Geardown retrouve les aéroports et les heures grâce aux signaux ADS-B de l'avion.",
+      "registration": "Immatriculation"
     },
     "signature": {
       "title": "Signature du vol",

@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  BadgeCheck, BarChart3, UserRound, Hotel, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Globe2, Wifi, WifiOff, MoreHorizontal, Radar, Lock, ShieldCheck, Bug,
+  BadgeCheck, BarChart3, FileDown, ScanSearch, Upload, UserRound, Hotel, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Globe2, Wifi, WifiOff, Radar, Lock, ShieldCheck, Bug,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -26,24 +26,33 @@ import { ThemeToggle } from "../ThemeToggle";
 import { LocaleSwitch } from "../LocaleSwitch";
 import { MobileTabBar } from "./MobileTabBar";
 
-const NAV: { href: AppPathname; key: string; icon: typeof Gauge; max?: MaxFeature; flag?: keyof Flags; admin?: boolean }[] = [
-  { href: "/app", key: "dashboard", icon: Gauge },
-  { href: "/app/carnet", key: "logbook", icon: NotebookPen },
-  { href: "/app/roster", key: "roster", icon: CalendarDays , max: "roster" },
-  { href: "/app/escales", key: "layovers", icon: Hotel, max: "layovers", flag: "layovers" },
-  { href: "/app/ftl", key: "ftl", icon: Timer , max: "ftl" },
-  { href: "/app/fuseaux", key: "timezones", icon: Globe2 },
-  { href: "/app/documents", key: "documents", icon: BadgeCheck },
-  { href: "/app/statistiques", key: "stats", icon: BarChart3 },
-  { href: "/app/carte", key: "map", icon: MapIcon },
-  { href: "/app/radar", key: "radar", icon: Radar, max: "radar", flag: "radar" },
-  { href: "/app/emplois", key: "jobs", icon: Briefcase, max: "jobs", flag: "jobs" },
-  { href: "/app/cv", key: "cv", icon: FileUser, max: "cv" },
-  { href: "/app/appareils", key: "aircraft", icon: Plane },
-  { href: "/app/profil", key: "profile", icon: UserRound },
-  { href: "/app/parametres", key: "settings", icon: Settings },
-  { href: "/app/admin", key: "admin", icon: ShieldCheck, admin: true },
+export type NavGroup = "home" | "logbook" | "activity" | "career" | "account" | "admin";
+/**
+ * The app's sections, in groups: Home; Logbook (flights, import, export, audit, aircraft); Activity (roster, FTL,
+ * layovers, time zones, radar, map); Career (experience, jobs, CV); Account (licences, profile, settings).
+ */
+export const NAV: { href: AppPathname; key: string; icon: typeof Gauge; group: NavGroup; max?: MaxFeature; flag?: keyof Flags; admin?: boolean }[] = [
+  { href: "/app", key: "home", icon: Gauge, group: "home" },
+  { href: "/app/carnet", key: "flights", icon: NotebookPen, group: "logbook" },
+  { href: "/app/carnet/import", key: "import", icon: Upload, group: "logbook" },
+  { href: "/app/carnet/export", key: "export", icon: FileDown, group: "logbook" },
+  { href: "/app/carnet/audit", key: "audit", icon: ScanSearch, group: "logbook", max: "audit" },
+  { href: "/app/appareils", key: "aircraft", icon: Plane, group: "logbook" },
+  { href: "/app/roster", key: "roster", icon: CalendarDays, group: "activity", max: "roster" },
+  { href: "/app/ftl", key: "ftl", icon: Timer, group: "activity", max: "ftl" },
+  { href: "/app/escales", key: "layovers", icon: Hotel, group: "activity", max: "layovers", flag: "layovers" },
+  { href: "/app/fuseaux", key: "timezones", icon: Globe2, group: "activity" },
+  { href: "/app/radar", key: "radar", icon: Radar, group: "activity", max: "radar", flag: "radar" },
+  { href: "/app/carte", key: "map", icon: MapIcon, group: "activity" },
+  { href: "/app/statistiques", key: "experience", icon: BarChart3, group: "career" },
+  { href: "/app/emplois", key: "jobs", icon: Briefcase, group: "career", max: "jobs", flag: "jobs" },
+  { href: "/app/cv", key: "cvFile", icon: FileUser, group: "career", max: "cv" },
+  { href: "/app/documents", key: "documents", icon: BadgeCheck, group: "account" },
+  { href: "/app/profil", key: "profile", icon: UserRound, group: "account" },
+  { href: "/app/parametres", key: "settings", icon: Settings, group: "account" },
+  { href: "/app/admin", key: "admin", icon: ShieldCheck, group: "admin", admin: true },
 ];
+const GROUPS: NavGroup[] = ["home", "logbook", "activity", "career", "account", "admin"];
 
 /** True when the signed-in account is an admin (checked by the server). */
 function useIsAdmin(signedIn: boolean) {
@@ -100,8 +109,13 @@ function Shell({ children }: { children: ReactNode }) {
     return () => clearTimeout(id);
   }, [pilot?.id, access.canWrite]); // eslint-disable-line react-hooks/exhaustive-deps
   const online = useOnline();
-  const [more, setMore] = useState(false);
-  const isActive = (href: string) => (href === "/app" ? pathname === "/app" : pathname.startsWith(href));
+  // the mobile sheet: one group of sections (Activity, Career) or everything else ("more")
+  const [sheet, setSheet] = useState<NavGroup | "more" | null>(null);
+  // the most specific section wins (/app/carnet/import is Import, not Flights)
+  const current = nav
+    .filter(({ href }) => (href === "/app" ? pathname === "/app" : pathname === href || pathname.startsWith(`${href}/`)))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+  const isActive = (href: string) => current?.href === href;
   const status = !online ? t("offline") : cloud.session ? t("synced") : t("localMode");
 
   return (
@@ -121,24 +135,30 @@ function Shell({ children }: { children: ReactNode }) {
               <Plus size={18} /> {t("newFlight")}
             </Link>
           </div>
-          <nav className="mt-4 flex-1 space-y-0.5 overflow-y-auto px-3" aria-label="App">
-            {nav.map(({ href, key, icon: Icon, max }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-[14.5px] font-medium transition-colors ${
-                  isActive(href) ? "bg-bg/60 text-accent shadow-[inset_0_1px_0_var(--glass-hi)]" : "text-muted hover:bg-bg/40 hover:text-text"
-                }`}
-              >
-                <Icon size={18} /> <span className="flex-1">{t(key)}</span>
-                {max && !access.has(max) && <Lock size={13} className="opacity-60" aria-label="Max" />}
-              </Link>
-            ))}
+          <nav className="mt-3 flex-1 overflow-y-auto px-3" aria-label="App">
+            {GROUPS.map((g) => {
+              const items = nav.filter((i) => i.group === g);
+              if (!items.length) return null;
+              return (
+                <div key={g} className={g === "home" ? "" : "pt-2"}>
+                  {g !== "home" && <p className="px-3 pb-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-muted/80">{t(`groups.${g}`)}</p>}
+                  {items.map(({ href, key, icon: Icon, max }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`flex items-center gap-3 rounded-xl px-3 py-[5px] text-[13.5px] font-medium transition-colors ${
+                        isActive(href) ? "bg-bg/60 text-accent shadow-[inset_0_1px_0_var(--glass-hi)]" : "text-muted hover:bg-bg/40 hover:text-text"
+                      }`}
+                    >
+                      <Icon size={17} /> <span className="flex-1">{t(key)}</span>
+                      {max && !access.has(max) && <Lock size={13} className="opacity-60" aria-label="Max" />}
+                    </Link>
+                  ))}
+                </div>
+              );
+            })}
           </nav>
           <div className="p-3">
-            <button type="button" onClick={() => setReport(true)} className="mb-2 flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-[13px] text-muted hover:bg-bg/40 hover:text-text">
-              <Bug size={15} /> {t("report")}
-            </button>
             <div className="flex items-center justify-between gap-2 px-2">
               <Link href="/app/profil" className="min-w-0 rounded-md hover:text-accent">
                 <p className="truncate text-sm font-semibold">{pilot?.fullName || "—"}</p>
@@ -148,6 +168,9 @@ function Shell({ children }: { children: ReactNode }) {
                 </p>
               </Link>
               <div className="flex">
+                <button type="button" onClick={() => setReport(true)} className="btn btn-ghost btn-sm !px-2" aria-label={t("report")} title={t("report")}>
+                  <Bug size={15} />
+                </button>
                 <LocaleSwitch />
                 <ThemeToggle />
               </div>
@@ -187,18 +210,38 @@ function Shell({ children }: { children: ReactNode }) {
           </main>
         </div>
 
-        {/* Mobile tab bar (liquid-glass pill) */}
-        <MobileTabBar moreOpen={more} onToggleMore={() => setMore(!more)} moreActive={nav.slice(2).some(({ href }) => href !== "/app/roster" && href !== "/app/documents" && isActive(href))} />
-        {more && (
-          <div className="fixed inset-x-0 bottom-[88px] z-40 mx-3 mb-[env(safe-area-inset-bottom)] grid grid-cols-3 gap-1 app-glass rounded-2xl p-2 lg:hidden" onClick={() => setMore(false)}>
-            {nav.slice(2).filter(({ href }) => href !== "/app/roster" && href !== "/app/documents").map(({ href, key, icon: Icon }) => (
-              <Link key={href} href={href} className={`flex flex-col items-center gap-1 rounded-xl px-2 py-3 text-xs font-medium ${isActive(href) ? "bg-accent/12 text-accent" : "text-muted"}`}>
-                <Icon size={20} /> {t(key)}
-              </Link>
-            ))}
-            <button type="button" onClick={() => setReport(true)} className="flex flex-col items-center gap-1 rounded-xl px-2 py-3 text-xs font-medium text-muted">
-              <Bug size={20} /> {t("report")}
-            </button>
+        {/* Mobile tab bar (liquid-glass pill): Home, Logbook, Activity, Career, More; the last three open a sheet */}
+        <MobileTabBar
+          active={sheet ?? (current?.group === "home" ? "home" : current?.group === "logbook" ? "logbook" : current?.group === "activity" || current?.group === "career" ? current.group : "more")}
+          onSheet={(g) => setSheet(sheet === g ? null : g)}
+          onClose={() => setSheet(null)}
+        />
+        {sheet && (
+          // the glass skin sets its own position: it goes on an inner box, the outer one stays fixed above the tab bar
+          <div className="fixed inset-x-0 bottom-[88px] z-40 mx-3 mb-[env(safe-area-inset-bottom)] lg:hidden" onClick={() => setSheet(null)}>
+            <div className="app-glass rounded-2xl p-2">
+            {(sheet === "more" ? (["logbook", "account", "admin"] as NavGroup[]) : [sheet]).map((g) => {
+              const items = nav.filter((i) => i.group === g);
+              if (!items.length) return null;
+              return (
+                <div key={g}>
+                  <p className="px-2 pb-1 pt-1.5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-muted">{t(`groups.${g}`)}</p>
+                  <div className="grid grid-cols-3 gap-1">
+                    {items.map(({ href, key, icon: Icon }) => (
+                      <Link key={href} href={href} className={`flex flex-col items-center gap-1 rounded-xl px-2 py-3 text-center text-xs font-medium ${isActive(href) ? "bg-accent/12 text-accent" : "text-muted"}`}>
+                        <Icon size={20} /> {t(key)}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {sheet === "more" && (
+              <button type="button" onClick={() => setReport(true)} className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-xs font-medium text-muted">
+                <Bug size={16} /> {t("report")}
+              </button>
+            )}
+            </div>
           </div>
         )}
         <ReportDialog open={report} onClose={() => setReport(false)} />

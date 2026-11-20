@@ -36,6 +36,15 @@ export default function TabsLayout() {
       <ThreeGreensO size={22} color={c.text} />
     </View>
   );
+  // the account (profile, licences, subscription, data, settings): from the avatar, with the sync state beside it
+  const account = () => (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginRight: 14 }}>
+      <SyncBadge />
+      <Pressable accessibilityRole="button" accessibilityLabel={t("tabs.account")} hitSlop={8} onPress={() => router.navigate("/more")}>
+        <Ionicons name="person-circle-outline" size={28} color={c.text} />
+      </Pressable>
+    </View>
+  );
   const bar = () => <BlurView tint={g.tint} intensity={g.intensity + 20} style={[StyleSheet.absoluteFill, { backgroundColor: g.pane }]} />;
   return (
     <Tabs
@@ -55,11 +64,27 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: "transparent" },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: t("tabs.dashboard"), headerTitle: t("dash.title"), headerLeft: brand, tabBarIcon: icon("speedometer-outline"), headerRight: () => <SyncBadge /> }} />
-      <Tabs.Screen name="logbook" options={{ title: t("tabs.logbook"), headerTitle: t("log.title"), headerLeft: brand, tabBarIcon: icon("book-outline"), headerRight: () => <SyncBadge /> }} />
-      <Tabs.Screen name="layovers" options={{ title: t("tabs.layovers"), headerTitle: t("lay.title"), headerLeft: brand, tabBarIcon: icon("bed-outline") }} />
-      <Tabs.Screen name="radar" options={{ title: t("tabs.radar"), headerTitle: t("radar.title"), headerLeft: brand, tabBarIcon: icon("radio-outline") }} />
-      <Tabs.Screen name="more" options={{ title: t("tabs.more"), headerTitle: t("more.title"), headerLeft: brand, tabBarIcon: icon("ellipsis-horizontal-circle-outline") }} />
+      {/* Home · Logbook · + · Activity · Career; the account (former "More") opens from the avatar, top right */}
+      <Tabs.Screen name="index" options={{ title: t("tabs.home"), headerTitle: t("dash.title"), headerLeft: brand, tabBarIcon: icon("speedometer-outline"), headerRight: account }} />
+      <Tabs.Screen name="logbook" options={{ title: t("tabs.logbook"), headerTitle: t("log.title"), headerLeft: brand, tabBarIcon: icon("book-outline"), headerRight: account }} />
+      <Tabs.Screen
+        name="new"
+        options={{
+          title: t("flight.new"),
+          tabBarButton: () => (
+            <Pressable accessibilityRole="button" accessibilityLabel={t("flight.new")} onPress={() => router.push("/flight/new")} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              <View style={{ width: 50, height: 50, borderRadius: 25, marginTop: -16, alignItems: "center", justifyContent: "center", backgroundColor: c.accent, shadowColor: c.accent, shadowOpacity: 0.45, shadowRadius: 10, shadowOffset: { width: 0, height: 6 } }}>
+                <Ionicons name="add" size={30} color="#fff" />
+              </View>
+            </Pressable>
+          ),
+        }}
+      />
+      <Tabs.Screen name="activity" options={{ title: t("tabs.activity"), headerTitle: t("tabs.activity"), headerLeft: brand, tabBarIcon: icon("calendar-outline"), headerRight: account }} />
+      <Tabs.Screen name="career" options={{ title: t("tabs.career"), headerTitle: t("tabs.career"), headerLeft: brand, tabBarIcon: icon("briefcase-outline"), headerRight: account }} />
+      <Tabs.Screen name="layovers" options={sub(t("lay.title"))} />
+      <Tabs.Screen name="radar" options={sub(t("radar.title"))} />
+      <Tabs.Screen name="more" options={sub(t("tabs.account"))} />
       <Tabs.Screen name="roster" options={sub(t("roster.title"))} />
       <Tabs.Screen name="documents" options={sub(t("docs.title"))} />
       <Tabs.Screen name="ftl" options={sub(t("ftl.title"))} />

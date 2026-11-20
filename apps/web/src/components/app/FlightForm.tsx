@@ -194,6 +194,33 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
               }}
             />
           </header>
+          {/* a new flight of today or yesterday: registration, then the times and airports seen by the ADS-B network */}
+          {!flight && !v.isFstd && (
+            <div className="mx-5 mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-accent/40 bg-accent/5 px-4 py-3">
+              <Radar size={18} className="shrink-0 text-accent" aria-hidden />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">{t("adsbTitle")}</p>
+                <p className="text-xs text-muted">{t("adsbHint")}</p>
+              </div>
+              <input
+                className="input num !w-32 uppercase"
+                placeholder="F-GXXX"
+                aria-label={t("registration")}
+                value={v.registration ?? ""}
+                onChange={(e) => setV((s) => ({ ...s, registration: e.target.value.toUpperCase(), aircraftId: null }))}
+              />
+              <FlightAwareFill prominent registration={v.registration} date={v.date} onPick={(f) =>
+                    setV((s) => ({
+                      ...s,
+                      depIcao: f.dep ?? s.depIcao,
+                      arrIcao: f.arr ?? s.arrIcao,
+                      out: f.out ?? s.out,
+                      off: f.off ?? s.off,
+                      on: f.on ?? s.on,
+                      in: f.in ?? s.in,
+                    }))} />
+            </div>
+          )}
           {!v.isFstd && (
             <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 px-5 pt-5 sm:gap-4">
               <AirportInput big label={t("dep")} value={v.depIcao} onChange={(x) => set("depIcao", x)} required />
