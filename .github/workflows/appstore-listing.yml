@@ -1,0 +1,28 @@
+name: App Store listing
+
+# Sets Geardown's App Store description, privacy policy and support URLs. Run by hand: Actions › App Store listing › Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      check:
+        description: "Only show what is there (no change)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  listing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/appstore/listing.mjs ${{ inputs.check && '--check' || '' }}
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
