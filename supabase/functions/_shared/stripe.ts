@@ -4,8 +4,7 @@ import type { Tier } from "./subscriptions.ts";
 
 const STRIPE_API = "https://api.stripe.com/v1";
 
-/** "student": Basic's features at the Student price (yearly only); the subscription grants the basic tier. */
-export type Plan = "basic" | "premium" | "student";
+export type Plan = "basic" | "premium";
 export type Interval = "monthly" | "yearly";
 
 /**
@@ -16,7 +15,6 @@ export type Interval = "monthly" | "yearly";
 const CURRENT_PRICES: Partial<Record<`${Plan}_${Interval}`, string>> = {
   basic_yearly: "price_1Udb75CeThANvNanODCcsPcu", // 39,99 € / an
   basic_monthly: "price_1UdtkXCeThANvNanTcURhdfG", // 3,99 € / mois
-  student_yearly: "price_1UdtQ3CeThANvNanBlpthNty", // 19,99 € / an
 };
 
 /** Price id for a plan + interval: the current price above, else the env secret. */
@@ -24,7 +22,7 @@ export function priceIdFor(plan: Plan, interval: Interval): string {
   return CURRENT_PRICES[`${plan}_${interval}`] ?? requireEnv(`STRIPE_PRICE_${plan.toUpperCase()}_${interval.toUpperCase()}`);
 }
 
-/** Maps a Stripe price id back to a Geardown tier (null when unknown): current, earlier and student prices. */
+/** Maps a Stripe price id back to a Geardown tier (null when unknown): current and earlier prices. */
 export function tierForPrice(priceId: string | null | undefined): Tier | null {
   if (!priceId) return null;
   for (const [key, id] of Object.entries(CURRENT_PRICES)) if (id === priceId) return key.startsWith("premium") ? "premium" : "basic";
@@ -34,7 +32,6 @@ export function tierForPrice(priceId: string | null | undefined): Tier | null {
       if (Deno.env.get(name) === priceId || Deno.env.get(`${name}_LEGACY`) === priceId) return plan;
     }
   }
-  if (Deno.env.get("STRIPE_PRICE_STUDENT_YEARLY") === priceId) return "basic";
   return null;
 }
 

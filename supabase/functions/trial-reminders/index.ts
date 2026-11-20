@@ -53,8 +53,8 @@ async function sendEmail(to: string, locale: "fr" | "en", daysLeft: 7 | 1): Prom
     ? daysLeft === 7 ? "Votre essai Geardown se termine dans 7 jours" : "Votre essai Geardown se termine demain"
     : daysLeft === 7 ? "Your Geardown trial ends in 7 days" : "Your Geardown trial ends tomorrow";
   const body = fr
-    ? `À la fin de l'essai, votre carnet reste consultable et exportable, et rien n'est supprimé. Pour continuer à saisir des vols, choisissez une formule (Élève, Basic ou Max).`
-    : `When the trial ends, your logbook stays readable and exportable, and nothing is deleted. To keep logging flights, choose a plan (Student, Basic or Max).`;
+    ? `À la fin de l'essai, votre carnet reste consultable et exportable, et rien n'est supprimé. Pour continuer à saisir des vols, choisissez une formule (Basic ou Max).`
+    : `When the trial ends, your logbook stays readable and exportable, and nothing is deleted. To keep logging flights, choose a plan (Basic or Max).`;
   const link = `${appUrl}/${locale}/app/${fr ? "parametres" : "settings"}`;
   const html = `<p>${escapeHtml(body)}</p><p><a href="${escapeHtml(link)}">${fr ? "Choisir une formule" : "Choose a plan"}</a></p>`;
   try {

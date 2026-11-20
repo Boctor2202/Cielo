@@ -6,7 +6,7 @@ import { useSubscriptionStatus } from "@/lib/subscriptionStatus";
 import { AirportInput } from "@/components/app/AirportInput";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { REGULATORS, regulatorById, PILOT_FUNCTIONS, studentEligible, type Pilot } from "@cielo/core";
+import { REGULATORS, regulatorById, PILOT_FUNCTIONS, type Pilot } from "@cielo/core";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Card, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { useFlights, usePilot, useTable } from "@/lib/hooks";
@@ -18,9 +18,6 @@ import { deleteAllLocal, exportAll, importAll, updatePilot } from "@/lib/repo";
 import { downloadBlob } from "@/lib/download";
 import { useCloud } from "@/lib/cloud";
 import { SITE } from "@/config/site";
-
-/** The Student plan is offered once its column (migration 0026) and its Stripe price exist. */
-const STUDENT_PLAN = process.env.NEXT_PUBLIC_STUDENT_PLAN === "1";
 
 export default function SettingsPage() {
   const t = useTranslations("app.settings");
@@ -70,7 +67,7 @@ export default function SettingsPage() {
     }
   }
 
-  async function checkout(plan: "basic" | "premium" | "student", interval: "monthly" | "yearly" = "monthly") {
+  async function checkout(plan: "basic" | "premium", interval: "monthly" | "yearly" = "monthly") {
     try {
       const { url } = await cloud.invoke<{ url: string }>("create-checkout-session", { plan, interval, returnPath: `/${locale}/app/parametres` });
       window.location.assign(url);
@@ -221,35 +218,6 @@ export default function SettingsPage() {
                   </button>
                 ))}
               </div>
-              {STUDENT_PLAN && (
-                <div className="rounded-xl border border-border p-3 text-sm">
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={!!v.studentUntil} onChange={(e) => {
-                      const studentUntil = e.target.checked ? new Date(Date.now() + 365 * 86400_000).toISOString().slice(0, 10) : null;
-                      setV({ ...v, studentUntil });
-                      void patch({ studentUntil });
-                    }} />
-                    {t("studentDeclare")}
-                  </label>
-                  {v.studentUntil && (
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span className="text-muted">{t("studentUntil")}</span>
-                      <input type="date" className="input num !w-auto" value={v.studentUntil} onChange={(e) => {
-                        setV({ ...v, studentUntil: e.target.value });
-                        void patch({ studentUntil: e.target.value });
-                      }} />
-                      <button type="button" className="btn btn-secondary btn-sm" disabled={!studentEligible(v.studentUntil) || stripeActive} onClick={async () => {
-                        // the server checks the declaration: send it before opening the checkout (sync runs every minute)
-                        await cloud.syncNow();
-                        await checkout("student", "yearly");
-                      }}>
-                        {tpr("plans.student.name")} · {SITE.pricing.student.yearly.toLocaleString(locale, { minimumFractionDigits: 2 })} €{tpr("perYear")}
-                      </button>
-                    </div>
-                  )}
-                  <p className="mt-2 text-xs text-muted">{t("studentHint")}</p>
-                </div>
-              )}
             </div>
           )}
         </Card>

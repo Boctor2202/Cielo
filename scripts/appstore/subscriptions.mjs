@@ -1,5 +1,5 @@
 // Creates Geardown's subscriptions in App Store Connect through Apple's API, so nobody has to fill the forms:
-// the group, the five plans (Basic / Max, monthly / yearly, and Student yearly), their French and English texts, their prices in every
+// the group, the four plans (Basic / Max, monthly / yearly), their French and English texts, their prices in every
 // country (from the French price, as App Store Connect does), no store free trial (the 30-day trial runs on the account), the review screenshot and notes.
 // Safe to run again: whatever already exists is kept and only what is missing is added.
 //
@@ -19,9 +19,11 @@ const NEW_SCREENSHOT = process.argv.includes("--replace-screenshot");
 // --update-prices: a plan whose French price differs from PLANS gets the new price in every country, for new
 // subscribers only (existing subscribers keep the price they signed up at: preserveCurrentPrice)
 const UPDATE_PRICES = process.argv.includes("--update-prices");
+// --remove-product=<productId>: deletes a plan that was never submitted to Apple (e.g. the dropped Student plan)
+const REMOVE = process.argv.find((a) => a.startsWith("--remove-product="))?.split("=")[1];
 
 const REVIEW_NOTE =
-  "Geardown is a pilot e-logbook. Basic unlocks the unlimited logbook, exports in authority formats (EASA, FAA, CASA), licence and recency tracking, statistics and web/mobile sync. Student is Basic at a lower yearly price for student pilots (self-declared in the app, until their licence). Max adds roster import and FTL monitoring, layovers, live radar, audit, job offers and the pilot CV. Every new account gets a 30-day free trial with all features, without any payment details; the subscriptions themselves have no free trial. The subscription screen is in the app under More › Subscription.";
+  "Geardown is a pilot e-logbook. Basic unlocks the unlimited logbook, exports in authority formats (EASA, FAA, CASA), licence and recency tracking, statistics and web/mobile sync. Max adds roster import and FTL monitoring, layovers, live radar, audit, job offers and the pilot CV. Every new account gets a 30-day free trial with all features, without any payment details; the subscriptions themselves have no free trial. The subscription screen is in the app under More › Subscription.";
 
 const PLANS = [
   {
@@ -43,12 +45,6 @@ const PLANS = [
     productId: "geardown_basic_monthly", ref: "Basic mensuel", period: "ONE_MONTH", level: 4, price: "3.99",
     fr: ["Geardown Basic – Mensuel", "Carnet illimité, exports au format et synchro."],
     en: ["Geardown Basic – Monthly", "Unlimited logbook, formatted exports and sync."],
-  },
-  {
-    // Basic's features at a student price, yearly only; RevenueCat grants the "basic" entitlement
-    productId: "geardown_student_yearly", ref: "Élève annuel", period: "ONE_YEAR", level: 5, price: "19.99",
-    fr: ["Geardown Élève – Annuel", "Les fonctions de Basic, pour les élèves pilotes."],
-    en: ["Geardown Student – Yearly", "Basic's features, for student pilots."],
   },
 ];
 
@@ -140,6 +136,15 @@ async function main() {
     return;
   }
 
+  if (REMOVE) {
+    const sub = existing.find((x) => x.attributes.productId === REMOVE);
+    if (!sub) log(`${REMOVE}: not found`);
+    else {
+      await api("DELETE", `/v1/subscriptions/${sub.id}`);
+      log(`${REMOVE}: deleted (was ${sub.attributes.state})`);
+    }
+    return;
+  }
   if (UPDATE_PRICES) {
     if (!group) throw new Error(`Group "${GROUP}" missing`);
     await updatePrices(existing);

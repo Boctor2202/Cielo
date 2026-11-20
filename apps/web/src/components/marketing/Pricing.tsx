@@ -7,10 +7,10 @@ import { FOUNDER_SEATS, REFUND_DAYS, yearlySaving } from "@cielo/core";
 import { Link } from "@/i18n/navigation";
 import { SITE } from "@/config/site";
 
-type Plan = "student" | "basic" | "premium";
+type Plan = "basic" | "premium";
 type Cell = boolean | string;
 
-/** Feature matrix — keep in sync with MAX_FEATURES in @cielo/core (the entitlements enforced by the app). Student = Basic. */
+/** Feature matrix — keep in sync with MAX_FEATURES in @cielo/core (the entitlements enforced by the app). */
 const MATRIX: { row: string; basic: Cell; premium: Cell }[] = [
   { row: "flights", basic: "unlimited", premium: "unlimited" },
   { row: "night", basic: true, premium: true },
@@ -49,7 +49,7 @@ export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
   const locale = useLocale();
   const messages = useMessages() as { pricing: { highlights: Record<Plan, string[]> } };
   const money = (v: number) => new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-IE", { style: "currency", currency: SITE.pricing.currency }).format(v);
-  const plans: Plan[] = ["student", "basic", "premium"];
+  const plans: Plan[] = ["basic", "premium"];
   const seats = useFounderSeats();
   const [yearly, setYearly] = useState(true);
 
@@ -74,7 +74,7 @@ export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
         </div>
       </div>
 
-      <div className="mx-auto mt-12 grid max-w-5xl gap-5 md:grid-cols-3">
+      <div className="mx-auto mt-12 grid max-w-4xl gap-5 md:grid-cols-2">
         {plans.map((p) => {
           const { monthly } = SITE.pricing[p];
           const saving = yearlySaving(monthly, SITE.pricing[p].yearly);
@@ -97,9 +97,7 @@ export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
                       {t("orMonthly", { price: money(monthly) })}
                       {saving > 0 && <span className="mt-0.5 block font-semibold text-accent">{t("saving", { pct: saving, full: money(monthly * 12), yearly: money(SITE.pricing[p].yearly) })}</span>}
                     </p>
-                  ) : (
-                    <p className="mt-2 text-sm text-muted">{t("yearlyOnly")}</p>
-                  )}
+                  ) : null}
                 </>
               ) : (
                 <>
@@ -149,7 +147,7 @@ export function Pricing({ showCompare = true }: { showCompare?: boolean }) {
               <thead className="bg-surface">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold">{t("feature")}</th>
-                  <th className="px-4 py-3 text-center font-semibold">{t("basicAndStudent")}</th>
+                  <th className="px-4 py-3 text-center font-semibold">{t("plans.basic.name")}</th>
                   <th className="px-4 py-3 text-center font-semibold text-accent">{t("plans.premium.name")}</th>
                 </tr>
               </thead>

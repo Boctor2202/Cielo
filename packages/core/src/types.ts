@@ -70,8 +70,6 @@ export interface Pilot extends SyncedRecord {
   phone?: string;
   bio?: string;
   subscriptionTier: SubscriptionTier;
-  /** student pilot (self-declared): the Student plan is offered until this date (expected licence, at most 24 months) */
-  studentUntil?: string | null;
   subscriptionSource: SubscriptionSource;
   subscriptionExpiresAt?: ISODateTime | null;
 }

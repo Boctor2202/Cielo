@@ -77,7 +77,6 @@ export function softwareLd(locale: string, description: string) {
     inLanguage: ["fr", "en"],
     publisher: { "@id": `${SITE_URL}/#organization` },
     offers: [
-      offer("Student (yearly)", p.student.yearly, "ANN"),
       offer("Basic (yearly)", p.basic.yearly, "ANN"),
       offer("Max (yearly)", p.premium.yearly, "ANN"),
       ...(p.basic.monthly ? [offer("Basic", p.basic.monthly, "MON")] : []),

@@ -12,6 +12,10 @@ on:
         description: "Apply the prices of scripts/appstore/subscriptions.mjs to new subscribers (existing ones keep theirs)"
         type: boolean
         default: false
+      remove_product:
+        description: "Delete this never-submitted plan (product id)"
+        type: string
+        default: ""
       replace_screenshot:
         description: "Replace the review screenshot with scripts/appstore/review-subscription.jpg"
         type: boolean
@@ -29,7 +33,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node scripts/appstore/subscriptions.mjs ${{ inputs.check && '--check' || '' }} ${{ inputs.replace_screenshot && '--replace-screenshot' || '' }} ${{ inputs.update_prices && '--update-prices' || '' }}
+      - run: node scripts/appstore/subscriptions.mjs ${{ inputs.check && '--check' || '' }} ${{ inputs.replace_screenshot && '--replace-screenshot' || '' }} ${{ inputs.update_prices && '--update-prices' || '' }} ${{ inputs.remove_product && format('--remove-product={0}', inputs.remove_product) || '' }}
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}

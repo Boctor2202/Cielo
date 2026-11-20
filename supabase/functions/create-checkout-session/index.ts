@@ -27,9 +27,8 @@ Deno.serve(async (req) => {
   const { user } = auth;
 
   const body = await readJson<Body>(req);
-  if (!body || (body.plan !== "basic" && body.plan !== "premium" && body.plan !== "student")) return errorResponse(400, "plan must be basic, premium or student");
-  // the Student plan is yearly only
-  const interval: Interval = body.plan === "student" ? "yearly" : body.interval ?? "monthly";
+  if (!body || (body.plan !== "basic" && body.plan !== "premium")) return errorResponse(400, "plan must be basic or premium");
+  const interval: Interval = body.interval ?? "monthly";
   if (interval !== "monthly" && interval !== "yearly") return errorResponse(400, "interval must be monthly or yearly");
 
   // Only same-site relative paths: never redirect to an arbitrary URL from the body.
@@ -62,12 +61,7 @@ Deno.serve(async (req) => {
       .select("id", { count: "exact", head: true })
       .eq("pilot_id", user.id);
     // what is left of the account's 30-day trial (Stripe needs a trial end at least 48 h ahead)
-    const { data: pilotRow } = await adminClient().from("pilots").select("created_at, student_until").eq("id", user.id).maybeSingle();
-    // Student plan: declared, and the expected licence date ahead (at most 24 months)
-    if (body.plan === "student") {
-      const until = pilotRow?.student_until ? Date.parse(pilotRow.student_until as string) : 0;
-      if (!until || until < Date.now() || until > Date.now() + 731 * 86_400_000) return json({ error: "not_student" }, 403);
-    }
+    const { data: pilotRow } = await adminClient().from("pilots").select("created_at").eq("id", user.id).maybeSingle();
     const trialEnd = pilotRow?.created_at ? Math.floor(Date.parse(pilotRow.created_at as string) / 1000) + TRIAL_DAYS * 86_400 : 0;
     const keepTrial = !pastSubscriptions && trialEnd - Date.now() / 1000 > 48 * 3600;
 

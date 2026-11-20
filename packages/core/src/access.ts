@@ -2,7 +2,7 @@ import type { Pilot } from "./types";
 
 /**
  * Who may do what. No free plan: a 30-day trial without a card, counted from the account's creation (or from the
- * first local use before signing up), with everything in Max; then Basic, Student or Max. Without a live
+ * first local use before signing up), with everything in Max; then Basic or Max. Without a live
  * subscription the logbook stays readable and exportable (GDPR portability), nothing is ever deleted, but nothing
  * new can be written.
  */
@@ -11,9 +11,6 @@ export const TRIAL_DAYS = 30;
 export const PRICES_EUR = { basic: 3.99, premium: 8.99 } as const;
 /** The yearly prices: two months free (10 months paid). */
 export const YEARLY_PRICES_EUR = { basic: 39.99, premium: 89.99 } as const;
-/** Student plan: Basic's features, yearly only, until the licence (self-declared, at most 24 months). */
-export const STUDENT_YEARLY_EUR = 19.99;
-export const STUDENT_MAX_MONTHS = 24;
 /** The first subscribers keep their price as long as they stay subscribed. */
 export const FOUNDER_SEATS = 500;
 /** Money-back guarantee after the first payment, in days. */
@@ -24,15 +21,6 @@ export function yearlySaving(monthly: number | undefined, yearly: number): numbe
   if (!monthly) return 0;
   const full = monthly * 12;
   return full > yearly ? Math.floor(((full - yearly) / full) * 100) : 0;
-}
-
-/** Whether the Student plan can be offered: declared, and the expected licence date within the limit. */
-export function studentEligible(studentUntil: string | null | undefined, now = new Date()): boolean {
-  if (!studentUntil) return false;
-  const until = Date.parse(studentUntil);
-  const max = new Date(now);
-  max.setMonth(max.getMonth() + STUDENT_MAX_MONTHS);
-  return until > now.getTime() && until <= max.getTime();
 }
 
 /** Seats left at the founder price, shown only once half are taken (a small number reveals little traction). */

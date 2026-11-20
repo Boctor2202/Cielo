@@ -159,10 +159,6 @@
       "premium": {
         "name": "Max",
         "desc": "Pour les pilotes de ligne et d'affaires : roster, FTL, offres d'emploi, CV, escales, radar et traces ADS-B."
-      },
-      "student": {
-        "name": "Élève",
-        "desc": "Pour les élèves pilotes, jusqu'à l'obtention de la licence. Les fonctions de Basic."
       }
     },
     "highlights": {
@@ -183,11 +179,6 @@
         "Escales : les meilleures adresses autour de l'hôtel équipage",
         "Radar en direct et trace ADS-B des vols quand la couverture le permet",
         "Scan photo du carnet papier (bêta)"
-      ],
-      "student": [
-        "Toutes les fonctions de Basic",
-        "Prix réservé aux élèves pilotes (sur déclaration), jusqu'à la date de licence prévue (24 mois au plus)",
-        "Ensuite, passage à Basic au prix Basic"
       ]
     },
     "compareTitle": "Comparaison détaillée",
@@ -224,13 +215,11 @@
     "billedOncePerYear": "facturé une fois par an",
     "orMonthly": "ou {price}/mois, facturé chaque mois",
     "saving": "Économie de {pct} % en annuel : {yearly} au lieu de {full}",
-    "yearlyOnly": "Formule annuelle uniquement",
     "founderTitle": "Prix fondateur.",
     "founder": "Les {seats} premiers abonnés gardent leur prix tant qu'ils restent abonnés.",
     "founderSeats": "Les {seats} premiers abonnés gardent leur prix tant qu'ils restent abonnés : encore {left} places.",
     "refundTitle": "Satisfait ou remboursé {days} jours.",
     "refund": "Pas convaincu ? Écrivez-nous dans les {days} jours qui suivent votre premier paiement sur le site : nous vous remboursons. Abonnement pris sur l'App Store : le remboursement se demande à Apple (reportaproblem.apple.com), qui en décide.",
-    "basicAndStudent": "Élève · Basic",
     "included": "Inclus",
     "notIncluded": "Non inclus",
     "billedMonthly": "facturé chaque mois",
@@ -1438,9 +1427,6 @@
       "cancelledHint": "Vous changez d'avis ? Réactivez-le avec le bouton « Gérer ou résilier mon abonnement » ci-dessous (« Renouveler l'abonnement » dans Stripe).",
       "exportEverything": "Exporter tout mon carnet",
       "exportEverythingHint": "PDF au format de votre autorité, CSV de tous vos vols et toutes vos données (JSON). Possible à tout moment, avec ou sans abonnement, même après la fin de l'essai ou une résiliation.",
-      "studentDeclare": "Je suis élève pilote (formule Élève)",
-      "studentUntil": "Licence prévue le",
-      "studentHint": "Sur déclaration : la formule Élève est proposée jusqu'à la date de licence prévue, 24 mois au plus. Un justificatif peut être demandé au renouvellement.",
       "trialPlan": "Essai gratuit, toutes les fonctions ({days} j restants)"
     },
     "functions": {
@@ -1883,7 +1869,7 @@
       "upgrade": "Passer à Max",
       "readOnlyShort": "Lecture seule : abonnez-vous pour enregistrer.",
       "readOnlyTitle": "Abonnement nécessaire",
-      "readOnlyText": "Sans abonnement actif, votre carnet reste consultable et exportable, mais la saisie est désactivée. Élève 19,99 €/an, Basic 39,99 €/an ou 3,99 €/mois, Max 89,99 €/an ou 8,99 €/mois.",
+      "readOnlyText": "Sans abonnement actif, votre carnet reste consultable et exportable, mais la saisie est désactivée. Basic 39,99 €/an ou 3,99 €/mois, Max 89,99 €/an ou 8,99 €/mois.",
       "maxTitle": "Fonction réservée à Max",
       "maxText": "Roster, FTL, offres d'emploi, CV pilote, escales, radar, traces ADS-B, audit et scan sont inclus dans Max (89,99 €/an ou 8,99 €/mois).",
       "haveAccount": "Déjà abonné ? Se connecter",
@@ -2511,8 +2497,8 @@
       "description": "Toutes les colonnes AMC1 FCL.050, import de roster, audit du carnet, suivi des licences et du médical, limites FTL, statistiques, signature, mode hors ligne, offres d'emploi et CV pilote."
     },
     "pricing": {
-      "title": "Tarifs — carnet de vol électronique dès 19,99 €/an",
-      "description": "Élève 19,99 €/an, Basic 39,99 €/an, Max 89,99 €/an pour les pilotes professionnels (roster, FTL, escales, radar). %TRIAL% jours d'essai sans carte bancaire, sans engagement."
+      "title": "Tarifs — carnet de vol électronique dès 3,99 €/mois",
+      "description": "Basic 39,99 €/an, Max 89,99 €/an pour les pilotes professionnels (roster, FTL, escales, radar). %TRIAL% jours d'essai sans carte bancaire, sans engagement."
     },
     "airlines": {
       "title": "Carnet de vol électronique pour compagnies et écoles",
