@@ -9,7 +9,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { REGULATORS, regulatorById, PILOT_FUNCTIONS, type Pilot } from "@cielo/core";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Card, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
-import { usePilot } from "@/lib/hooks";
+import { useFlights, usePilot, useTable } from "@/lib/hooks";
+import { exportEverything } from "@/lib/exportEverything";
 import { useAccess } from "@/lib/access";
 import { Link } from "@/i18n/navigation";
 import { useAirports } from "@/lib/airports";
@@ -39,6 +40,9 @@ export default function SettingsPage() {
   const [v, setV] = useState<Pilot | null>(null);
   const [delOpen, setDelOpen] = useState(false);
   const [word, setWord] = useState("");
+  const [exportingAll, setExportingAll] = useState(false);
+  const allFlights = useFlights();
+  const allBalances = useTable("opening_balances");
   useEffect(() => {
     if (pilot && !v) setV(pilot);
   }, [pilot, v]);
@@ -230,7 +234,18 @@ export default function SettingsPage() {
         </Card>
 
         <Card title={t("data")} className="lg:col-span-2">
+          <p className="mb-3 text-sm text-muted">{t("exportEverythingHint")}</p>
           <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn btn-primary" disabled={exportingAll} onClick={async () => {
+              setExportingAll(true);
+              try {
+                await exportEverything(allFlights ?? [], allBalances ?? [], v ?? undefined);
+              } finally {
+                setExportingAll(false);
+              }
+            }}>
+              <Download size={16} /> {t("exportEverything")}
+            </button>
             <button type="button" className="btn btn-secondary" onClick={async () => downloadBlob(JSON.stringify(await exportAll(), null, 2), `geardown-export-${new Date().toISOString().slice(0, 10)}.json`, "application/json")}>
               <Download size={16} /> {t("exportJson")}
             </button>

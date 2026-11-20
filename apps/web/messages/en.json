@@ -1418,7 +1418,9 @@
       "manageNone": "No card subscription found for this account.",
       "manageUnavailable": "Subscription management is not available right now. Write to us and we will do it for you.",
       "cancelledTitle": "Subscription cancelled: access until {date}",
-      "cancelledHint": "Changed your mind? Renew it with the button below (“Renew subscription” in Stripe)."
+      "cancelledHint": "Changed your mind? Renew it with the button below (“Renew subscription” in Stripe).",
+      "exportEverything": "Export my whole logbook",
+      "exportEverythingHint": "PDF in your authority's format, CSV of all your flights and all your data (JSON). Possible at any time, with or without a subscription, even after the trial or a cancellation."
     },
     "functions": {
       "PIC": "Pilot in command (PIC)",
@@ -2594,5 +2596,14 @@
     ],
     "more": "The legal detail (legal bases, retention, your rights) is in the",
     "privacyLink": "privacy policy."
+  },
+  "ownership": {
+    "title": "Your logbook is yours",
+    "export": "Full export at any time (PDF in your authority's format, CSV, all your data), even without a subscription, even after the trial or a cancellation.",
+    "storage": "Your data is stored on your device first, then synced to our servers.",
+    "storageEu": "Your data is stored on your device first, then on servers located in the European Union.",
+    "never": "Never sold, never used for advertising. Nothing is deleted when the trial ends.",
+    "shutdown": "If the service ever shut down, all your data would be handed back to you.",
+    "more": "What we keep, and how to get it back"
   }
 }

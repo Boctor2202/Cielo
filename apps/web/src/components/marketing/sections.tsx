@@ -310,3 +310,22 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle?: stri
     </div>
   );
 }
+
+/** « Your logbook is yours »: what is promised on the home and pricing pages, and kept by the code. */
+export function OwnershipBlock() {
+  const t = useTranslations("ownership");
+  const points = [t("export"), SITE.dataRegion === "eu" ? t("storageEu") : t("storage"), t("never"), t("shutdown")];
+  return (
+    <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
+      <div className="rounded-2xl border border-accent/40 bg-accent/5 p-7">
+        <h2 className="flex items-center gap-2 text-2xl font-bold tracking-tight"><ShieldCheck size={24} className="text-accent" aria-hidden /> {t("title")}</h2>
+        <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+          {points.map((p) => (
+            <li key={p} className="flex gap-2.5 text-[15px]"><BadgeCheck size={18} className="mt-0.5 shrink-0 text-accent" aria-hidden />{p}</li>
+          ))}
+        </ul>
+        <Link href="/vos-donnees" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent">{t("more")} <ArrowRight size={14} aria-hidden /></Link>
+      </div>
+    </section>
+  );
+}

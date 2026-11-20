@@ -1418,7 +1418,9 @@
       "manageNone": "Aucun abonnement par carte trouvé pour ce compte.",
       "manageUnavailable": "La gestion de l'abonnement n'est pas disponible pour le moment. Écrivez-nous et nous le ferons pour vous.",
       "cancelledTitle": "Abonnement résilié : accès jusqu'au {date}",
-      "cancelledHint": "Vous changez d'avis ? Réactivez-le avec le bouton « Gérer ou résilier mon abonnement » ci-dessous (« Renouveler l'abonnement » dans Stripe)."
+      "cancelledHint": "Vous changez d'avis ? Réactivez-le avec le bouton « Gérer ou résilier mon abonnement » ci-dessous (« Renouveler l'abonnement » dans Stripe).",
+      "exportEverything": "Exporter tout mon carnet",
+      "exportEverythingHint": "PDF au format de votre autorité, CSV de tous vos vols et toutes vos données (JSON). Possible à tout moment, avec ou sans abonnement, même après la fin de l'essai ou une résiliation."
     },
     "functions": {
       "PIC": "Commandant de bord (PIC)",
@@ -2594,5 +2596,14 @@
     ],
     "more": "Le détail juridique (bases légales, durées de conservation, vos droits) est dans la",
     "privacyLink": "politique de confidentialité."
+  },
+  "ownership": {
+    "title": "Votre carnet vous appartient",
+    "export": "Export complet à tout moment (PDF au format de votre autorité, CSV, toutes vos données), même sans abonnement, même après l'essai ou une résiliation.",
+    "storage": "Vos données sont stockées d'abord sur votre appareil, puis synchronisées sur nos serveurs.",
+    "storageEu": "Vos données sont stockées d'abord sur votre appareil, puis sur des serveurs situés dans l'Union européenne.",
+    "never": "Jamais revendues, jamais utilisées pour de la publicité. Rien n'est supprimé à la fin de l'essai.",
+    "shutdown": "Si le service s'arrêtait un jour, toutes vos données vous seraient remises.",
+    "more": "Ce que nous gardons, et comment le récupérer"
   }
 }

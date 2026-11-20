@@ -30,6 +30,8 @@ export const SITE = {
     youtube: "#",
     x: "#",
   },
+  /** where the account's data is hosted, said on the site only once confirmed (e.g. "eu"); null = not stated */
+  dataRegion: null as "eu" | null,
   company: {
     legalName: "[Raison sociale]",
     address: "[Adresse du siège]",
