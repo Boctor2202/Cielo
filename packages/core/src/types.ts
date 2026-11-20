@@ -65,6 +65,8 @@ export interface Pilot extends SyncedRecord {
   currentTypes?: string[] | null;
   /** the CV draft (a CvProfile from @cielo/cv), synced between devices */
   cv?: Record<string, unknown> | null;
+  /** the Overview layout: widgets shown, their order and size (shared by the website and the app) */
+  dashboard?: { widgets: { id: string; size?: "s" | "l" }[] } | null;
   phone?: string;
   bio?: string;
   subscriptionTier: SubscriptionTier;
