@@ -1,17 +1,119 @@
 [
-  { "file": { "fr": "logbook.jpg" },
-    "fr": { "title": "Votre carnet de vol, <em>toujours à jour</em>.", "text": "Chaque vol avec son avion, ses horaires, la nuit et l'IFR, synchronisé entre iPhone et web." },
-    "en": { "title": "Your logbook, <em>always up to date</em>.", "text": "Every flight with its aircraft, times, night and IFR, synced between iPhone and the web." } },
-  { "file": { "fr": "cv.jpg" },
-    "fr": { "title": "Un CV pilote <em>tiré de vos vols</em>.", "text": "Heures, types, licences : votre CV se met à jour tout seul, prêt à envoyer." },
-    "en": { "title": "A pilot CV <em>built from your flights</em>.", "text": "Hours, types, licences: your CV updates itself, ready to send." } },
-  { "file": { "fr": "jobs.jpg" },
-    "fr": { "title": "Les offres faites <em>pour votre profil</em>.", "text": "Postes de pilote classés selon votre expérience, avec ce qu'il vous manque." },
-    "en": { "title": "Jobs that <em>match your profile</em>.", "text": "Pilot jobs ranked by your experience, with what you still need." } },
-  { "file": { "fr": "badges.jpg" },
-    "fr": { "title": "Chaque heure de vol <em>compte</em>.", "text": "Aéroports, pays, atterrissages de nuit : débloquez vos distinctions." },
-    "en": { "title": "Every hour <em>counts</em>.", "text": "Airports, countries, night landings: unlock your distinctions." } },
-  { "file": { "fr": "subscription-fr.jpg" },
-    "fr": { "title": "Essayez <em>7 jours</em>, gratuitement.", "text": "Basic pour le carnet, Max pour tout Geardown. Au mois ou à l'année, résiliable à tout moment." },
-    "en": { "title": "Try it <em>free</em> for 7 days.", "text": "Basic for the logbook, Max for all of Geardown. Monthly or yearly, cancel anytime." } }
+  {
+    "file": {
+      "fr": "dashboard.jpg"
+    },
+    "fr": {
+      "title": "Toutes vos heures, <em>en un coup d'œil</em>.",
+      "text": "Temps total, PIC, nuit, IFR, 28 jours, 90 jours, 12 mois : toujours à jour."
+    },
+    "en": {
+      "title": "All your hours, <em>at a glance</em>.",
+      "text": "Total, PIC, night, IFR, 28 days, 90 days, 12 months: always up to date."
+    }
+  },
+  {
+    "file": {
+      "fr": "logbook.jpg"
+    },
+    "fr": {
+      "title": "Votre carnet de vol, <em>toujours à jour</em>.",
+      "text": "Chaque vol avec son avion, ses horaires, la nuit et l'IFR, synchronisé entre iPhone et web."
+    },
+    "en": {
+      "title": "Your logbook, <em>always up to date</em>.",
+      "text": "Every flight with its aircraft, times, night and IFR, synced between iPhone and the web."
+    }
+  },
+  {
+    "file": {
+      "fr": "import.jpg"
+    },
+    "fr": {
+      "title": "Importez <em>tout votre historique</em>.",
+      "text": "Photos de votre carnet papier, relevé PDF de compagnie, CSV ou e-mail : Geardown lit tout."
+    },
+    "en": {
+      "title": "Import <em>your whole history</em>.",
+      "text": "Paper logbook photos, airline PDFs, CSV or e-mail: Geardown reads it all."
+    }
+  },
+  {
+    "file": {
+      "fr": "documents.jpg"
+    },
+    "fr": {
+      "title": "Vos licences, <em>jamais expirées</em>.",
+      "text": "Qualifications, licence et médical, avec un rappel avant chaque échéance."
+    },
+    "en": {
+      "title": "Your licences, <em>never expired</em>.",
+      "text": "Ratings, licence and medical, with a reminder before every expiry."
+    }
+  },
+  {
+    "file": {
+      "fr": "radar.jpg"
+    },
+    "fr": {
+      "title": "Le trafic <em>en direct</em>.",
+      "text": "Suivez vos avions et le trafic autour de vous, avec les traces réelles de vos vols."
+    },
+    "en": {
+      "title": "Live <em>traffic</em>.",
+      "text": "Follow your aircraft and the traffic around you, with the real tracks of your flights."
+    }
+  },
+  {
+    "file": {
+      "fr": "cv.jpg"
+    },
+    "fr": {
+      "title": "Un CV pilote <em>tiré de vos vols</em>.",
+      "text": "Heures, types, licences : votre CV se met à jour tout seul, prêt à envoyer."
+    },
+    "en": {
+      "title": "A pilot CV <em>built from your flights</em>.",
+      "text": "Hours, types, licences: your CV updates itself, ready to send."
+    }
+  },
+  {
+    "file": {
+      "fr": "jobs.jpg"
+    },
+    "fr": {
+      "title": "Les offres faites <em>pour votre profil</em>.",
+      "text": "Postes de pilote classés selon votre expérience, avec ce qu'il vous manque."
+    },
+    "en": {
+      "title": "Jobs that <em>match your profile</em>.",
+      "text": "Pilot jobs ranked by your experience, with what you still need."
+    }
+  },
+  {
+    "file": {
+      "fr": "badges.jpg"
+    },
+    "fr": {
+      "title": "Chaque heure de vol <em>compte</em>.",
+      "text": "Aéroports, pays, atterrissages de nuit : débloquez vos distinctions."
+    },
+    "en": {
+      "title": "Every hour <em>counts</em>.",
+      "text": "Airports, countries, night landings: unlock your distinctions."
+    }
+  },
+  {
+    "file": {
+      "fr": "subscription-fr.jpg"
+    },
+    "fr": {
+      "title": "Essayez <em>7 jours</em>, gratuitement.",
+      "text": "Basic pour le carnet, Max pour tout Geardown. Au mois ou à l'année, résiliable à tout moment."
+    },
+    "en": {
+      "title": "Try it <em>free</em> for 7 days.",
+      "text": "Basic for the logbook, Max for all of Geardown. Monthly or yearly, cancel anytime."
+    }
+  }
 ]

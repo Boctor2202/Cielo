@@ -1,7 +1,9 @@
 """Raw captures with the pilot's own data swapped for a fictional pilot (name, photo, contact, licence, airline)."""
 import sys
+from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
+HERE = Path(__file__).parent
 INTER = "/usr/share/fonts/opentype/inter/Inter-{}.otf"
 def font(weight, size): return ImageFont.truetype(INTER.format(weight), size)
 
@@ -28,13 +30,17 @@ def cv(src, dst):
     text(im, (56, 162), "Thomas Mercier", "Bold", 33, (255, 255, 255))
     erase(im, (50, 238, 360, 258), left=(45, 248), right=(380, 248))
     text(im, (56, 240), "thomas.mercier@email.com   ·   +33 6 00 00 00 00   ·   France", "Regular", 12, (226, 232, 240))
+    # photo: a fictional pilot (generated portrait), in the white ring of the original
     d = ImageDraw.Draw(im)
     cx, cy, r = 628, 202, 55
-    d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(255, 255, 255))
-    d.ellipse((cx - r + 4, cy - r + 4, cx + r - 4, cy + r - 4), fill=(46, 84, 130))
-    f = font("SemiBold", 38)
-    w = d.textlength("TM", font=f)
-    d.text((cx - w / 2, cy - 24), "TM", font=f, fill=(255, 255, 255))
+    ring = Image.new("L", (r * 16, r * 16), 0)
+    ImageDraw.Draw(ring).ellipse((0, 0, r * 16 - 1, r * 16 - 1), fill=255)
+    im.paste((255, 255, 255), (cx - r, cy - r, cx + r, cy + r), ring.resize((r * 2, r * 2), Image.LANCZOS))
+    inner = r - 4
+    face = Image.open(HERE / "portrait.png").convert("RGB").crop((230, 70, 1030, 870)).resize((inner * 2, inner * 2), Image.LANCZOS)
+    mask = Image.new("L", (inner * 8, inner * 8), 0)
+    ImageDraw.Draw(mask).ellipse((0, 0, inner * 8 - 1, inner * 8 - 1), fill=255)
+    im.paste(face, (cx - inner, cy - inner), mask.resize((inner * 2, inner * 2), Image.LANCZOS))
     # licence numbers and footer
     white = (255, 255, 255)
     for box, xy, s in [
@@ -62,6 +68,22 @@ def logbook(src, dst):
         text(im, (417, f - 14), "GDN214 ·...", "Regular", 22, (150, 160, 175))
     im.save(dst, quality=95)
 
+def dashboard(src, dst):
+    im = Image.open(src).convert("RGB")
+    erase(im, (203, 222, 290, 255))
+    ImageDraw.Draw(im).text((206, 247), "Thomas", font=font("Regular", 27), fill=(150, 163, 182), anchor="ls")
+    im.save(dst, quality=95)
+
+def radar(src, dst):
+    im = Image.open(src).convert("RGB")
+    d = ImageDraw.Draw(im)
+    f = font("Medium", 24)
+    for (x0, x1), reg in zip([(25, 141), (155, 270), (282, 402), (415, 528), (541, 656)], ["F-HGDN", "F-HGDW", "F-HGDX", "D-IGDN", "D-IGDW"]):
+        chip = im.getpixel((x0 + 10, 360))
+        d.rectangle((x0 + 9, 361, x1 - 9, 391), fill=chip)
+        d.text(((x0 + x1) / 2, 384), reg, font=f, fill=(240, 244, 248), anchor="ms")
+    im.save(dst, quality=95)
+
 if __name__ == "__main__":
     kind, src, dst = sys.argv[1:4]
-    {"cv": cv, "logbook": logbook}[kind](src, dst)
+    {"cv": cv, "logbook": logbook, "dashboard": dashboard, "radar": radar}[kind](src, dst)
