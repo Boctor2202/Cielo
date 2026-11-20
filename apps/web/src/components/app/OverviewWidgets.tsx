@@ -285,8 +285,8 @@ export function OverviewWidgets({
         </div>
       </div>
 
-      <div className={editing ? "grid gap-4 lg:grid-cols-[1fr_260px]" : ""}>
-        <div className="grid gap-4 md:grid-cols-4">
+      <div className={editing ? "grid grid-cols-1 gap-4 lg:grid-cols-[1fr_260px]" : ""}>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           {widgets.map((w, i) => (
             <div
               key={w.id}

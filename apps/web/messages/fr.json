@@ -542,6 +542,7 @@
         "daysLeft": "{n} jours restants",
         "changeLabel": "sur 28 jours, par rapport aux 28 précédents",
         "newFlight": "Nouveau vol",
+        "night": "Nuit",
         "footerNote": "Calculé depuis votre carnet",
         "savingsNote": "Objectifs calculés automatiquement à partir de votre carnet et des règles FCL.060.",
         "otherTypes": "Autres types",
