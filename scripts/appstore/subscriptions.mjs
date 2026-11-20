@@ -1,5 +1,5 @@
 // Creates Geardown's subscriptions in App Store Connect through Apple's API, so nobody has to fill the forms:
-// the group, the four plans (Basic / Max, monthly / yearly), their French and English texts, their prices in every
+// the group, the five plans (Basic / Max, monthly / yearly, and Student yearly), their French and English texts, their prices in every
 // country (from the French price, as App Store Connect does), the 7-day free trial, the review screenshot and notes.
 // Safe to run again: whatever already exists is kept and only what is missing is added.
 //
@@ -21,7 +21,7 @@ const NEW_SCREENSHOT = process.argv.includes("--replace-screenshot");
 const UPDATE_PRICES = process.argv.includes("--update-prices");
 
 const REVIEW_NOTE =
-  "Geardown is a pilot e-logbook. Basic unlocks the unlimited logbook, official exports, licence and recency tracking, statistics and web/mobile sync. Max adds roster import and FTL monitoring, layovers, live radar, audit, signatures, job offers and the pilot CV. Both plans start with a 7-day free trial. The subscription screen is in the app under More › Subscription.";
+  "Geardown is a pilot e-logbook. Basic unlocks the unlimited logbook, exports in authority formats (EASA, FAA, CASA), licence and recency tracking, statistics and web/mobile sync. Student is Basic at a lower yearly price for student pilots (self-declared in the app, until their licence). Max adds roster import and FTL monitoring, layovers, live radar, audit, job offers and the pilot CV. Both plans start with a 7-day free trial. The subscription screen is in the app under More › Subscription.";
 
 const PLANS = [
   {
@@ -41,8 +41,14 @@ const PLANS = [
   },
   {
     productId: "geardown_basic_monthly", ref: "Basic mensuel", period: "ONE_MONTH", level: 4, price: "3.99",
-    fr: ["Geardown Basic – Mensuel", "Carnet illimité, exports officiels et synchro."],
-    en: ["Geardown Basic – Monthly", "Unlimited logbook, official exports and sync."],
+    fr: ["Geardown Basic – Mensuel", "Carnet illimité, exports au format et synchro."],
+    en: ["Geardown Basic – Monthly", "Unlimited logbook, formatted exports and sync."],
+  },
+  {
+    // Basic's features at a student price, yearly only; RevenueCat grants the "basic" entitlement
+    productId: "geardown_student_yearly", ref: "Élève annuel", period: "ONE_YEAR", level: 5, price: "19.99",
+    fr: ["Geardown Élève – Annuel", "Les fonctions de Basic, pour les élèves pilotes."],
+    en: ["Geardown Student – Yearly", "Basic's features, for student pilots."],
   },
 ];
 
