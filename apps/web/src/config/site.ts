@@ -19,6 +19,8 @@ export const SITE = {
     premium: { monthly: 8.99 as number | undefined, yearly: 89.99 },
     trialDays: 30,
   },
+  /** the brand line, in English in every language */
+  slogan: "From gear up to gear down.",
   /** public TestFlight link of the iPhone beta (null until created): replaces the store badges with « Join the beta » */
   betaUrl: null as string | null,
   stores: {
