@@ -117,7 +117,7 @@
         "text": "Geardown fonctionne sans réseau, en vol comme en escale. Vos données se synchronisent dès que vous retrouvez une connexion, sur tous vos appareils.",
         "points": [
           "Base locale sur chaque appareil",
-          "Hébergement dans l'Union européenne",
+          "Hébergement en Europe (Londres)",
           "Sauvegarde automatique sur votre compte"
         ]
       },
@@ -230,7 +230,7 @@
     "items": [
       {
         "q": "Mes données sont-elles en sécurité ?",
-        "a": "Vos données sont stockées d'abord sur votre appareil, puis synchronisées sur des serveurs situés dans l'Union européenne. Les échanges sont chiffrés (TLS), les documents joints sont stockés dans un espace privé et chaque compte n'accède qu'à ses propres données. Nous ne vendons ni ne partageons vos données."
+        "a": "Vos données sont stockées d'abord sur votre appareil, puis synchronisées sur des serveurs situés à Londres (Royaume-Uni). Les échanges sont chiffrés (TLS), les documents joints sont stockés dans un espace privé et chaque compte n'accède qu'à ses propres données. Nous ne vendons ni ne partageons vos données."
       },
       {
         "q": "Les exports Geardown sont-ils au format EASA ?",
@@ -266,7 +266,7 @@
     "legal": "Légal",
     "legalNotice": "Mentions légales",
     "privacy": "Confidentialité (RGPD)",
-    "terms": "CGU",
+    "terms": "CGU / CGV",
     "cookies": "Cookies",
     "contact": "Contact",
     "rights": "Tous droits réservés.",
@@ -2406,7 +2406,7 @@
       },
       {
         "t": "Vos données restent à vous",
-        "d": "Hébergement dans l'Union européenne, export complet à tout moment, suppression en un clic."
+        "d": "Base de données à Londres, export complet à tout moment, suppression en un clic."
       }
     ]
   },

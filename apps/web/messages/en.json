@@ -117,7 +117,7 @@
         "text": "Geardown works without a network, in flight or on a layover. Your data syncs as soon as you're back online, on all your devices.",
         "points": [
           "Local database on each device",
-          "Hosted in the European Union",
+          "Hosted in Europe (London)",
           "Automatic backup to your account"
         ]
       },
@@ -230,7 +230,7 @@
     "items": [
       {
         "q": "Is my data safe?",
-        "a": "Your data is stored on your device first, then synced to servers located in the European Union. Traffic is encrypted (TLS), attachments are kept in a private space and each account can only access its own data. We never sell or share your data."
+        "a": "Your data is stored on your device first, then synced to servers located in London (United Kingdom). Traffic is encrypted (TLS), attachments are kept in a private space and each account can only access its own data. We never sell or share your data."
       },
       {
         "q": "Are Geardown exports in EASA format?",
@@ -266,7 +266,7 @@
     "legal": "Legal",
     "legalNotice": "Legal notice",
     "privacy": "Privacy (GDPR)",
-    "terms": "Terms of use",
+    "terms": "Terms of use and sale",
     "cookies": "Cookies",
     "contact": "Contact",
     "rights": "All rights reserved.",
@@ -2406,7 +2406,7 @@
       },
       {
         "t": "Your data stays yours",
-        "d": "Hosted in the European Union, full export anytime, deletion in one click."
+        "d": "Database in London, full export anytime, deletion in one click."
       }
     ]
   },

@@ -33,7 +33,7 @@ export function LogoMark({ size = 28, className }: { size?: number; className?: 
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={`inline-flex items-baseline text-[17px] font-bold leading-none tracking-[0.18em] ${className ?? ""}`} aria-label="Geardown">
+    <span className={`inline-flex items-baseline text-[17px] font-bold leading-none tracking-[0.18em] ${className ?? ""}`} role="img" aria-label="Geardown">
       {/* GEAR bold, DOWN regular: the ring of the O drawn at the weight of the regular letters */}
       <span aria-hidden>GEAR</span>
       <span aria-hidden className="font-normal">D</span>
