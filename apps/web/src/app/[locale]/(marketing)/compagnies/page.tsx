@@ -1,7 +1,7 @@
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { Building2, CalendarClock, ShieldCheck, Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { PageHeader } from "@/components/marketing/sections";
+import { PageHeader, RosterFormats } from "@/components/marketing/sections";
 import { BrowserFrame, Shot } from "@/components/marketing/Shot";
 import { pageMeta } from "@/lib/seo";
 
@@ -40,6 +40,7 @@ export default async function AirlinesPage({ params }: { params: Promise<{ local
           <Shot name="roster" alt="" className="w-full" />
         </BrowserFrame>
       </section>
+      <RosterFormats />
     </>
   );
 }

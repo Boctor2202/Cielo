@@ -1,11 +1,15 @@
 // Creates a Stripe Checkout session for the signed-in pilot.
 // Body: { plan: "basic" | "premium" (Max), interval?: "monthly", returnPath?: "/settings" }
-// No free plan: the first subscription of a pilot starts with a 7-day trial; the card is collected up front.
+// The 30-day trial needs no card: it runs on the account from its creation. The card is asked only here, when
+// the pilot chooses to subscribe; the days of trial left are kept (nothing is charged before the trial ends).
 // Response: { url }
 // Secrets: STRIPE_SECRET_KEY, STRIPE_PRICE_*, APP_URL (e.g. https://geardown.app).
 import { errorResponse, json, preflight, readJson, requireEnv } from "../_shared/http.ts";
 import { adminClient, getUser } from "../_shared/supabase.ts";
 import { type Interval, type Plan, priceIdFor, stripeRequest } from "../_shared/stripe.ts";
+
+/** Same as TRIAL_DAYS in packages/core/src/access.ts (functions cannot import the workspace packages). */
+const TRIAL_DAYS = 30;
 
 interface Body {
   plan?: Plan;
@@ -23,8 +27,9 @@ Deno.serve(async (req) => {
   const { user } = auth;
 
   const body = await readJson<Body>(req);
-  if (!body || (body.plan !== "basic" && body.plan !== "premium")) return errorResponse(400, "plan must be basic or premium");
-  const interval: Interval = body.interval ?? "monthly";
+  if (!body || (body.plan !== "basic" && body.plan !== "premium" && body.plan !== "student")) return errorResponse(400, "plan must be basic, premium or student");
+  // the Student plan is yearly only
+  const interval: Interval = body.plan === "student" ? "yearly" : body.interval ?? "monthly";
   if (interval !== "monthly" && interval !== "yearly") return errorResponse(400, "interval must be monthly or yearly");
 
   // Only same-site relative paths: never redirect to an arbitrary URL from the body.
@@ -56,7 +61,15 @@ Deno.serve(async (req) => {
       .from("subscriptions")
       .select("id", { count: "exact", head: true })
       .eq("pilot_id", user.id);
-    const trial = !pastSubscriptions;
+    // what is left of the account's 30-day trial (Stripe needs a trial end at least 48 h ahead)
+    const { data: pilotRow } = await adminClient().from("pilots").select("created_at, student_until").eq("id", user.id).maybeSingle();
+    // Student plan: declared, and the expected licence date ahead (at most 24 months)
+    if (body.plan === "student") {
+      const until = pilotRow?.student_until ? Date.parse(pilotRow.student_until as string) : 0;
+      if (!until || until < Date.now() || until > Date.now() + 731 * 86_400_000) return json({ error: "not_student" }, 403);
+    }
+    const trialEnd = pilotRow?.created_at ? Math.floor(Date.parse(pilotRow.created_at as string) / 1000) + TRIAL_DAYS * 86_400 : 0;
+    const keepTrial = !pastSubscriptions && trialEnd - Date.now() / 1000 > 48 * 3600;
 
     const session = await stripeRequest<{ id: string; url: string }>("POST", "/checkout/sessions", {
       mode: "subscription",
@@ -67,7 +80,7 @@ Deno.serve(async (req) => {
       metadata: { pilot_id: user.id },
       subscription_data: {
         metadata: { pilot_id: user.id },
-        ...(trial ? { trial_period_days: 7, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } } : {}),
+        ...(keepTrial ? { trial_end: trialEnd, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } } : {}),
       },
       allow_promotion_codes: true,
       success_url: `${appUrl}${returnPath}?checkout=success`,

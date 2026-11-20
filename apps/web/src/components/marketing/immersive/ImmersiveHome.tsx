@@ -581,8 +581,8 @@ function FlightStrip({ readouts }: { readouts: React.RefObject<Readouts> }) {
   return (
     <div className="num pointer-events-none absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-4 whitespace-nowrap rounded-full border border-white/10 bg-[#02040b]/55 px-4 py-2 text-[11px] text-white/85 backdrop-blur-md sm:gap-6 sm:px-5 sm:text-xs" aria-hidden>
       <span ref={phase} className="font-semibold text-[#86efac] data-[phase=gearDown]:text-[#4ade80]" />
-      <span className={item}><span className="text-white/45">IAS</span><span ref={ias}>0 kt</span></span>
-      <span className={item}><span className="text-white/45">ALT</span><span ref={alt}>0 ft</span></span>
+      <span className={item}><span className="text-white/45">IAS</span>{/* before the film starts (or without WebGL): no figure rather than a meaningless 0 */}<span ref={ias}>—</span></span>
+      <span className={item}><span className="text-white/45">ALT</span><span ref={alt}>—</span></span>
     </div>
   );
 }

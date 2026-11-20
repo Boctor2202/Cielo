@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, Switch, View } from "react-native";
 import { router } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
@@ -12,10 +12,12 @@ import {
 } from "@cielo/core";
 import { API_URL } from "../src/api";
 import { toIcao } from "../src/airports";
-import { saveImportedRows } from "../src/importer";
+import { prepareImportedRows, savePrepared, type PreparedImport } from "../src/importer";
+import { checkImport, formatDuration, type ImportCheck } from "@cielo/core";
 import { Button, Card, Row, Screen, Txt, tap } from "../src/components/ui";
 import { useApp } from "../src/state";
 import { useTheme } from "../src/theme";
+import type { I18nKey } from "../src/i18n";
 
 /** A request stays under the server's 4.5 MB body limit: photos go in batches. */
 const BATCH_BYTES = 3_300_000;
@@ -37,6 +39,21 @@ export default function ImportScreen() {
   const [photos, setPhotos] = useState<{ data: string; type: string }[]>([]);
   // a table read here: kept to teach its layout once imported
   const [table, setTable] = useState<{ header: string[]; mapping: Record<ImportField, number> } | null>(null);
+  // « Check your totals »: the flights as they would be saved, compared with the file, before anything is stored
+  const [review, setReview] = useState<{ prepared: PreparedImport; check: ImportCheck } | null>(null);
+  // the last imports on this phone, each can be undone as a whole
+  const [batches, setBatches] = useState<{ id: string; at: string; ids: string[] }[]>([]);
+  useEffect(() => {
+    void store.getMeta("importBatches").then((v) => {
+      try {
+        setBatches(JSON.parse(v ?? "[]"));
+      } catch {}
+    });
+  }, [store]);
+  const saveBatches = async (list: typeof batches) => {
+    setBatches(list);
+    await store.setMeta("importBatches", JSON.stringify(list.slice(0, 10)));
+  };
 
   const call = async (body: Record<string, unknown>): Promise<Result> => {
     if (!session?.access_token) return { error: "unauthorized" };
@@ -154,20 +171,45 @@ export default function ImportScreen() {
   };
 
   const ok = useMemo(() => (rows ?? []).filter((r) => r.input && !r.errors.length), [rows]);
-  const save = async () => {
+  const prepare = async () => {
     setBusy("save");
     try {
-      const r = await saveImportedRows(store, pilot, app.aircraftTypes, flights, ok, "import");
+      const prepared = await prepareImportedRows(store, pilot, app.aircraftTypes, flights, ok, "import");
+      setReview({ prepared, check: checkImport(rows ?? [], prepared.pairs, prepared.duplicates) });
+    } finally {
+      setBusy(null);
+    }
+  };
+  const save = async () => {
+    if (!review) return;
+    setBusy("save");
+    try {
+      const r = await savePrepared(store, review.prepared);
+      if (r.ids.length) await saveBatches([{ id: `${Date.now()}`, at: new Date().toISOString(), ids: r.ids }, ...batches]);
       // a table imported with its columns: the layout is kept for the next pilot (column titles only)
       if (table && r.imported) void call({ kind: "learn", header: table.header, mapping: mappingToTitles(table.header, table.mapping), source: source ?? undefined }).catch(() => undefined);
       await app.reload();
       Alert.alert(t("uimp.title"), t("more.importDone", { n: r.imported, d: r.duplicates, s: rows!.length - ok.length + r.skipped }));
+      setReview(null);
       setRows(null);
       router.back();
     } finally {
       setBusy(null);
     }
   };
+  const undo = (b: (typeof batches)[number]) =>
+    Alert.alert(t("uimp.undo"), t("uimp.undoConfirm", { n: b.ids.length }), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("uimp.undo"),
+        style: "destructive",
+        onPress: async () => {
+          for (const id of b.ids) await app.remove("flights", id);
+          await saveBatches(batches.filter((x) => x.id !== b.id));
+          await app.reload();
+        },
+      },
+    ]);
 
   const Big = ({ icon, label, hint, onPress, k }: { icon: keyof typeof Ionicons.glyphMap; label: string; hint: string; onPress: () => void; k: string }) => (
     <Pressable onPress={onPress} disabled={!!busy} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: c.scheme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(10,22,38,0.12)", opacity: busy && busy !== k ? 0.5 : 1, backgroundColor: pressed ? c.accent + "14" : "transparent" })}>
@@ -180,6 +222,49 @@ export default function ImportScreen() {
       </View>
     </Pressable>
   );
+
+  if (rows && review) {
+    const ck = review.check;
+    const shown = ck.lines.filter((l) => l.file !== undefined || l.geardown > 0);
+    const v = (f: string, n: number | undefined) => (n === undefined ? "—" : f === "landings" ? String(n) : formatDuration(n));
+    return (
+      <Screen>
+        <Card>
+          <Txt variant="h2">{t("uimp.checkTitle")}</Txt>
+          <Txt variant="small">{t("uimp.checkIntro", { n: ck.kept })}</Txt>
+          <Row style={{ justifyContent: "space-between" }}>
+            <Txt variant="small" style={{ flex: 1.3, fontWeight: "700" }}>{t("uimp.colField")}</Txt>
+            <Txt variant="small" style={{ flex: 1, textAlign: "right", fontWeight: "700" }}>{t("uimp.colFile")}</Txt>
+            <Txt variant="small" style={{ flex: 1, textAlign: "right", fontWeight: "700" }}>Geardown</Txt>
+          </Row>
+          {shown.map((l) => (
+            <View key={l.field} style={{ gap: 1 }}>
+              <Row style={{ justifyContent: "space-between" }}>
+                <Txt style={{ flex: 1.3 }}>{t(`uimp.f.${l.field}` as I18nKey)}</Txt>
+                <Txt mono style={{ flex: 1, textAlign: "right" }}>{v(l.field, l.file)}</Txt>
+                <Txt mono style={{ flex: 1, textAlign: "right", fontWeight: "700" }} color={l.rows.length ? c.caution : undefined}>{v(l.field, l.geardown)}</Txt>
+              </Row>
+              {l.rows.length ? <Txt variant="small" color={c.caution}>{t("uimp.diffRows", { rows: l.rows.slice(0, 20).join(", ") })}</Txt> : null}
+            </View>
+          ))}
+          {ck.lines.some((l) => l.rows.length) ? <Txt variant="small">{t("uimp.diffHelp")}</Txt> : null}
+        </Card>
+        {ck.rejected.length ? (
+          <Card>
+            <Txt style={{ fontWeight: "700" }}>{t("uimp.rejected", { n: ck.rejected.length })}</Txt>
+            {ck.rejected.slice(0, 60).map((r) => (
+              <Txt key={r.row} variant="small">{t("uimp.rejectedLine", { row: r.row, reasons: r.reasons.map((x) => t(`uimp.reason.${x}` as I18nKey)).join(", ") })}</Txt>
+            ))}
+          </Card>
+        ) : null}
+        <Row gap={10}>
+          <Button style={{ flex: 1 }} kind="secondary" title={t("uimp.fix")} onPress={() => setReview(null)} />
+          <Button style={{ flex: 1 }} title={t("uimp.confirm", { n: ck.kept })} disabled={!ck.kept || busy === "save"} onPress={() => void save()} />
+        </Row>
+        <Button kind="secondary" title={t("uimp.cancelImport")} onPress={() => { setReview(null); setRows(null); }} />
+      </Screen>
+    );
+  }
 
   if (rows) {
     return (
@@ -197,7 +282,7 @@ export default function ImportScreen() {
         ))}
         <Row gap={10}>
           <Button style={{ flex: 1 }} kind="secondary" title={t("common.cancel")} onPress={() => setRows(null)} />
-          <Button style={{ flex: 1 }} title={t("uimp.importN", { n: ok.length })} disabled={!ok.length || busy === "save"} onPress={() => void save()} />
+          <Button style={{ flex: 1 }} title={t("uimp.checkN", { n: ok.length })} disabled={!ok.length || busy === "save"} onPress={() => void prepare()} />
         </Row>
       </Screen>
     );
@@ -206,6 +291,19 @@ export default function ImportScreen() {
   return (
     <Screen>
       <Txt variant="muted">{t("uimp.intro")}</Txt>
+      {batches.length ? (
+        <Card>
+          <Txt style={{ fontWeight: "700" }}>{t("uimp.batches")}</Txt>
+          {batches.map((b) => (
+            <Row key={b.id} style={{ justifyContent: "space-between", alignItems: "center" }}>
+              <Txt variant="small" style={{ flex: 1 }}>{t("uimp.batchLine", { n: b.ids.length, date: b.at.slice(0, 10) })}</Txt>
+              <Pressable onPress={() => undo(b)} hitSlop={8}>
+                <Txt variant="small" color={c.accent} style={{ fontWeight: "700" }}>{t("uimp.undo")}</Txt>
+              </Pressable>
+            </Row>
+          ))}
+        </Card>
+      ) : null}
       <Big k="photos" icon="camera" label={t("uimp.camera")} hint={t("uimp.cameraHint")} onPress={() => void pickPhotos(true)} />
       <Big k="photos" icon="images" label={t("uimp.library")} hint={t("uimp.libraryHint")} onPress={() => void pickPhotos(false)} />
       {photos.length ? (

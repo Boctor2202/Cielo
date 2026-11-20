@@ -270,10 +270,10 @@ describe("flight tracks", () => {
 describe("access", () => {
   const now = new Date("2026-11-14T12:00:00Z");
   const p = (createdAt: string, tier: "free" | "basic" | "premium", exp?: string) => ({ createdAt, subscriptionTier: tier, subscriptionExpiresAt: exp ?? null });
-  it("gives a 7-day local demo, then read-only", () => {
+  it("gives a 30-day local demo, then read-only", () => {
     const a = accessFor(p("2026-11-10T00:00:00Z", "free"), { signedIn: false, now });
     expect(a.demo && a.canWrite && a.has("radar")).toBe(true);
-    const b = accessFor(p("2026-11-01T00:00:00Z", "free"), { signedIn: false, now });
+    const b = accessFor(p("2026-10-01T00:00:00Z", "free"), { signedIn: false, now });
     expect(b.canWrite || b.has("roster")).toBe(false);
   });
   it("signed-in pilots need a subscription; Basic has no Max features", () => {
@@ -436,14 +436,39 @@ describe("plans", () => {
     expect(basic.has("roster")).toBe(false);
     expect(accessFor(p("2026-01-01T00:00:00Z", "free"), { signedIn: true, now }).has("signature")).toBe(false);
   });
-  it("no-card trial: off by default, 14 days from account creation when configured, never over a subscription", () => {
+  it("no-card trial: 30 days from account creation by default, read-only after, never over a subscription", () => {
     const fresh = p("2026-11-10T00:00:00Z", "free");
-    expect(accessFor(fresh, { signedIn: true, now }).plan).toBeNull();
-    const t = accessFor(fresh, { signedIn: true, now, noCardTrialDays: noCardTrialDays("14") });
-    expect(t).toMatchObject({ plan: "premium", trial: true, daysLeft: 4 });
-    expect(accessFor(p("2026-11-01T00:00:00Z", "free"), { signedIn: true, now, noCardTrialDays: 14 }).plan).toBeNull();
-    expect(accessFor(p("2026-11-10T00:00:00Z", "basic", "2027-01-01T00:00:00Z"), { signedIn: true, now, noCardTrialDays: 14 }).plan).toBe("basic");
-    expect(noCardTrialDays(undefined)).toBe(0);
-    expect(noCardTrialDays("abc")).toBe(0);
+    const t = accessFor(fresh, { signedIn: true, now, noCardTrialDays: noCardTrialDays(undefined) });
+    expect(t).toMatchObject({ plan: "premium", trial: true, daysLeft: 20, canWrite: true });
+    const over = accessFor(p("2026-10-01T00:00:00Z", "free"), { signedIn: true, now, noCardTrialDays: 30 });
+    expect(over.plan).toBeNull();
+    expect(over.canWrite).toBe(false);
+    expect(accessFor(p("2026-11-10T00:00:00Z", "basic", "2027-01-01T00:00:00Z"), { signedIn: true, now, noCardTrialDays: 30 }).plan).toBe("basic");
+    expect(noCardTrialDays(undefined)).toBe(30);
+    expect(noCardTrialDays("0")).toBe(0);
+    expect(noCardTrialDays("14")).toBe(14);
+  });
+});
+
+describe("pricing", () => {
+  it("states the real yearly saving", async () => {
+    const { yearlySaving, PRICES_EUR, YEARLY_PRICES_EUR } = await import("../src/access");
+    expect(yearlySaving(PRICES_EUR.basic, YEARLY_PRICES_EUR.basic)).toBe(16);
+    expect(yearlySaving(PRICES_EUR.premium, YEARLY_PRICES_EUR.premium)).toBe(16);
+    expect(yearlySaving(undefined, 19.99)).toBe(0);
+  });
+  it("offers the Student plan only when declared, within 24 months", async () => {
+    const { studentEligible } = await import("../src/access");
+    const now = new Date("2026-11-20T00:00:00Z");
+    expect(studentEligible("2027-09-01", now)).toBe(true);
+    expect(studentEligible("2026-10-01", now)).toBe(false);
+    expect(studentEligible("2029-06-01", now)).toBe(false);
+    expect(studentEligible(null, now)).toBe(false);
+  });
+  it("shows the founder seats left only from half taken", async () => {
+    const { founderSeatsShown } = await import("../src/access");
+    expect(founderSeatsShown(12)).toBeNull();
+    expect(founderSeatsShown(300)).toBe(200);
+    expect(founderSeatsShown(600)).toBe(0);
   });
 });

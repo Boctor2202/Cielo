@@ -6,10 +6,11 @@ import { useSubscriptionStatus } from "@/lib/subscriptionStatus";
 import { AirportInput } from "@/components/app/AirportInput";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { REGULATORS, regulatorById, PILOT_FUNCTIONS, type Pilot } from "@cielo/core";
+import { REGULATORS, regulatorById, PILOT_FUNCTIONS, studentEligible, type Pilot } from "@cielo/core";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Card, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
-import { usePilot } from "@/lib/hooks";
+import { useFlights, usePilot, useTable } from "@/lib/hooks";
+import { exportEverything } from "@/lib/exportEverything";
 import { useAccess } from "@/lib/access";
 import { Link } from "@/i18n/navigation";
 import { useAirports } from "@/lib/airports";
@@ -17,6 +18,9 @@ import { deleteAllLocal, exportAll, importAll, updatePilot } from "@/lib/repo";
 import { downloadBlob } from "@/lib/download";
 import { useCloud } from "@/lib/cloud";
 import { SITE } from "@/config/site";
+
+/** The Student plan is offered once its column (migration 0026) and its Stripe price exist. */
+const STUDENT_PLAN = process.env.NEXT_PUBLIC_STUDENT_PLAN === "1";
 
 export default function SettingsPage() {
   const t = useTranslations("app.settings");
@@ -39,6 +43,9 @@ export default function SettingsPage() {
   const [v, setV] = useState<Pilot | null>(null);
   const [delOpen, setDelOpen] = useState(false);
   const [word, setWord] = useState("");
+  const [exportingAll, setExportingAll] = useState(false);
+  const allFlights = useFlights();
+  const allBalances = useTable("opening_balances");
   useEffect(() => {
     if (pilot && !v) setV(pilot);
   }, [pilot, v]);
@@ -63,7 +70,7 @@ export default function SettingsPage() {
     }
   }
 
-  async function checkout(plan: "basic" | "premium", interval: "monthly" | "yearly" = "monthly") {
+  async function checkout(plan: "basic" | "premium" | "student", interval: "monthly" | "yearly" = "monthly") {
     try {
       const { url } = await cloud.invoke<{ url: string }>("create-checkout-session", { plan, interval, returnPath: `/${locale}/app/parametres` });
       window.location.assign(url);
@@ -210,10 +217,35 @@ export default function SettingsPage() {
               <div className="grid gap-2 sm:grid-cols-2">
                 {(["basic", "premium"] as const).map((p) => (
                   <button key={p} type="button" className={`btn ${p === "premium" ? "btn-primary" : "btn-secondary"}`} disabled={v.subscriptionTier === p} onClick={() => (stripeActive ? void manage() : checkout(p, interval))}>
-                    {tp(p)} · {SITE.pricing[p][interval].toLocaleString(locale, { minimumFractionDigits: 2 })} €{interval === "yearly" ? tpr("perYear") : tpr("perMonth")}
+                    {tp(p)} · {(SITE.pricing[p][interval] ?? SITE.pricing[p].yearly).toLocaleString(locale, { minimumFractionDigits: 2 })} €{interval === "yearly" || !SITE.pricing[p].monthly ? tpr("perYear") : tpr("perMonth")}
                   </button>
                 ))}
               </div>
+              {STUDENT_PLAN && (
+                <div className="rounded-xl border border-border p-3 text-sm">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={!!v.studentUntil} onChange={(e) => {
+                      const studentUntil = e.target.checked ? new Date(Date.now() + 365 * 86400_000).toISOString().slice(0, 10) : null;
+                      setV({ ...v, studentUntil });
+                      void patch({ studentUntil });
+                    }} />
+                    {t("studentDeclare")}
+                  </label>
+                  {v.studentUntil && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="text-muted">{t("studentUntil")}</span>
+                      <input type="date" className="input num !w-auto" value={v.studentUntil} onChange={(e) => {
+                        setV({ ...v, studentUntil: e.target.value });
+                        void patch({ studentUntil: e.target.value });
+                      }} />
+                      <button type="button" className="btn btn-secondary btn-sm" disabled={!studentEligible(v.studentUntil) || stripeActive} onClick={() => checkout("student", "yearly")}>
+                        {tpr("plans.student.name")} · {SITE.pricing.student.yearly.toLocaleString(locale, { minimumFractionDigits: 2 })} €{tpr("perYear")}
+                      </button>
+                    </div>
+                  )}
+                  <p className="mt-2 text-xs text-muted">{t("studentHint")}</p>
+                </div>
+              )}
             </div>
           )}
         </Card>
@@ -230,7 +262,18 @@ export default function SettingsPage() {
         </Card>
 
         <Card title={t("data")} className="lg:col-span-2">
+          <p className="mb-3 text-sm text-muted">{t("exportEverythingHint")}</p>
           <div className="flex flex-wrap gap-2">
+            <button type="button" className="btn btn-primary" disabled={exportingAll} onClick={async () => {
+              setExportingAll(true);
+              try {
+                await exportEverything(allFlights ?? [], allBalances ?? [], v ?? undefined);
+              } finally {
+                setExportingAll(false);
+              }
+            }}>
+              <Download size={16} /> {t("exportEverything")}
+            </button>
             <button type="button" className="btn btn-secondary" onClick={async () => downloadBlob(JSON.stringify(await exportAll(), null, 2), `geardown-export-${new Date().toISOString().slice(0, 10)}.json`, "application/json")}>
               <Download size={16} /> {t("exportJson")}
             </button>

@@ -190,6 +190,7 @@ export interface ExplicitTimes {
   night?: number;
   ifr?: number;
   pic?: number;
+  picus?: number;
   copilot?: number;
   dual?: number;
   instructor?: number;
@@ -240,10 +241,11 @@ export async function buildFlight(
     d.nightMin = Math.min(ex.night, d.totalMin);
     d.nightCalc = "manual";
   }
-  if (ex.pic !== undefined) d.picMin = ex.pic;
-  if (ex.copilot !== undefined) d.copilotMin = ex.copilot;
-  if (ex.dual !== undefined) d.dualMin = ex.dual;
-  if (ex.instructor !== undefined) d.instructorMin = ex.instructor;
+  if (ex.pic !== undefined) d.picMin = Math.min(ex.pic, d.totalMin);
+  if (ex.picus !== undefined) d.picusMin = Math.min(ex.picus, d.totalMin);
+  if (ex.copilot !== undefined) d.copilotMin = Math.min(ex.copilot, d.totalMin);
+  if (ex.dual !== undefined) d.dualMin = Math.min(ex.dual, d.totalMin);
+  if (ex.instructor !== undefined) d.instructorMin = Math.min(ex.instructor, d.totalMin);
 
   const flight: Flight = {
     ...(existing ?? {}),

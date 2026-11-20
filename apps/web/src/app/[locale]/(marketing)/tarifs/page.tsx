@@ -1,6 +1,6 @@
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { JsonLd } from "@/components/JsonLd";
-import { Faq } from "@/components/marketing/sections";
+import { Faq, OfferBox, OwnershipBlock, RosterFormats } from "@/components/marketing/sections";
 import { Pricing } from "@/components/marketing/Pricing";
 import { faqLd, organizationLd, pageMeta, softwareLd } from "@/lib/seo";
 
@@ -18,7 +18,10 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
   return (
     <>
       <JsonLd nodes={[organizationLd(), softwareLd(locale, t("description")), faqLd(m.faq.items)]} />
+      <OfferBox />
       <Pricing />
+      <RosterFormats />
+      <OwnershipBlock />
       <Faq />
     </>
   );

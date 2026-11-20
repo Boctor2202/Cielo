@@ -204,6 +204,7 @@ export default function More() {
 
       <Card>
         <Txt variant="h2">{t("more.export")}</Txt>
+        <Txt variant="small">{t("more.exportAlways")}</Txt>
         <Button
           kind="secondary"
           title={busy === "pdf" ? t("more.exporting") : t("more.exportPdf", { layout: layoutForAuthority(pilot.authority, frameworkOf(pilot)).replace("TCCA", "Transport Canada").replace("HKCAD", "CAD Hong Kong").replace("UK", "UK CAA") })}
