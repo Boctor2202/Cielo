@@ -234,11 +234,6 @@
     "included": "Included",
     "notIncluded": "Not included"
   },
-  "testimonials": {
-    "title": "They fly with Geardown",
-    "empty": "The first pilot testimonials will appear here.",
-    "slot": "Testimonial slot"
-  },
   "faq": {
     "title": "Frequently asked questions",
     "items": [

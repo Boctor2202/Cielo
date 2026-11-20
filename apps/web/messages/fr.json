@@ -234,11 +234,6 @@
     "included": "Inclus",
     "notIncluded": "Non inclus"
   },
-  "testimonials": {
-    "title": "Ils volent avec Geardown",
-    "empty": "Les premiers témoignages de pilotes arriveront ici.",
-    "slot": "Emplacement témoignage"
-  },
   "faq": {
     "title": "Questions fréquentes",
     "items": [

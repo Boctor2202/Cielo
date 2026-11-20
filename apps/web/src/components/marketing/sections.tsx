@@ -5,7 +5,6 @@ import { SITE } from "@/config/site";
 import { BrowserFrame, LaptopFrame, PhoneFrame, Shot } from "./Shot";
 import { FeatureTabs } from "./FeatureTabs";
 import { Reveal } from "./Reveal";
-import { TESTIMONIALS } from "@/content/testimonials";
 
 export const FEATURE_KEYS = ["logbook", "import", "audit", "licenses", "ftl", "stats", "signature", "offline", "jobs", "cv"] as const;
 const ICONS = { logbook: FileDown, import: Upload, audit: ScanSearch, licenses: BadgeCheck, ftl: CalendarClock, stats: Map, signature: PenLine, offline: CloudOff, jobs: Briefcase, cv: FileUser };
@@ -238,31 +237,6 @@ export function Features({ detailed = false }: { detailed?: boolean }) {
             </article>
           );
         })}
-      </div>
-    </section>
-  );
-}
-
-/** Real, consented testimonials (src/content/testimonials.ts); nothing at all while there are none. */
-export function Testimonials() {
-  const t = useTranslations("testimonials");
-  const locale = useLocale() === "en" ? "en" : "fr";
-  if (!TESTIMONIALS.length) return null;
-  return (
-    <section className="border-y border-border bg-surface">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-        <h2 className="text-center text-3xl font-bold tracking-tight">{t("title")}</h2>
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {TESTIMONIALS.map((x) => (
-            <figure key={x.name + x.consent.date} className="flex flex-col justify-between rounded-xl border border-border bg-bg p-6">
-              <blockquote className="leading-relaxed">« {x.quote[locale] ?? x.quote.fr} »</blockquote>
-              <figcaption className="mt-4 text-sm text-muted">
-                <strong className="text-text">{x.name}</strong>
-                {x.role ? ` · ${x.role[locale] ?? x.role.fr}` : ""}
-              </figcaption>
-            </figure>
-          ))}
-        </div>
       </div>
     </section>
   );
