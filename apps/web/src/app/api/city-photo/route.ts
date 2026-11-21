@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   try {
     const ap = (await serverAirports(u.origin)).get(icao);
     if (!ap) return Response.json({ photo: null });
-    const photo = await cityPhoto(ap.city || ap.name, ap.country, { lat: ap.lat, lon: ap.lon }, lang, n);
+    const photo = await cityPhoto((ap.city || ap.name).replace(/\s*\(.*\)\s*/g, " ").trim(), ap.country, { lat: ap.lat, lon: ap.lon }, lang, n);
     // a short cache only: Google's photo URLs are not to be kept
     return Response.json({ photo }, { headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=600" } });
   } catch (e) {
