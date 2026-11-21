@@ -7,6 +7,8 @@ import { airlines } from "./airlines";
 import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import {
+  findDuplicate,
+  type DuplicateMatch,
   deriveFlightTimes,
   operatorIndex,
   analyseTable,
@@ -37,6 +39,8 @@ export interface ImportResult {
 export interface PreparedImport {
   pairs: { rowIndex: number; flight: Flight }[];
   duplicates: number[];
+  /** the flight each duplicate matches (exactly or very likely) */
+  duplicateOf: Record<number, DuplicateMatch>;
   skipped: number;
 }
 
@@ -72,12 +76,11 @@ export async function savePrepared(store: SqliteStore, p: PreparedImport): Promi
 /** Builds the flights of reviewed rows as they would be saved, without storing them. */
 export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, types: AircraftType[], existing: Flight[], parsed: ImportedRow[], source: Flight["source"]): Promise<PreparedImport> {
   const now = new Date().toISOString();
-  const key = (f: Pick<Flight, "date" | "depIcao" | "arrIcao" | "outUtc" | "totalMin">) => `${f.date}|${f.depIcao}|${f.arrIcao}|${f.outUtc ?? ""}|${f.totalMin}`;
-  const seen = new Set(existing.map(key));
   // the operator of each imported flight, as the logbook recognises it (call sign, aircraft, what it learned)
   const ops = operatorIndex(existing, await store.all("aircraft"), airlines());
   const pairs: PreparedImport["pairs"] = [];
   const dups: number[] = [];
+  const duplicateOf: Record<number, DuplicateMatch> = {};
   let skipped = 0;
   for (const r of parsed) {
     if (!r.input || r.errors.length) {
@@ -164,12 +167,14 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
       locked: false,
     };
     if (!f.operator && !f.isFstd) f.operator = ops.of(f);
-    if (seen.has(key(f))) {
+    // already in the logbook, or earlier in this file (exactly or very likely): left out unless the pilot keeps it
+    const m = findDuplicate(f, [...existing, ...pairs.map((p) => p.flight)]);
+    if (m && !("keepDuplicate" in r && (r as { keepDuplicate?: boolean }).keepDuplicate)) {
       dups.push(r.rowIndex);
+      duplicateOf[r.rowIndex] = m;
       continue;
     }
-    seen.add(key(f));
     pairs.push({ rowIndex: r.rowIndex, flight: f });
   }
-  return { pairs, duplicates: dups, skipped };
+  return { pairs, duplicates: dups, duplicateOf, skipped };
 }

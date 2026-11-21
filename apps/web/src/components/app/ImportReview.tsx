@@ -1,12 +1,12 @@
 "use client";
 
 import { AlertTriangle, Check, Pencil, Undo2, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { formatDuration, rowMinutes, type CheckField, type ImportCheck, type ImportChoices, type ImportedRow, type ImportRowEdit } from "@cielo/core";
 import { Card, ClockInput, DurationInput, Field, Segmented } from "./ui";
 
-type Row = ImportedRow & { excluded?: boolean };
+type Row = ImportedRow & { excluded?: boolean; keepDuplicate?: boolean };
 
 /** Totals shown above the flights, in this order (a line only when it has something). */
 const TOTALS: CheckField[] = ["total", "pic", "dual", "copilot", "picus", "instructor", "multiPilot", "xc", "vfr", "ifr", "night", "landings", "fstd"];
@@ -44,11 +44,16 @@ export function ImportReview({
 }) {
   const t = useTranslations("app.import.review");
   const [open, setOpen] = useState<number | null>(null);
-  const dupRows = useMemo(() => new Set((check?.rejected ?? []).filter((r) => r.reasons.includes("duplicate")).map((r) => r.row - firstRow)), [check, firstRow]);
+  const dupOf = check?.duplicateOf ?? {};
   const reasons = (r: Row): string[] => {
     if (r.excluded) return [];
     if (r.errors.length) return r.errors.map((e) => t(`err.${e === "date" || e === "route" || e === "times" ? e : "other"}`));
-    if (dupRows.has(r.rowIndex)) return [t("err.duplicate")];
+    const d = dupOf[r.rowIndex];
+    if (d) {
+      const f = d.flight;
+      const when = (f.outUtc ?? f.offUtc)?.slice(11, 16);
+      return [t(d.kind === "exact" ? "dup.exact" : "dup.probable", { flight: `${isoToDmy(f.date)} ${f.depIcao}→${f.arrIcao}${when ? ` ${when}` : ""} · ${fmt("total", f.totalMin)}` })];
+    }
     return (check?.flags[r.rowIndex] ?? []).map((f) => (f === "times" ? t("why.times", { total: fmt("total", r.explicit.total) }) : f === "airport" ? t("why.airport") : t("why.diff", { field: t(`f.${f}`) })));
   };
   const toCheck = rows.filter((r) => reasons(r).length > 0);
@@ -123,6 +128,15 @@ export function ImportReview({
               {why.length > 0 && (
                 <p className="mt-1 flex items-start gap-1.5 text-sm text-[var(--caution)]">
                   <AlertTriangle size={14} className="mt-0.5 shrink-0" /> {why.join(" · ")}
+                </p>
+              )}
+              {dupOf[r.rowIndex] && !r.excluded && (
+                <button type="button" className="btn btn-secondary btn-sm mt-2" onClick={() => onEdit(r.rowIndex, { ...(edits[r.rowIndex] ?? {}), keepDuplicate: true })}>{t("dup.keep")}</button>
+              )}
+              {r.keepDuplicate && !dupOf[r.rowIndex] && (
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
+                  {t("dup.kept")}
+                  <button type="button" className="underline" onClick={() => onEdit(r.rowIndex, { ...(edits[r.rowIndex] ?? {}), keepDuplicate: false })}>{t("dup.undo")}</button>
                 </p>
               )}
               {open === r.rowIndex && i && <RowEditor row={r} edit={edits[r.rowIndex] ?? {}} onEdit={(e) => onEdit(r.rowIndex, e)} onClose={() => setOpen(null)} />}

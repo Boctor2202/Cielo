@@ -1028,7 +1028,14 @@
           "fstdMin": "Session time"
         },
         "cancel": "Cancel the import",
-        "confirm": "Import ({count, plural, one {# row} other {# rows}})"
+        "confirm": "Import ({count, plural, one {# row} other {# rows}})",
+        "dup": {
+          "exact": "Already in your logbook: {flight}. It will not be imported.",
+          "probable": "Possibly already in your logbook: {flight}. It will not be imported unless it is another flight.",
+          "keep": "Import anyway",
+          "kept": "Imported although it looks like a flight in your logbook.",
+          "undo": "Undo"
+        }
       }
     },
     "audit": {

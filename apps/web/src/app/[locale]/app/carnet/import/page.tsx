@@ -4,14 +4,14 @@ import { CalendarDays, Camera, FileSpreadsheet, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  analyseTable, applyImportChoices, checkMapping, editImportedRow, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
-  type DateOrder, type ImportChoices, type ImportField, type ImportRowEdit, type ImportedRow, type LogbookLeg, type StoredMapping,
+  analyseTable, applyImportChoices, checkMapping, editImportedRow, findDuplicate, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
+  type DateOrder, type DuplicateMatch, type ImportChoices, type ImportField, type ImportRowEdit, type ImportedRow, type LogbookLeg, type StoredMapping,
 } from "@cielo/core";
 import { apiFetch } from "@/lib/report";
 import { Link } from "@/i18n/navigation";
 import { Card, Field, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { useAirports } from "@/lib/airports";
-import { logImported, buildFlight, flightKey, softDelete } from "@/lib/repo";
+import { logImported, buildFlight, softDelete } from "@/lib/repo";
 import { db, localStore } from "@/lib/db";
 import { announceGains } from "@/lib/gains";
 import { useAirlineDirectory } from "@/lib/airlines";
@@ -260,21 +260,22 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     if (!airports) return null;
     // flights already in the logbook (or twice in the file) are skipped: importing the same file again adds nothing
     const existing = (await db().t("flights").toArray()).filter((f) => !f.deletedAt);
-    const seen = new Set(existing.map(flightKey));
     // the operator of each imported flight, as the logbook recognises it (call sign, aircraft, what it learned)
     const ops = operatorIndex(existing, await db().t("aircraft").toArray(), airlines);
     const pairs: { rowIndex: number; flight: Flight }[] = [];
     const dups: number[] = [];
+    const dupOf: Record<number, DuplicateMatch> = {};
     for (const r of ok) {
       const f = await buildFlight(r.input!, airports, { source: "import", explicit: r.explicit });
       if (!f.operator && !f.isFstd) f.operator = ops.of(f);
-      if (seen.has(flightKey(f))) dups.push(r.rowIndex);
-      else {
-        seen.add(flightKey(f));
-        pairs.push({ rowIndex: r.rowIndex, flight: f });
-      }
+      // already in the logbook, or earlier in this file (exactly or very likely): left out unless the pilot keeps it
+      const m = findDuplicate(f, [...existing, ...pairs.map((p) => p.flight)]);
+      if (m && !("keepDuplicate" in r && r.keepDuplicate)) {
+        dups.push(r.rowIndex);
+        dupOf[r.rowIndex] = m;
+      } else pairs.push({ rowIndex: r.rowIndex, flight: f });
     }
-    return { built: pairs.map((p) => p.flight), check: checkImport(parsed, pairs, dups, pdfRows ? 1 : 2) };
+    return { built: pairs.map((p) => p.flight), check: checkImport(parsed, pairs, dups, pdfRows ? 1 : 2, dupOf) };
   }
 
   // step 2: the pilot checked the totals: save, and keep the batch so it can be undone as a whole

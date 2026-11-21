@@ -1028,7 +1028,14 @@
           "fstdMin": "Durée de la séance"
         },
         "cancel": "Annuler l'import",
-        "confirm": "Importer ({count, plural, one {# ligne} other {# lignes}})"
+        "confirm": "Importer ({count, plural, one {# ligne} other {# lignes}})",
+        "dup": {
+          "exact": "Déjà dans votre carnet : {flight}. Il ne sera pas importé.",
+          "probable": "Peut-être déjà dans votre carnet : {flight}. Il ne sera pas importé, sauf si c'est un autre vol.",
+          "keep": "Importer quand même",
+          "kept": "Importé même s'il ressemble à un vol de votre carnet.",
+          "undo": "Annuler"
+        }
       }
     },
     "audit": {

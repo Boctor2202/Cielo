@@ -1,5 +1,6 @@
 import type { ImportedRow } from "./import";
 import type { Flight } from "./types";
+import type { DuplicateMatch } from "./duplicates";
 
 /**
  * "Check your totals" after reading a logbook file and before saving it: what the file says (its own columns)
@@ -39,6 +40,8 @@ export interface ImportCheck {
   airportsToCheck: number[];
   /** for each row index (ImportedRow.rowIndex) worth a look, why */
   flags: Record<number, RowFlag[]>;
+  /** rows left out as already in the logbook (by row index), with the flight they match */
+  duplicateOf: Record<number, DuplicateMatch>;
 }
 
 /** Same minute, or a one-minute rounding (decimal hours in the file). */
@@ -51,7 +54,7 @@ const same = (a: number, b: number) => Math.abs(a - b) <= 1;
  * @param firstRow  number shown for the first row: 2 in a table (its header is row 1), 1 for flights read from a
  *                  document (a photo, a PDF: flight 1 is the first line of the page)
  */
-export function checkImport(rows: ImportedRow[], built: { rowIndex: number; flight: Flight }[], duplicates: number[] = [], firstRow = 2): ImportCheck {
+export function checkImport(rows: ImportedRow[], built: { rowIndex: number; flight: Flight }[], duplicates: number[] = [], firstRow = 2, duplicateOf: Record<number, DuplicateMatch> = {}): ImportCheck {
   const byRow = new Map(built.map((b) => [b.rowIndex, b.flight]));
   const lines: TotalLine[] = [];
   const fileRow = (i: number) => i + firstRow;
@@ -125,5 +128,5 @@ export function checkImport(rows: ImportedRow[], built: { rowIndex: number; flig
   for (const l of lines) for (const row of l.rows) if (l.field !== "vfr" && l.field !== "fstd") add(row, l.field);
   for (const row of timesToCheck) add(row, "times");
   for (const row of airportsToCheck) add(row, "airport");
-  return { lines, rejected, kept: built.length, timesToCheck, airportsToCheck, flags };
+  return { lines, rejected, kept: built.length, timesToCheck, airportsToCheck, flags, duplicateOf };
 }
