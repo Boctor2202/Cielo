@@ -3,7 +3,7 @@
 import {
   markPilotFields,
   operatorIndex,
-  canonicalFlightContent, deriveFlightTimes, extraFlightFields, flightRevision, newId, stamp, SYNC_TABLES, type Aircraft, type AircraftType, type Flight,
+  canonicalFlightContent, ownSignature, type SignedInfo, deriveFlightTimes, extraFlightFields, flightRevision, newId, stamp, SYNC_TABLES, type Aircraft, type AircraftType, type Flight,
   type FlightFormInput, type Layover, type License, type Locale, type OpeningBalance, type Pilot, type RosterEvent,
   type Signature, type TableMap, type TableName, type FlightRevision,
 } from "@cielo/core";
@@ -439,6 +439,36 @@ export async function signFlight(flightId: string, s: Pick<Signature, "signerNam
   const sig: Signature = stamp({ ...s, pilotId: pilot.id, flightId, signedAt: now(), contentHash: await sha256(canonicalFlightContent(f)) } as Signature);
   await db().t("signatures").put(sig);
   await putFlight({ ...f, signatureId: sig.id, locked: true, updatedAt: now() });
+}
+
+/** Signs flights with the pilot's saved signature (one signature each, flight locked). Returns how many. */
+export async function signWithSaved(ids: string[]): Promise<number> {
+  guard();
+  const pilot = await ensurePilot();
+  if (!pilot.signatureDataUrl) return 0;
+  const at = now();
+  let n = 0;
+  for (const id of ids) {
+    const f = await db().t("flights").get(id);
+    if (!f || f.deletedAt || f.signatureId) continue;
+    const sig = stamp({ ...ownSignature(pilot, f, await sha256(canonicalFlightContent(f)), at) } as Signature);
+    await db().t("signatures").put(sig);
+    await putFlight({ ...f, signatureId: sig.id, locked: true, updatedAt: at });
+    n++;
+  }
+  return n;
+}
+
+/** The flights' signatures for an export: who signed, and whether each flight is unchanged since. */
+export async function signaturesFor(flights: Flight[]): Promise<Record<string, SignedInfo>> {
+  const out: Record<string, SignedInfo> = {};
+  for (const f of flights) {
+    if (!f.signatureId || f.deletedAt) continue;
+    const s = await db().t("signatures").get(f.signatureId);
+    if (!s || s.deletedAt) continue;
+    out[f.id] = { signerName: s.signerName, signerRole: s.signerRole, signerLicenceNumber: s.signerLicenceNumber, signedAt: s.signedAt, imageDataUrl: s.imageDataUrl, valid: s.contentHash === (await sha256(canonicalFlightContent(f))) };
+  }
+  return out;
 }
 
 export async function verifySignature(f: Flight): Promise<{ sig?: Signature; valid: boolean }> {

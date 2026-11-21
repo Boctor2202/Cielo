@@ -1,6 +1,8 @@
 "use client";
 
-import { X, BookCopy, Building2, CalendarRange, Check, ListChecks, Clock, CloudFog, FileDown, MapPin, Moon, NotebookPen, Plane, PlaneLanding, Plus, ScanSearch, ShieldCheck, Upload } from "lucide-react";
+import { X, BookCopy, Building2, CalendarRange, Check, ListChecks, Clock, CloudFog, FileDown, MapPin, Moon, NotebookPen, Plane, PenLine, PlaneLanding, Plus, ScanSearch, ShieldCheck, Upload } from "lucide-react";
+import { SignManyModal } from "@/components/app/Signature";
+import { useAccess } from "@/lib/access";
 import { useAirports } from "@/lib/airports";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -26,6 +28,9 @@ export default function Logbook() {
   const t = useTranslations("app.logbook");
   const tfn = useTranslations("app.functions");
   const tn = useTranslations("app.nav");
+  const tm = useTranslations("app.mysig");
+  const access = useAccess();
+  const [signMany, setSignMany] = useState(false);
   const flights = useFlights();
   const d = useDuration();
   const fd = useFormatDate();
@@ -133,6 +138,7 @@ export default function Logbook() {
 
   return (
     <>
+      <SignManyModal open={signMany} onClose={() => setSignMany(false)} flights={flights ?? []} />
       <PageTitle
         title={t("title")}
         subtitle={t("flightCount", { count: filtered.length })}
@@ -140,6 +146,9 @@ export default function Logbook() {
           <>
             <Link href="/app/carnet/import" className="btn btn-secondary btn-sm"><Upload size={15} /> {t("import")}</Link>
             <Link href="/app/carnet/export" className="btn btn-secondary btn-sm"><FileDown size={15} /> {t("export")}</Link>
+            {access.has("signature") ? (
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setSignMany(true)}><PenLine size={15} /> {tm("signMine")}</button>
+            ) : null}
             <Link href="/app/carnet/audit" className="btn btn-secondary btn-sm"><ScanSearch size={15} /> {t("audit")}</Link>
             <Link href="/app/carnet/report" className="btn btn-secondary btn-sm"><BookCopy size={15} /> {t("carry")}</Link>
             <Link href="/app/carnet/nouveau" className="btn btn-primary btn-sm"><Plus size={15} /> {tn("newFlight")}</Link>

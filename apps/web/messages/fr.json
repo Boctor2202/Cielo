@@ -1122,7 +1122,12 @@
         "SACAA": "PDF SACAA Afrique du Sud (SA-CATS 61)",
         "HKCAD": "PDF CAD Hong Kong (CAD 54)"
       },
-      "pdfMine": "votre autorité"
+      "pdfMine": "votre autorité",
+      "signTitle": "Signer le carnet",
+      "signBody": "Votre signature enregistrée et la date du jour sont apposées dans la certification en bas de chaque page et sur la couverture. Les signatures des vols sont toujours incluses.",
+      "signToggle": "Signer le carnet exporté",
+      "signNone": "Les signatures des vols sont incluses. Pour signer aussi le carnet, enregistrez votre signature :",
+      "signCreate": "créer ma signature"
     },
     "carry": {
       "title": "Report des totaux",
@@ -2524,6 +2529,31 @@
       "airports": "Tes aéroports",
       "base": "Base",
       "legendZoom": "Zoome et déplace-toi comme sur n'importe quelle carte. Couleurs : décalage UTC standard. En ombré : la nuit en ce moment. Clique n'importe où pour son heure locale."
+    },
+    "mysig": {
+      "title": "Ma signature",
+      "hint": "Tracez-la une fois : elle signe vos vols, ceux que des collègues vous demandent de signer, et votre carnet à l'export. Gardée sur votre compte, partagée avec l'app.",
+      "save": "Enregistrer ma signature",
+      "cancel": "Annuler",
+      "needName": "Ajoutez d'abord votre nom complet dans le profil : il accompagne la signature.",
+      "role": "Je signe en tant que",
+      "auto": "Signer automatiquement mes vols",
+      "autoHint": "Chaque vol à partir d'aujourd'hui est signé le lendemain (le temps de le corriger). Un vol modifié après signature apparaît comme invalide.",
+      "redraw": "Refaire",
+      "remove": "Supprimer",
+      "removeBody": "Supprimer votre signature enregistrée ? Les vols déjà signés gardent leur signature.",
+      "signThis": "Signer avec ma signature",
+      "confirmOne": "Ce vol sera signé par {name} et verrouillé. Le modifier ensuite rend la signature invalide.",
+      "signMine": "Signer mes vols",
+      "none": "Vous n'avez pas encore de signature enregistrée.",
+      "create": "Créer ma signature",
+      "unsigned": "{n, plural, one {# vol non signé} other {# vols non signés}}",
+      "all": "Tout cocher",
+      "none_": "Tout décocher",
+      "hashNote": "Chaque vol garde l'empreinte de son contenu (SHA-256) : un vol modifié ensuite apparaît comme invalide.",
+      "signN": "Signer {n, plural, one {# vol} other {# vols}} · {total}",
+      "done": "{n, plural, one {# vol signé} other {# vols signés}}.",
+      "signing": "Signature en cours…"
     }
   },
   "why": {

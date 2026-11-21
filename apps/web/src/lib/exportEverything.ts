@@ -3,7 +3,7 @@
 import { frameworkOf, openingTotals, type Flight, type OpeningBalance, type Pilot } from "@cielo/core";
 import { buildLogbookPdf, flightsToCsv, layoutForAuthority } from "@cielo/export";
 import { downloadBlob } from "./download";
-import { exportAll } from "./repo";
+import { exportAll, signaturesFor } from "./repo";
 import { track } from "./metrics";
 
 /**
@@ -15,6 +15,8 @@ export async function exportEverything(flights: Flight[], balances: OpeningBalan
   const name = `geardown-logbook-${stamp}`;
   const live = flights.filter((f) => !f.deletedAt);
   const layout = pilot ? layoutForAuthority(pilot.authority, frameworkOf(pilot)) : "EASA";
+  // the flights' signatures go with it (the holder's own certification is offered on the export page)
+  const signatures = await signaturesFor(live);
   const pdf = await buildLogbookPdf(live, {
     layout,
     pilotName: pilot?.fullName || "—",
@@ -22,9 +24,10 @@ export async function exportEverything(flights: Flight[], balances: OpeningBalan
     periodLabel: "All time",
     opening: openingTotals(balances.filter((b) => !b.deletedAt)),
     locale: pilot?.locale ?? "fr",
+    signatures,
   });
   downloadBlob(pdf as BlobPart, `${name}-${layout}.pdf`, "application/pdf");
-  downloadBlob(flightsToCsv(live, { decimal: false }), `${name}.csv`, "text/csv;charset=utf-8");
+  downloadBlob(flightsToCsv(live, { decimal: false, signatures }), `${name}.csv`, "text/csv;charset=utf-8");
   downloadBlob(JSON.stringify(await exportAll(), null, 2), `geardown-export-${stamp}.json`, "application/json");
   track("export");
 }

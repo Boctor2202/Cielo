@@ -22,7 +22,7 @@ import { AirportInput } from "./AirportInput";
 import { FlightAwareFill } from "./FlightAwareFill";
 import { ReportPaste } from "./ReportPaste";
 import { Card, ClockInput, DurationInput, Field, Meter, Segmented, Toggle, useToast } from "./ui";
-import { SignatureModal, SignatureStatus } from "./Signature";
+import { SignatureModal, SignatureStatus, SignWithSavedButton } from "./Signature";
 import { FlightHistory } from "./FlightHistory";
 
 
@@ -483,6 +483,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
         {flight && (
           <div className="card mt-4 space-y-2 p-4">
             <SignatureStatus flight={flight} />
+            {access.has("signature") ? <SignWithSavedButton flight={flight} /> : null}
             {!flight.signatureId && access.has("signature") && (
               <button type="button" className="btn btn-secondary w-full" onClick={() => setSignOpen(true)}>
                 <PenLine size={16} /> {t("sign")}
