@@ -44,7 +44,7 @@ export const NAV: { href: AppPathname; key: string; icon: typeof Gauge; group: N
   { href: "/app/fuseaux", key: "timezones", icon: Globe2, group: "activity" },
   { href: "/app/radar", key: "radar", icon: Radar, group: "activity", max: "radar", flag: "radar" },
   { href: "/app/carte", key: "map", icon: MapIcon, group: "activity" },
-  { href: "/app/statistiques", key: "experience", icon: BarChart3, group: "career" },
+  { href: "/app/statistiques", key: "stats", icon: BarChart3, group: "career" },
   { href: "/app/emplois", key: "jobs", icon: Briefcase, group: "career", max: "jobs", flag: "jobs" },
   { href: "/app/cv", key: "cvFile", icon: FileUser, group: "career", max: "cv" },
   { href: "/app/documents", key: "documents", icon: BadgeCheck, group: "account" },
