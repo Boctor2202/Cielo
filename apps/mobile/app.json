@@ -95,7 +95,8 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "./plugins/withAndroidLintTranslations"
+      "./plugins/withAndroidLintTranslations",
+      "./plugins/withAndroidGoogleMaps"
     ],
     "experiments": {
       "typedRoutes": true
