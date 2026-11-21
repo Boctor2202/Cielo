@@ -1,0 +1,4 @@
+Date,Departure,,Arrival,,Aircraft,,Total time,Name PIC,Landings,,Operational condition time,,Pilot function time,,,
+,Place,Time,Place,Time,Model,Registration,,,Day,Night,Night,IFR,PIC,Co-pilot,Dual,Instructor
+15/03/24,LFPN,0910,LFOP,1025,DR40,F-GSTR,1:15,SELF,1,,,,1:15,,,
+16/03/24,LFOP,1100,LFPN,1220,DR40,F-GSTR,1:20,SELF,2,,,,1:20,,,

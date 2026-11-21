@@ -897,7 +897,10 @@
         "error": "This PDF could not be read. Send it to us from \"Report a problem\" and we'll add its layout.",
         "mapping": "Recognising the columns…",
         "none": "No flight found in this document.",
-        "busy": "The reader is busy, try again in a minute."
+        "busy": "The reader is busy, try again in a minute.",
+        "too_big": "This PDF is too heavy to send (over 3 MB, usually a scan). Send fewer pages at a time, or photos of the pages.",
+        "xls": "Old Excel format (.xls): open it in Excel or Numbers, save it as .xlsx or CSV, then drop it here.",
+        "unreadable": "This file could not be opened. Save it as CSV or .xlsx and try again."
       },
       "dropAny": "Drop anything: CSV, Excel, PDF statement, photos of logbook pages… or click to choose",
       "pasteTitle": "Paste a text (post-flight e-mail, summary)",

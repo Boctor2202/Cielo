@@ -27,7 +27,10 @@ export function parseDuration(input: string | number | null | undefined): number
   const s = input.trim().toLowerCase();
   if (s === "") return null;
   let m: RegExpMatchArray | null;
-  if ((m = s.match(/^(\d+)\s*[:h]\s*(\d{1,2})$/))) return Number(m[1]) * 60 + Number(m[2]);
+  // "1:30", "1h30", "1h30m", "1 h 30 min", and "01:30:00" as spreadsheets write durations (seconds rounded)
+  if ((m = s.match(/^(\d+)\s*[:h]\s*(\d{1,2})(?::(\d{2}))?\s*(?:m|min|mn)?$/))) return Number(m[1]) * 60 + Number(m[2]) + (Number(m[3] ?? 0) >= 30 ? 1 : 0);
+  // "90 min", "90min", "45 mn"
+  if ((m = s.match(/^(\d+)\s*(?:min|mn|m)$/))) return Number(m[1]);
   if ((m = s.match(/^(\d+)[.,](\d+)$/))) return Math.round(parseFloat(`${m[1]}.${m[2]}`) * 60);
   if ((m = s.match(/^(\d{3,4})$/))) {
     const v = m[1]!.padStart(4, "0");

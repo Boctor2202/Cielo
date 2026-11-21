@@ -10,13 +10,13 @@ import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import {
   combineUtc,
-  detectMapping,
   icalToRosterEvent,
   mergeRosterImport,
   parseCsv,
   printedDutiesToEvents,
   parseFlexibleDate,
   parseIcal,
+  analyseTable,
   stamp,
   type Pilot,
   type PrintedDuty,
@@ -131,12 +131,13 @@ export async function pickAndImportRoster(store: SqliteStore, pilot: Pilot, exis
       result.imported++;
     }
   } else {
-    const table = parseCsv(text);
-    const map = detectMapping(table[0] ?? []);
-    for (const row of table.slice(1)) {
+    // header row (title lines above it skipped), columns from names and values, and the date order (31/12 vs 12/31)
+    const a = analyseTable(parseCsv(text.replace(/^\uFEFF/, "")));
+    const map = a.mapping;
+    for (const row of a.rows) {
       if (row.every((x) => !x.trim())) continue;
       const g = (k: keyof typeof map) => (map[k] >= 0 ? (row[map[k]] ?? "").trim() : "");
-      const date = parseFlexibleDate(g("date"));
+      const date = parseFlexibleDate(g("date"), a.dateOrder);
       const start = date ? combineUtc(date, g("out") || "00:00") : null;
       const end = date && start ? combineUtc(date, g("in") || "23:59", start) : null;
       if (!start || !end) {

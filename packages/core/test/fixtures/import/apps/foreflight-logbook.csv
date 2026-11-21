@@ -1,0 +1,12 @@
+ForeFlight Logbook Import
+
+Aircraft Table
+AircraftID,EquipmentType,TypeCode,Year,Make,Model,Category,Class,GearType,EngineType,Complex,TAA,HighPerformance,Pressurized
+N5416B,,C152,1979,Cessna,152,airplane,airplane_single_engine_land,fixed_tricycle,Piston,false,false,false,false
+N812RR,,C172,2004,Cessna,172S,airplane,airplane_single_engine_land,fixed_tricycle,Piston,false,true,false,false
+
+Flights Table
+Date,AircraftID,From,To,Route,TimeOut,TimeOff,TimeOn,TimeIn,OnDuty,OffDuty,TotalTime,PIC,SIC,Night,Solo,CrossCountry,NVG,NVG Ops,Distance,DayTakeoffs,DayLandingsFullStop,NightTakeoffs,NightLandingsFullStop,AllLandings,ActualInstrument,SimulatedInstrument,HobbsStart,HobbsEnd,TachStart,TachEnd,Holds,Approach1,Approach2,Approach3,Approach4,Approach5,Approach6,DualGiven,DualReceived,SimulatedFlight,GroundTraining,InstructorName,InstructorComments,Person1,Person2,Person3,Person4,Person5,Person6,FlightReview,Checkride,IPC,NVG Proficiency,FAA6158,PilotComments,[Numeric]PF
+2022-11-29,N812RR,21N,21N,KHWV,,,,,,,2.0,2.0,0.0,0.0,0.0,0.0,0.0,0,0.00,0,0,0,0,0,0.0,0.0,0.00,0.00,0.00,0.00,0,,,,,,,2.0,0.0,0.0,0.0,,,Jeff Truelove;Student;,,,,,,false,false,false,false,false,"Practiced eights on pylons, chandelles, and steep spirals. ",0.000000
+2022-12-03,N5416B,KHPN,KPOU,,14:25,14:28,14:58,14:59,,,0.8,0.8,0.0,0.0,0.0,0.8,0.0,0,27.40,1,1,0,0,1,0.0,0.0,4120.30,4121.10,0.00,0.00,0,,,,,,,0.0,0.0,0.0,0.0,,,,,,,,,false,false,false,false,false,Solo XC to Poughkeepsie,0.000000
+2022-12-10,N812RR,KPOU,KHPN,,22:40,22:47,23:55,00:01,,,1.4,1.4,0.0,1.4,0.0,1.4,0.0,0,27.40,0,0,1,1,1,0.0,0.6,0.00,0.00,0.00,0.00,1,1;ILS OR LOC RWY 16;16;KHPN;,,,,,,0.0,0.0,0.0,0.0,,,,,,,,,false,false,false,false,false,"Night IFR currency, hold at CMK",0.000000

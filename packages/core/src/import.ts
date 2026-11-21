@@ -2,6 +2,7 @@ import { parseDuration, parseClock } from "./time";
 import type { FlightFormInput } from "./flight";
 import type { PilotFunction } from "./types";
 import { prepareLogbookTable, type LogbookApp } from "./importFormats";
+import { tzOffsetMs } from "./ical";
 
 /** Canonical import fields. */
 export type ImportField =
@@ -36,12 +37,12 @@ const SYNONYMS: Record<ImportField, string[]> = {
   picName: ["pic name", "name pic", "name of pic", "captain", "captain name", "commandant", "cdb", "nom cdb", "nom du cdb", "nom commandant", "pic", "instructor name"],
   total: ["total", "duration total", "duration block", "total duration", "block duration", "time block", "block hours", "flight duration", "duration flight", "total block", "total time", "total flight time", "time total", "total time of flight", "block", "block time", "flight time", "temps total", "temps de vol", "temps bloc", "duree", "duration", "ttl", "totaltime"],
   night: ["night", "duration night", "night duration", "time night duration", "night time", "time night", "nuit", "temps nuit", "operational condition time night"],
-  ifr: ["ifr", "duration ifr", "ifr time", "time ifr", "instrument", "actual instrument", "ifr temps", "operational condition time ifr", "temps ifr"],
+  ifr: ["ifr", "duration ifr", "ifr time", "time ifr", "instrument", "actual instrument", "ifr temps", "operational condition time ifr", "temps ifr", "imc", "instrument flying"],
   landingsDay: ["landings day", "ldgs day", "ldg day", "day ldgs", "landing day", "day landings", "ldg day", "day ldg", "atterrissages jour", "att jour", "day landings full stop", "landings", "ldg", "atterrissages"],
   landingsNight: ["landings night", "ldgs night", "ldg night", "night ldgs", "landing night", "night landings", "ldg night", "night ldg", "atterrissages nuit", "att nuit", "night landings full stop"],
   takeoffsDay: ["takeoffs day", "takeoff day", "tos day", "tkof day", "day takeoffs", "to day", "t o day", "decollages jour", "dec jour", "takeoffs"],
   takeoffsNight: ["takeoffs night", "takeoff night", "tos night", "tkof night", "night takeoffs", "to night", "t o night", "decollages nuit", "dec nuit"],
-  pic: ["pic", "duration pic", "pic time", "time pic", "pilot function time pic", "temps cdb", "cdb temps", "commandant de bord", "p1"],
+  pic: ["pic", "duration pic", "pic time", "time pic", "pilot function time pic", "temps cdb", "cdb temps", "commandant de bord", "p1", "cdb", "cdt", "heures cdb"],
   // PIC under supervision: its own column, never read as PIC (nor as a block time)
   picus: ["picus", "picus time", "time picus", "duration picus", "pic us", "pic u s", "p1 us", "p1 u s", "p1us", "p1s", "pic under supervision", "puis", "cdb sous supervision", "temps picus"],
   // single-pilot single / multi-engine time: recognised so they are not taken for block times; Geardown works them
@@ -53,7 +54,7 @@ const SYNONYMS: Record<ImportField, string[]> = {
   instructor: ["instructor", "duration instructor", "dual given", "time instructor", "instructeur", "pilot function time instructor", "fi time", "cfi"],
   multiPilot: ["multi pilot", "duration multi pilot", "duration mp", "multi pilot time", "multipilote", "mp", "mcc", "multi crew", "time mp"],
   remarks: ["remarks", "remarques", "notes", "note", "comments", "comment", "pilot comments", "observations", "remarks and endorsements", "route"],
-  fstdType: ["fstd type", "simulator type", "sim type", "sim type", "simulator", "simulator type", "simulateur", "fstd", "fstd session type", "synthetic"],
+  fstdType: ["ac issim", "issim", "is sim", "fstd type", "simulator type", "sim type", "sim type", "simulator", "simulator type", "simulateur", "fstd", "fstd session type", "synthetic"],
   fstdTime: ["fstd time", "duration simulator", "duration sim", "duration fstd", "simulator duration", "time simulator", "sim time", "simulator time", "time sim", "simulated flight", "temps simulateur", "fstd total", "fstd session total time of session", "total time of session"],
 };
 
@@ -64,12 +65,17 @@ const CLOCK_FIELDS: ImportField[] = ["out", "off", "on", "in"];
 const NOT: Partial<Record<ImportField, string[]>> = Object.fromEntries([
   ...DURATION_FIELDS.map((f) => [f, ["ldg", "ldgs", "landing", "landings", "takeoff", "takeoffs", "tos", "atterrissages", "decollages", "start", "end", "debut", "fin", "name", "nom", "type", "count", "nb", "number"]]),
   ...COUNT_FIELDS.map((f) => [f, ["duration", "time", "temps", "duree", "hours", "minutes"]]),
-  ...CLOCK_FIELDS.map((f) => [f, ["duration", "total", "duree", "ldgs", "ldg", "landings", "takeoffs", "airport", "place", "icao", "name"]]),
+  // "Scheduled departure" is not the actual off-block; "Day SE in Command" is a function time, not "in"
+  ...CLOCK_FIELDS.map((f) => [f, ["duration", "total", "duree", "ldgs", "ldg", "landings", "takeoffs", "airport", "place", "icao", "name", "scheduled", "sched", "command", "engine", "picus", "dual", "pilot"]]),
   ["dep", ["time", "duration", "heure"]],
   ["arr", ["time", "duration", "heure"]],
   ["registration", ["type", "model", "name"]],
   ["type", ["simulator", "fstd", "sim", "registration", "reg"]],
   ["picName", ["duration", "time"]],
+  // a night or IFR column split by function or engine ("Night SE PICUS") is not the night time of the flight
+  ["night", ["ldg", "ldgs", "landing", "landings", "takeoff", "takeoffs", "tos", "atterrissages", "decollages", "start", "end", "debut", "fin", "name", "nom", "type", "count", "nb", "number", "picus", "command", "dual", "p2", "copilot", "co", "engine", "se", "me"]],
+  ["ifr", ["ldg", "ldgs", "landing", "landings", "takeoff", "takeoffs", "tos", "start", "end", "name", "nom", "type", "count", "nb", "number", "simulated", "approach", "approaches"]],
+  ["function", ["supervision", "custom", "under"]],
   ["flightNumber", ["duration", "time", "date", "total"]],
 ]) as Partial<Record<ImportField, string[]>>;
 
@@ -86,12 +92,33 @@ const norm = (s: string) =>
 
 /* ---------- what a column's values look like ---------- */
 
-type Kind = "date" | "icao" | "clock" | "duration" | "reg" | "actype" | "func" | "int" | "text" | "hm";
+type Kind = "date" | "icao" | "clock" | "duration" | "reg" | "regLoose" | "actype" | "func" | "int" | "text" | "hm" | "bool";
 
-const DATE_RE = /^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})([ t]\d{1,2}:\d{2}(:\d{2})?)?$/i;
+const DATE_RE = /^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})([ t]\d{1,2}:\d{2}(:\d{2}(\.\d+)?)?\s*(z|utc)?)?$/i;
+/** 15-Mar-2024, 15 Mar 2024, 15 mars 2024, Mar 15, 2024, March 15 2024 */
+const MONTHS: Record<string, number> = {
+  jan: 1, january: 1, janv: 1, janvier: 1, januar: 1, ene: 1, enero: 1,
+  feb: 2, february: 2, fev: 2, fevr: 2, fevrier: 2, februar: 2, febrero: 2,
+  mar: 3, march: 3, mars: 3, marz: 3, maerz: 3, marzo: 3,
+  apr: 4, april: 4, avr: 4, avril: 4, abr: 4, abril: 4,
+  may: 5, mai: 5, mayo: 5,
+  jun: 6, june: 6, juin: 6, juni: 6, junio: 6,
+  jul: 7, july: 7, juil: 7, juillet: 7, juli: 7, julio: 7,
+  aug: 8, august: 8, aout: 8, ago: 8, agosto: 8,
+  sep: 9, sept: 9, september: 9, septembre: 9, septiembre: 9,
+  oct: 10, october: 10, octobre: 10, okt: 10, oktober: 10, octubre: 10,
+  nov: 11, november: 11, novembre: 11, noviembre: 11,
+  dec: 12, december: 12, decembre: 12, dez: 12, dezember: 12, dic: 12, diciembre: 12,
+};
+const monthOf = (w: string) => MONTHS[w.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\.$/, "")];
+const NAMED_DATE_RE = /^(?:[a-z]{3,9}\.?,?\s+)?(\d{1,2})(?:st|nd|rd|th|er)?[\s\-/.]+([a-zA-Z\u00c0-\u00ff]{3,9}\.?)[\s\-/.,]+(\d{2,4})|^([a-zA-Z\u00c0-\u00ff]{3,9}\.?)[\s\-/.]+(\d{1,2})(?:st|nd|rd|th)?,?[\s\-/.]+(\d{2,4})/i;
+const isNamedDate = (v: string) => {
+  const m = v.match(NAMED_DATE_RE);
+  return !!m && !!monthOf(m[2] ?? m[4] ?? "");
+};
 const ICAO_RE = /^[A-Z]{4}$|^[A-Z]{3}$/;
-const CLOCK_RE = /^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}[ T])?([01]?\d|2[0-3])[:h.]?[0-5]\d(:\d{2})?z?$/i;
-const DUR_RE = /^\d{1,4}[:h]\d{2}$|^\d{1,3}[.,]\d{1,2}$/;
+const CLOCK_RE = /^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}[ T])?([01]?\d|2[0-3])[:h.]?[0-5]\d(:\d{2})?\s*(z|utc|gmt|lt|local)?$/i;
+const DUR_RE = /^\d{1,4}[:h]\d{2}(:\d{2})?$|^\d{1,3}[.,]\d{1,2}$/;
 const REG_RE = /^([A-Z]{1,2}|[A-Z]\d|\d[A-Z])-[A-Z0-9]{2,5}$|^N\d{1,5}[A-Z]{0,2}$|^HL\d{4}$|^JA[0-9A-Z]{4}$|^B-?\d{4,5}$/;
 const TYPE_RE = /^[A-Z][A-Z0-9]{1,3}$/;
 const FUNC_RE = /^(pic|sic|picus|p1|p2|p1s|p1us|fo|f\/o|cdb|opl|cpt|capt|captain|dual|fi|fe|tri|tre|cfi|instructor|student|copilot|co-pilot|copilote|eleve)$/i;
@@ -99,21 +126,23 @@ const FUNC_RE = /^(pic|sic|picus|p1|p2|p1s|p1us|fo|f\/o|cdb|opl|cpt|capt|captain
 type Profile = Record<Kind, number> & { filled: number };
 
 function profile(values: string[]): Profile {
-  const p: Profile = { date: 0, icao: 0, clock: 0, duration: 0, reg: 0, actype: 0, func: 0, int: 0, text: 0, hm: 0, filled: 0 };
+  const p: Profile = { date: 0, icao: 0, clock: 0, duration: 0, reg: 0, regLoose: 0, actype: 0, func: 0, int: 0, text: 0, hm: 0, bool: 0, filled: 0 };
   const vals = values.map((v) => v.trim()).filter(Boolean);
   if (!vals.length) return p;
   for (const v of vals) {
     const u = v.toUpperCase();
-    if (DATE_RE.test(v) || /^\d{5}$/.test(v) && +v > 20000 && +v < 60000) p.date++;
+    if (DATE_RE.test(v) || isNamedDate(v) || /^\d{5}$/.test(v) && +v > 20000 && +v < 60000) p.date++;
     if (ICAO_RE.test(u) && u === v) p.icao++;
     if (CLOCK_RE.test(v)) p.clock++;
     if (DUR_RE.test(v) || /^\d{1,2}$/.test(v)) p.duration++;
     if (REG_RE.test(u)) p.reg++;
+    if (/^[A-Z][A-Z0-9]{4,5}$/.test(u) && u === v) p.regLoose++;
     if (TYPE_RE.test(u) && /\d/.test(u)) p.actype++;
     if (FUNC_RE.test(v)) p.func++;
     if (/^\d{1,2}$/.test(v)) p.int++;
-    if (/^\d{1,4}[:h]\d{2}$|^\d{1,3}[.,]\d{1,2}$/.test(v)) p.hm++;
+    if (/^\d{1,4}[:h]\d{2}(:\d{2})?$|^\d{1,3}[.,]\d{1,2}$/.test(v)) p.hm++;
     if (/[a-z]{3,}/i.test(v) && v.length > 3) p.text++;
+    if (/^(true|false|yes|no|oui|non)$/i.test(v)) p.bool++;
   }
   for (const k of Object.keys(p) as (keyof Profile)[]) if (k !== "filled") p[k] /= vals.length;
   p.filled = vals.length / values.length;
@@ -127,7 +156,8 @@ function fit(field: ImportField, p: Profile): number {
     case "date": return p.date;
     case "dep": case "arr": return p.icao;
     case "out": case "off": case "on": case "in": return p.clock;
-    case "registration": return Math.max(p.reg, p.actype * 0.3);
+    // registrations without their hyphen (PHXYZ, FHZUN) as some apps store them
+    case "registration": return Math.max(p.reg, p.regLoose * 0.6, p.actype * 0.3);
     case "type": return Math.max(p.actype, p.text * 0.6);
     case "function": return p.func;
     case "total": case "night": case "ifr": case "pic": case "picus": case "copilot": case "dual": case "instructor": case "multiPilot":
@@ -136,9 +166,11 @@ function fit(field: ImportField, p: Profile): number {
       if (p.hm === 0 && p.int > 0.9) return 0.2;
       return Math.max(p.duration, p.clock * 0.9);
     case "landingsDay": case "landingsNight": case "takeoffsDay": case "takeoffsNight": return p.hm > 0.2 ? 0 : p.int;
-    case "picName": return p.text;
-    case "flightNumber": return /* AF1234, 1234, EZY12AB */ 1 - p.date - p.clock * 0.5;
-    case "remarks": case "fstdType": return 1 - p.date;
+    // a column of true / false (ForeFlight's "FlightReview") is a flag, not a name, a flight number or a remark
+    case "picName": return p.text * (1 - p.bool);
+    case "flightNumber": return /* AF1234, 1234, EZY12AB */ (1 - p.date - p.clock * 0.5) * (1 - p.bool);
+    case "remarks": return (1 - p.date) * (1 - p.bool);
+    case "fstdType": return 1 - p.date;
   }
 }
 
@@ -171,7 +203,8 @@ export function detectMapping(header: string[], sample: string[][] = []): Record
       const hs = headerScore(f, h);
       if (!hs) return;
       const fi = hasData ? fit(f, profiles[i]!) : 1;
-      if (hasData && fi < 0.35) return;
+      // an exact column name ("AC_REG" holding "PHXYZ", "TIME_NIGHT" in minutes) is kept unless the values rule it out
+      if (hasData && fi < (hs >= 100 ? 0.15 : 0.35)) return;
       cands.push({ f, i, s: hs * (0.5 + fi / 2) });
     });
   }
@@ -238,7 +271,7 @@ export function detectMapping(header: string[], sample: string[][] = []): Record
 
 /** "2024-05-26 08:30:00", "08:30:00Z", "0830" -> the HH:MM part */
 const clockPart = (v: string) => {
-  const m = v.trim().match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*z?$/i);
+  const m = v.trim().match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(?:z|utc|gmt|lt|local)?$/i);
   return m ? `${m[1]}:${m[2]}` : v.trim();
 };
 
@@ -385,6 +418,9 @@ export function analyseTable(table: string[][]): TableAnalysis {
       headerRow = i;
     }
   }
+  // a two-row header whose second row (Place / Time, Day / Night…) names more fields than the first: start one row up
+  const above = rows[headerRow - 1];
+  if (above && hits(above) >= 2 && !above.some((c) => DATE_RE.test((c ?? "").trim())) && profile(rows[headerRow]!).clock < 0.2 && rows[headerRow]!.filter((c) => (c ?? "").trim()).length > above.filter((c) => (c ?? "").trim()).length) headerRow--;
   let header = (rows[headerRow] ?? []).map((c) => (c ?? "").trim());
   let dataStart = headerRow + 1;
   // two-row header: the next row holds sub-headers (Place / Time, Day / Night, SE / ME…) and no data
@@ -437,12 +473,18 @@ export function parseFlexibleDate(input: string, order: DateOrder = "dmy"): stri
   const s = input.trim();
   let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
   if (m) return iso(+m[1]!, +m[2]!, +m[3]!);
-  m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
+  // 15/03/2024, 15.03.24, and with a time after it as spreadsheets export dates ("15/03/2024 00:00")
+  m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})(?:[ t]\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?\s*(?:z|utc)?)?$/i);
   if (m) {
-    let y = +m[3]!;
-    if (y < 100) y += y > 70 ? 1900 : 2000;
+    const y = fullYear(+m[3]!);
     const [a, b] = [+m[1]!, +m[2]!];
     return order === "mdy" ? iso(y, a, b) : iso(y, b, a);
+  }
+  // 15-Mar-2024, 15 mars 2024, Mar 15, 2024
+  m = s.match(NAMED_DATE_RE);
+  if (m) {
+    const mo = monthOf(m[2] ?? m[4] ?? "");
+    if (mo) return iso(fullYear(+(m[3] ?? m[6])!), mo, +(m[1] ?? m[5])!);
   }
   // Excel serial date
   if (/^\d{5}$/.test(s)) {
@@ -451,6 +493,8 @@ export function parseFlexibleDate(input: string, order: DateOrder = "dmy"): stri
   }
   return null;
 }
+
+const fullYear = (y: number) => (y < 100 ? y + (y > 70 ? 1900 : 2000) : y);
 
 function iso(y: number, mo: number, d: number): string | null {
   if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
@@ -480,10 +524,29 @@ export interface ImportedRow {
 export function rowsToFlights(
   rows: string[][],
   mapping: Record<ImportField, number>,
-  opts: { dateOrder?: DateOrder; defaultFunction?: PilotFunction; pilotFlying?: boolean } = {},
+  opts: {
+    dateOrder?: DateOrder;
+    defaultFunction?: PilotFunction;
+    pilotFlying?: boolean;
+    /** IANA time zone of an airport: times written as local ("09:00 LOCAL", "09:00 LT") are converted to UTC */
+    timezoneOf?: (code: string) => string | undefined;
+  } = {},
 ): ImportedRow[] {
   const get = (r: string[], f: ImportField) => (mapping[f] >= 0 ? (r[mapping[f]] ?? "").trim() : "");
   const num = (v: string) => (v === "" ? undefined : Number.isFinite(Number(v)) ? Number(v) : undefined);
+  // durations in whole minutes (CrewLounge, APDL): a column of whole numbers, one above 24, cannot be hours
+  const inMinutes = new Set(
+    DURATION_FIELDS.filter((f) => {
+      if (mapping[f] < 0) return false;
+      const vals = rows.map((r) => (r[mapping[f]] ?? "").trim()).filter(Boolean);
+      return vals.length > 0 && vals.every((v) => /^\d+$/.test(v)) && vals.some((v) => Number(v) > 24);
+    }),
+  );
+  const durOf = (r: string[], f: ImportField) => {
+    const v = get(r, f);
+    if (v === "") return undefined;
+    return inMinutes.has(f) && /^\d+$/.test(v) ? Number(v) : parseDuration(v) ?? undefined;
+  };
   const dur = (v: string) => (v === "" ? undefined : parseDuration(v) ?? undefined);
   const clock = (v: string) => {
     if (!v) return undefined;
@@ -495,27 +558,30 @@ export function rowsToFlights(
     const errors: string[] = [];
     const date = parseFlexibleDate(get(r, "date"), opts.dateOrder);
     if (!date) errors.push("date");
+    let utcDate: string | null = null;
     // A "simulator" / "FSTD" column often holds the session time (the EASA logbook's FSTD "total time of
     // session"), not the device type: a value that reads as a duration is taken as the session time.
-    const rawFstd = get(r, "fstdType");
+    // a simulator flag ("sim", TRUE) marks a session; FALSE / no / 0 / 0:00 do not
+    const flag = get(r, "fstdType");
+    const rawFstd = /^(false|no|non|n|0|0:00|00:00|0[.,]0+)$/i.test(flag) ? "" : flag;
     const fstdTypeIsTime = /^\d{1,2}\s*[:hH]\s*\d{2}$|^\d+([.,]\d+)?$/.test(rawFstd.trim());
-    const fstdTime = dur(get(r, "fstdTime")) ?? (fstdTypeIsTime ? dur(rawFstd.trim()) : undefined);
-    const fstdType = fstdTypeIsTime ? undefined : rawFstd || undefined;
+    const fstdTime = durOf(r, "fstdTime") ?? (fstdTypeIsTime ? dur(rawFstd.trim()) : undefined);
+    const fstdType = fstdTypeIsTime || /^(true|yes|oui|y|sim|fstd|ffs)$/i.test(rawFstd) ? undefined : rawFstd || undefined;
     const isFstd = !!rawFstd || (!!fstdTime && !get(r, "registration"));
     const dep = get(r, "dep").toUpperCase();
     const arr = get(r, "arr").toUpperCase();
     if (!isFstd && (!dep || !arr)) errors.push("route");
 
     const explicit: ImportedRow["explicit"] = {
-      total: dur(get(r, "total")),
-      night: dur(get(r, "night")),
-      ifr: dur(get(r, "ifr")),
-      pic: dur(get(r, "pic")),
-      picus: dur(get(r, "picus")),
-      copilot: dur(get(r, "copilot")),
-      dual: dur(get(r, "dual")),
-      instructor: dur(get(r, "instructor")),
-      multiPilot: dur(get(r, "multiPilot")),
+      total: durOf(r, "total"),
+      night: durOf(r, "night"),
+      ifr: durOf(r, "ifr"),
+      pic: durOf(r, "pic"),
+      picus: durOf(r, "picus"),
+      copilot: durOf(r, "copilot"),
+      dual: durOf(r, "dual"),
+      instructor: durOf(r, "instructor"),
+      multiPilot: durOf(r, "multiPilot"),
     };
     let fn = parseFunction(get(r, "function"));
     if (!fn) {
@@ -525,19 +591,38 @@ export function rowsToFlights(
       else if (explicit.dual) fn = "DUAL";
       else if (explicit.instructor) fn = "FI";
     }
-    const out = clock(get(r, "out"));
-    const inn = clock(get(r, "in"));
+    // local times: converted to UTC with the airport's zone (departure for out / off, arrival for on / in)
+    const isLocal = (f: ImportField) => /\b(local|lt)$/i.test(get(r, f));
+    const utcOf = (f: ImportField, airport: string, day: string | null): string | undefined => {
+      const c = clock(get(r, f));
+      if (!c || !day || !isLocal(f)) return c;
+      const tz = opts.timezoneOf?.(airport);
+      if (!tz) return c;
+      const [y, mo, d] = day.split("-").map(Number) as [number, number, number];
+      const asUtc = Date.UTC(y, mo - 1, d, Number(c.slice(0, 2)), Number(c.slice(3)));
+      return new Date(asUtc - tzOffsetMs(tz, asUtc)).toISOString().slice(11, 16);
+    };
+    const out = utcOf("out", dep, date);
+    const inn = utcOf("in", arr, date);
+    if (date && isLocal("out") && opts.timezoneOf?.(dep) && clock(get(r, "out"))) {
+      // the UTC day of a local off-block before dawn east of Greenwich (or late evening west) is the day before / after
+      const [y, mo, d] = date.split("-").map(Number) as [number, number, number];
+      const c = clock(get(r, "out"))!;
+      const asUtc = Date.UTC(y, mo - 1, d, Number(c.slice(0, 2)), Number(c.slice(3)));
+      const utcDay = new Date(asUtc - tzOffsetMs(opts.timezoneOf(dep)!, asUtc)).toISOString().slice(0, 10);
+      if (utcDay !== date) utcDate = utcDay;
+    }
     if (!isFstd && !out && !inn && !explicit.total) errors.push("times");
 
     const input: FlightFormInput | undefined = date
       ? {
-          date,
+          date: utcDate ?? date,
           flightNumber: get(r, "flightNumber") || undefined,
           depIcao: dep || (isFstd ? "FSTD" : ""),
           arrIcao: arr || (isFstd ? "FSTD" : ""),
           out,
-          off: clock(get(r, "off")),
-          on: clock(get(r, "on")),
+          off: utcOf("off", dep, date),
+          on: utcOf("on", arr, date),
           in: inn,
           registration: get(r, "registration").toUpperCase() || undefined,
           aircraftTypeIcao: get(r, "type").toUpperCase() || undefined,
@@ -554,7 +639,8 @@ export function rowsToFlights(
           pilotFlying: opts.pilotFlying ?? (num(get(r, "landingsDay")) ?? 0) + (num(get(r, "landingsNight")) ?? 0) > 0,
           isFstd,
           fstdType,
-          fstdMin: fstdTime,
+          // a session flagged as simulator with only a total (mccPILOTLOG "sim"): the total is the session time
+          fstdMin: fstdTime ?? (isFstd ? explicit.total : undefined),
           remarks: get(r, "remarks") || undefined,
         }
       : undefined;

@@ -11,7 +11,7 @@ import {
   type ImportField, type ImportedRow, type LogbookLeg, type StoredMapping,
 } from "@cielo/core";
 import { API_URL } from "../src/api";
-import { toIcao } from "../src/airports";
+import { lookupAirport, toIcao } from "../src/airports";
 import { prepareImportedRows, savePrepared, type PreparedImport } from "../src/importer";
 import { checkImport, formatDuration, type ImportCheck } from "@cielo/core";
 import { Button, Card, Row, Screen, Txt, tap } from "../src/components/ui";
@@ -22,7 +22,7 @@ import type { I18nKey } from "../src/i18n";
 /** A request stays under the server's 4.5 MB body limit: photos go in batches. */
 const BATCH_BYTES = 3_300_000;
 
-type Result = { legs?: LogbookLeg[]; role?: string | null; reader?: string; source?: string; mapping?: StoredMapping; mappingIndex?: Record<string, number>; error?: string };
+type Result = { table?: string[][]; legs?: LogbookLeg[]; role?: string | null; reader?: string; source?: string; mapping?: StoredMapping; mappingIndex?: Record<string, number>; error?: string };
 
 /**
  * The universal import, as on the website: photos of paper logbook pages, a PDF statement, a CSV or a pasted
@@ -65,7 +65,7 @@ export default function ImportScreen() {
     const d = (await r.json().catch(() => ({}))) as Result;
     return r.ok ? d : { ...d, error: d.error ?? (r.status === 413 ? "too_big" : "error") };
   };
-  const fail = (code?: string) => Alert.alert(t("uimp.title"), t(`uimp.err.${["plan", "unauthorized", "rate_limited", "unsupported", "too_big", "busy"].includes(code ?? "") ? code : "error"}` as never));
+  const fail = (code?: string) => Alert.alert(t("uimp.title"), t(`uimp.err.${["plan", "unauthorized", "rate_limited", "unsupported", "too_big", "busy", "xls", "unreadable"].includes(code ?? "") ? code : "error"}` as never));
   const show = (legs: LogbookLeg[], role?: string | null, src?: string | null) => {
     const fn = role === "CDB" || role === "CDT" ? "PIC" : role ? "SIC" : pilot.defaultFunction;
     setRows(legsToRows(legs, (code) => toIcao(code), { function: fn, pilotFlying: false }));
@@ -132,8 +132,19 @@ export default function ImportScreen() {
         if (d.error || !d.legs) return fail(d.error);
         return show(d.legs, d.role, d.reader === "airfrance-ep5" ? "Air France · EP5" : d.source ?? "ai");
       }
-      // a table: read here, columns found by themselves, else learned or mapped on the server
-      const an = analyseTable(parseCsv((await new File(a.uri).text()).replace(/^﻿/, "")));
+      // Excel 97-2003 (.xls) cannot be read: ask for .xlsx or CSV
+      if (/\.xls$/i.test(a.name) || a.mimeType === "application/vnd.ms-excel") return fail("xls");
+      // a workbook (.xlsx) is unzipped on the server into a table; a CSV / text file is read here
+      let cells: string[][];
+      if (/\.xlsx$/i.test(a.name) || a.mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+        const data = await new File(a.uri).base64();
+        if (data.length > BATCH_BYTES * 1.3) return fail("too_big");
+        const d = await call({ kind: "sheet", data, fileName: a.name });
+        if (d.error || !d.table) return fail(d.error);
+        cells = d.table;
+      } else cells = parseCsv((await new File(a.uri).text()).replace(/^\uFEFF/, ""));
+      // columns found by themselves, else learned or mapped on the server
+      const an = analyseTable(cells);
       let mapping = an.mapping;
       let src: string | null = an.app ?? null;
       if (!an.app && !mappingUsable(an.mapping)) {
@@ -146,7 +157,7 @@ export default function ImportScreen() {
           src = d.source ?? "ai";
         } else if (d.error && d.error !== "plan") return fail(d.error);
       }
-      setRows(rowsToFlights(an.rows, mapping, { dateOrder: an.dateOrder, defaultFunction: pilot.defaultFunction }));
+      setRows(rowsToFlights(an.rows, mapping, { dateOrder: an.dateOrder, defaultFunction: pilot.defaultFunction, timezoneOf: (c) => lookupAirport(toIcao(c))?.timezone }));
       setTable({ header: an.header, mapping });
       setSource(src);
     } catch {

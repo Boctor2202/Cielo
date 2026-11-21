@@ -57,8 +57,26 @@ function icalDate(v: string, tzid?: string): string | null {
   const [, y, mo, d, h = "00", mi = "00", s = "00", z] = m;
   const utc = Date.UTC(+y!, +mo! - 1, +d!, +h, +mi, +s);
   if (z || !tzid) return new Date(utc).toISOString();
-  return new Date(utc - tzOffsetMs(tzid, utc)).toISOString();
+  const zone = WINDOWS_ZONES[tzid] ?? tzid;
+  return new Date(utc - tzOffsetMs(zone, utc)).toISOString();
 }
+
+/** Outlook and Exchange write Windows zone names ("Romance Standard Time"): the usual ones, as IANA zones. */
+const WINDOWS_ZONES: Record<string, string> = {
+  "UTC": "UTC", "Coordinated Universal Time": "UTC", "GMT Standard Time": "Europe/London", "Greenwich Standard Time": "Atlantic/Reykjavik",
+  "W. Europe Standard Time": "Europe/Berlin", "Romance Standard Time": "Europe/Paris", "Central Europe Standard Time": "Europe/Budapest",
+  "Central European Standard Time": "Europe/Warsaw", "E. Europe Standard Time": "Europe/Chisinau", "GTB Standard Time": "Europe/Bucharest",
+  "FLE Standard Time": "Europe/Kiev", "Russian Standard Time": "Europe/Moscow", "Turkey Standard Time": "Europe/Istanbul",
+  "Arabian Standard Time": "Asia/Dubai", "Arab Standard Time": "Asia/Riyadh", "Israel Standard Time": "Asia/Jerusalem", "Egypt Standard Time": "Africa/Cairo",
+  "Morocco Standard Time": "Africa/Casablanca", "South Africa Standard Time": "Africa/Johannesburg", "India Standard Time": "Asia/Kolkata",
+  "Singapore Standard Time": "Asia/Singapore", "China Standard Time": "Asia/Shanghai", "Tokyo Standard Time": "Asia/Tokyo",
+  "AUS Eastern Standard Time": "Australia/Sydney", "E. Australia Standard Time": "Australia/Brisbane", "W. Australia Standard Time": "Australia/Perth",
+  "New Zealand Standard Time": "Pacific/Auckland", "Eastern Standard Time": "America/New_York", "Central Standard Time": "America/Chicago",
+  "Mountain Standard Time": "America/Denver", "US Mountain Standard Time": "America/Phoenix", "Pacific Standard Time": "America/Los_Angeles",
+  "Alaskan Standard Time": "America/Anchorage", "Hawaiian Standard Time": "Pacific/Honolulu", "Atlantic Standard Time": "America/Halifax",
+  "Canada Central Standard Time": "America/Regina", "SA Pacific Standard Time": "America/Bogota", "E. South America Standard Time": "America/Sao_Paulo",
+  "Argentina Standard Time": "America/Buenos_Aires", "Azores Standard Time": "Atlantic/Azores", "Cape Verde Standard Time": "Atlantic/Cape_Verde",
+};
 
 /** Offset of `timeZone` from UTC at the given instant, in ms. */
 export function tzOffsetMs(timeZone: string, utcMs: number): number {
@@ -74,8 +92,9 @@ export function tzOffsetMs(timeZone: string, utcMs: number): number {
   }
 }
 
-const ICAO_PAIR = /\b([A-Z]{4})\s*[-–>/ ]+\s*([A-Z]{4})\b/;
-const IATA_PAIR = /\b([A-Z]{3})\s*[-–>/ ]+\s*([A-Z]{3})\b/;
+// "CDG-JFK", "CDG > JFK", and with the times between the codes as many crew apps print them ("CDG 1030 JFK 1855")
+const ICAO_PAIR = /\b([A-Z]{4})\s*(?:\d{4}Z?|\d{1,2}:\d{2}Z?)?\s*[-–>/ ]+\s*([A-Z]{4})\b/;
+const IATA_PAIR = /\b([A-Z]{3})\s*(?:\d{4}Z?|\d{1,2}:\d{2}Z?)?\s*[-–>/ ]+\s*([A-Z]{3})\b/;
 const FLIGHT_NO = /\b([A-Z]{2,3}|[A-Z]\d|\d[A-Z])\s?(\d{1,4}[A-Z]?)\b/;
 
 /**
@@ -87,29 +106,38 @@ export function icalToRosterEvent(
   pilotId: string,
   iataToIcao: (iata: string) => string | undefined,
 ): Omit<RosterEvent, "id" | "createdAt" | "updatedAt"> {
+  // the title decides first: a flight whose notes mention the hotel at the outstation is still a flight
+  const title = e.summary.toUpperCase();
   const text = `${e.summary} ${e.location ?? ""} ${e.description ?? ""}`.toUpperCase();
-  let kind: RosterEventKind = "OTHER";
-  if (/\b(DH|DHD|DEADHEAD|POSITIONING|MEP|PAX)\b/.test(text)) kind = "DEADHEAD";
-  else if (/\b(SBY|STBY|STANDBY|RESERVE|RSV|HSBY|ASBY)\b/.test(text)) kind = "STANDBY";
-  else if (/\b(SIM|FFS|FSTD|LOE|OPC|LPC)\b/.test(text)) kind = "SIM";
-  else if (/\b(OFF|DAY OFF|REPOS|JOUR OFF|RDO)\b/.test(text)) kind = "OFF";
-  else if (/\b(LEAVE|CONGE|CONGÉ|VACATION|HOLIDAY)\b/.test(text)) kind = "LEAVE";
-  else if (/\b(HOTEL|LAYOVER|REST|NIGHTSTOP)\b/.test(text)) kind = "REST";
-  else if (/\b(GROUND|TRAINING|COURSE|OFFICE|MEDICAL|CRM|SEP|E-LEARNING)\b/.test(text)) kind = "GROUND";
+  const kindOf = (t: string): RosterEventKind => {
+    if (/\b(DH|DHD|DEADHEAD|POSITIONING|MEP|PAX)\b/.test(t)) return "DEADHEAD";
+    if (/\b(SBY|STBY|STANDBY|RESERVE|RSV|HSBY|ASBY)\b/.test(t)) return "STANDBY";
+    if (/\b(SIM|FFS|FSTD|LOE|OPC|LPC)\b/.test(t)) return "SIM";
+    if (/\b(OFF|DAY OFF|REPOS|JOUR OFF|RDO)\b/.test(t)) return "OFF";
+    if (/\b(LEAVE|CONGE|CONGÉ|VACATION|HOLIDAY)\b/.test(t)) return "LEAVE";
+    if (/\b(HOTEL|LAYOVER|REST|NIGHTSTOP)\b/.test(t)) return "REST";
+    if (/\b(GROUND|TRAINING|COURSE|OFFICE|MEDICAL|CRM|SEP|E-LEARNING)\b/.test(t)) return "GROUND";
+    return "OTHER";
+  };
 
   let depIcao: string | undefined;
   let arrIcao: string | undefined;
-  const icao = text.match(ICAO_PAIR);
-  if (icao) {
-    depIcao = icao[1];
-    arrIcao = icao[2];
-  } else {
-    const iata = text.match(IATA_PAIR);
+  const pair = (t: string) => {
+    const icao = t.match(ICAO_PAIR);
+    if (icao) return [icao[1], icao[2]] as const;
+    const iata = t.match(IATA_PAIR);
     if (iata) {
-      depIcao = iataToIcao(iata[1]!) ?? undefined;
-      arrIcao = iataToIcao(iata[2]!) ?? undefined;
+      const a = iataToIcao(iata[1]!);
+      const b = iataToIcao(iata[2]!);
+      if (a && b) return [a, b] as const;
     }
-  }
+    return null;
+  };
+  const route = pair(title) ?? pair(text);
+  if (route) [depIcao, arrIcao] = route;
+  let kind = kindOf(title);
+  // a title with a route and no other word is a flight; otherwise the notes may tell what the day is
+  if (kind === "OTHER" && !(depIcao && arrIcao && pair(title))) kind = kindOf(text);
   if (kind === "OTHER" && depIcao && arrIcao) kind = "FLIGHT";
   const fn = kind === "FLIGHT" || kind === "DEADHEAD" ? e.summary.toUpperCase().match(FLIGHT_NO) : null;
 

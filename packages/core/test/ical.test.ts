@@ -1,0 +1,47 @@
+import { describe, expect, it } from "vitest";
+import { icalToRosterEvent, parseIcal } from "../src";
+
+const IATA: Record<string, string> = { CDG: "LFPG", JFK: "KJFK", FRA: "EDDF", ORY: "LFPO", NCE: "LFMN" };
+const toIcao = (c: string) => IATA[c];
+
+/** Roster calendars as crew apps export them: UTC times, a time zone by name, Outlook zones, all-day days off. */
+describe("roster calendars (iCal)", () => {
+  it("UTC times, folded lines and escaped text", () => {
+    const ics = [
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Crew//EN",
+      "BEGIN:VEVENT", "UID:abc-1", "DTSTART:20240315T081000Z", "DTEND:20240315T163500Z",
+      "SUMMARY:AF006 CDG-JFK", "DESCRIPTION:Report 07:10Z\\, A350\\nHotel: Lexington",
+      "  Ave", "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+    const [e] = parseIcal(ics);
+    expect(e).toMatchObject({ uid: "abc-1", startUtc: "2024-03-15T08:10:00.000Z", endUtc: "2024-03-15T16:35:00.000Z" });
+    expect(e!.description).toBe("Report 07:10Z, A350\nHotel: Lexington Ave");
+    expect(icalToRosterEvent(e!, "p", toIcao)).toMatchObject({ kind: "FLIGHT", depIcao: "LFPG", arrIcao: "KJFK", flightNumber: "AF006" });
+  });
+
+  it("local times with an IANA zone, and with an Outlook (Windows) zone", () => {
+    const ev = (tz: string) =>
+      parseIcal(["BEGIN:VCALENDAR", "BEGIN:VEVENT", `DTSTART;TZID=${tz}:20240715T061000`, `DTEND;TZID=${tz}:20240715T074500`, "SUMMARY:LH1029 FRA-NCE", "END:VEVENT", "END:VCALENDAR"].join("\n"))[0]!;
+    // Paris / Frankfurt are UTC+2 in July
+    expect(ev("Europe/Berlin").startUtc).toBe("2024-07-15T04:10:00.000Z");
+    expect(ev("W. Europe Standard Time").startUtc).toBe("2024-07-15T04:10:00.000Z");
+    expect(ev("\"Romance Standard Time\"").endUtc).toBe("2024-07-15T05:45:00.000Z");
+  });
+
+  it("days off, standby and deadhead, times between the airports", () => {
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT", "DTSTART;VALUE=DATE:20240316", "DTEND;VALUE=DATE:20240317", "SUMMARY:OFF", "END:VEVENT",
+      "BEGIN:VEVENT", "DTSTART:20240317T050000Z", "DTEND:20240317T130000Z", "SUMMARY:SBY ORY", "END:VEVENT",
+      "BEGIN:VEVENT", "DTSTART:20240318T100000Z", "DTEND:20240318T113500Z", "SUMMARY:DH AF7700 ORY-NCE", "END:VEVENT",
+      "BEGIN:VEVENT", "DTSTART:20240319T103000Z", "DTEND:20240319T185500Z", "SUMMARY:AF006 CDG 1030 JFK 1855", "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\n");
+    const ev = parseIcal(ics).map((e) => icalToRosterEvent(e, "p", toIcao));
+    expect(ev.map((e) => e.kind)).toEqual(["OFF", "STANDBY", "DEADHEAD", "FLIGHT"]);
+    expect(ev[0]!.startUtc).toBe("2024-03-16T00:00:00.000Z");
+    expect(ev[2]).toMatchObject({ depIcao: "LFPO", arrIcao: "LFMN", flightNumber: "AF7700" });
+    expect(ev[3]).toMatchObject({ depIcao: "LFPG", arrIcao: "KJFK" });
+  });
+});
