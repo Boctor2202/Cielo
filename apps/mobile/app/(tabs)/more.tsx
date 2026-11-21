@@ -16,6 +16,7 @@ import { sendReport } from "../../src/api";
 import { useApp } from "../../src/state";
 import { useTheme } from "../../src/theme";
 import { loadThemePref, setThemePref, type ThemePref } from "../../src/appearance";
+import { AppearancePicker } from "../../src/components/AppearancePicker";
 
 export default function More() {
   const app = useApp();
@@ -149,6 +150,7 @@ export default function More() {
             { value: "system", label: t("more.theme.system") },
           ]}
         />
+        <AppearancePicker theme={theme} onTheme={setTheme} />
         {Platform.OS === "ios" && WIDGETS_IN_BUILD ? (
           <ToggleRow
             label={t("more.liveActivity")}

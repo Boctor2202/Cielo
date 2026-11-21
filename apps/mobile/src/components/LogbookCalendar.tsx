@@ -6,7 +6,7 @@ import { formatClock, formatDuration, sumFlights, type Flight } from "@cielo/cor
 import { Card, Row, Txt, tap } from "./ui";
 import { formatMonth } from "../i18n";
 import { todayUtc, useApp } from "../state";
-import { glass, space, useTheme } from "../theme";
+import { glass, space, useTheme, withAlpha } from "../theme";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const addMonths = (ym: string, n: number) => {
@@ -91,7 +91,7 @@ export function LogbookCalendar({ flights }: { flights: Flight[] }) {
                     borderRadius: 10,
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: fs.length ? `rgba(34,197,94,${k.toFixed(2)})` : glass(c).input,
+                    backgroundColor: fs.length ? withAlpha(c.accent, Number(k.toFixed(2))) : glass(c).input,
                     borderWidth: on || isToday ? 1.5 : 0,
                     borderColor: on ? c.text : c.accent,
                   }}
@@ -109,7 +109,7 @@ export function LogbookCalendar({ flights }: { flights: Flight[] }) {
         </View>
         <Row gap={space.md} style={{ justifyContent: "center" }}>
           <Row gap={4} style={{ alignItems: "center" }}>
-            <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: "rgba(34,197,94,0.7)" }} />
+            <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: withAlpha(c.accent, 0.7) }} />
             <Txt variant="small">{t("cal.flown")}</Txt>
           </Row>
           <Row gap={4} style={{ alignItems: "center" }}>
