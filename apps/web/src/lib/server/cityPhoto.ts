@@ -56,13 +56,16 @@ async function landmarkOf(city: string, country: string, near: { lat: number; lo
   // the city itself, near the airport
   const town = (await searchText({ textQuery: city, includedType: "locality", languageCode: "en", locationBias: { circle: { center: { latitude: near.lat, longitude: near.lon }, radius: 50000 } }, pageSize: 1 }, "places.location").catch(() => []))[0]?.location;
   const centre = town ? { lat: town.latitude, lon: town.longitude } : near;
-  const fields = "places.id,places.displayName,places.userRatingCount,places.types,places.formattedAddress,places.photos.name";
+  const fields = "places.id,places.displayName,places.userRatingCount,places.types,places.formattedAddress,places.location,places.photos.name";
   const around = (q: string) => searchText({ textQuery: q, languageCode: lang, locationRestriction: box(centre, town ? 0.18 : 0.32), pageSize: 20 }, fields).catch(() => [] as Hit[]);
   const found = [...(await around(`famous landmark ${city}`)), ...(await around(`monument ${city}`))];
   const NOT = ["airport", "lodging", "shopping_mall", "store", "restaurant", "stadium", "zoo", "amusement_park", "water_park", "casino", "aquarium"];
   const sights = found.filter((p) => p.photos?.length && !(p.types ?? []).some((t) => NOT.includes(t)));
+  // in the city itself: within 10 km of its centre (an address says "Roma" for Rome, "Milano" for Milan), or,
+  // when the centre is not known, an address that names the city
   const plain = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const inCity = sights.filter((p) => plain(p.formattedAddress ?? "").includes(plain(city)));
+  const km = (p: Hit) => (p.location ? Math.hypot((p.location.latitude - centre.lat) * 111, (p.location.longitude - centre.lon) * 111 * Math.cos((centre.lat * Math.PI) / 180)) : 99);
+  const inCity = sights.filter((p) => (town ? km(p) <= 10 : plain(p.formattedAddress ?? "").includes(plain(city))));
   const best = (inCity.length ? inCity : sights).sort((a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0))[0];
   const hit = best ? { id: best.id, name: best.displayName?.text ?? city } : null;
   landmarks.set(k, hit);
