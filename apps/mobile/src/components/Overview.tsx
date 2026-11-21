@@ -8,7 +8,6 @@ import { Track } from "./Bars";
 import { Row, Txt, tap } from "./ui";
 import { useTheme } from "../theme";
 
-const GREEN = "#22C55E";
 const INDIGO = "#818CF8";
 const SKY = "#38BDF8";
 const AMBER = "#FBBF24";
@@ -16,6 +15,7 @@ const AMBER = "#FBBF24";
 /** A ring filled to `ratio`, the value in the middle. */
 function Ring({ ratio, size = 92, label, sub }: { ratio: number; size?: number; label: string; sub?: string }) {
   const c = useTheme();
+  const GREEN = c.accent;
   const r = (size - 10) / 2;
   const len = 2 * Math.PI * r;
   return (
@@ -33,6 +33,7 @@ function Ring({ ratio, size = 92, label, sub }: { ratio: number; size?: number; 
 /** Hours of each of the last 12 months as bars, the night hours at the foot of each bar. */
 function MonthBars({ months, width, height = 70 }: { months: { label: string; total: number; night: number }[]; width: number; height?: number }) {
   const c = useTheme();
+  const GREEN = c.accent;
   const max = Math.max(1, ...months.map((m) => m.total));
   const slot = width / Math.max(1, months.length);
   const w = Math.min(18, slot * 0.62);
@@ -74,6 +75,7 @@ function MonthBars({ months, width, height = 70 }: { months: { label: string; to
 /** A coloured chip: icon, label, value, and the share of the total as a thin bar. */
 function Chip3({ icon, color, label, value, share }: { icon: keyof typeof Ionicons.glyphMap; color: string; label: string; value: string; share: number }) {
   const c = useTheme();
+  const GREEN = c.accent;
   return (
     <View style={{ flex: 1, gap: 4, padding: 10, borderRadius: 14, backgroundColor: color + "1A" }}>
       <Row gap={5} style={{ alignItems: "center" }}>
@@ -89,6 +91,7 @@ function Chip3({ icon, color, label, value, share }: { icon: keyof typeof Ionico
 /** The headline: total time rolling in, the next milestone as a ring, PIC / night / IFR, and the last 12 months. */
 export function HeroCard({ all, flights, goal, timeDisplay, t, monthLabel, locale }: { all: Totals; flights: Flight[]; goal?: GoalProgress; timeDisplay: "hhmm" | "decimal"; t: (k: never, v?: Record<string, string | number>) => string; monthLabel: string; locale: string }) {
   const c = useTheme();
+  const GREEN = c.accent;
   const fmt = (m: number) => formatDuration(m, timeDisplay);
   const months = useMemo(() => {
     const now = new Date();
@@ -161,6 +164,7 @@ export function HeroCard({ all, flights, goal, timeDisplay, t, monthLabel, local
 /** The next duty: route with a dashed track and an aircraft, countdown, departure and report times. */
 export function DutyCard({ title, from, to, label, countdown, chips, onPress }: { title: string; from?: string; to?: string; label?: string; countdown: string; chips: string[]; onPress: () => void }) {
   const c = useTheme();
+  const GREEN = c.accent;
   return (
     <Pressable onPress={() => (tap(), onPress())} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
       <View style={{ borderRadius: 22, padding: 18, gap: 12, backgroundColor: c.scheme === "dark" ? "rgba(56,189,248,0.10)" : "rgba(56,189,248,0.12)", borderWidth: 1, borderColor: SKY + "40" }}>
@@ -202,6 +206,7 @@ export function DutyCard({ title, from, to, label, countdown, chips, onPress }: 
 /** The last flight: coloured edge, route, function badge, aircraft chip and block time. */
 export function LastFlightCard({ title, f, time, date, onPress }: { title: string; f: Flight; time: string; date: string; onPress: () => void }) {
   const c = useTheme();
+  const GREEN = c.accent;
   const tone: Record<string, string> = { PIC: "#34D399", SIC: SKY, PICUS: "#2DD4BF", DUAL: AMBER, FI: "#A78BFA", FE: "#E879F9" };
   const edge = f.nightMin > 0 ? INDIGO : f.ifrMin > 0 ? SKY : GREEN;
   return (
@@ -244,6 +249,7 @@ export function LastFlightCard({ title, f, time, date, onPress }: { title: strin
 /** 28 days / 90 days / 12 months as three tiles with a coloured top edge. */
 export function PeriodTiles({ items }: { items: { label: string; value: string; sub: string; color: string }[] }) {
   const c = useTheme();
+  const GREEN = c.accent;
   return (
     <Row gap={8}>
       {items.map((x) => (

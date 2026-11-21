@@ -1,8 +1,10 @@
 import { type TextStyle } from "react-native";
-import { useScheme } from "./appearance";
+import { ACCENTS, useLook, useScheme, type AccentId, type BackdropId } from "./appearance";
 
 export interface Palette {
   scheme: "light" | "dark";
+  /** the backdrop behind the screens */
+  look?: BackdropId | "pearl";
   bg: string;
   surface: string;
   surface2: string;
@@ -77,14 +79,42 @@ export function glass(c: Palette) {
   return {
     tint: (dark ? "dark" : "light") as "dark" | "light",
     intensity: dark ? 40 : 50,
-    pane: dark ? "rgba(17,34,58,0.45)" : "rgba(243,246,249,0.42)",
-    strong: dark ? "rgba(17,34,58,0.72)" : "rgba(243,246,249,0.72)",
+    pane: dark ? withAlpha(c.surface, 0.5) : "rgba(255,255,255,0.55)",
+    strong: dark ? withAlpha(c.surface, 0.76) : "rgba(255,255,255,0.78)",
     edge: dark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.65)",
     shade: dark ? "rgba(10,22,38,0.62)" : "rgba(255,255,255,0.18)",
-    input: dark ? "rgba(10,22,38,0.45)" : "rgba(255,255,255,0.6)",
+    input: dark ? withAlpha(c.bg, 0.45) : "rgba(255,255,255,0.6)",
   };
 }
 
+/** The dark backdrops: a near-black and a graphite next to the default midnight blue. */
+const DARK_LOOKS: Record<BackdropId, Partial<Palette>> = {
+  midnight: {},
+  black: { bg: "#050507", surface: "#141419", surface2: "#1F1F26", border: "#26262F", muted: "#9BA1AC", brand: "#141419", onAccent: "#050507" },
+  slate: { bg: "#12161C", surface: "#1B2129", surface2: "#262E38", border: "#2B343F", muted: "#9AA6B4", brand: "#1B2129", onAccent: "#12161C" },
+};
+const cache = new Map<string, Palette>();
+/** The palette for a scheme, an accent and a backdrop (the same object each time, so screens don't redraw). */
+export function paletteFor(scheme: "light" | "dark", accent: AccentId, backdrop: BackdropId): Palette {
+  const key = `${scheme}.${accent}.${backdrop}`;
+  let p = cache.get(key);
+  if (!p) {
+    const a = ACCENTS[accent];
+    p = scheme === "dark" ? { ...DARK, ...DARK_LOOKS[backdrop], accent: a.dark, look: backdrop } : { ...LIGHT, accent: a.light, look: "pearl" };
+    cache.set(key, p);
+  }
+  return p;
+}
+
 export function useTheme(): Palette {
-  return useScheme() === "dark" ? DARK : LIGHT;
+  const scheme = useScheme();
+  const { accent, backdrop } = useLook();
+  return paletteFor(scheme, accent, backdrop);
+}
+
+/** "#22C55E" + alpha → "rgba(34,197,94,0.2)". */
+export function withAlpha(hex: string, a: number): string {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.replace(/./g, "$&$&") : h.slice(0, 6), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
 }

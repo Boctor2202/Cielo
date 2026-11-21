@@ -44,16 +44,16 @@ import { todayUtc, useApp } from "../../src/state";
 import { useFtlSettings } from "../../src/ftlSettings";
 import { loadDismissed, pendingDrafts } from "../../src/flightDrafts";
 import { useCurrency } from "../../src/currency";
-import { space, useTheme } from "../../src/theme";
+import { space, useTheme, withAlpha } from "../../src/theme";
 import { lookupAirport } from "../../src/airports";
 import { Emblem } from "../../src/components/Achievements";
 
-/** Each widget's icon and colour, as on the website, so the cards read at a glance. */
+/** Each widget's icon and colour, as on the website, so the cards read at a glance ("" = the pilot's colour). */
 const LOOK: Record<WidgetId, { icon: React.ComponentProps<typeof Ionicons>["name"]; tone: string }> = {
-  hero: { icon: "time-outline", tone: "#22C55E" },
+  hero: { icon: "time-outline", tone: "" },
   periods: { icon: "speedometer-outline", tone: "#38BDF8" },
   nextDuty: { icon: "calendar-outline", tone: "#A78BFA" },
-  lastFlight: { icon: "airplane-outline", tone: "#22C55E" },
+  lastFlight: { icon: "airplane-outline", tone: "" },
   recency: { icon: "shield-checkmark-outline", tone: "#F59E0B" },
   expiries: { icon: "document-text-outline", tone: "#F87171" },
   ftl: { icon: "checkmark-done-circle-outline", tone: "#34D399" },
@@ -68,7 +68,7 @@ const LOOK: Record<WidgetId, { icon: React.ComponentProps<typeof Ionicons>["name
 /** A card's title row: the widget's icon in its colour, the title, an optional chip, and a chevron. */
 function Head({ id, title, chip, go }: { id: WidgetId; title: string; chip?: string; go?: boolean }) {
   const c = useTheme();
-  const look = LOOK[id];
+  const look = { ...LOOK[id], tone: LOOK[id].tone || c.accent };
   return (
     <Row style={{ alignItems: "center", gap: 10 }}>
       <View style={{ width: 30, height: 30, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: `${look.tone}26` }}>
@@ -185,7 +185,7 @@ export default function Dashboard() {
     ),
     periods: (
       <Pressable onPress={() => router.navigate("/stats")} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
-        <PeriodTiles items={[period(t("dash.d28"), periods.d28, "#38BDF8"), period(t("dash.d90"), periods.d90, "#818CF8"), period(t("dash.m12"), periods.m12, "#22C55E")]} />
+        <PeriodTiles items={[period(t("dash.d28"), periods.d28, "#38BDF8"), period(t("dash.d90"), periods.d90, "#818CF8"), period(t("dash.m12"), periods.m12, c.accent)]} />
       </Pressable>
     ),
     nextDuty: nextDuty ? (
@@ -361,8 +361,8 @@ export default function Dashboard() {
     return (
       <Card onPress={locked ? () => router.push("/subscription") : x.go} style={{ flex: 1, minHeight: 104, gap: 6 }}>
         <Row style={{ alignItems: "center", gap: 7 }}>
-          <View style={{ width: 24, height: 24, borderRadius: 8, alignItems: "center", justifyContent: "center", backgroundColor: `${LOOK[id].tone}26` }}>
-            <Ionicons name={LOOK[id].icon} size={13} color={LOOK[id].tone} />
+          <View style={{ width: 24, height: 24, borderRadius: 8, alignItems: "center", justifyContent: "center", backgroundColor: `${(LOOK[id].tone || c.accent)}26` }}>
+            <Ionicons name={LOOK[id].icon} size={13} color={(LOOK[id].tone || c.accent)} />
           </View>
           <Txt variant="small" numberOfLines={1} style={{ flex: 1, fontWeight: "700", letterSpacing: 0.6, textTransform: "uppercase", fontSize: 10 }}>{widgetLabel(id, locale)}</Txt>
           {x.go || locked ? <Ionicons name="chevron-forward" size={13} color={c.muted} /> : null}
@@ -371,8 +371,8 @@ export default function Dashboard() {
         <Row style={{ alignItems: "center", gap: 6 }}>
           {x.sub && !locked ? <Txt variant="small" numberOfLines={1} style={{ flex: 1 }}>{x.sub}</Txt> : <View style={{ flex: 1 }} />}
           {x.chip && !locked ? (
-            <View style={{ borderRadius: 99, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: `${LOOK[id].tone}26` }}>
-              <Txt mono style={{ fontSize: 10.5, fontWeight: "700" }} color={LOOK[id].tone}>{x.chip}</Txt>
+            <View style={{ borderRadius: 99, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: `${(LOOK[id].tone || c.accent)}26` }}>
+              <Txt mono style={{ fontSize: 10.5, fontWeight: "700" }} color={(LOOK[id].tone || c.accent)}>{x.chip}</Txt>
             </View>
           ) : null}
         </Row>
@@ -449,7 +449,7 @@ export default function Dashboard() {
 
         <Clocks />
         <Row style={{ justifyContent: "flex-end", marginTop: -6 }}>
-          <Pressable onPress={() => (editing ? void save() : setDraft(saved))} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: editing ? c.accent : "rgba(34,197,94,0.15)", borderWidth: 1, borderColor: "rgba(34,197,94,0.4)" }}>
+          <Pressable onPress={() => (editing ? void save() : setDraft(saved))} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: editing ? c.accent : withAlpha(c.accent, 0.15), borderWidth: 1, borderColor: withAlpha(c.accent, 0.4) }}>
             <Ionicons name={editing ? "checkmark" : "options-outline"} size={15} color={editing ? c.onAccent : c.accent} />
             <Txt style={{ fontWeight: "700", fontSize: 13 }} color={editing ? c.onAccent : c.accent}>{t(editing ? "dash.customDone" : "dash.customize")}</Txt>
           </Pressable>

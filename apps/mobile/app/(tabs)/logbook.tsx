@@ -12,7 +12,7 @@ import { airports } from "../../src/airports";
 import { airlines } from "../../src/airlines";
 import { OperatorField } from "../../src/components/OperatorField";
 import { useSyncStatus } from "../../src/syncStatus";
-import { font, glass, mono, space, useTheme } from "../../src/theme";
+import { font, glass, mono, space, useTheme, withAlpha } from "../../src/theme";
 
 /** Function badges: command green, co-pilot blue, supervised command teal, instruction amber / violet. */
 const FN_TONE: Record<string, string> = { PIC: "#34D399", SIC: "#38BDF8", PICUS: "#2DD4BF", DUAL: "#FBBF24", FI: "#A78BFA", FE: "#E879F9" };
@@ -390,7 +390,7 @@ export default function Logbook() {
                   ) : null}
                 </View>
                 <View style={{ alignItems: "flex-end", gap: 4 }}>
-                  <View style={{ paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, backgroundColor: c.scheme === "dark" ? "rgba(34,197,94,0.16)" : "rgba(21,128,61,0.10)" }}>
+                  <View style={{ paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, backgroundColor: withAlpha(c.accent, c.scheme === "dark" ? 0.16 : 0.1) }}>
                     <Txt mono style={{ fontWeight: "700", fontSize: 15 }} color={c.accent}>
                       {fmt(f.isFstd ? f.fstdMin : f.totalMin)}
                     </Txt>

@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
-  ImageBackground,
   InputAccessoryView,
   Keyboard,
   Platform,
@@ -23,18 +22,55 @@ import {
 } from "react-native";
 import { Roll } from "./Roll";
 import { BlurView } from "expo-blur";
+import Svg, { Defs, LinearGradient as SvgLinear, RadialGradient, Rect, Stop } from "react-native-svg";
 import { font, glass, mono, radius, space, useTheme, type Palette } from "../theme";
 
 /** The photo behind every screen (as on the web app), with the theme's shade over it. */
+/** The base of each backdrop, from top to bottom, and the colour of its second glow. */
+const BASES: Record<string, { stops: [string, string, string]; second: string; secondOpacity: number }> = {
+  midnight: { stops: ["#0B1830", "#060D1C", "#03060F"], second: "#3B82F6", secondOpacity: 0.3 },
+  black: { stops: ["#0B0B0E", "#050507", "#000000"], second: "", secondOpacity: 0.14 },
+  slate: { stops: ["#20262F", "#14181E", "#0D1014"], second: "#64748B", secondOpacity: 0.28 },
+  pearl: { stops: ["#F8FAFC", "#EEF2F7", "#E5EBF2"], second: "#93C5FD", secondOpacity: 0.32 },
+};
+
+/**
+ * The app's backdrop: a deep gradient with soft glows in the pilot's colour (no photo), behind the glass panes.
+ * Drawn once in vectors, so it is sharp on every screen and costs nothing to keep.
+ */
 export function Backdrop() {
   const c = useTheme();
-  // portrait phone: the portrait framing; iPad, the unfolded iPhone Duo, landscape: the wide frame
-  const { width, height } = useWindowDimensions();
-  const wide = width > height * 0.8;
+  const { width: w, height: h } = useWindowDimensions();
+  const base = BASES[c.look ?? (c.scheme === "dark" ? "midnight" : "pearl")] ?? BASES.midnight!;
+  const second = base.second || c.accent;
+  const light = c.scheme === "light";
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <ImageBackground source={wide ? require("../../assets/backdrop-wide.jpg") : require("../../assets/backdrop.jpg")} resizeMode="cover" style={StyleSheet.absoluteFill} />
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: glass(c).shade }]} />
+      <Svg width={w} height={h}>
+        <Defs>
+          <SvgLinear id="bd-base" x1="0.2" y1="0" x2="0.8" y2="1">
+            <Stop offset="0" stopColor={base.stops[0]} />
+            <Stop offset="0.55" stopColor={base.stops[1]} />
+            <Stop offset="1" stopColor={base.stops[2]} />
+          </SvgLinear>
+          <RadialGradient id="bd-glow1" cx="0.88" cy="0.06" rx="0.9" ry="0.5" fx="0.88" fy="0.06" gradientUnits="objectBoundingBox">
+            <Stop offset="0" stopColor={c.accent} stopOpacity={light ? 0.22 : 0.34} />
+            <Stop offset="1" stopColor={c.accent} stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="bd-glow2" cx="0.02" cy="1" rx="0.85" ry="0.55" fx="0.02" fy="1" gradientUnits="objectBoundingBox">
+            <Stop offset="0" stopColor={second} stopOpacity={base.secondOpacity} />
+            <Stop offset="1" stopColor={second} stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="bd-glow3" cx="0.3" cy="0.42" rx="0.6" ry="0.35" fx="0.3" fy="0.42" gradientUnits="objectBoundingBox">
+            <Stop offset="0" stopColor={c.accent} stopOpacity={light ? 0.05 : 0.08} />
+            <Stop offset="1" stopColor={c.accent} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Rect x={0} y={0} width={w} height={h} fill="url(#bd-base)" />
+        <Rect x={0} y={0} width={w} height={h} fill="url(#bd-glow1)" />
+        <Rect x={0} y={0} width={w} height={h} fill="url(#bd-glow2)" />
+        <Rect x={0} y={0} width={w} height={h} fill="url(#bd-glow3)" />
+      </Svg>
     </View>
   );
 }

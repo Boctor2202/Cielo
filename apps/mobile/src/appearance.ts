@@ -82,3 +82,57 @@ export function useScheme(): "light" | "dark" {
     () => scheme,
   );
 }
+
+/*
+ * The pilot's colours, kept on this device: the accent used across the app (buttons, active tab, bars, chips,
+ * the glow of the backdrop) and, in dark mode, the backdrop (light mode is always "pearl").
+ */
+export type AccentId = "emerald" | "azure" | "violet" | "gold" | "coral" | "lagoon" | "amber" | "platinum";
+export type BackdropId = "midnight" | "black" | "slate";
+/** Each accent in dark mode, and a deeper shade that reads on light backgrounds. */
+export const ACCENTS: Record<AccentId, { dark: string; light: string }> = {
+  emerald: { dark: "#22C55E", light: "#15803D" },
+  azure: { dark: "#38BDF8", light: "#0369A1" },
+  violet: { dark: "#A78BFA", light: "#6D28D9" },
+  gold: { dark: "#E9C25A", light: "#A16207" },
+  coral: { dark: "#FB7185", light: "#BE123C" },
+  lagoon: { dark: "#2DD4BF", light: "#0F766E" },
+  amber: { dark: "#FB923C", light: "#C2410C" },
+  platinum: { dark: "#CBD5E1", light: "#475569" },
+};
+export const BACKDROPS: BackdropId[] = ["midnight", "black", "slate"];
+
+const ACCENT_KEY = "appearance.accent";
+const BACKDROP_KEY = "appearance.backdrop";
+const read = <T extends string>(key: string, ok: readonly T[], fallback: T): T => {
+  try {
+    const v = Storage.getItemSync(key);
+    return v && (ok as readonly string[]).includes(v) ? (v as T) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+let look = {
+  accent: read<AccentId>(ACCENT_KEY, Object.keys(ACCENTS) as AccentId[], "emerald"),
+  backdrop: read<BackdropId>(BACKDROP_KEY, BACKDROPS, "midnight"),
+};
+const lookListeners = new Set<() => void>();
+const saveLook = (next: typeof look, key: string, value: string) => {
+  look = next;
+  try {
+    Storage.setItemSync(key, value);
+  } catch {
+    // not persisted: still applied for this session
+  }
+  lookListeners.forEach((f) => f());
+};
+export const setAccent = (a: AccentId) => saveLook({ ...look, accent: a }, ACCENT_KEY, a);
+export const setBackdrop = (b: BackdropId) => saveLook({ ...look, backdrop: b }, BACKDROP_KEY, b);
+
+/** The accent and backdrop the pilot chose. */
+export function useLook(): { accent: AccentId; backdrop: BackdropId } {
+  return useSyncExternalStore(
+    (f) => (lookListeners.add(f), () => void lookListeners.delete(f)),
+    () => look,
+  );
+}
