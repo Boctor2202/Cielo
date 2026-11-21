@@ -53,6 +53,7 @@ const PICKS: Record<string, string> = {
   rome: "Colosseum",
   miami: "South Beach Miami",
   "new york": "Empire State Building",
+  london: "Big Ben London",
 };
 
 const box = (c: { lat: number; lon: number }, d: number) => ({ rectangle: { low: { latitude: c.lat - d, longitude: c.lon - d * 1.4 }, high: { latitude: c.lat + d, longitude: c.lon + d * 1.4 } } });
