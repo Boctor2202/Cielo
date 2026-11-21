@@ -2556,6 +2556,15 @@
       "signN": "Signer {n, plural, one {# vol} other {# vols}} · {total}",
       "done": "{n, plural, one {# vol signé} other {# vols signés}}.",
       "signing": "Signature en cours…"
+    },
+    "trash": {
+      "button": "Corbeille ({n})",
+      "title": "Vols supprimés",
+      "hint": "Les vols supprimés sont gardés ici et sur votre compte. Restaurez-en un pour le remettre dans le carnet, tel qu'il était.",
+      "deletedOn": "supprimé le {date}",
+      "restore": "Restaurer",
+      "restoreAll": "Tout restaurer ({n})",
+      "empty": "Aucun vol supprimé."
     }
   },
   "why": {
