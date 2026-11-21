@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Pressable, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { formatDuration, parseDuration, rowMinutes, type CheckField, type ImportCheck, type ImportChoices, type ImportedRow, type ImportRowEdit } from "@cielo/core";
@@ -7,7 +7,7 @@ import { useTheme } from "../theme";
 import type { I18nKey } from "../i18n";
 import { Button, Card, Field, Row, Segmented, Txt } from "./ui";
 
-type ImportRow = ImportedRow & { excluded?: boolean };
+type ImportRow = ImportedRow & { excluded?: boolean; keepDuplicate?: boolean };
 
 const TOTALS: CheckField[] = ["total", "pic", "dual", "copilot", "picus", "instructor", "multiPilot", "xc", "vfr", "ifr", "night", "landings", "fstd"];
 const ALWAYS: CheckField[] = ["total", "pic", "dual", "copilot", "picus", "xc", "vfr", "ifr", "night", "landings"];
@@ -56,11 +56,16 @@ export function ImportReview({
   const { t } = useApp();
   const c = useTheme();
   const [open, setOpen] = useState<number | null>(null);
-  const dupRows = useMemo(() => new Set((check?.rejected ?? []).filter((r) => r.reasons.includes("duplicate")).map((r) => r.row - firstRow)), [check, firstRow]);
+  const dupOf = check?.duplicateOf ?? {};
   const reasons = (r: ImportRow): string[] => {
     if (r.excluded) return [];
     if (r.errors.length) return r.errors.map((e) => t(`irv.err.${e === "date" || e === "route" || e === "times" ? e : "other"}` as I18nKey));
-    if (dupRows.has(r.rowIndex)) return [t("irv.err.duplicate")];
+    const d = dupOf[r.rowIndex];
+    if (d) {
+      const f = d.flight;
+      const when = (f.outUtc ?? f.offUtc)?.slice(11, 16);
+      return [t(d.kind === "exact" ? "irv.dup.exact" : "irv.dup.probable", { flight: `${dmy(f.date)} ${f.depIcao}→${f.arrIcao}${when ? ` ${when}` : ""} · ${fmt("total", f.totalMin)}` })];
+    }
     return (check?.flags[r.rowIndex] ?? []).map((f) =>
       f === "times" ? t("irv.why.times", { total: fmt("total", r.explicit.total) }) : f === "airport" ? t("irv.why.airport") : t("irv.why.diff", { field: t(`irv.f.${f}` as I18nKey) }),
     );
@@ -129,6 +134,15 @@ export function ImportReview({
                 </Row>
               ) : null}
             </Pressable>
+            {dupOf[r.rowIndex] && !r.excluded ? <Button kind="secondary" title={t("irv.dup.keep")} onPress={() => onEdit(r.rowIndex, { ...(edits[r.rowIndex] ?? {}), keepDuplicate: true })} /> : null}
+            {r.keepDuplicate && !dupOf[r.rowIndex] ? (
+              <Row style={{ gap: 8, flexWrap: "wrap" }}>
+                <Txt variant="small">{t("irv.dup.kept")}</Txt>
+                <Pressable onPress={() => onEdit(r.rowIndex, { ...(edits[r.rowIndex] ?? {}), keepDuplicate: false })}>
+                  <Txt variant="small" color={c.accent}>{t("irv.dup.undo")}</Txt>
+                </Pressable>
+              </Row>
+            ) : null}
             {open === r.rowIndex && i ? <RowEditor row={r} edit={edits[r.rowIndex] ?? {}} onEdit={(e) => onEdit(r.rowIndex, e)} onClose={() => setOpen(null)} /> : null}
           </Card>
         );

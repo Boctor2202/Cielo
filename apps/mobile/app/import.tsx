@@ -203,7 +203,7 @@ export default function ImportScreen() {
     let stale = false;
     const h = setTimeout(() => {
       void prepareImportedRows(store, pilot, app.aircraftTypes, flights, ok, "import").then((prepared) => {
-        if (!stale) setReview({ prepared, check: checkImport(rows, prepared.pairs, prepared.duplicates, table ? 2 : 1) });
+        if (!stale) setReview({ prepared, check: checkImport(rows, prepared.pairs, prepared.duplicates, table ? 2 : 1, prepared.duplicateOf) });
       });
     }, 250);
     return () => {

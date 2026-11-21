@@ -732,11 +732,14 @@ export interface ImportRowEdit {
   fstdType?: string;
   fstdMin?: number;
   excluded?: boolean;
+  /** imported although it looks like a flight already in the logbook */
+  keepDuplicate?: boolean;
 }
 
 /** A row with the pilot's correction applied, its errors worked out again. */
-export function editImportedRow(r: ImportedRow, e: ImportRowEdit | undefined): ImportedRow & { excluded?: boolean } {
-  if (!e || !r.input) return e?.excluded ? { ...r, excluded: true } : r;
+export function editImportedRow(r: ImportedRow, e: ImportRowEdit | undefined): ImportedRow & { excluded?: boolean; keepDuplicate?: boolean } {
+  if (!e) return r;
+  if (!r.input) return { ...r, ...(e.excluded ? { excluded: true } : {}), ...(e.keepDuplicate ? { keepDuplicate: true } : {}) };
   const input = { ...r.input };
   const explicit = { ...r.explicit };
   if (e.date !== undefined) input.date = e.date;
@@ -782,5 +785,5 @@ export function editImportedRow(r: ImportedRow, e: ImportRowEdit | undefined): I
   if (!input.isFstd && !input.out && !input.in && !explicit.total) errors.push("times");
   // an airport typed again is no longer the unknown code that was read
   const warnings = e.dep !== undefined || e.arr !== undefined ? r.warnings?.filter((w) => w !== "airport") : r.warnings;
-  return { ...r, input, explicit, errors, warnings, ...(e.excluded ? { excluded: true } : {}) };
+  return { ...r, input, explicit, errors, warnings, ...(e.excluded ? { excluded: true } : {}), ...(e.keepDuplicate ? { keepDuplicate: true } : {}) };
 }
