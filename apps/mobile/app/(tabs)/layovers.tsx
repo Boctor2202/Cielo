@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Alert, Pressable, View } from "react-native";
 import { countryName, rosterLayovers, splitBreak, unsavedRosterLayovers } from "@cielo/core";
 import { Flag } from "../../src/components/Flag";
+import { CityPhoto } from "../../src/components/CityPhoto";
 import { Roll } from "../../src/components/Roll";
 import { router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -175,6 +176,10 @@ function LayoversScreen() {
           <Pressable key={l.id} onPress={() => void open(l)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
             <View style={{ borderRadius: 22, padding: 16, gap: 14, backgroundColor: glass, borderWidth: 1, borderColor: GREEN + "40", overflow: "hidden" }}>
               <View style={{ position: "absolute", right: -50, top: -50, width: 150, height: 150, borderRadius: 75, backgroundColor: GREEN, opacity: 0.12 }} />
+              {/* the city's landmark (Google photo), across the top of the card */}
+              <View style={{ marginHorizontal: -16, marginTop: -16 }}>
+                <CityPhoto icao={l.airportIcao} />
+              </View>
               <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
                 <Row gap={10} style={{ flex: 1, alignItems: "center" }}>
                   {cc ? <Flag code={cc} size={34} /> : <Ionicons name="location" size={26} color={c.muted} />}

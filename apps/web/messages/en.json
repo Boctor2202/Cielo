@@ -1944,7 +1944,9 @@
       "statCities": "Airports",
       "statCountries": "Countries",
       "fromRoster": "From your roster",
-      "dayStop": "Split duty · {h} h break"
+      "dayStop": "Split duty · {h} h break",
+      "otherPhoto": "Another photo",
+      "photoCredit": "Photo: {name} · Google"
     },
     "radar": {
       "title": "Radar",
