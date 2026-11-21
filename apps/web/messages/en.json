@@ -2424,7 +2424,18 @@
       "allBadges": "All badges",
       "distinctions": "Distinctions",
       "noWings": "First wings at 100 h",
-      "noDistinction": "Your first badges appear with your first flights."
+      "noDistinction": "Your first badges appear with your first flights.",
+      "unlockedTitle": "Badge unlocked",
+      "tapNext": "Tap to continue",
+      "skipAll": "Skip all",
+      "tiers": {
+        "bronze": "Bronze",
+        "silver": "Silver",
+        "gold": "Gold",
+        "platinum": "Platinum",
+        "diamond": "Diamond",
+        "legend": "Legend"
+      }
     },
     "share": {
       "mail": "E-mail",

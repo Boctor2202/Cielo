@@ -2424,7 +2424,18 @@
       "allBadges": "Tous les badges",
       "distinctions": "Badges",
       "noWings": "Premières ailes à 100 h",
-      "noDistinction": "Vos premiers badges apparaîtront avec vos premiers vols."
+      "noDistinction": "Vos premiers badges apparaîtront avec vos premiers vols.",
+      "unlockedTitle": "Badge débloqué",
+      "tapNext": "Touchez pour passer",
+      "skipAll": "Tout passer",
+      "tiers": {
+        "bronze": "Bronze",
+        "silver": "Argent",
+        "gold": "Or",
+        "platinum": "Platine",
+        "diamond": "Diamant",
+        "legend": "Légende"
+      }
     },
     "share": {
       "mail": "E-mail",
