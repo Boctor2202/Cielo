@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Share, View } from "react-native";
 import Svg, { SvgXml } from "react-native-svg";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { badgeEmblemSvg, distanceNm, discoveryBadges, shareLinkUrl, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
+import { badgeEmblemSvg, distanceNm, discoveryBadges, createShareLink, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
 import { lookupAirport } from "../airports";
 import { Track } from "./Bars";
 import { API_URL } from "../api";
@@ -95,7 +95,7 @@ export function Achievements({ flights, opening, t, locale, pilot }: { flights: 
       if (file.exists) file.delete();
       file.create();
       file.write(new Uint8Array(await r.arrayBuffer()));
-      const link = shareLinkUrl(API_URL, lang, q);
+      const link = await createShareLink(API_URL, lang, q);
       await Share.share({ url: file.uri, message: `${text} · ${link}` });
     } catch {
       Alert.alert(t("badges.shareError"));

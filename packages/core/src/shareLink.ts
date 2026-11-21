@@ -30,3 +30,23 @@ export function unpackShare(p: string): URLSearchParams | null {
     return null;
   }
 }
+
+/** A short id (10 characters) stands for settings kept on the server; a long one carries them itself. */
+export const isShortShareId = (p: string) => /^[A-Za-z0-9_-]{10}$/.test(p);
+
+/**
+ * The public link of a share, short (geardown.app/fr/b/Xk3pQ9aZ2m): the settings are kept by the server under a
+ * short id. If the server cannot be reached, the long link (settings in the path) still works.
+ */
+export async function createShareLink(site: string, lang: string, params: URLSearchParams | Record<string, string>): Promise<string> {
+  const base = site.replace(/\/$/, "");
+  const packed = packShare(params);
+  try {
+    const r = await fetch(`${base}/api/share-link`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p: packed }) });
+    const d = r.ok ? ((await r.json()) as { id?: string }) : {};
+    if (d.id && isShortShareId(d.id)) return `${base}/${lang === "fr" ? "fr" : "en"}/b/${d.id}`;
+  } catch {
+    // the long link below
+  }
+  return `${base}/${lang === "fr" ? "fr" : "en"}/b/${packed}`;
+}

@@ -4,7 +4,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { GoogleRoutesMap } from "@/components/app/GoogleRoutesMap";
-import { encodeShareRoutes, greatCirclePath, shareLinkUrl, routeMapChoices, routeMapFlights, routeMapTotals } from "@cielo/core";
+import { encodeShareRoutes, greatCirclePath, createShareLink, routeMapChoices, routeMapFlights, routeMapTotals } from "@cielo/core";
 import { Plane, MapPin, Route, Globe2, Share2 } from "lucide-react";
 import { prefersNativeShare, ShareSheet } from "@/components/app/ShareSheet";
 import { usePilot } from "@/lib/hooks";
@@ -82,7 +82,7 @@ export default function MapPage() {
     const base = `/api/share-card?${q}`;
     const text = t("shareText", { fl: totals.flights.toLocaleString(locale), ap: totals.airports, nm: totals.nm.toLocaleString(locale), ct: totals.countries });
     // the public page of this map: its preview is the map image, on every network
-    const link = shareLinkUrl(window.location.origin, lang, q);
+    const link = await createShareLink(window.location.origin, lang, q);
     try {
       const blob = await (await fetch(base)).blob();
       const file = new File([blob], "geardown-map.png", { type: "image/png" });

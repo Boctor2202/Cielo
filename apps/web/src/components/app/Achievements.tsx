@@ -3,7 +3,7 @@
 import { Flame, Lock, Share2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { badgeEmblemSvg, distanceNm, discoveryBadges, shareLinkUrl, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
+import { badgeEmblemSvg, distanceNm, discoveryBadges, createShareLink, HOUR_LEVELS, hourLevel, hoursLabel, loggingStreak, wingsSvg, type DiscoveryBadge, type Flight, type OpeningBalance, type Tier } from "@cielo/core";
 import { useFormatDate } from "@/lib/hooks";
 import { TIER_COLORS as TIER } from "@/lib/badgeArt";
 import { Card, Modal } from "./ui";
@@ -86,7 +86,7 @@ export function Achievements({ flights, opening, airport, pilot }: { flights: Fl
     })}`);
     const base = `/api/share-card?${params}`;
     // the public page of this achievement: its preview is the image, on every network
-    const link = shareLinkUrl(window.location.origin, locale, params);
+    const link = await createShareLink(window.location.origin, locale, params);
     try {
       const blob = await (await fetch(base)).blob();
       const file = new File([blob], "geardown.png", { type: "image/png" });

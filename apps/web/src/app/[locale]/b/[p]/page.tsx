@@ -3,11 +3,19 @@ import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/seo";
-import { unpackShare } from "@cielo/core";
+import { isShortShareId, unpackShare } from "@cielo/core";
+import { adminDb } from "@/lib/server/admin";
 import en from "../../../../../messages/en.json";
 import fr from "../../../../../messages/fr.json";
 
 type Props = { params: Promise<{ locale: string; p: string }> };
+
+/** The share's settings: kept on the server under a short id, or carried by a long link itself. */
+async function settingsOf(p: string): Promise<URLSearchParams | null> {
+  if (!isShortShareId(p)) return unpackShare(p);
+  const { data } = (await adminDb()?.from("share_links").select("params").eq("id", p).maybeSingle()) ?? { data: null };
+  return data?.params ? unpackShare(data.params) : null;
+}
 
 /** What the shared image says, for the page title. */
 function titleOf(q: URLSearchParams, locale: string) {
@@ -26,7 +34,7 @@ function titleOf(q: URLSearchParams, locale: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, p } = await params;
-  const q = unpackShare(p);
+  const q = await settingsOf(p);
   if (!q) return {};
   const { what, name, stats } = titleOf(q, locale);
   const title = name ? `${name} · ${what}` : what;
@@ -45,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Page({ params }: Props) {
   const { locale, p } = await params;
   setRequestLocale(locale);
-  const q = unpackShare(p);
+  const q = await settingsOf(p);
   if (!q) notFound();
   const { what, name, stats } = titleOf(q, locale);
   const fr_ = locale === "fr";
