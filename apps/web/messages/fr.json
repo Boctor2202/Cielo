@@ -875,7 +875,8 @@
         "fstdTime": "Temps FSTD",
         "picus": "Temps PICUS",
         "singleEngine": "Temps monopilote SE",
-        "multiEngine": "Temps monopilote ME"
+        "multiEngine": "Temps monopilote ME",
+        "xc": "Navigation (XC)"
       },
       "autoDetected": "{count} colonnes sur {total} reconnues automatiquement. Vérifiez l'aperçu ci-dessous puis importez.",
       "checkColumns": "Vérifier ou corriger les colonnes",
@@ -957,6 +958,77 @@
           "SIC": "SIC (copilote)",
           "DUAL": "Dual (double commande)"
         }
+      },
+      "review": {
+        "title": "Vérifier l'import",
+        "counts": "{flights, plural, one {# vol} other {# vols}} · {sessions, plural, =0 {aucune séance simulateur} one {# séance simulateur} other {# séances simulateur}}",
+        "intro": "Totaux de ce que Geardown enregistrera, recalculés à chaque correction. Rien n'est enregistré avant « Importer ».",
+        "read": "lu {v}",
+        "f": {
+          "total": "Temps total",
+          "pic": "PIC",
+          "dual": "Dual",
+          "copilot": "SIC",
+          "picus": "PICUS",
+          "instructor": "Instructeur",
+          "multiPilot": "Multipilote",
+          "xc": "Navigation (XC)",
+          "vfr": "VFR",
+          "ifr": "IFR",
+          "night": "Nuit",
+          "landings": "Atterrissages",
+          "fstd": "Simulateur"
+        },
+        "choicesHelp": "Pour tous les vols de l'import. « Tel que lu » garde ce que Geardown a lu, vol par vol.",
+        "rules": "Règles de vol",
+        "function": "Fonction",
+        "xc": "Navigation (cross-country)",
+        "asRead": "Tel que lu",
+        "xc_other": "Vers un autre terrain",
+        "xc_none": "Aucune",
+        "fn": {
+          "PIC": "PIC",
+          "SIC": "SIC",
+          "PICUS": "PICUS",
+          "DUAL": "Dual"
+        },
+        "filterCheck": "À vérifier ({count})",
+        "filterAll": "Tous ({count})",
+        "sim": "Simulateur",
+        "edit": "Modifier",
+        "excluded": "exclu",
+        "exclude": "Exclure ce vol",
+        "include": "Réintégrer ce vol",
+        "ok": "OK",
+        "why": {
+          "times": "Les heures ne collent pas avec le total écrit ({total})",
+          "airport": "Aéroport inconnu : vérifiez le code",
+          "diff": "{field} diffère de ce qui a été lu"
+        },
+        "err": {
+          "date": "Date illisible",
+          "route": "Départ ou arrivée manquant",
+          "times": "Ni heures ni temps total",
+          "duplicate": "Déjà dans votre carnet",
+          "other": "Donnée illisible"
+        },
+        "fld": {
+          "date": "Date",
+          "dep": "Départ",
+          "arr": "Arrivée",
+          "out": "Heure départ",
+          "in": "Heure arrivée",
+          "total": "Temps total",
+          "registration": "Immatriculation",
+          "type": "Type",
+          "landings": "Atterrissages",
+          "night": "Nuit",
+          "xc": "Navigation",
+          "fstdType": "Simulateur (type)",
+          "fstdMin": "Durée de la séance"
+        },
+        "cancel": "Annuler l'import",
+        "confirm": "Importer ({count, plural, one {# ligne} other {# lignes}})"
       }
     },
     "audit": {

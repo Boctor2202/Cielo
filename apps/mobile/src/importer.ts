@@ -147,7 +147,7 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
       nightMin: d.nightMin,
       ifrMin: d.ifrMin,
       actualImcMin: 0,
-      xcMin: 0,
+      xcMin: Math.min(input.xcMin ?? 0, d.totalMin),
       nightCalc: ex.night !== undefined ? "manual" : d.nightCalc,
       takeoffsDay: d.takeoffsDay,
       takeoffsNight: d.takeoffsNight,

@@ -3,18 +3,19 @@ import type { FlightFormInput } from "./flight";
 import type { PilotFunction } from "./types";
 import { prepareLogbookTable, type LogbookApp } from "./importFormats";
 import { tzOffsetMs } from "./ical";
+import { normalizeRegistration } from "./registration";
 
 /** Canonical import fields. */
 export type ImportField =
   | "date" | "flightNumber" | "dep" | "arr" | "out" | "off" | "on" | "in" | "registration" | "type"
   | "function" | "picName" | "total" | "night" | "ifr" | "landingsDay" | "landingsNight" | "takeoffsDay"
-  | "takeoffsNight" | "pic" | "picus" | "copilot" | "dual" | "instructor" | "multiPilot" | "singleEngine" | "multiEngine"
+  | "takeoffsNight" | "pic" | "picus" | "copilot" | "dual" | "instructor" | "multiPilot" | "singleEngine" | "multiEngine" | "xc"
   | "remarks" | "fstdType" | "fstdTime";
 
 export const IMPORT_FIELDS: ImportField[] = [
   "date", "flightNumber", "dep", "arr", "out", "off", "on", "in", "registration", "type", "function", "picName",
   "total", "night", "ifr", "takeoffsDay", "takeoffsNight", "landingsDay", "landingsNight", "pic", "picus", "copilot", "dual",
-  "instructor", "multiPilot", "singleEngine", "multiEngine", "remarks", "fstdType", "fstdTime",
+  "instructor", "multiPilot", "singleEngine", "multiEngine", "xc", "remarks", "fstdType", "fstdTime",
 ];
 
 /**
@@ -53,12 +54,14 @@ const SYNONYMS: Record<ImportField, string[]> = {
   dual: ["dual", "duration dual", "dual received", "time dual", "double commande", "pilot function time dual", "instruction recue"],
   instructor: ["instructor", "duration instructor", "dual given", "time instructor", "instructeur", "pilot function time instructor", "fi time", "cfi"],
   multiPilot: ["multi pilot", "duration multi pilot", "duration mp", "multi pilot time", "multipilote", "mp", "mcc", "multi crew", "time mp"],
+  // cross-country time ("X-Country", LogTen's crossCountry, "Navigation" in French logbooks)
+  xc: ["xc", "cross country", "x country", "crosscountry", "duration xc", "time xc", "xc time", "navigation", "temps navigation", "temps de navigation"],
   remarks: ["remarks", "remarques", "notes", "note", "comments", "comment", "pilot comments", "observations", "remarks and endorsements", "route"],
   fstdType: ["ac issim", "issim", "is sim", "fstd type", "simulator type", "sim type", "sim type", "simulator", "simulator type", "simulateur", "fstd", "fstd session type", "synthetic"],
   fstdTime: ["fstd time", "duration simulator", "duration sim", "duration fstd", "simulator duration", "time simulator", "sim time", "simulator time", "time sim", "simulated flight", "temps simulateur", "fstd total", "fstd session total time of session", "total time of session"],
 };
 
-const DURATION_FIELDS: ImportField[] = ["total", "night", "ifr", "pic", "picus", "copilot", "dual", "instructor", "multiPilot", "singleEngine", "multiEngine", "fstdTime"];
+const DURATION_FIELDS: ImportField[] = ["total", "night", "ifr", "pic", "picus", "copilot", "dual", "instructor", "multiPilot", "singleEngine", "multiEngine", "xc", "fstdTime"];
 const COUNT_FIELDS: ImportField[] = ["landingsDay", "landingsNight", "takeoffsDay", "takeoffsNight"];
 const CLOCK_FIELDS: ImportField[] = ["out", "off", "on", "in"];
 /** Words that rule a header out for a field ("LDGS_NIGHT" is not night time, "TIME_BLOCK_START" is not the total). */
@@ -161,7 +164,7 @@ function fit(field: ImportField, p: Profile): number {
     case "type": return Math.max(p.actype, p.text * 0.6);
     case "function": return p.func;
     case "total": case "night": case "ifr": case "pic": case "picus": case "copilot": case "dual": case "instructor": case "multiPilot":
-    case "singleEngine": case "multiEngine": case "fstdTime":
+    case "singleEngine": case "multiEngine": case "xc": case "fstdTime":
       // a column of small whole numbers only (0, 1, 2…) is a count of landings, not a duration
       if (p.hm === 0 && p.int > 0.9) return 0.2;
       return Math.max(p.duration, p.clock * 0.9);
@@ -517,7 +520,7 @@ export interface ImportedRow {
   rowIndex: number;
   input?: FlightFormInput;
   /** When the file provides totals, they win over computed values. */
-  explicit: { total?: number; night?: number; ifr?: number; pic?: number; picus?: number; copilot?: number; dual?: number; instructor?: number; multiPilot?: number };
+  explicit: { total?: number; night?: number; ifr?: number; pic?: number; picus?: number; copilot?: number; dual?: number; instructor?: number; multiPilot?: number; xc?: number };
   errors: string[];
   /** read but worth a look: "airport" (a code that is not a known airport, kept as written) */
   warnings?: string[];
@@ -584,6 +587,7 @@ export function rowsToFlights(
       dual: durOf(r, "dual"),
       instructor: durOf(r, "instructor"),
       multiPilot: durOf(r, "multiPilot"),
+      xc: durOf(r, "xc"),
     };
     let fn = parseFunction(get(r, "function"));
     if (!fn) {
@@ -626,12 +630,13 @@ export function rowsToFlights(
           off: utcOf("off", dep, date),
           on: utcOf("on", arr, date),
           in: inn,
-          registration: get(r, "registration").toUpperCase() || undefined,
+          registration: normalizeRegistration(get(r, "registration")),
           aircraftTypeIcao: get(r, "type").toUpperCase() || undefined,
           function: fn ?? opts.defaultFunction ?? "PIC",
           picName: get(r, "picName") || undefined,
           ifr: (explicit.ifr ?? 0) > 0,
           nightOverrideMin: explicit.night,
+          xcMin: explicit.xc,
           ifrOverrideMin: explicit.ifr,
           takeoffsDay: num(get(r, "takeoffsDay")),
           takeoffsNight: num(get(r, "takeoffsNight")),
@@ -650,11 +655,26 @@ export function rowsToFlights(
   });
 }
 
-/** Set for every flight of an import by the pilot: flight rules and function, or "doc" to keep what was read. */
+/**
+ * Set for every flight of an import by the pilot ("doc": keep what was read, row by row): flight rules, function,
+ * and cross-country ("other": the whole flight when it lands elsewhere than it took off).
+ */
 export interface ImportChoices {
   rules: "doc" | "VFR" | "IFR";
-  function: "doc" | "PIC" | "SIC" | "DUAL";
+  function: "doc" | "PIC" | "SIC" | "PICUS" | "DUAL";
+  xc?: "doc" | "other" | "none";
 }
+
+/** Minutes between two HH:MM clock times (past midnight allowed), or undefined. */
+export function clockSpan(out?: string, inn?: string): number | undefined {
+  const a = parseClock(out ?? "");
+  const b = parseClock(inn ?? "");
+  if (!a || !b) return undefined;
+  return (b.h * 60 + b.m - (a.h * 60 + a.m) + 1440) % 1440;
+}
+
+/** The flight time of a row as it will be logged: the written total, else its block times. */
+export const rowMinutes = (r: ImportedRow) => r.explicit.total ?? clockSpan(r.input?.out, r.input?.in);
 
 /**
  * Applies the pilot's choice to every row of an import (a student's page: VFR, dual). The function chosen
@@ -662,7 +682,8 @@ export interface ImportChoices {
  * whole flight IFR unless the document gave its IFR time.
  */
 export function applyImportChoices(rows: ImportedRow[], c: ImportChoices): ImportedRow[] {
-  if (c.rules === "doc" && c.function === "doc") return rows;
+  const xc = c.xc ?? "doc";
+  if (c.rules === "doc" && c.function === "doc" && xc === "doc") return rows;
   return rows.map((r) => {
     if (!r.input) return r;
     const input = { ...r.input };
@@ -682,6 +703,84 @@ export function applyImportChoices(rows: ImportedRow[], c: ImportChoices): Impor
       input.function = c.function;
       explicit.pic = explicit.picus = explicit.copilot = explicit.dual = explicit.instructor = undefined;
     }
+    if (xc !== "doc" && !input.isFstd) {
+      const away = !!input.depIcao && !!input.arrIcao && input.depIcao !== input.arrIcao;
+      const min = xc === "other" && away ? rowMinutes({ ...r, input, explicit }) ?? 0 : 0;
+      input.xcMin = min;
+      explicit.xc = min;
+    }
     return { ...r, input, explicit };
   });
+}
+
+/** A correction typed by the pilot on one row before importing (every field optional). */
+export interface ImportRowEdit {
+  date?: string;
+  dep?: string;
+  arr?: string;
+  out?: string;
+  in?: string;
+  /** minutes */
+  total?: number;
+  night?: number;
+  xc?: number;
+  registration?: string;
+  type?: string;
+  landings?: number;
+  rules?: "VFR" | "IFR";
+  function?: "PIC" | "SIC" | "PICUS" | "DUAL";
+  fstdType?: string;
+  fstdMin?: number;
+  excluded?: boolean;
+}
+
+/** A row with the pilot's correction applied, its errors worked out again. */
+export function editImportedRow(r: ImportedRow, e: ImportRowEdit | undefined): ImportedRow & { excluded?: boolean } {
+  if (!e || !r.input) return e?.excluded ? { ...r, excluded: true } : r;
+  const input = { ...r.input };
+  const explicit = { ...r.explicit };
+  if (e.date !== undefined) input.date = e.date;
+  if (e.dep !== undefined) input.depIcao = e.dep.trim().toUpperCase();
+  if (e.arr !== undefined) input.arrIcao = e.arr.trim().toUpperCase();
+  if (e.out !== undefined) input.out = e.out || undefined;
+  if (e.in !== undefined) input.in = e.in || undefined;
+  if (e.total !== undefined) explicit.total = e.total;
+  if (e.night !== undefined) {
+    explicit.night = e.night;
+    input.nightOverrideMin = e.night;
+  }
+  if (e.xc !== undefined) {
+    explicit.xc = e.xc;
+    input.xcMin = e.xc;
+  }
+  if (e.registration !== undefined) input.registration = e.registration.trim().toUpperCase() || undefined;
+  if (e.type !== undefined) input.aircraftTypeIcao = e.type.trim().toUpperCase() || undefined;
+  if (e.landings !== undefined) {
+    input.landingsDay = e.landings;
+    input.landingsNight = 0;
+    input.takeoffsDay = e.landings;
+    input.takeoffsNight = 0;
+  }
+  if (e.rules === "VFR") {
+    input.ifr = false;
+    input.ifrOverrideMin = 0;
+    explicit.ifr = 0;
+  } else if (e.rules === "IFR") {
+    input.ifr = true;
+    input.ifrOverrideMin = undefined;
+    explicit.ifr = undefined;
+  }
+  if (e.function) {
+    input.function = e.function;
+    explicit.pic = explicit.picus = explicit.copilot = explicit.dual = explicit.instructor = undefined;
+  }
+  if (e.fstdType !== undefined) input.fstdType = e.fstdType || undefined;
+  if (e.fstdMin !== undefined) input.fstdMin = e.fstdMin;
+  const errors: string[] = [];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) errors.push("date");
+  if (!input.isFstd && (!input.depIcao || !input.arrIcao)) errors.push("route");
+  if (!input.isFstd && !input.out && !input.in && !explicit.total) errors.push("times");
+  // an airport typed again is no longer the unknown code that was read
+  const warnings = e.dep !== undefined || e.arr !== undefined ? r.warnings?.filter((w) => w !== "airport") : r.warnings;
+  return { ...r, input, explicit, errors, warnings, ...(e.excluded ? { excluded: true } : {}) };
 }
