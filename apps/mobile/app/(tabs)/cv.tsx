@@ -12,6 +12,7 @@ import { DateField } from "../../src/components/DateField";
 import { Requires } from "../../src/components/Access";
 import { api, API_URL } from "../../src/api";
 import { shareFile } from "../../src/exporters";
+import { CvPreview } from "../../src/components/CvPreview";
 import { setLetterJob } from "../../src/letterJob";
 import { router } from "expo-router";
 import { todayUtc, useApp } from "../../src/state";
@@ -73,6 +74,7 @@ function Cv() {
   const [profile, setProfile] = useState<CvProfile | null>(null);
   const [locale, setLocale] = useState<CvLocale>("en");
   const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState(false);
   const loaded = useRef(false);
 
   // the CV draft lives on this phone, next to the logbook
@@ -186,7 +188,8 @@ function Cv() {
             ))}
           </ScrollView>
         </Row>
-        <Button title={t("cv.share")} loading={busy} onPress={() => void share()} />
+        <Button title={t("cv.preview")} onPress={() => setPreview(true)} />
+        <Button kind="secondary" title={t("cv.share")} loading={busy} onPress={() => void share()} />
         <Button kind="secondary" title={t("cv.pack")} loading={busy} onPress={() => void sharePack()} />
         <Button
           kind="secondary"
@@ -200,6 +203,7 @@ function Cv() {
         <Txt variant="small">{t("cv.shareHint")}</Txt>
       </Card>
 
+      <CvPreview open={preview} onClose={() => setPreview(false)} doc={doc} theme={profile.theme} photo={profile.photo !== false ? pilot.photoDataUrl : undefined} onShare={() => void share()} busy={busy} />
       <TargetJob target={profile.target} onChange={(v) => set("target", v)} />
 
       <Card>
