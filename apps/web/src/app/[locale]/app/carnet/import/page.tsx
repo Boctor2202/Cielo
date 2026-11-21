@@ -19,7 +19,7 @@ import { checkImport, formatDuration, operatorIndex, type Flight, type ImportChe
 import { DropZone } from "@/components/app/DropZone";
 import { Paywall, useAccess } from "@/lib/access";
 import { track } from "@/lib/metrics";
-import { useFormatDate } from "@/lib/hooks";
+import { useFormatDate, usePilot } from "@/lib/hooks";
 
 type Tab = "file" | "roster" | "scan";
 
@@ -108,6 +108,7 @@ async function readTable(file: File): Promise<string[][]> {
 /** The universal import: a file, a PDF, photos (a paper logbook) or pasted text, in one place. */
 function FileImport({ photos = false }: { photos?: boolean }) {
   const t = useTranslations("app.import");
+  const pilot = usePilot();
   const airports = useAirports();
   const airlines = useAirlineDirectory();
   const { toast, toastNode } = useToast();
@@ -171,8 +172,10 @@ function FileImport({ photos = false }: { photos?: boolean }) {
         d = { ...last, legs };
       } else d = await importAny({ ...body, share });
       if (d.error || !d.legs) return setPdfState(d.error ?? "error");
-      const role = d.role === "CDB" || d.role === "CDT" ? "PIC" : "SIC";
-      setPdfRows(legsToRows(d.legs, (c) => airports?.get(c)?.icao, { function: role, pilotFlying: false }));
+      // an airline statement gives the role (CDB / OPL); a paper logbook or an e-mail does not: the pilot's usual function
+      const ep5 = d.reader === "airfrance-ep5";
+      const role = d.role === "CDB" || d.role === "CDT" ? "PIC" : ep5 || d.role ? "SIC" : pilot?.defaultFunction ?? "PIC";
+      setPdfRows(legsToRows(d.legs, (c) => airports?.get(c)?.icao, { function: role, pilotFlying: false, airline: ep5 }));
       setApp(d.reader === "airfrance-ep5" ? "Air France · Carnet de vol EP5" : undefined);
       setSource(d.reader === "ai" ? d.source ?? "?" : d.reader === "report" ? "report" : null);
       setPdfState(d.legs.length ? null : "none");

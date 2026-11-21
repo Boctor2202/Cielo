@@ -160,7 +160,12 @@ export const ep5Legs = (ep5: Ep5): LogbookLeg[] => ep5.legs.map((l) => ({ date: 
 const FUNCTIONS = ["PIC", "PICUS", "SIC", "DUAL", "FI", "FE"];
 
 /** Legs as import rows (the document's totals win over computed values). */
-export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string | undefined, base: Pick<FlightFormInput, "function" | "pilotFlying">): ImportedRow[] {
+/**
+ * Legs read from a document, as rows to import. `airline`: an airline statement (EP5…), where every leg is a
+ * multi-pilot IFR flight; otherwise (a paper logbook, an e-mail) IFR and multi-pilot come from the document or,
+ * when it does not say, from the aircraft type — never assumed.
+ */
+export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string | undefined, base: Pick<FlightFormInput, "function" | "pilotFlying"> & { airline?: boolean }): ImportedRow[] {
   return legs.map((l, i) => {
     const dep = toIcao(l.dep);
     const arr = toIcao(l.arr);
@@ -184,9 +189,9 @@ export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string 
       function: fn,
       picName: l.picName,
       pilotFlying: base.pilotFlying,
-      ifr: true,
+      ifr: base.airline ? true : (l.ifrMin ?? 0) > 0,
       isFstd: false,
-      operation: l.multiPilotMin === 0 ? "single_pilot" : "multi_pilot",
+      operation: l.multiPilotMin !== undefined ? (l.multiPilotMin > 0 ? "multi_pilot" : "single_pilot") : base.airline ? "multi_pilot" : undefined,
       autoLandings: false,
       takeoffsDay: l.landingsDay ?? 0,
       takeoffsNight: l.landingsNight ?? 0,

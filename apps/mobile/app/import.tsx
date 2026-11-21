@@ -68,7 +68,7 @@ export default function ImportScreen() {
   const fail = (code?: string) => Alert.alert(t("uimp.title"), t(`uimp.err.${["plan", "unauthorized", "rate_limited", "unsupported", "too_big", "busy", "xls", "unreadable"].includes(code ?? "") ? code : "error"}` as never));
   const show = (legs: LogbookLeg[], role?: string | null, src?: string | null) => {
     const fn = role === "CDB" || role === "CDT" ? "PIC" : role ? "SIC" : pilot.defaultFunction;
-    setRows(legsToRows(legs, (code) => toIcao(code), { function: fn, pilotFlying: false }));
+    setRows(legsToRows(legs, (code) => toIcao(code), { function: fn, pilotFlying: false, airline: src === "Air France · EP5" }));
     setSource(src ?? null);
     setTable(null);
     if (!legs.length) Alert.alert(t("uimp.title"), t("uimp.none"));

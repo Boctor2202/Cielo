@@ -60,7 +60,9 @@ const LEGS_SYSTEM = `You extract the flights a pilot logged or flew from what th
 Rules:
 - One leg per flown sector, in the document's order. Skip totals, "brought forward"/"total this page"/"total time" lines, cumulative lines and empty rows. Skip simulator-only lines.
 - Times: HH:MM. Convert decimal hours ("14.63" = 14:38, "1.5" = 90 min). Durations in minutes ("1:30" = 90, "1h30" = 90).
-- Paper logbooks: read every column carefully, row by row; a page spread has the date/route/aircraft on the left and the times, landings, function times and remarks on the right — keep each row aligned. When the year is not written on a row, take it from the page or the previous rows. Ditto marks (" or 〃) repeat the value above.
+- Paper logbooks: read every column carefully, row by row; a page spread has the date/route/aircraft on the left and the times, landings, function times and remarks on the right — keep each row aligned. A spread may come as two crops of the same photo (left half, then right half, overlapping a little): the rows at the same height in both crops are the same flight, so give one leg per row with the values of both halves. Read the departure and arrival times (off-block / on-block) and the total time of every row; when only one of them is legible, keep the others empty rather than guessing. When the year is not written on a row, take it from the page or the previous rows. Ditto marks (" or 〃) repeat the value above.
+- Paper logbook cells: the total time of flight is often split in two cells, hours then minutes ("1 | 25" = 85 min, "00 | 57" = 57 min); clock times are written "14h29", "7h45" or "0745" (= 14:29, 07:45). A row with only a date and nothing else is not a flight: skip it. Skip the "total this page", "total from previous pages" and "total time" lines and any carry-over note.
+- The name in the "Name PIC" column is the pilot in command; when it is someone else (an instructor), the pilot was likely flying dual: use the function-time columns when visible, else leave function "".
 - Airports as written (ICAO or IATA). Registrations as written, with the national prefix when obvious ("FGKXA" → "F-GKXA", Air France "HZUN" → "F-HZUN").
 - Never invent: when a value is absent or unreadable, write "" for text and times, -1 for numbers.`;
 
@@ -72,14 +74,14 @@ export interface LegsResult {
 
 type Block = Anthropic.Beta.Messages.BetaContentBlockParam;
 
-export async function extractLegs(content: Block[], today: string): Promise<LegsResult> {
+export async function extractLegs(content: Block[], today: string, effort: "medium" | "high" = "medium"): Promise<LegsResult> {
   const client = anthropic();
   const stream = client.beta.messages.stream({
     model: AI_MODEL,
     max_tokens: 32000,
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
-    output_config: { effort: "medium", format: { type: "json_schema", schema: LEGS_SCHEMA as unknown as Record<string, unknown> } },
+    output_config: { effort, format: { type: "json_schema", schema: LEGS_SCHEMA as unknown as Record<string, unknown> } },
     system: LEGS_SYSTEM,
     messages: [{ role: "user", content: [...content, { type: "text", text: `Today is ${today}. Extract the flights.` }] }],
   });
