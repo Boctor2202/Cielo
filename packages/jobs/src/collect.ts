@@ -87,7 +87,7 @@ export interface CollectResult {
 }
 
 /** Reads every source (a few at a time, politely) and returns the pilot jobs. */
-export async function collectJobs(sources: Source[] = SOURCES, concurrency = 4, opts: { adzuna?: { appId: string; appKey: string } } = {}): Promise<CollectResult> {
+export async function collectJobs(sources: Source[] = SOURCES, concurrency = 4, opts: { adzuna?: { appId: string; appKey: string }; adzunaFetch?: () => Promise<Awaited<ReturnType<typeof fetchAdzuna>>> } = {}): Promise<CollectResult> {
   const now = new Date().toISOString();
   const out: CollectResult = { jobs: [], sources: [] };
   const queue = [...sources];
@@ -105,8 +105,9 @@ export async function collectJobs(sources: Source[] = SOURCES, concurrency = 4, 
     }),
   );
   // Adzuna (when its keys are set): offers from many countries; the employers read directly win on duplicates
-  if (opts.adzuna) {
-    const { raws, errors } = await fetchAdzuna(opts.adzuna.appId, opts.adzuna.appKey);
+  // (adzunaFetch: the caller's own, e.g. cached, so that Adzuna's daily quota is not spent on every refresh)
+  if (opts.adzuna || opts.adzunaFetch) {
+    const { raws, errors } = opts.adzunaFetch ? await opts.adzunaFetch() : await fetchAdzuna(opts.adzuna!.appId, opts.adzuna!.appKey);
     const direct = new Set(out.jobs.map((j) => `${j.company.toLowerCase()}|${j.title.toLowerCase()}`));
     let n = 0;
     for (const r of raws) {

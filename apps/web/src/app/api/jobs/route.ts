@@ -1,4 +1,20 @@
-import { collectJobs } from "@cielo/jobs";
+import { unstable_cache } from "next/cache";
+import { collectJobs, fetchAdzuna } from "@cielo/jobs";
+
+/**
+ * Adzuna's offers, kept 12 hours in Vercel's data cache, which outlives deployments: each deployment rebuilds
+ * this page, and reading Adzuna every time used up its daily quota (about 250 calls) in a few deployments.
+ * A failed read throws, so it is never cached and the next request tries again.
+ */
+const adzunaCached = unstable_cache(
+  async (appId: string, appKey: string) => {
+    const r = await fetchAdzuna(appId, appKey);
+    if (!r.raws.length && r.errors.length) throw new Error(`adzuna: ${r.errors.slice(0, 3).join("; ")}`);
+    return r;
+  },
+  ["adzuna-v2"],
+  { revalidate: 43200 },
+);
 
 /**
  * Pilot job offers read from employers' own public job feeds (see packages/jobs/src/sources.ts).
@@ -12,9 +28,13 @@ export const maxDuration = 120;
 export async function GET() {
   const appId = process.env.ADZUNA_APP_ID;
   const appKey = process.env.ADZUNA_APP_KEY;
-  const { jobs, sources } = await collectJobs(undefined, 4, appId && appKey ? { adzuna: { appId, appKey } } : {});
+  const { jobs, sources } = await collectJobs(
+    undefined,
+    4,
+    appId && appKey ? { adzunaFetch: () => adzunaCached(appId, appKey).catch((e: Error) => ({ raws: [], errors: [e.message.replace(/app_(id|key)=[^&\s]+/g, "")] })) } : {},
+  );
   // every source down at once is an outage on our side, not offers closing: throwing during a background refresh
   // keeps the previous list cached (an empty list would hide every offer for six hours)
   if (!jobs.length && sources.length && sources.every((s) => !s.ok)) throw new Error("all job sources failed");
-  return Response.json({ updatedAt: new Date().toISOString(), jobs, sources: sources.map(({ company, ok, pilotJobs }) => ({ company, ok, pilotJobs })) });
+  return Response.json({ updatedAt: new Date().toISOString(), jobs, sources: sources.map(({ company, ok, pilotJobs, error }) => ({ company, ok, pilotJobs, ...(ok || !error ? {} : { error: error.slice(0, 120) }) })) });
 }

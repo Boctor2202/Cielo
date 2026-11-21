@@ -9,7 +9,8 @@ import type { RawPosting, Source } from "./types";
 export const ADZUNA_COUNTRIES = ["gb", "us", "ca", "au", "nz", "fr", "de", "nl", "be", "at", "ch", "es", "it", "pl", "in", "sg", "za", "br", "mx"] as const;
 
 /** Searches that bring pilot jobs; results are then filtered on the title and an aviation context. */
-const QUERIES = ["what=pilot", "what_phrase=first%20officer", "what_and=captain%20airline"];
+// two searches per country (38 calls in all): Adzuna's free quota is about 250 calls a day
+const QUERIES = ["what=pilot", "what_phrase=first%20officer"];
 
 const AVIATION = /\b(aircraft|airline|aviation|airways|air ?lines|flight|cockpit|ATPL|ATP|CPL|MPL|type[- ]rat|jet|turboprop|helicopter|rotor|cargo|charter|part ?1(21|35)|airbus|boeing|embraer|bombardier|citation|gulfstream|falcon|pilatus|king ?air|ATR|dash ?8|A3[0-9]{2}|B7[0-9]{2}|E1[79]0)\b/i;
 
