@@ -8,6 +8,7 @@ import { onGains } from "../gains";
 import { useApp } from "../state";
 import { useTheme } from "../theme";
 import { Emblem, TIER, Wings } from "./Achievements";
+import { BadgeCelebration } from "./BadgeCelebration";
 import { Track } from "./Bars";
 import { Row, Txt } from "./ui";
 import type { I18nKey } from "../i18n";
@@ -20,6 +21,8 @@ export function GainsSheet() {
   const c = useTheme();
   const insets = useSafeAreaInsets();
   const [g, setG] = useState<LogbookGains | null>(null);
+  // badges just unlocked: celebrated full screen first, then the summary of the gains
+  const [party, setParty] = useState<LogbookGains | null>(null);
   const y = useRef(new Animated.Value(0)).current;
 
   useEffect(
@@ -27,7 +30,9 @@ export function GainsSheet() {
       onGains(async (ids) => {
         const [flights, opening] = await Promise.all([store.all("flights"), store.all("opening_balances")]);
         const gains = logbookGains(flights, ids, lookupAirport, opening);
-        if (gains.flights) setG(gains);
+        if (!gains.flights) return;
+        if (gains.badges.length) setParty(gains);
+        else setG(gains);
       }),
     [store],
   );
@@ -40,6 +45,7 @@ export function GainsSheet() {
     return () => clearTimeout(id);
   }, [g, y]);
 
+  if (party) return <BadgeCelebration badges={party.badges} onDone={() => { setG(party); setParty(null); }} />;
   if (!g) return null;
   const dur = (m: number) => formatDuration(m, pilot?.timeDisplay);
   const chips = [
