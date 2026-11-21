@@ -219,7 +219,7 @@ export const SERVED_CITY: Record<string, string> = {
   KJFK: "New York", KEWR: "New York", KLGA: "New York", KIAD: "Washington", KDCA: "Washington", KORD: "Chicago", KLAX: "Los Angeles",
   KSFO: "San Francisco", KBOS: "Boston", KMIA: "Miami", CYYZ: "Toronto", CYUL: "Montreal", SBGR: "São Paulo", SBGL: "Rio de Janeiro",
   SAEZ: "Buenos Aires", MMMX: "Mexico City", RJAA: "Tokyo", RJTT: "Tokyo", RKSI: "Seoul", VHHH: "Hong Kong", WSSS: "Singapore",
-  VTBS: "Bangkok", ZBAA: "Beijing", ZSPD: "Shanghai", YSSY: "Sydney", YMML: "Melbourne", UUEE: "Moscow", UUDD: "Moscow",
+  VTBS: "Bangkok", WMKK: "Kuala Lumpur", VTBD: "Bangkok", RJBB: "Osaka", RCTP: "Taipei", RPLL: "Manila", WIII: "Jakarta", VIDP: "Delhi", ZBAA: "Beijing", ZSPD: "Shanghai", YSSY: "Sydney", YMML: "Melbourne", UUEE: "Moscow", UUDD: "Moscow",
 };
 
 /** The source's town, tidied: "Paris (Roissy-en-France, Val-d'Oise)" → "Paris", "Nice, Alpes-Maritimes" → "Nice". */

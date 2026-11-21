@@ -29,37 +29,42 @@ function apiKey() {
   return k;
 }
 
+type Hit = { id: string; displayName?: { text: string }; userRatingCount?: number; types?: string[]; formattedAddress?: string; location?: { latitude: number; longitude: number }; photos?: unknown[] };
+
+async function searchText(body: Record<string, unknown>, fields: string): Promise<Hit[]> {
+  const r = await fetch("https://places.googleapis.com/v1/places:searchText", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey(), "X-Goog-FieldMask": fields },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  if (!r.ok) throw new PlacesError("upstream", `Places API ${r.status}`);
+  return ((await r.json()) as { places?: Hit[] }).places ?? [];
+}
+
+const box = (c: { lat: number; lon: number }, d: number) => ({ rectangle: { low: { latitude: c.lat - d, longitude: c.lon - d * 1.4 }, high: { latitude: c.lat + d, longitude: c.lon + d * 1.4 } } });
+
 /**
- * The city's best-known landmark (cached by city): among the landmarks and attractions within ~35 km of the
- * airport, the one with the most Google reviews (the Eiffel Tower, the Duomo). The airport's own town is often a
- * suburb (Linate is in Segrate), so the search is around the airport, not by the town's name.
+ * The city's best-known landmark (cached by city): the city's centre is found first (the airport is often far
+ * out: Narita, Incheon, Ben Gurion), then among the sights around that centre, the one with the most Google
+ * reviews, those whose address names the city first (Notre-Dame de la Garde for Marseille, not a castle in
+ * Provence). Hotels, shops, airports, zoos and theme parks are left out.
  */
 async function landmarkOf(city: string, country: string, near: { lat: number; lon: number }, lang: string) {
-  const k = `${near.lat.toFixed(2)}|${near.lon.toFixed(2)}`;
+  const k = `${city}|${country}`.toLowerCase();
   if (landmarks.has(k)) return landmarks.get(k)!;
-  const d = 0.32;
-  const box = { rectangle: { low: { latitude: near.lat - d, longitude: near.lon - d * 1.4 }, high: { latitude: near.lat + d, longitude: near.lon + d * 1.4 } } };
-  const search = async (textQuery: string) => {
-    const r = await fetch("https://places.googleapis.com/v1/places:searchText", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey(), "X-Goog-FieldMask": "places.id,places.displayName,places.userRatingCount,places.types,places.formattedAddress,places.photos.name" },
-      body: JSON.stringify({ textQuery, languageCode: lang, locationRestriction: box, pageSize: 20 }),
-      cache: "no-store",
-    });
-    if (!r.ok) throw new PlacesError("upstream", `Places API ${r.status}`);
-    return ((await r.json()) as { places?: { id: string; displayName?: { text: string }; userRatingCount?: number; types?: string[]; formattedAddress?: string; photos?: unknown[] }[] }).places ?? [];
-  };
-  const found = [...(await search(`famous landmark ${city}`)), ...(await search(`monument ${city}`).catch(() => []))];
-  // a sight people visit, not a shop, an airport or a hotel
-  const NOT = ["airport", "lodging", "shopping_mall", "store", "restaurant", "stadium", "place_of_worship_small"];
+  // the city itself, near the airport
+  const town = (await searchText({ textQuery: city, includedType: "locality", languageCode: "en", locationBias: { circle: { center: { latitude: near.lat, longitude: near.lon }, radius: 50000 } }, pageSize: 1 }, "places.location").catch(() => []))[0]?.location;
+  const centre = town ? { lat: town.latitude, lon: town.longitude } : near;
+  const fields = "places.id,places.displayName,places.userRatingCount,places.types,places.formattedAddress,places.photos.name";
+  const around = (q: string) => searchText({ textQuery: q, languageCode: lang, locationRestriction: box(centre, town ? 0.18 : 0.32), pageSize: 20 }, fields).catch(() => [] as Hit[]);
+  const found = [...(await around(`famous landmark ${city}`)), ...(await around(`monument ${city}`))];
+  const NOT = ["airport", "lodging", "shopping_mall", "store", "restaurant", "stadium", "zoo", "amusement_park", "water_park", "casino", "aquarium"];
   const sights = found.filter((p) => p.photos?.length && !(p.types ?? []).some((t) => NOT.includes(t)));
-  // in the city itself first (its address names it: Notre-Dame de la Garde for Marseille, not a castle in
-  // Provence), then anywhere around
   const plain = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const inCity = sights.filter((p) => plain(p.formattedAddress ?? "").includes(plain(city)));
   const best = (inCity.length ? inCity : sights).sort((a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0))[0];
   const hit = best ? { id: best.id, name: best.displayName?.text ?? city } : null;
-  void country;
   landmarks.set(k, hit);
   return hit;
 }
