@@ -61,8 +61,10 @@ Deno.serve(async (req) => {
       .select("id", { count: "exact", head: true })
       .eq("pilot_id", user.id);
     // what is left of the account's 30-day trial (Stripe needs a trial end at least 48 h ahead)
-    const { data: pilotRow } = await adminClient().from("pilots").select("created_at").eq("id", user.id).maybeSingle();
-    const trialEnd = pilotRow?.created_at ? Math.floor(Date.parse(pilotRow.created_at as string) / 1000) + TRIAL_DAYS * 86_400 : 0;
+    const { data: pilotRow } = await adminClient().from("pilots").select("created_at, trial_started_at").eq("id", user.id).maybeSingle();
+    // the trial started with the address's first account (trial_ledger), else with this profile
+    const trialStart = (pilotRow?.trial_started_at ?? pilotRow?.created_at) as string | undefined;
+    const trialEnd = trialStart ? Math.floor(Date.parse(trialStart) / 1000) + TRIAL_DAYS * 86_400 : 0;
     const keepTrial = !pastSubscriptions && trialEnd - Date.now() / 1000 > 48 * 3600;
 
     const session = await stripeRequest<{ id: string; url: string }>("POST", "/checkout/sessions", {

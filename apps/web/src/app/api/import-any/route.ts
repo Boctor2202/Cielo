@@ -97,8 +97,8 @@ export async function POST(req: Request) {
   }
 
   // 2. anything else: Claude (Max plan)
-  const { data: p } = db ? await db.from("pilots").select("created_at, subscription_tier, subscription_expires_at").eq("id", user.id).maybeSingle() : { data: null };
-  const access = accessFor(p ? { createdAt: p.created_at, subscriptionTier: p.subscription_tier, subscriptionExpiresAt: p.subscription_expires_at } : undefined, { signedIn: true, noCardTrialDays: noCardTrialDays(process.env.NEXT_PUBLIC_NO_CARD_TRIAL_DAYS) });
+  const { data: p } = db ? await db.from("pilots").select("created_at, trial_started_at, subscription_tier, subscription_expires_at").eq("id", user.id).maybeSingle() : { data: null };
+  const access = accessFor(p ? { createdAt: p.trial_started_at ?? p.created_at, subscriptionTier: p.subscription_tier, subscriptionExpiresAt: p.subscription_expires_at } : undefined, { signedIn: true, noCardTrialDays: noCardTrialDays(process.env.NEXT_PUBLIC_NO_CARD_TRIAL_DAYS) });
   if (!(access.plan === "premium" && !access.demo) && !isAdminId(user.id)) return Response.json({ error: "plan" }, { status: 403 });
   if (!process.env.ANTHROPIC_API_KEY) return Response.json({ error: "unsupported" }, { status: 422 });
 

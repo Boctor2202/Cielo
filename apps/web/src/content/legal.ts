@@ -7,7 +7,7 @@ type Key = "notice" | "privacy" | "terms" | "cookies";
 const c = SITE.company;
 const P = SITE.pricing;
 const eur = (n: number | undefined, locale: "fr" | "en") => (n === undefined ? "" : locale === "fr" ? `${n.toFixed(2).replace(".", ",")} €` : `€${n.toFixed(2)}`);
-export const LEGAL_UPDATED = "2026-11-20";
+export const LEGAL_UPDATED = "2026-11-21";
 
 export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
   fr: {
@@ -40,7 +40,7 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
           ],
         },
         { h: "Transferts hors de l'Union européenne", p: ["Le Royaume-Uni bénéficie d'une décision d'adéquation de la Commission européenne. Les transferts vers les États-Unis sont encadrés par les garanties prévues par le RGPD (Data Privacy Framework ou clauses contractuelles types de la Commission européenne)."] },
-        { h: "Durée de conservation", p: ["Vos données sont conservées tant que votre compte est actif. Elles sont supprimées dans les 30 jours suivant la suppression du compte, sauf obligations légales (facturation : 10 ans)."] },
+        { h: "Durée de conservation", p: ["Vos données sont conservées tant que votre compte est actif. Elles sont supprimées dans les 30 jours suivant la suppression du compte, sauf obligations légales (facturation : 10 ans).", "Pour qu'un même utilisateur ne bénéficie qu'une fois de l'essai gratuit, nous conservons une empreinte chiffrée et irréversible de l'adresse e-mail (et non l'adresse elle-même) avec la date de début de l'essai, y compris après la suppression du compte, pendant 3 ans au plus. Base légale : notre intérêt légitime à prévenir les abus de l'offre d'essai."] },
         { h: "Vos droits", p: ["Accès, rectification, effacement, limitation, opposition et portabilité. Depuis Paramètres › Mes données, vous pouvez télécharger l'intégralité de vos données (JSON) et supprimer votre compte. Vous pouvez aussi nous écrire et saisir la CNIL (cnil.fr)."] },
         { h: "Sécurité", p: ["Chiffrement en transit (TLS), cloisonnement des données par compte (Row Level Security), stockage privé des documents, sauvegardes automatiques."] },
       ],
@@ -99,7 +99,7 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
           ],
         },
         { h: "Transfers outside the European Union", p: ["The United Kingdom benefits from a European Commission adequacy decision. Transfers to the United States rely on the safeguards provided by the GDPR (Data Privacy Framework or the European Commission's standard contractual clauses)."] },
-        { h: "Retention", p: ["Data is kept while your account is active and deleted within 30 days of account deletion, except legal obligations (invoices: 10 years)."] },
+        { h: "Retention", p: ["Data is kept while your account is active and deleted within 30 days of account deletion, except legal obligations (invoices: 10 years).", "So that the free trial is given only once per person, we keep an irreversible encrypted fingerprint of the e-mail address (not the address itself) with the date the trial started, including after the account is deleted, for at most 3 years. Legal basis: our legitimate interest in preventing abuse of the trial offer."] },
         { h: "Your rights", p: ["Access, rectification, erasure, restriction, objection and portability. From Settings › My data you can download all your data (JSON) and delete your account. You can also contact us and lodge a complaint with your supervisory authority."] },
         { h: "Security", p: ["Encryption in transit (TLS), per-account data isolation (Row Level Security), private document storage, automatic backups."] },
       ],

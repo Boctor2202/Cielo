@@ -16,15 +16,17 @@ Deno.serve(async (req) => {
   const admin = adminClient();
   const today = Date.parse(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
   let sent = 0;
+  // trial fingerprints are kept 3 years at most (privacy policy)
+  await admin.from("trial_ledger").delete().lt("created_at", new Date(today - 3 * 365 * DAY).toISOString());
   for (const daysLeft of [7, 1] as const) {
-    // accounts whose trial ends in `daysLeft` days: created on that day, TRIAL_DAYS - daysLeft days ago
+    // accounts whose trial ends in `daysLeft` days: trial started TRIAL_DAYS - daysLeft days ago
     const from = new Date(today - (TRIAL_DAYS - daysLeft) * DAY).toISOString();
     const to = new Date(today - (TRIAL_DAYS - daysLeft - 1) * DAY).toISOString();
     const { data, error } = await admin
       .from("pilots")
       .select("id, email, locale, subscription_tier, subscription_expires_at, deleted_at")
-      .gte("created_at", from)
-      .lt("created_at", to)
+      .gte("trial_started_at", from)
+      .lt("trial_started_at", to)
       .is("deleted_at", null);
     if (error) return errorResponse(500, `pilots: ${error.message}`);
     for (const p of data ?? []) {

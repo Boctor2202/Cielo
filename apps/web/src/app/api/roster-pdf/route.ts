@@ -81,9 +81,9 @@ export async function POST(req: Request) {
   if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
   const db = adminDb();
   if (!db) return Response.json({ error: "not_configured" }, { status: 503 });
-  const { data: p } = await db.from("pilots").select("created_at, subscription_tier, subscription_expires_at").eq("id", user.id).maybeSingle();
+  const { data: p } = await db.from("pilots").select("created_at, trial_started_at, subscription_tier, subscription_expires_at").eq("id", user.id).maybeSingle();
   const access = accessFor(
-    p ? { createdAt: p.created_at, subscriptionTier: p.subscription_tier, subscriptionExpiresAt: p.subscription_expires_at } : undefined,
+    p ? { createdAt: p.trial_started_at ?? p.created_at, subscriptionTier: p.subscription_tier, subscriptionExpiresAt: p.subscription_expires_at } : undefined,
     { signedIn: true, noCardTrialDays: noCardTrialDays(process.env.NEXT_PUBLIC_NO_CARD_TRIAL_DAYS) },
   );
   if (!(access.plan === "premium" && !access.demo) && !isAdminId(user.id)) return Response.json({ error: "plan" }, { status: 403 });

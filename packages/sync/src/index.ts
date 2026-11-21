@@ -222,7 +222,7 @@ export function createSupabaseSync(options: SupabaseSyncOptions): SupabaseSync {
   }
 
   /**
-   * Columns the server owns (the database refuses client changes to them): the subscription. A client that
+   * Columns the server owns (the database refuses client changes to them): the subscription and the start of the trial. A client that
    * pushes its profile keeps its own updated_at, so a plain pull would never bring the server value back.
    * Re-read them after each sync and patch the local profile without touching updatedAt.
    */
@@ -230,7 +230,7 @@ export function createSupabaseSync(options: SupabaseSyncOptions): SupabaseSync {
     if (!tables.includes("pilots")) return;
     const { data, error } = await supabase
       .from("pilots")
-      .select("subscription_tier, subscription_source, subscription_expires_at")
+      .select("subscription_tier, subscription_source, subscription_expires_at, trial_started_at")
       .eq("id", pilotId)
       .limit(1);
     if (error || !Array.isArray(data) || !data[0]) return;
@@ -241,12 +241,14 @@ export function createSupabaseSync(options: SupabaseSyncOptions): SupabaseSync {
       subscriptionTier: (row.subscription_tier as string) ?? "free",
       subscriptionSource: (row.subscription_source as string | null) ?? null,
       subscriptionExpiresAt: row.subscription_expires_at ? new Date(String(row.subscription_expires_at)).toISOString() : null,
+      trialStartedAt: row.trial_started_at ? new Date(String(row.trial_started_at)).toISOString() : null,
     };
     const prev = local as unknown as Record<string, unknown>;
     const changed =
       prev.subscriptionTier !== next.subscriptionTier ||
       (prev.subscriptionSource ?? null) !== next.subscriptionSource ||
-      (prev.subscriptionExpiresAt ? new Date(String(prev.subscriptionExpiresAt)).toISOString() : null) !== next.subscriptionExpiresAt;
+      (prev.subscriptionExpiresAt ? new Date(String(prev.subscriptionExpiresAt)).toISOString() : null) !== next.subscriptionExpiresAt ||
+      (prev.trialStartedAt ? new Date(String(prev.trialStartedAt)).toISOString() : null) !== next.trialStartedAt;
     if (changed) await store.bulkPut("pilots", [{ ...local, ...next } as never]);
   }
 
