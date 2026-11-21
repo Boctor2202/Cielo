@@ -3,7 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { SYNC_TABLES } from "@cielo/core";
-import { createSupabaseSync, lastPushKey, type SupabaseSync, type SyncResult } from "@cielo/sync";
+import { createSupabaseSync, lastPushKey, restoreLogbook, snapshotLogbook, unsyncedCount, type SupabaseSync, type SyncResult } from "@cielo/sync";
+import { dropRescue, saveRescue, takeRescue } from "./rescue";
 import { DEMO_META, localStore } from "./db";
 import { adoptPilotId, dedupeAircraft, dedupeFlights, deleteAllLocal } from "./repo";
 import { supabase } from "./supabase";
@@ -14,7 +15,7 @@ interface CloudState {
   lastSync: SyncResult | null;
   syncing: boolean;
   syncNow: () => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: (opts?: { forget?: boolean }) => Promise<void>;
   /** Calls an edge function as the signed-in user. */
   invoke: <T>(fn: string, body?: unknown) => Promise<T>;
 }
@@ -77,10 +78,16 @@ export function CloudProvider({ children }: { children: ReactNode }) {
       // another account's logbook in this browser (someone signed in with a different account): it is on the server
       // under its own account already, so the browser starts clean and pulls this account's data. Never re-key it.
       const owner = await ownerOf(session.user.created_at);
-      if (owner && owner !== session.user.id) await deleteAllLocal();
+      if (owner && owner !== session.user.id) {
+        // what the other account had not sent yet is kept aside on this browser, restored when it signs in again
+        const other = (await localStore.getMeta("pilotId")) ?? owner;
+        if ((await unsyncedCount(localStore, other).catch(() => 0)) > 0) await saveRescue(await snapshotLogbook(localStore, other));
+        await deleteAllLocal();
+      }
       const merged = await adoptPilotId(session.user.id, session.user.email ?? undefined);
       if (stopped) return;
       let cleaned = !merged;
+      let rescued = false;
       engine.current = createSupabaseSync({
         supabase: sb,
         store: localStore,
@@ -89,6 +96,16 @@ export function CloudProvider({ children }: { children: ReactNode }) {
           setLastSync(r);
           setSyncing(false);
           if (r.ok) void localStore.setMeta(OWNER_KEY, session.user.id);
+          // a copy of this account's logbook kept on this browser when it was signed out before everything was sent
+          if (r.ok && !rescued) {
+            rescued = true;
+            void takeRescue(session.user.id).then(async (copy) => {
+              if (!copy) return;
+              const n = await restoreLogbook(localStore, copy);
+              await dropRescue(session.user.id);
+              if (n) void engine.current?.syncNow();
+            });
+          }
           // first sync after this browser's logbook joined the account: drop flights it already had
           if (!cleaned && r.ok) {
             cleaned = true;
@@ -121,16 +138,21 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     const { data, error } = await sb.functions.invoke(fn, { body: body as Record<string, unknown> });
     if (error) throw error;
     return data as T;
-  }, [sb]);
+  }, [sb, session]);
 
   /**
    * Sign-out: what is not on the server yet is sent first, then this browser forgets the logbook (it stays in the
    * account), so the next person to sign in here never sees it nor gets it merged into their account.
    */
-  const signOut = useCallback(async () => {
+  const signOut = useCallback(async (opts?: { forget?: boolean }) => {
     try {
       await Promise.race([engine.current?.syncNow(), new Promise((r) => setTimeout(r, 8000))]);
     } catch {}
+    // not everything reached the server (no network, server down): a full copy stays on this browser, merged back
+    // and sent when this account signs in here again. Not after deleting the account (forget).
+    const me = session?.user.id;
+    if (me && !opts?.forget && (await unsyncedCount(localStore, me).catch(() => 0)) > 0) await saveRescue(await snapshotLogbook(localStore, me));
+    if (me && opts?.forget) await dropRescue(me);
     engine.current?.stop();
     engine.current = null;
     // this browser only: the phone app stays signed in

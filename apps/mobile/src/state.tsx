@@ -26,6 +26,8 @@ import { SqliteStore } from "./db/sqliteStore";
 import { ensureLocalPilot, seedReferenceData } from "./db/seed";
 import { deviceLocale, translator, type TFunction } from "./i18n";
 import { getSession, onAuthChange, signOut as authSignOut, supabase } from "./auth";
+import { snapshotLogbook, unsyncedCount } from "@cielo/sync";
+import { dropRescue, saveRescue } from "./rescue";
 import { startSync, type SyncHandle } from "./sync";
 import { cancelAllLicenseAlerts, scheduleLicenseAlerts } from "./notifications";
 import { setSyncStatus } from "./syncStatus";
@@ -57,7 +59,7 @@ export interface AppState extends AppData {
   savePilot(patch: Partial<Pilot>): Promise<void>;
   reload(): Promise<void>;
   wipeAll(): Promise<void>;
-  signOut(): Promise<void>;
+  signOut(opts?: { forget?: boolean }): Promise<void>;
 }
 
 export class ReadOnlyError extends Error {
@@ -211,9 +213,14 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
         await seedReferenceData(store);
         setData(await loadAll(store));
       },
-      async signOut() {
+      async signOut(opts?: { forget?: boolean }) {
         // last changes to the server first: the logbook lives on in the account
         await syncRef.current?.syncNow().catch(() => undefined);
+        // not everything reached the server (no network): a full copy stays on this phone, merged back and sent
+        // when this account signs in here again. Not after deleting the account (forget).
+        const me = session?.user.id;
+        if (me && opts?.forget) dropRescue(me);
+        else if (me && (await unsyncedCount(store, me).catch(() => 0)) > 0) saveRescue(await snapshotLogbook(store, me));
         syncRef.current?.stop();
         syncRef.current = null;
         await authSignOut();

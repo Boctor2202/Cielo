@@ -304,3 +304,4 @@ export function createSupabaseSync(options: SupabaseSyncOptions): SupabaseSync {
 
   return { syncNow, start, stop };
 }
+export * from "./rescue";

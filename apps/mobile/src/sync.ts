@@ -6,7 +6,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AppState as RNAppState } from "react-native";
 import { SYNC_TABLES, type LocalStore } from "@cielo/core";
-import { createSupabaseSync, lastPushKey } from "@cielo/sync";
+import { createSupabaseSync, lastPushKey, restoreLogbook, snapshotLogbook, unsyncedCount } from "@cielo/sync";
+import { dropRescue, saveRescue, takeRescue } from "./rescue";
 import { ensureLocalPilot, PILOT_ID_KEY, seedReferenceData } from "./db/seed";
 import { isNetworkError, setSyncRequester, setSyncStatus } from "./syncStatus";
 
@@ -93,6 +94,8 @@ export async function startSync({ supabase, store, pilotId, onChange }: StartSyn
   // Never re-key it to this account: that would mix two pilots' logbooks.
   const owner = await ownerOf(store, pilotId, data.user?.created_at);
   if (owner && owner !== accountId) {
+    // what the other account had not sent yet is kept aside on this phone, restored when it signs in again here
+    if ((await unsyncedCount(store, pilotId).catch(() => 0)) > 0) saveRescue(await snapshotLogbook(store, pilotId));
     await store.clear();
     await seedReferenceData(store);
     const fresh = await ensureLocalPilot(store);
@@ -112,6 +115,7 @@ export async function startSync({ supabase, store, pilotId, onChange }: StartSyn
   let retry: ReturnType<typeof setTimeout> | null = null;
   let failures = 0;
   let stopped = false;
+  let rescued = false;
   const scheduleRetry = () => {
     if (retry || stopped) return;
     const delay = Math.min(60_000, 10_000 * 2 ** Math.min(failures - 1, 3));
@@ -128,6 +132,19 @@ export async function startSync({ supabase, store, pilotId, onChange }: StartSyn
       if (Object.values(r.pulled).some((n) => (n ?? 0) > 0)) onChange?.();
       if (r.ok) {
         failures = 0;
+        // a copy of this account's logbook kept on this phone when it was signed out before everything was sent
+        if (!rescued) {
+          rescued = true;
+          void takeRescue(accountId).then(async (copy) => {
+            if (!copy) return;
+            const n = await restoreLogbook(store, copy);
+            dropRescue(accountId);
+            if (n) {
+              onChange?.();
+              void run();
+            }
+          });
+        }
         void store.setMeta(OWNER_KEY, accountId).catch(() => undefined);
         setSyncStatus({ mode: "idle", lastOkAt: r.finishedAt });
       } else {
