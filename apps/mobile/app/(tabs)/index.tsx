@@ -48,6 +48,43 @@ import { space, useTheme } from "../../src/theme";
 import { lookupAirport } from "../../src/airports";
 import { Emblem } from "../../src/components/Achievements";
 
+/** Each widget's icon and colour, as on the website, so the cards read at a glance. */
+const LOOK: Record<WidgetId, { icon: React.ComponentProps<typeof Ionicons>["name"]; tone: string }> = {
+  hero: { icon: "time-outline", tone: "#22C55E" },
+  periods: { icon: "speedometer-outline", tone: "#38BDF8" },
+  nextDuty: { icon: "calendar-outline", tone: "#A78BFA" },
+  lastFlight: { icon: "airplane-outline", tone: "#22C55E" },
+  recency: { icon: "shield-checkmark-outline", tone: "#F59E0B" },
+  expiries: { icon: "document-text-outline", tone: "#F87171" },
+  ftl: { icon: "checkmark-done-circle-outline", tone: "#34D399" },
+  byType: { icon: "airplane", tone: "#60A5FA" },
+  countries: { icon: "globe-outline", tone: "#2DD4BF" },
+  byOperator: { icon: "business-outline", tone: "#F472B6" },
+  nextLayover: { icon: "bed-outline", tone: "#FB923C" },
+  nextBadge: { icon: "medal-outline", tone: "#A78BFA" },
+  jobs: { icon: "briefcase-outline", tone: "#FACC15" },
+};
+
+/** A card's title row: the widget's icon in its colour, the title, an optional chip, and a chevron. */
+function Head({ id, title, chip, go }: { id: WidgetId; title: string; chip?: string; go?: boolean }) {
+  const c = useTheme();
+  const look = LOOK[id];
+  return (
+    <Row style={{ alignItems: "center", gap: 10 }}>
+      <View style={{ width: 30, height: 30, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: `${look.tone}26` }}>
+        <Ionicons name={look.icon} size={16} color={look.tone} />
+      </View>
+      <Txt variant="h2" numberOfLines={1} style={{ flex: 1 }}>{title}</Txt>
+      {chip ? (
+        <View style={{ borderRadius: 99, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: `${look.tone}26` }}>
+          <Txt mono style={{ fontSize: 11, fontWeight: "700" }} color={look.tone}>{chip}</Txt>
+        </View>
+      ) : null}
+      {go ? <Ionicons name="chevron-forward" size={16} color={c.muted} /> : null}
+    </Row>
+  );
+}
+
 const FTL_KEYS = ["duty7d", "duty14d", "duty28d", "flight28d", "flightYear", "flight12m"] as const;
 
 export default function Dashboard() {
@@ -147,7 +184,9 @@ export default function Dashboard() {
         />
     ),
     periods: (
-      <PeriodTiles items={[period(t("dash.d28"), periods.d28, "#38BDF8"), period(t("dash.d90"), periods.d90, "#818CF8"), period(t("dash.m12"), periods.m12, "#22C55E")]} />
+      <Pressable onPress={() => router.navigate("/stats")} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
+        <PeriodTiles items={[period(t("dash.d28"), periods.d28, "#38BDF8"), period(t("dash.d90"), periods.d90, "#818CF8"), period(t("dash.m12"), periods.m12, "#22C55E")]} />
+      </Pressable>
     ),
     nextDuty: nextDuty ? (
           <DutyCard
@@ -176,12 +215,7 @@ export default function Dashboard() {
         ) : null,
     recency: (
       <Card onPress={() => router.navigate("/currency")}>
-          <Row style={{ justifyContent: "space-between", alignItems: "baseline" }}>
-            <Txt variant="h2">{t("dash.recency")}</Txt>
-            <Txt variant="small" color={currency.alerts.length ? c.warning : c.success} style={{ fontWeight: "700" }}>
-              {currency.items.length ? (currency.alerts.length ? t("cur.alerts", { n: currency.alerts.length }) : t("cur.allGood")) : ""}
-            </Txt>
-          </Row>
+          <Head id="recency" title={t("dash.recency")} chip={currency.items.length ? (currency.alerts.length ? t("cur.alerts", { n: currency.alerts.length }) : t("cur.allGood")) : undefined} go />
           {currency.items.length
             ? (currency.alerts.length ? currency.alerts : currency.items.filter((i) => i.kind === "passengers")).slice(0, 3).map((i) =>
                 recencyRow(`${t(`cur.kind.${i.kind}` as I18nKey)}${i.group === "all" ? "" : ` · ${i.group}`}`, i),
@@ -204,7 +238,7 @@ export default function Dashboard() {
     ),
     expiries: (
       <Card onPress={() => router.navigate("/documents")}>
-          <Txt variant="h2">{t("dash.expiries")}</Txt>
+          <Head id="expiries" title={t("dash.expiries")} chip={expiries[0]?.s.daysLeft !== undefined ? (expiries[0]!.s.daysLeft! < 0 ? t("dash.expired") : t("dash.daysLeft", { n: expiries[0]!.s.daysLeft! })) : undefined} go />
           {expiries.length === 0 ? <Txt variant="muted">{t("dash.noDocuments")}</Txt> : null}
           {expiries.map(({ l, s }) => (
             <Row key={l.id} style={{ justifyContent: "space-between" }}>
@@ -222,8 +256,8 @@ export default function Dashboard() {
         </Card>
     ),
     ftl: (
-      <Card>
-          <Txt variant="h2">{t("dash.ftl")}</Txt>
+      <Card onPress={() => router.navigate("/ftl")}>
+          <Head id="ftl" title={t("dash.ftl")} go />
           {FTL_KEYS.filter((k) => limitApplies(k, pilot.ftlRegime ?? "oro")).map((k) => {
             const actual = ftl.cumulative[k];
             const limit = FTL_LIMITS[k];
@@ -246,7 +280,7 @@ export default function Dashboard() {
     ),
     byType: byType.length ? (
       <Card onPress={() => router.navigate("/stats")}>
-        <Txt variant="h2">{widgetLabel("byType", locale)}</Txt>
+        <Head id="byType" title={widgetLabel("byType", locale)} go />
         {byType.map((x) => (
           <View key={x.key} style={{ gap: 4 }}>
             <Row style={{ justifyContent: "space-between" }}>
@@ -260,7 +294,7 @@ export default function Dashboard() {
     ) : null,
     nextBadge: nearBadges.length ? (
       <Card onPress={() => router.navigate("/stats")}>
-        <Txt variant="h2">{t("dash.nextBadges")}</Txt>
+        <Head id="nextBadge" title={t("dash.nextBadges")} go />
         {nearBadges.map((b) => (
           <Row key={b.id} style={{ alignItems: "center", gap: 12 }}>
             <Emblem badge={b} size={40} />
@@ -278,7 +312,7 @@ export default function Dashboard() {
     ) : null,
     byOperator: byOperator.length ? (
       <Card onPress={() => router.navigate("/logbook")}>
-        <Txt variant="h2">{widgetLabel("byOperator", locale)}</Txt>
+        <Head id="byOperator" title={widgetLabel("byOperator", locale)} go />
         {byOperator.map((x) => (
           <View key={x.key} style={{ gap: 4 }}>
             <Row style={{ justifyContent: "space-between" }}>
@@ -292,18 +326,18 @@ export default function Dashboard() {
     ) : null,
   };
   // the small tiles: a figure and what it is
-  const small: Partial<Record<WidgetId, { value: string; sub?: string; color?: string; go?: () => void }>> = {
+  const small: Partial<Record<WidgetId, { value: string; sub?: string; color?: string; chip?: string; go?: () => void }>> = {
     hero: { value: fmt(periods.all.totalMin), sub: t("dash.flights", { n: periods.all.flights }), go: () => router.navigate("/stats") },
-    periods: { value: fmt(periods.d28.totalMin), sub: t("dash.d28"), color: "#38BDF8" },
-    nextDuty: nextDuty ? { value: nextDuty.depIcao && nextDuty.arrIcao ? `${nextDuty.depIcao} → ${nextDuty.arrIcao}` : nextDuty.title || t(`roster.kind.${nextDuty.kind}` as I18nKey), sub: inWords(nextDuty.reportUtc ?? nextDuty.startUtc), go: () => router.navigate("/roster") } : undefined,
-    lastFlight: lastFlight ? { value: `${lastFlight.depIcao} → ${lastFlight.arrIcao}`, sub: `${fmt(lastFlight.totalMin)} · ${formatDate(lastFlight.date, locale)}`, go: () => router.push({ pathname: "/flight/[id]", params: { id: lastFlight.id } }) } : undefined,
+    periods: { value: fmt(periods.d28.totalMin), sub: t("dash.d28"), color: "#38BDF8", go: () => router.navigate("/stats") },
+    nextDuty: nextDuty ? { value: nextDuty.depIcao && nextDuty.arrIcao ? `${nextDuty.depIcao} → ${nextDuty.arrIcao}` : nextDuty.title || t(`roster.kind.${nextDuty.kind}` as I18nKey), sub: `${formatDate(nextDuty.startUtc.slice(0, 10), locale)} · ${nextDuty.startUtc.slice(11, 16)} UTC`, chip: inWords(nextDuty.reportUtc ?? nextDuty.startUtc), go: () => router.navigate("/roster") } : undefined,
+    lastFlight: lastFlight ? { value: `${lastFlight.depIcao} → ${lastFlight.arrIcao}`, sub: `${formatDate(lastFlight.date, locale)}${lastFlight.registration ? ` · ${lastFlight.registration}` : ""}`, chip: fmt(lastFlight.totalMin), go: () => router.push({ pathname: "/flight/[id]", params: { id: lastFlight.id } }) } : undefined,
     recency: { value: currency.alerts.length ? t("cur.alerts", { n: currency.alerts.length }) : t("cur.allGood"), color: currency.alerts.length ? c.warning : c.success, go: () => router.navigate("/currency") },
-    expiries: expiries[0] ? { value: expiries[0].l.code, sub: formatDate(expiries[0].l.validUntil!, locale), color: statusColor(c, expiries[0].s.state), go: () => router.navigate("/documents") } : undefined,
-    ftl: { value: `${formatDuration(ftlLimit("flight28d").actual)} / ${formatDuration(ftlLimit("flight28d").limit)}`, sub: t("dash.ftl.flight28d"), color: statusColor(c, cumulativeLevel(ftlLimit("flight28d").actual, ftlLimit("flight28d").limit)) },
+    expiries: expiries[0] ? { value: expiries[0].l.code, sub: formatDate(expiries[0].l.validUntil!, locale), color: statusColor(c, expiries[0].s.state), chip: expiries[0].s.daysLeft !== undefined ? (expiries[0].s.daysLeft < 0 ? t("dash.expired") : t("dash.daysLeft", { n: expiries[0].s.daysLeft })) : undefined, go: () => router.navigate("/documents") } : undefined,
+    ftl: { value: `${formatDuration(ftlLimit("flight28d").actual)} / ${formatDuration(ftlLimit("flight28d").limit)}`, sub: t("dash.ftl.flight28d"), color: statusColor(c, cumulativeLevel(ftlLimit("flight28d").actual, ftlLimit("flight28d").limit)), go: () => router.navigate("/ftl") },
     byType: byType[0] ? { value: byType[0].key, sub: fmt(byType[0].minutes), go: () => router.navigate("/stats") } : undefined,
     countries: { value: String(places.countries.length), sub: t("dash.places", { a: places.airports }), color: c.accent, go: () => router.navigate("/stats") },
-    byOperator: byOperator[0] ? { value: byOperator[0].key === "—" ? t("dash.noOperator") : byOperator[0].key, sub: fmt(byOperator[0].minutes) } : undefined,
-    nextLayover: layover ? { value: layover.airportIcao, sub: layover.arrivalUtc ? formatDate(layover.arrivalUtc.slice(0, 10), locale) : layover.hotelName, go: () => router.navigate("/layovers") } : { value: "—", sub: t("dash.noLayover") },
+    byOperator: byOperator[0] ? { value: byOperator[0].key === "—" ? t("dash.noOperator") : byOperator[0].key, sub: fmt(byOperator[0].minutes), go: () => router.navigate("/logbook") } : undefined,
+    nextLayover: layover ? { value: layover.airportIcao, sub: layover.arrivalUtc ? formatDate(layover.arrivalUtc.slice(0, 10), locale) : layover.hotelName, go: () => router.navigate("/layovers") } : { value: "—", sub: t("dash.noLayover"), go: () => router.navigate("/layovers") },
     nextBadge: badge ? { value: t(`badges.d.${badge.id}` as I18nKey), sub: `${badge.value} / ${badge.target}`, color: "#A78BFA", go: () => router.navigate("/stats") } : undefined,
     jobs: { value: t("dash.jobsValue"), sub: t("dash.jobsSub"), color: c.accent, go: () => router.navigate("/jobs") },
   };
@@ -325,10 +359,23 @@ export default function Dashboard() {
     if (!x) return null;
     const locked = !!widgetSpec(id).max && !access.has("jobs");
     return (
-      <Card onPress={locked ? () => router.push("/subscription") : x.go} style={{ flex: 1, minHeight: 92, gap: 2 }}>
-        <Txt variant="small" numberOfLines={1} style={{ fontWeight: "700", letterSpacing: 0.6, textTransform: "uppercase", fontSize: 10.5 }}>{widgetLabel(id, locale)}</Txt>
+      <Card onPress={locked ? () => router.push("/subscription") : x.go} style={{ flex: 1, minHeight: 104, gap: 6 }}>
+        <Row style={{ alignItems: "center", gap: 7 }}>
+          <View style={{ width: 24, height: 24, borderRadius: 8, alignItems: "center", justifyContent: "center", backgroundColor: `${LOOK[id].tone}26` }}>
+            <Ionicons name={LOOK[id].icon} size={13} color={LOOK[id].tone} />
+          </View>
+          <Txt variant="small" numberOfLines={1} style={{ flex: 1, fontWeight: "700", letterSpacing: 0.6, textTransform: "uppercase", fontSize: 10 }}>{widgetLabel(id, locale)}</Txt>
+          {x.go || locked ? <Ionicons name="chevron-forward" size={13} color={c.muted} /> : null}
+        </Row>
         <Txt numberOfLines={1} style={{ fontSize: 20, fontWeight: "800" }} color={locked ? c.muted : x.color}>{locked ? "Max" : x.value}</Txt>
-        {x.sub && !locked ? <Txt variant="small" numberOfLines={1}>{x.sub}</Txt> : null}
+        <Row style={{ alignItems: "center", gap: 6 }}>
+          {x.sub && !locked ? <Txt variant="small" numberOfLines={1} style={{ flex: 1 }}>{x.sub}</Txt> : <View style={{ flex: 1 }} />}
+          {x.chip && !locked ? (
+            <View style={{ borderRadius: 99, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: `${LOOK[id].tone}26` }}>
+              <Txt mono style={{ fontSize: 10.5, fontWeight: "700" }} color={LOOK[id].tone}>{x.chip}</Txt>
+            </View>
+          ) : null}
+        </Row>
       </Card>
     );
   };
