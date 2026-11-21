@@ -186,7 +186,7 @@ export default function ImportScreen() {
     setBusy("save");
     try {
       const prepared = await prepareImportedRows(store, pilot, app.aircraftTypes, flights, ok, "import");
-      setReview({ prepared, check: checkImport(rows ?? [], prepared.pairs, prepared.duplicates) });
+      setReview({ prepared, check: checkImport(rows ?? [], prepared.pairs, prepared.duplicates, table ? 2 : 1) });
     } finally {
       setBusy(null);
     }
@@ -259,6 +259,12 @@ export default function ImportScreen() {
             </View>
           ))}
           {ck.lines.some((l) => l.rows.length) ? <Txt variant="small">{t("uimp.diffHelp")}</Txt> : null}
+          {ck.timesToCheck.length ? (
+            <View style={{ gap: 2 }}>
+              <Txt style={{ fontWeight: "700" }} color={c.caution}>{t("uimp.timesTitle")}</Txt>
+              <Txt variant="small">{t("uimp.timesText", { rows: ck.timesToCheck.slice(0, 20).join(", ") })}</Txt>
+            </View>
+          ) : null}
         </Card>
         {ck.rejected.length ? (
           <Card>

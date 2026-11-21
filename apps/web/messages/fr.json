@@ -929,7 +929,7 @@
         "noColumn": "Absent du fichier",
         "diffTitle": "Lignes à regarder",
         "rows": "lignes {rows}",
-        "diffHelp": "Geardown recalcule le temps total à partir des heures bloc et la nuit à partir des heures et des aéroports ; une colonne de votre fichier peut donc différer d'une minute à l'autre (arrondis décimaux) ou révéler une erreur. Corrigez la correspondance des colonnes ou votre fichier, ou validez en connaissance de cause.",
+        "diffHelp": "Geardown garde le temps total écrit dans votre carnet ; il calcule la nuit à partir des heures et des aéroports quand votre fichier ne la donne pas. Une colonne peut différer d'une minute (arrondis décimaux) ou révéler une erreur : corrigez la correspondance des colonnes ou votre fichier, ou validez en connaissance de cause.",
         "rejected": "{count, plural, one {# ligne non importée} other {# lignes non importées}}",
         "rejectedLine": "Ligne {row} : {reasons}",
         "reason": {
@@ -941,7 +941,9 @@
         },
         "cancel": "Annuler l'import",
         "fix": "Corriger les colonnes",
-        "confirm": "Valider et importer ({count, plural, one {# vol} other {# vols}})"
+        "confirm": "Valider et importer ({count, plural, one {# vol} other {# vols}})",
+        "timesTitle": "Heures à vérifier",
+        "timesText": "Lignes {rows} : les heures de départ et d'arrivée ne correspondent pas au temps total écrit. Geardown garde le temps total écrit ; vérifiez les heures (une heure mal lue ou mal écrite) avant ou après l'import."
       }
     },
     "audit": {

@@ -251,7 +251,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
         pairs.push({ rowIndex: r.rowIndex, flight: f });
       }
     }
-    setReview({ built: pairs.map((p) => p.flight), check: checkImport(parsed, pairs, dups) });
+    setReview({ built: pairs.map((p) => p.flight), check: checkImport(parsed, pairs, dups, pdfRows ? 1 : 2) });
     setBusy(false);
   }
 
@@ -450,6 +450,12 @@ function TotalsCheck({ check, busy, onConfirm, onFix, onCancel }: { check: Impor
             ))}
           </ul>
           <p className="mt-2 text-xs text-muted">{t("totals.diffHelp")}</p>
+        </div>
+      )}
+      {check.timesToCheck.length > 0 && (
+        <div className="mt-4 rounded-xl bg-[var(--caution)]/10 p-3 text-sm">
+          <p className="font-semibold">{t("totals.timesTitle")}</p>
+          <p className="mt-1">{t("totals.timesText", { rows: check.timesToCheck.slice(0, 30).join(", ") + (check.timesToCheck.length > 30 ? "…" : "") })}</p>
         </div>
       )}
       {check.rejected.length > 0 && (

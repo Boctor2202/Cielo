@@ -215,8 +215,9 @@ export async function buildFlight(
   const existing = opts.id ? await db().t("flights").get(opts.id) : undefined;
   const ex = opts.explicit ?? {};
 
-  // Files with totals but no clock times: trust the file.
-  if (ex.total !== undefined && d.totalMin === 0 && !input.isFstd) {
+  // Files with totals but no clock times, or whose times disagree with the total written: trust the total (the
+  // logbook's own figure; a misread or mistyped hour must not add or remove flight time).
+  if (ex.total !== undefined && !input.isFstd && (d.totalMin === 0 || Math.abs(d.totalMin - ex.total) > 5)) {
     const total = ex.total;
     d.totalMin = total;
     d.airMin = total;
@@ -236,6 +237,7 @@ export async function buildFlight(
     d.examinerMin = f === "FE" ? total : 0;
     if (input.ifr && ex.ifr === undefined) d.ifrMin = total;
   }
+  d.nightMin = Math.min(d.nightMin, d.totalMin);
   if (ex.ifr !== undefined) d.ifrMin = Math.min(ex.ifr, d.totalMin);
   if (ex.night !== undefined) {
     d.nightMin = Math.min(ex.night, d.totalMin);

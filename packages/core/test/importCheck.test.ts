@@ -24,3 +24,16 @@ describe("check your totals", () => {
     expect(c.kept).toBe(2);
   });
 });
+
+describe("times that disagree with the written total", () => {
+  it("lists the row (numbered from 1 for a document) when off/on-block do not match the total kept", () => {
+    const rows = [
+      { rowIndex: 0, explicit: { total: 62 }, errors: [], input: { date: "2021-08-04" } },
+      { rowIndex: 1, explicit: { total: 61 }, errors: [], input: { date: "2021-08-03" } },
+    ] as never;
+    const f = (out: string, inn: string, total: number) => ({ outUtc: `2021-08-04T${out}:00.000Z`, inUtc: `2021-08-04T${inn}:00.000Z`, totalMin: total, landingsDay: 1 }) as never;
+    // flight 1: 13:02 read instead of 15:02 -> 3:02 of block for 1:02 written
+    const c = checkImport(rows, [{ rowIndex: 0, flight: f("13:02", "16:04", 62) }, { rowIndex: 1, flight: f("14:29", "15:30", 61) }], [], 1);
+    expect(c.timesToCheck).toEqual([1]);
+  });
+});
