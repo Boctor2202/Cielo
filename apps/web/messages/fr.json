@@ -2434,18 +2434,18 @@
     ]
   },
   "immersive": {
-    "canvasLabel": "Film animé au défilement : un jet d'affaires descend au crépuscule au-dessus d'une mer de nuages, traverse la couche, sort en finale face à la piste et sort son train, puis la Terre vue de l'espace avec des routes aériennes, que l'on peut faire tourner.",
+    "canvasLabel": "Film animé au défilement : un avion de ligne en approche finale un midi d'été sort son train, se pose, puis quitte la piste et roule jusqu'à sa porte, suivi de la Terre vue de l'espace avec des routes aériennes, que l'on peut faire tourner.",
     "scroll": "Faites défiler",
     "chapters": [
-      "Temps de nuit",
+      "Atterrissage",
       "Votre carnet",
       "Vos routes",
       "Conformité"
     ],
     "c1": {
-      "label": "01 · Temps de nuit",
-      "title": "Le soleil passe sous −6°. Geardown le note.",
-      "text": "La nuit EASA commence à la fin du crépuscule civil du soir. Geardown suit la position de l'avion minute par minute et calcule le temps de nuit, les décollages et les atterrissages de nuit, sans que vous ayez rien à saisir."
+      "label": "01 · Atterrissage",
+      "title": "Train sorti, roues sur la piste. Geardown le note.",
+      "text": "Saisissez le vol une fois ou récupérez-le par ADS-B : Geardown calcule le temps bloc, les atterrissages de jour ou de nuit et le temps de nuit selon le crépuscule civil le long de votre route, sans rien additionner."
     },
     "machine": {
       "label": "02 · Votre carnet",
@@ -2479,12 +2479,13 @@
       "cta": "Créer mon carnet"
     },
     "hud": {
-      "sun": "Élévation soleil",
-      "utc": "UTC",
-      "night": "Temps de nuit",
-      "day": "JOUR",
-      "nightOn": "NUIT",
-      "threshold": "Seuil EASA −6°"
+      "landing": "Atterrissage",
+      "dayLdg": "Atterr. jour",
+      "onBlock": "Sur cales",
+      "block": "Temps bloc",
+      "night": "Nuit",
+      "inFlight": "EN COURS",
+      "logged": "ENREGISTRÉ"
     },
     "picker": {
       "flying": "Vous volez sur",
@@ -2501,9 +2502,10 @@
     },
     "drag": "Cliquez-glissez pour faire tourner la Terre",
     "phase": {
-      "descent": "DESCENTE",
       "approach": "APPROCHE FINALE",
       "gearDown": "TRAIN SORTI · 3 VERTS",
+      "touchdown": "TOUCHER",
+      "taxi": "ROULAGE VERS LA PORTE",
       "logged": "VOL ENREGISTRÉ"
     }
   },
