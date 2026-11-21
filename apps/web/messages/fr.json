@@ -601,7 +601,12 @@
         "jobsSub": "selon ton carnet",
         "cockpitPreview": "Le cockpit complet : temps total, objectif, heures des 12 derniers mois, derniers vols et objectifs.",
         "local": "Locale",
-        "badgeLeft": "encore {n}"
+        "badgeLeft": "encore {n}",
+        "inMin": "dans {n} min",
+        "inHours": "dans {n} h",
+        "inDays": "dans {n} j",
+        "daysLeft": "{n} j restants",
+        "expired": "expiré"
       }
     },
     "logbook": {

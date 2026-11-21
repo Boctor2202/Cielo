@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Check, GripVertical, Maximize2, Minimize2, Minus, SlidersHorizontal, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, BadgeCheck, Briefcase, Building2, CalendarClock, Check, Clock, FileWarning, Gauge, Globe2, GripVertical, Hotel, Maximize2, Medal, Minimize2, Minus, Plane, PlaneLanding, ShieldCheck, SlidersHorizontal, X, type LucideIcon } from "lucide-react";
 import React, { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -34,6 +34,23 @@ import { Meter, type Level } from "@/components/app/ui";
 import { useAirports } from "@/lib/airports";
 import { useDuration, useFormatDate, useTable } from "@/lib/hooks";
 import { updatePilot } from "@/lib/repo";
+
+/** Each widget's icon and colour, so the cards read at a glance. */
+const LOOK: Record<WidgetId, { icon: LucideIcon; tone: string }> = {
+  hero: { icon: Clock, tone: "#22c55e" },
+  periods: { icon: Gauge, tone: "#38bdf8" },
+  nextDuty: { icon: CalendarClock, tone: "#a78bfa" },
+  lastFlight: { icon: PlaneLanding, tone: "#22c55e" },
+  recency: { icon: ShieldCheck, tone: "#f59e0b" },
+  expiries: { icon: FileWarning, tone: "#f87171" },
+  ftl: { icon: BadgeCheck, tone: "#34d399" },
+  byType: { icon: Plane, tone: "#60a5fa" },
+  countries: { icon: Globe2, tone: "#2dd4bf" },
+  byOperator: { icon: Building2, tone: "#f472b6" },
+  nextLayover: { icon: Hotel, tone: "#fb923c" },
+  nextBadge: { icon: Medal, tone: "#a78bfa" },
+  jobs: { icon: Briefcase, tone: "#facc15" },
+};
 
 const LEVEL_TEXT: Record<Level, string> = { neutral: "text-muted", ok: "text-ok", info: "text-accent", caution: "text-caution", warning: "text-warning" };
 
@@ -100,7 +117,12 @@ export function OverviewWidgets({
 
   // each widget: a figure for the compact card, and a list for the large one
   type Href = React.ComponentProps<typeof Link>["href"];
-  type Body = { value: ReactNode; sub?: ReactNode; level?: Level; href?: Href; list?: ReactNode };
+  type Body = { value: ReactNode; sub?: ReactNode; level?: Level; href?: Href; list?: ReactNode; chip?: string };
+  // "in 11 h", "in 3 d": how long until a duty starts
+  const inTime = (iso: string) => {
+    const min = Math.max(0, Math.round((Date.parse(iso) - Date.now()) / 60_000));
+    return min < 60 ? t("inMin", { n: min }) : min < 48 * 60 ? t("inHours", { n: Math.round(min / 60) }) : t("inDays", { n: Math.round(min / 1440) });
+  };
   const rows = (items: { key: string; label: ReactNode; value: string; ratio?: number; level?: Level }[]) => (
     <ul className="mt-3 space-y-2.5">
       {items.map((x) => (
@@ -118,18 +140,24 @@ export function OverviewWidgets({
     hero: { value: d(periods.all.totalMin), sub: t("flights", { n: periods.all.flights }), href: "/app/statistiques" },
     periods: {
       value: d(periods.d28.totalMin),
-      sub: t("d28"),
-      list: rows([
-        { key: "d28", label: t("d28"), value: `${d(periods.d28.totalMin)} · ${t("flights", { n: periods.d28.flights })}` },
-        { key: "d90", label: t("d90"), value: `${d(periods.d90.totalMin)} · ${t("flights", { n: periods.d90.flights })}` },
-        { key: "m12", label: t("m12"), value: `${d(periods.m12.totalMin)} · ${t("flights", { n: periods.m12.flights })}` },
-      ]),
+      sub: `${t("d28")} · ${t("flights", { n: periods.d28.flights })}`,
+      href: "/app/statistiques",
+      list: rows(
+        (["d28", "d90", "m12"] as const).map((k) => ({
+          key: k,
+          label: t(k),
+          value: `${d(periods[k].totalMin)} · ${t("flights", { n: periods[k].flights })}`,
+          ratio: periods.m12.totalMin ? periods[k].totalMin / periods.m12.totalMin : 0,
+          level: "info" as Level,
+        })),
+      ),
     },
     nextDuty: nextDuty
-      ? { value: nextDuty.depIcao && nextDuty.arrIcao ? `${nextDuty.depIcao} → ${nextDuty.arrIcao}` : nextDuty.title || nextDuty.kind, sub: `${fd(nextDuty.startUtc.slice(0, 10), { day: "numeric", month: "short" })} · ${nextDuty.startUtc.slice(11, 16)} UTC`, href: "/app/roster" }
+      ? { value: nextDuty.depIcao && nextDuty.arrIcao ? `${nextDuty.depIcao} → ${nextDuty.arrIcao}` : nextDuty.title || nextDuty.kind, sub: `${fd(nextDuty.startUtc.slice(0, 10), { day: "numeric", month: "short" })} · ${nextDuty.startUtc.slice(11, 16)} UTC`, chip: inTime(nextDuty.startUtc), href: "/app/roster" }
       : { value: "—", sub: t("nothing"), href: "/app/roster" },
-    lastFlight: last ? { value: `${last.depIcao} → ${last.arrIcao}`, sub: `${d(last.totalMin)} · ${fd(last.date, { day: "numeric", month: "short", year: "numeric" })}${last.registration ? ` · ${last.registration}` : ""}`, href: { pathname: "/app/carnet/[id]", params: { id: last.id } } } : null,
+    lastFlight: last ? { chip: d(last.totalMin), value: `${last.depIcao} → ${last.arrIcao}`, sub: `${fd(last.date, { day: "numeric", month: "short", year: "numeric" })}${last.registration ? ` · ${last.registration}` : ""}${last.aircraftTypeIcao ? ` · ${last.aircraftTypeIcao}` : ""}`, href: { pathname: "/app/carnet/[id]", params: { id: last.id } } } : null,
     recency: {
+      href: "/app/documents",
       value: recency.passengers.valid ? t("current") : t("notCurrent"),
       level: recency.passengers.valid ? (recency.night.valid ? "ok" : "caution") : "warning",
       sub: recency.passengers.validUntil ? t("until", { date: fd(recency.passengers.validUntil, { day: "numeric", month: "short" }) }) : undefined,
@@ -143,6 +171,7 @@ export function OverviewWidgets({
           value: expiries[0].l.code,
           level: lvl(expiries[0].s.state),
           sub: expiries[0].l.validUntil ? fd(expiries[0].l.validUntil, { day: "numeric", month: "short", year: "numeric" }) : undefined,
+          chip: expiries[0].s.daysLeft !== undefined && expiries[0].s.daysLeft !== null ? (expiries[0].s.daysLeft < 0 ? t("expired") : t("daysLeft", { n: expiries[0].s.daysLeft })) : undefined,
           href: "/app/documents",
           list: rows(expiries.slice(0, 5).map(({ l, s }) => ({ key: l.id, label: l.code, value: l.validUntil ? fd(l.validUntil, { day: "numeric", month: "short", year: "numeric" }) : "—", level: lvl(s.state) }))),
         }
@@ -234,25 +263,41 @@ export function OverviewWidgets({
         </section>
       );
     const b = body[w.id];
+    const look = LOOK[w.id];
+    const Icon = look.icon;
+    const clickable = !editing && !!(locked(w.id) ? "/app/parametres" : b?.href);
     const inner = (
-      <section className="card h-full min-w-0 p-5">
-        <p className="mono-label !text-[10px]">{widgetLabel(w.id, locale)}</p>
+      <section
+        className="card group relative h-full min-w-0 overflow-hidden p-5 transition duration-200 group-hover/link:border-[color:var(--tone)]/60"
+        style={{ ["--tone" as string]: look.tone }}
+      >
+        <span aria-hidden className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(120% 90% at 100% 0%, ${look.tone}1f 0%, transparent 55%)` }} />
+        <div className="relative flex items-center gap-2.5">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style={{ background: `${look.tone}22`, color: look.tone }}>
+            <Icon size={16} />
+          </span>
+          <p className="mono-label min-w-0 flex-1 truncate !text-[10px]">{widgetLabel(w.id, locale)}</p>
+          {b?.chip ? (
+            <span className="num shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: `${look.tone}22`, color: look.tone }}>{b.chip}</span>
+          ) : null}
+          {clickable ? <ArrowUpRight size={16} className="shrink-0 text-muted opacity-0 transition group-hover/link:translate-x-0.5 group-hover/link:opacity-100" /> : null}
+        </div>
         {!b ? (
-          <p className="mt-2 text-sm text-muted">{t("nothing")}</p>
+          <p className="mt-3 text-sm text-muted">{t("nothing")}</p>
         ) : locked(w.id) ? (
-          <p className="mt-2 text-lg font-bold text-muted">Max</p>
+          <p className="mt-3 text-lg font-bold text-muted">Max</p>
         ) : (
           <>
-            <p className={`mt-1.5 truncate text-2xl font-bold ${b.level ? LEVEL_TEXT[b.level] : ""}`}>{b.value}</p>
-            {b.sub && <div className="truncate text-sm text-muted">{b.sub}</div>}
-            {w.size === "l" && b.list}
+            <p className={`num relative mt-3 truncate text-[26px] font-bold leading-tight ${b.level ? LEVEL_TEXT[b.level] : ""}`}>{b.value}</p>
+            {b.sub && <div className="relative mt-0.5 truncate text-sm text-muted">{b.sub}</div>}
+            {w.size === "l" && <div className="relative">{b.list}</div>}
           </>
         )}
       </section>
     );
     const href: Href | undefined = locked(w.id) ? "/app/parametres" : b?.href;
     return href && !editing ? (
-      <Link href={href} className="block h-full transition hover:-translate-y-0.5">
+      <Link href={href} className="group/link block h-full rounded-2xl transition duration-200 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-accent">
         {inner}
       </Link>
     ) : (

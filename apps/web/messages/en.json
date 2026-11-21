@@ -601,7 +601,12 @@
         "jobsSub": "matched to your logbook",
         "cockpitPreview": "The full cockpit: total time, goal, hours of the last 12 months, last flights and goals.",
         "local": "Local",
-        "badgeLeft": "{n} to go"
+        "badgeLeft": "{n} to go",
+        "inMin": "in {n} min",
+        "inHours": "in {n} h",
+        "inDays": "in {n} d",
+        "daysLeft": "{n} d left",
+        "expired": "expired"
       }
     },
     "logbook": {
