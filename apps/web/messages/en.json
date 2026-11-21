@@ -2465,7 +2465,8 @@
       "imageSaved": "Image saved: add it to your post.",
       "postInApp": "Image saved: open {app}, create a post or a story and choose this image.",
       "addImage": "Image saved: add it to the post that just opened.",
-      "linkCopied": "Text and link copied."
+      "linkCopied": "Text and link copied.",
+      "more": "More…"
     },
     "gains": {
       "titleOne": "Flight added to your logbook",

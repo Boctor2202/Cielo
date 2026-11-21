@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, Download, Link2, Mail, MessageSquare } from "lucide-react";
+import { Check, Copy, Download, Link2, Mail, MessageSquare, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { siFacebook, siInstagram, siLinkedin, siMessenger, siTelegram, siTiktok, siWhatsapp, siX, type SimpleIcon } from "simple-icons";
@@ -19,6 +19,12 @@ function Logo({ icon, size = 22 }: { icon: SimpleIcon; size?: number }) {
  * image: WhatsApp, Messenger, Telegram, LinkedIn, Facebook, X, SMS and e-mail all show the image with it.
  * Instagram and TikTok take only images posted from their app, so the image is saved (or copied) for them.
  */
+/**
+ * Phones and tablets share through the device's own sheet (every app installed); a computer shows Geardown's
+ * sheet instead (format choice, Instagram, LinkedIn…), whose "More" tile still opens the system one.
+ */
+export const prefersNativeShare = () => typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches === true;
+
 export function ShareSheet({ image, text, link }: { image: string; text: string; link: string }) {
   // the link is the achievement's public page: every network shows its image as the preview
   const SITE = link;
@@ -48,6 +54,17 @@ export function ShareSheet({ image, text, link }: { image: string; text: string;
     download();
     setNote(t("postInApp", { app: name }));
   };
+  // the computer's own share window (Windows, macOS): the image with the text and link
+  const systemShare = async () => {
+    try {
+      const blob = await (await fetch(image)).blob();
+      const file = new File([blob], "geardown.png", { type: blob.type || "image/png" });
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      await navigator.share(nav.canShare?.({ files: [file] }) ? { files: [file], text: message } : { text: message, url: SITE });
+    } catch {
+      /* closed */
+    }
+  };
   const open = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
 
   const tiles: { key: string; label: string; bg: string; icon: React.ReactNode; onClick: () => void }[] = [
@@ -62,6 +79,9 @@ export function ShareSheet({ image, text, link }: { image: string; text: string;
     { key: "sms", label: "SMS", bg: "#34C759", icon: <MessageSquare size={21} color="#fff" />, onClick: () => { window.location.href = `sms:?&body=${enc(message)}`; } },
     { key: "mail", label: t("mail"), bg: "#64748B", icon: <Mail size={21} color="#fff" />, onClick: () => { window.location.href = `mailto:?subject=${enc(text)}&body=${enc(message)}`; } },
     { key: "copy", label: t("copyImage"), bg: "#0E2A47", icon: <Copy size={20} color="#fff" />, onClick: () => void copyImage() },
+    ...(typeof navigator !== "undefined" && "share" in navigator
+      ? [{ key: "more", label: t("more"), bg: "#0E2A47", icon: <MoreHorizontal size={21} color="#fff" />, onClick: () => void systemShare() }]
+      : []),
     { key: "link", label: t("copyLink"), bg: "#0E2A47", icon: <Link2 size={20} color="#fff" />, onClick: () => void navigator.clipboard.writeText(message).then(() => setNote(t("linkCopied"))) },
   ];
 

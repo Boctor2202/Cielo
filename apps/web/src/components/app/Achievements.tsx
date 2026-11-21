@@ -7,7 +7,7 @@ import { badgeEmblemSvg, distanceNm, discoveryBadges, shareLinkUrl, HOUR_LEVELS,
 import { useFormatDate } from "@/lib/hooks";
 import { TIER_COLORS as TIER } from "@/lib/badgeArt";
 import { Card, Modal } from "./ui";
-import { ShareSheet } from "./ShareSheet";
+import { prefersNativeShare, ShareSheet } from "./ShareSheet";
 
 /** A discovery badge: one outline and one symbol per series, in the metal of its rank (@cielo/core draws it). */
 export function Emblem({ badge, size = 64, locked }: { badge: Pick<DiscoveryBadge, "id" | "series" | "tier" | "rank" | "of">; size?: number; locked?: boolean }) {
@@ -92,7 +92,7 @@ export function Achievements({ flights, opening, airport, pilot }: { flights: Fl
       const file = new File([blob], "geardown.png", { type: "image/png" });
       const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
       // the device's own share sheet (phones, and Windows / macOS in Chrome, Edge, Safari): image + text + link
-      if (nav.canShare?.({ files: [file], text, url: link })) {
+      if (prefersNativeShare() && nav.canShare?.({ files: [file], text, url: link })) {
         await navigator.share({ files: [file], text: `${text} · ${link}` });
         return;
       }
