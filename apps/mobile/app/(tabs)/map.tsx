@@ -49,7 +49,7 @@ export default function RoutesMap() {
     try {
       const lang = locale === "fr" ? "fr" : "en";
       const per = period === "all" ? "" : period === "12m" ? t("map.last12") : period;
-      const q = new URLSearchParams({ type: "map", lang, r: encodeShareRoutes(totals.routes), fl: String(totals.flights), ap: String(totals.airports), nm: String(totals.nm), ct: String(totals.countries), per, ty: type, name: pilot.fullName ?? "", rank: pilot.rank ?? "" });
+      const q = new URLSearchParams({ type: "map", lang, r: encodeShareRoutes(totals.routes), fl: String(totals.flights), ap: String(totals.airports), nm: String(totals.nm), ct: String(totals.countries), per, ty: type, th: c.scheme === "dark" ? "" : "light", name: pilot.fullName ?? "", rank: pilot.rank ?? "" });
       const r = await fetch(`${API_URL}/api/share-card?${q}`);
       if (!r.ok) throw new Error(String(r.status));
       const file = new File(Paths.cache, "geardown-map.png");
