@@ -24,7 +24,7 @@ const LEGS_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["date", "dep", "arr", "out", "off", "on", "in", "totalMin", "nightMin", "ifrMin", "picMin", "copilotMin", "dualMin", "instructorMin", "multiPilotMin", "landingsDay", "landingsNight", "registration", "aircraftType", "flightNumber", "function", "picName", "remarks", "fstdType", "fstdMin"],
+        required: ["date", "dep", "arr", "out", "off", "on", "in", "totalMin", "nightMin", "ifrMin", "picMin", "copilotMin", "dualMin", "instructorMin", "multiPilotMin", "xcMin", "landingsDay", "landingsNight", "registration", "aircraftType", "flightNumber", "function", "picName", "remarks", "fstdType", "fstdMin"],
         properties: {
           date: { type: "string", description: "YYYY-MM-DD, day of departure" },
           dep: { type: "string", description: "Departure airport code as written (ICAO or IATA)" },
@@ -41,6 +41,7 @@ const LEGS_SCHEMA = {
           dualMin: n,
           instructorMin: n,
           multiPilotMin: n,
+          xcMin: { ...n, description: "Cross-country (navigation) time in minutes when the document has that column; -1 when absent" },
           landingsDay: n,
           landingsNight: n,
           registration: s,

@@ -6,12 +6,15 @@ import type { Flight } from "./types";
  * against what Geardown will record (times worked out from the clock times, the aircraft and the night rules),
  * with every difference row by row, and the rows left out with their reason.
  */
-export type CheckField = "total" | "night" | "ifr" | "pic" | "picus" | "copilot" | "dual" | "instructor" | "multiPilot" | "landings";
+export type CheckField = "total" | "night" | "ifr" | "pic" | "picus" | "copilot" | "dual" | "instructor" | "multiPilot" | "xc" | "landings" | "vfr" | "fstd";
 
-const FLIGHT_KEY: Record<Exclude<CheckField, "landings">, keyof Flight> = {
+const FLIGHT_KEY: Record<Exclude<CheckField, "landings" | "vfr" | "fstd">, keyof Flight> = {
   total: "totalMin", night: "nightMin", ifr: "ifrMin", pic: "picMin", picus: "picusMin", copilot: "copilotMin",
-  dual: "dualMin", instructor: "instructorMin", multiPilot: "multiPilotMin",
+  dual: "dualMin", instructor: "instructorMin", multiPilot: "multiPilotMin", xc: "xcMin",
 };
+
+/** Why a row is worth a look before importing. */
+export type RowFlag = "times" | "airport" | Exclude<CheckField, "vfr" | "fstd">;
 
 export interface TotalLine {
   field: CheckField;
@@ -34,6 +37,8 @@ export interface ImportCheck {
   timesToCheck: number[];
   /** rows with an airport code that is not a known airport (kept as written) */
   airportsToCheck: number[];
+  /** for each row index (ImportedRow.rowIndex) worth a look, why */
+  flags: Record<number, RowFlag[]>;
 }
 
 /** Same minute, or a one-minute rounding (decimal hours in the file). */
@@ -50,7 +55,7 @@ export function checkImport(rows: ImportedRow[], built: { rowIndex: number; flig
   const byRow = new Map(built.map((b) => [b.rowIndex, b.flight]));
   const lines: TotalLine[] = [];
   const fileRow = (i: number) => i + firstRow;
-  for (const field of Object.keys(FLIGHT_KEY) as Exclude<CheckField, "landings">[]) {
+  for (const field of Object.keys(FLIGHT_KEY) as (keyof typeof FLIGHT_KEY)[]) {
     let file: number | undefined;
     let geardown = 0;
     const diff: number[] = [];
@@ -103,5 +108,22 @@ export function checkImport(rows: ImportedRow[], built: { rowIndex: number; flig
     if (Math.abs(block - written) > 5) timesToCheck.push(fileRow(r.rowIndex));
   }
   const airportsToCheck = rows.filter((r) => byRow.has(r.rowIndex) && r.warnings?.includes("airport")).map((r) => fileRow(r.rowIndex));
-  return { lines, rejected, kept: built.length, timesToCheck, airportsToCheck };
+  // VFR time (flight time not under IFR) and simulator sessions, for the totals shown before importing
+  let vfr = 0;
+  let fstd = 0;
+  for (const b of built) {
+    if (b.flight.isFstd) fstd += b.flight.fstdMin || 0;
+    else vfr += Math.max(0, (b.flight.totalMin || 0) - (b.flight.ifrMin || 0));
+  }
+  lines.push({ field: "vfr", geardown: vfr, rows: [] }, { field: "fstd", geardown: fstd, rows: [] });
+  // every reason, row by row (by row index), for the list of flights to check
+  const flags: Record<number, RowFlag[]> = {};
+  const add = (row: number, f: RowFlag) => {
+    const i = row - firstRow;
+    (flags[i] ??= []).includes(f) || flags[i]!.push(f);
+  };
+  for (const l of lines) for (const row of l.rows) if (l.field !== "vfr" && l.field !== "fstd") add(row, l.field);
+  for (const row of timesToCheck) add(row, "times");
+  for (const row of airportsToCheck) add(row, "airport");
+  return { lines, rejected, kept: built.length, timesToCheck, airportsToCheck, flags };
 }

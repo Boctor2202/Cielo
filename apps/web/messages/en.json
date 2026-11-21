@@ -875,7 +875,8 @@
         "fstdTime": "FSTD time",
         "picus": "PICUS time",
         "singleEngine": "Single-pilot SE time",
-        "multiEngine": "Single-pilot ME time"
+        "multiEngine": "Single-pilot ME time",
+        "xc": "Cross-country"
       },
       "autoDetected": "{count} of {total} columns recognised automatically. Check the preview below, then import.",
       "checkColumns": "Check or fix the columns",
@@ -957,6 +958,77 @@
           "SIC": "SIC (co-pilot)",
           "DUAL": "Dual (instruction)"
         }
+      },
+      "review": {
+        "title": "Check the import",
+        "counts": "{flights, plural, one {# flight} other {# flights}} · {sessions, plural, =0 {no simulator session} one {# simulator session} other {# simulator sessions}}",
+        "intro": "Totals of what Geardown will record, worked out again after every correction. Nothing is saved before \"Import\".",
+        "read": "read {v}",
+        "f": {
+          "total": "Total time",
+          "pic": "PIC",
+          "dual": "Dual",
+          "copilot": "SIC",
+          "picus": "PICUS",
+          "instructor": "Instructor",
+          "multiPilot": "Multi-pilot",
+          "xc": "Cross-country",
+          "vfr": "VFR",
+          "ifr": "IFR",
+          "night": "Night",
+          "landings": "Landings",
+          "fstd": "Simulator"
+        },
+        "choicesHelp": "For every flight of the import. \"As read\" keeps what Geardown read, flight by flight.",
+        "rules": "Flight rules",
+        "function": "Function",
+        "xc": "Cross-country",
+        "asRead": "As read",
+        "xc_other": "To another airfield",
+        "xc_none": "None",
+        "fn": {
+          "PIC": "PIC",
+          "SIC": "SIC",
+          "PICUS": "PICUS",
+          "DUAL": "Dual"
+        },
+        "filterCheck": "To check ({count})",
+        "filterAll": "All ({count})",
+        "sim": "Simulator",
+        "edit": "Edit",
+        "excluded": "left out",
+        "exclude": "Leave this flight out",
+        "include": "Bring it back",
+        "ok": "OK",
+        "why": {
+          "times": "The times do not match the total written ({total})",
+          "airport": "Unknown airport: check the code",
+          "diff": "{field} differs from what was read"
+        },
+        "err": {
+          "date": "Unreadable date",
+          "route": "Departure or arrival missing",
+          "times": "No times and no total",
+          "duplicate": "Already in your logbook",
+          "other": "Unreadable value"
+        },
+        "fld": {
+          "date": "Date",
+          "dep": "From",
+          "arr": "To",
+          "out": "Off-block",
+          "in": "On-block",
+          "total": "Total time",
+          "registration": "Registration",
+          "type": "Type",
+          "landings": "Landings",
+          "night": "Night",
+          "xc": "Cross-country",
+          "fstdType": "Simulator (type)",
+          "fstdMin": "Session time"
+        },
+        "cancel": "Cancel the import",
+        "confirm": "Import ({count, plural, one {# row} other {# rows}})"
       }
     },
     "audit": {

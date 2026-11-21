@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { analyseTable, applyImportChoices, detectDelimiter, legsToRows, normalizeRegistration, parseCsv, parseDuration, parseFlexibleDate, rowsToFlights, sheetCellText } from "../src";
+import { analyseTable, applyImportChoices, detectDelimiter, editImportedRow, legsToRows, normalizeRegistration, parseCsv, parseDuration, parseFlexibleDate, rowsToFlights, sheetCellText } from "../src";
 
 /**
  * Real-world logbook files, read end to end as the apps read them: delimiter, header row, column mapping, date
@@ -146,7 +146,7 @@ describe("exports of other logbook apps", () => {
     expect(ok).toHaveLength(2);
     expect(rows[0]!.explicit.total).toBe(80);
     expect(rows[1]!.explicit).toMatchObject({ total: 86, night: 86, copilot: 86 });
-    expect(rows[0]!.input).toMatchObject({ registration: "PHXYZ", isFstd: false });
+    expect(rows[0]!.input).toMatchObject({ registration: "PH-XYZ", isFstd: false });
   });
 
   it("MyFlightbook: decimal hours, IMC as IFR, route split into airports", () => {
@@ -174,7 +174,7 @@ describe("exports of other logbook apps", () => {
     const { a, rows, ok } = readApp("flylog-export.csv");
     expect(a.app).toBe("Flylog");
     expect(ok).toHaveLength(2);
-    expect(rows[1]!.input).toMatchObject({ flightNumber: "FL101", registration: "PHFAKE", off: "16:20", on: "17:12" });
+    expect(rows[1]!.input).toMatchObject({ flightNumber: "FL101", registration: "PH-FAKE", off: "16:20", on: "17:12" });
     expect(rows[1]!.explicit).toMatchObject({ total: 75, night: 40, copilot: 75 });
   });
 });
@@ -230,5 +230,29 @@ describe("complete logbook lines from a photo", () => {
   });
   it("registrations get their national prefix", () => {
     expect([normalizeRegistration("FHAEC"), normalizeRegistration("G-EUUA"), normalizeRegistration("N172SP"), normalizeRegistration("ECmxv"), normalizeRegistration("HBZAB")]).toEqual(["F-HAEC", "G-EUUA", "N172SP", "EC-MXV", "HB-ZAB"]);
+  });
+});
+
+describe("the check before importing", () => {
+  const rows = legsToRows(
+    [
+      { date: "2021-08-03", dep: "LFPN", arr: "LFPN", out: "13:29", in: "15:30", totalMin: 61, landingsDay: 1 },
+      { date: "2021-08-08", dep: "LFOX", arr: "LFPN", out: "15:38", in: "16:35", totalMin: 57, landingsDay: 1 },
+    ],
+    (c) => c,
+    { function: "PIC", pilotFlying: false },
+  );
+  it("a corrected time, function and rules apply to that flight only", () => {
+    const [a, b] = rows.map((r, i) => editImportedRow(r, i === 0 ? { out: "14:29", function: "PICUS", rules: "VFR" } : undefined));
+    expect(a!.input).toMatchObject({ out: "14:29", function: "PICUS", ifr: false });
+    expect(b!.input!.function).toBe("PIC");
+  });
+  it("a flight left out, and errors worked out again", () => {
+    expect(editImportedRow(rows[0]!, { excluded: true }).excluded).toBe(true);
+    expect(editImportedRow(rows[0]!, { dep: "" }).errors).toEqual(["route"]);
+  });
+  it("cross-country for the flights that land elsewhere", () => {
+    const x = applyImportChoices(rows, { rules: "doc", function: "doc", xc: "other" });
+    expect(x.map((r) => r.input!.xcMin)).toEqual([0, 57]);
   });
 });

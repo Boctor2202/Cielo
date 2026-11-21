@@ -4,8 +4,8 @@ import { CalendarDays, Camera, FileSpreadsheet, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  analyseTable, applyImportChoices, checkMapping, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
-  type DateOrder, type ImportChoices, type ImportField, type ImportedRow, type LogbookLeg, type StoredMapping,
+  analyseTable, applyImportChoices, checkMapping, editImportedRow, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
+  type DateOrder, type ImportChoices, type ImportField, type ImportRowEdit, type ImportedRow, type LogbookLeg, type StoredMapping,
 } from "@cielo/core";
 import { apiFetch } from "@/lib/report";
 import { Link } from "@/i18n/navigation";
@@ -17,6 +17,7 @@ import { announceGains } from "@/lib/gains";
 import { useAirlineDirectory } from "@/lib/airlines";
 import { checkImport, formatDuration, operatorIndex, type Flight, type ImportCheck } from "@cielo/core";
 import { DropZone } from "@/components/app/DropZone";
+import { ImportReview } from "@/components/app/ImportReview";
 import { Paywall, useAccess } from "@/lib/access";
 import { track } from "@/lib/metrics";
 import { useFormatDate, usePilot } from "@/lib/hooks";
@@ -128,8 +129,10 @@ function FileImport({ photos = false }: { photos?: boolean }) {
   const [paste, setPaste] = useState("");
   const tableRows = useMemo<ImportedRow[]>(() => (rows && mapping ? rowsToFlights(rows.slice(1), mapping, { dateOrder: order, timezoneOf: (c) => airports?.get(c.length === 3 ? airports.iataToIcao(c) ?? c : c)?.timezone }) : []), [rows, mapping, order, airports]);
   // VFR / IFR and PIC / SIC / dual for every flight of the import, when the document does not say it (a student's page)
-  const [choices, setChoices] = useState<ImportChoices>({ rules: "doc", function: "doc" });
-  const parsed = useMemo(() => applyImportChoices(pdfRows ?? tableRows, choices), [pdfRows, tableRows, choices]);
+  const [choices, setChoices] = useState<ImportChoices>({ rules: "doc", function: "doc", xc: "doc" });
+  // the pilot's corrections, row by row (typed in the check before importing)
+  const [edits, setEdits] = useState<Record<number, ImportRowEdit>>({});
+  const parsed = useMemo(() => applyImportChoices(pdfRows ?? tableRows, choices).map((r) => editImportedRow(r, edits[r.rowIndex])), [pdfRows, tableRows, choices, edits]);
   const recognised = mapping ? Object.values(mapping).filter((i) => i >= 0).length : 0;
   // cross-checks on the data itself, recomputed whenever a column is changed by hand
   const checks = useMemo(() => (rows && mapping ? checkMapping(rows.slice(1), mapping) : []), [rows, mapping]);
@@ -139,10 +142,17 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     const used = new Set(Object.values(mapping));
     return rows[0]!.filter((h, i) => h && !used.has(i) && rows.slice(1).some((r) => (r[i] ?? "").trim()));
   }, [rows, mapping]);
-  const ok = parsed.filter((r) => r.errors.length === 0 && r.input);
+  const ok = useMemo(() => parsed.filter((r) => r.errors.length === 0 && r.input && !("excluded" in r && r.excluded)), [parsed]);
+  /** A new document or file: the corrections and choices made for the previous one are dropped. */
+  const fresh = () => {
+    setEdits({});
+    setChoices({ rules: "doc", function: "doc", xc: "doc" });
+    setReview(null);
+  };
 
   /** A document read on the server (PDF, photos, pasted text): legs to review. */
   async function fromServer(body: Record<string, unknown>) {
+    fresh();
     setRows(null);
     setMapping(null);
     setPdfRows(null);
@@ -207,6 +217,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
 
   async function onFile(file: File) {
     if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") return onPdf(file);
+    fresh();
     setPdfRows(null);
     setPdfState(null);
     // header row, two-row headers, columns (names + values) and date order are all detected automatically
@@ -232,11 +243,21 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     }
   }
 
-  // step 1: build the flights as they would be saved, and compare them with the file ("Check your totals")
+  // the flights as they would be saved, compared with what was read: worked out again after every change
   const [review, setReview] = useState<{ built: Flight[]; check: ImportCheck } | null>(null);
-  async function prepare() {
-    if (!airports) return;
-    setBusy(true);
+  const reading = !!pdfRows || !!(rows && mapping);
+  useEffect(() => {
+    if (!reading || !airports) return;
+    let stale = false;
+    const h = setTimeout(() => void prepare().then((r) => !stale && r && setReview(r)), 250);
+    return () => {
+      stale = true;
+      clearTimeout(h);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ok, airports, reading]);
+  async function prepare(): Promise<{ built: Flight[]; check: ImportCheck } | null> {
+    if (!airports) return null;
     // flights already in the logbook (or twice in the file) are skipped: importing the same file again adds nothing
     const existing = (await db().t("flights").toArray()).filter((f) => !f.deletedAt);
     const seen = new Set(existing.map(flightKey));
@@ -253,8 +274,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
         pairs.push({ rowIndex: r.rowIndex, flight: f });
       }
     }
-    setReview({ built: pairs.map((p) => p.flight), check: checkImport(parsed, pairs, dups, pdfRows ? 1 : 2) });
-    setBusy(false);
+    return { built: pairs.map((p) => p.flight), check: checkImport(parsed, pairs, dups, pdfRows ? 1 : 2) };
   }
 
   // step 2: the pilot checked the totals: save, and keep the batch so it can be undone as a whole
@@ -275,11 +295,31 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     const skipped = review.check.rejected.filter((x) => x.reasons.includes("duplicate")).length;
     toast(t("done", { count: built.length }) + (skipped ? ` · ${t("skipped", { count: skipped })}` : ""));
     track(built.length ? "import_success" : "import_fail");
-    setReview(null);
+    fresh();
     setRows(null);
     setMapping(null);
     setPdfRows(null);
   }
+  const cancel = () => {
+    fresh();
+    setRows(null);
+    setMapping(null);
+    setPdfRows(null);
+  };
+  const reviewNode = (
+    <ImportReview
+      rows={parsed}
+      check={review?.check ?? null}
+      firstRow={pdfRows ? 1 : 2}
+      choices={choices}
+      onChoices={setChoices}
+      edits={edits}
+      onEdit={(i, e) => setEdits((all) => ({ ...all, [i]: e }))}
+      onConfirm={run}
+      onCancel={cancel}
+      busy={busy || !airports}
+    />
+  );
 
   return (
     <div className="space-y-5">
@@ -298,11 +338,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
       </label>
       {pdfState && <p className={`mt-2 text-sm ${pdfState === "reading" || pdfState === "mapping" ? "text-accent" : "text-[var(--warning)]"}`}>{t(`pdf.${["reading", "mapping", "plan", "unauthorized", "rate_limited", "none", "busy", "too_big", "xls", "unreadable"].includes(pdfState) ? pdfState : "error"}`)}</p>}
       {source && <p className="text-sm font-semibold text-accent">{source === "learned" ? t("readLearned") : source === "report" ? t("readReport") : t("readAi", { source })}</p>}
-      {review ? (
-        <TotalsCheck check={review.check} busy={busy} onConfirm={run} onFix={() => setReview(null)} onCancel={() => { setReview(null); setRows(null); setMapping(null); setPdfRows(null); }} />
-      ) : (
-        pdfRows && <PreviewCard parsed={parsed} ok={ok.length} onImport={prepare} busy={busy || !airports} choices={choices} onChoices={setChoices} />
-      )}
+      {pdfRows && reviewNode}
       <p className="mt-2 text-xs text-muted">{t("fromApps")}</p>
       {app && (rows || pdfRows) && <p className="mt-2 text-sm font-semibold text-accent">{t("appRecognised", { app })}</p>}
       {rows && mapping && (
@@ -341,7 +377,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
             </div>
             </details>
           </Card>
-          {!review && <PreviewCard parsed={parsed} ok={ok.length} onImport={prepare} busy={busy || !airports} choices={choices} onChoices={setChoices} />}
+          {reviewNode}
         </>
       )}
       <ImportBatches />
@@ -404,126 +440,6 @@ function ImportBatches() {
           </li>
         ))}
       </ul>
-    </Card>
-  );
-}
-
-/** « Check your totals »: the file's columns against what Geardown will record, differences and rows left out. */
-function TotalsCheck({ check, busy, onConfirm, onFix, onCancel }: { check: ImportCheck; busy: boolean; onConfirm: () => void; onFix: () => void; onCancel: () => void }) {
-  const t = useTranslations("app.import");
-  const v = (field: string, n: number | undefined) => (n === undefined ? "—" : field === "landings" ? String(n) : formatDuration(n));
-  const shown = check.lines.filter((l) => l.file !== undefined || l.geardown > 0);
-  const diffs = check.lines.filter((l) => l.rows.length);
-  return (
-    <Card title={t("totals.title")}>
-      <p className="text-sm text-muted">{t("totals.intro", { kept: check.kept })}</p>
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-left">
-            <tr className="[&>th]:label-caps [&>th]:px-3 [&>th]:py-2">
-              <th>{t("totals.column")}</th><th className="!text-right">{t("totals.file")}</th><th className="!text-right">{t("totals.geardown")}</th><th>{t("totals.status")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {shown.map((l) => {
-              const off = l.rows.length > 0;
-              return (
-                <tr key={l.field} className={`num [&>td]:px-3 [&>td]:py-2 ${off ? "bg-[var(--caution)]/10" : ""}`}>
-                  <td>{l.field === "landings" ? t("totals.landings") : t(`fields.${l.field}`)}</td>
-                  <td className="text-right">{v(l.field, l.file)}</td>
-                  <td className="text-right font-semibold">{v(l.field, l.geardown)}</td>
-                  <td className={off ? "font-semibold text-caution" : l.file === undefined ? "text-muted" : "text-success"}>
-                    {off ? t("totals.diff", { count: l.rows.length }) : l.file === undefined ? t("totals.noColumn") : t("totals.same")}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      {diffs.length > 0 && (
-        <div className="mt-4 rounded-xl bg-[var(--caution)]/10 p-3 text-sm">
-          <p className="font-semibold">{t("totals.diffTitle")}</p>
-          <ul className="mt-1 space-y-1">
-            {diffs.map((l) => (
-              <li key={l.field}>
-                {l.field === "landings" ? t("totals.landings") : t(`fields.${l.field}`)} : {t("totals.rows", { rows: l.rows.slice(0, 30).join(", ") + (l.rows.length > 30 ? "…" : "") })}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2 text-xs text-muted">{t("totals.diffHelp")}</p>
-        </div>
-      )}
-      {check.airportsToCheck.length > 0 && (
-        <div className="mt-4 rounded-xl bg-[var(--caution)]/10 p-3 text-sm">
-          <p className="font-semibold">{t("totals.airportsTitle")}</p>
-          <p className="mt-1">{t("totals.airportsText", { rows: check.airportsToCheck.slice(0, 30).join(", ") })}</p>
-        </div>
-      )}
-      {check.timesToCheck.length > 0 && (
-        <div className="mt-4 rounded-xl bg-[var(--caution)]/10 p-3 text-sm">
-          <p className="font-semibold">{t("totals.timesTitle")}</p>
-          <p className="mt-1">{t("totals.timesText", { rows: check.timesToCheck.slice(0, 30).join(", ") + (check.timesToCheck.length > 30 ? "…" : "") })}</p>
-        </div>
-      )}
-      {check.rejected.length > 0 && (
-        <div className="mt-4 text-sm">
-          <p className="font-semibold">{t("totals.rejected", { count: check.rejected.length })}</p>
-          <ul className="mt-1 max-h-40 space-y-0.5 overflow-auto text-muted">
-            {check.rejected.slice(0, 200).map((r) => (
-              <li key={r.row}>{t("totals.rejectedLine", { row: r.row, reasons: r.reasons.map((x) => t(`totals.reason.${x}`)).join(", ") })}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <div className="mt-5 flex flex-wrap justify-end gap-2">
-        <button type="button" className="btn btn-ghost" onClick={onCancel}>{t("totals.cancel")}</button>
-        <button type="button" className="btn btn-secondary" onClick={onFix}>{t("totals.fix")}</button>
-        <button type="button" className="btn btn-primary" disabled={busy || check.kept === 0} onClick={onConfirm}>{t("totals.confirm", { count: check.kept })}</button>
-      </div>
-    </Card>
-  );
-}
-
-function PreviewCard({ parsed, ok, onImport, busy, choices, onChoices }: { parsed: ImportedRow[]; ok: number; onImport: () => void; busy: boolean; choices: ImportChoices; onChoices: (c: ImportChoices) => void }) {
-  const t = useTranslations("app.import");
-  return (
-    <Card title={t("preview")} action={<span className="text-sm text-muted">{t("rowsOk", { ok, total: parsed.length })}</span>} pad={false}>
-      <div className="flex flex-wrap items-end gap-4 border-b border-border p-4">
-        <p className="w-full text-sm text-muted">{t("choices.help")}</p>
-        <div>
-          <p className="label-caps mb-1">{t("choices.rules")}</p>
-          <Segmented value={choices.rules} onChange={(rules) => onChoices({ ...choices, rules })} options={(["doc", "VFR", "IFR"] as const).map((v) => ({ value: v, label: v === "doc" ? t("choices.doc") : v }))} />
-        </div>
-        <div>
-          <p className="label-caps mb-1">{t("choices.function")}</p>
-          <Segmented value={choices.function} onChange={(fn) => onChoices({ ...choices, function: fn })} options={(["doc", "PIC", "SIC", "DUAL"] as const).map((v) => ({ value: v, label: v === "doc" ? t("choices.doc") : t(`choices.fn.${v}`) }))} />
-        </div>
-      </div>
-      <div className="max-h-96 overflow-auto">
-        <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-surface text-left">
-            <tr className="[&>th]:label-caps [&>th]:px-3 [&>th]:py-2">
-              <th>#</th><th>{t("fields.date")}</th><th>{t("fields.dep")}</th><th>{t("fields.arr")}</th><th>{t("fields.out")}</th><th>{t("fields.in")}</th><th>{t("fields.registration")}</th><th>{t("fields.type")}</th><th>{t("fields.function")}</th><th>{t("errors")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {parsed.slice(0, 200).map((r) => (
-              <tr key={r.rowIndex} className={`num [&>td]:px-3 [&>td]:py-1.5 ${r.errors.length ? "bg-warning/8 text-warning" : ""}`}>
-                <td className="text-muted">{r.rowIndex + 2}</td>
-                <td>{r.input?.date}</td><td>{r.input?.depIcao}</td><td>{r.input?.arrIcao}</td><td>{r.input?.out}</td><td>{r.input?.in}</td>
-                <td>{r.input?.registration}</td><td>{r.input?.aircraftTypeIcao}</td><td>{r.input?.function}</td>
-                <td>{r.errors.map((e) => t(`fields.${e === "route" ? "dep" : e === "times" ? "out" : "date"}`)).join(", ")}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="border-t border-border p-4 text-right">
-        <button type="button" className="btn btn-primary" disabled={busy || ok === 0} onClick={onImport}>
-          <Upload size={16} /> {t("importN", { count: ok })}
-        </button>
-      </div>
     </Card>
   );
 }

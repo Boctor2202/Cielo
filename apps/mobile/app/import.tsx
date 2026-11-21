@@ -7,12 +7,13 @@ import * as Clipboard from "expo-clipboard";
 import { File } from "expo-file-system";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
-  analyseTable, applyImportChoices, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, titlesToMapping,
-  type ImportChoices, type ImportField, type ImportedRow, type LogbookLeg, type StoredMapping,
+  analyseTable, applyImportChoices, editImportedRow, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, titlesToMapping,
+  type ImportChoices, type ImportField, type ImportedRow, type ImportRowEdit, type LogbookLeg, type StoredMapping,
 } from "@cielo/core";
 import { API_URL } from "../src/api";
 import { lookupAirport, toIcao } from "../src/airports";
 import { prepareImportedRows, savePrepared, type PreparedImport } from "../src/importer";
+import { ImportReview } from "../src/components/ImportReview";
 import { checkImport, formatDuration, type ImportCheck } from "@cielo/core";
 import { Button, Card, Row, Screen, Segmented, Txt, tap } from "../src/components/ui";
 import { useApp } from "../src/state";
@@ -34,10 +35,19 @@ export default function ImportScreen() {
   const { t, session, pilot, flights, store } = app;
   const c = useTheme();
   const [busy, setBusy] = useState<string | null>(null);
-  const [readRows, setRows] = useState<ImportedRow[] | null>(null);
+  const [readRows, setReadRows] = useState<ImportedRow[] | null>(null);
   // VFR / IFR and PIC / SIC / dual for every flight of the import, when the document does not say it
-  const [choices, setChoices] = useState<ImportChoices>({ rules: "doc", function: "doc" });
-  const rows = useMemo(() => (readRows ? applyImportChoices(readRows, choices) : null), [readRows, choices]);
+  const [choices, setChoices] = useState<ImportChoices>({ rules: "doc", function: "doc", xc: "doc" });
+  // the pilot's corrections, row by row
+  const [edits, setEdits] = useState<Record<number, ImportRowEdit>>({});
+  const rows = useMemo(() => (readRows ? applyImportChoices(readRows, choices).map((r) => editImportedRow(r, edits[r.rowIndex])) : null), [readRows, choices, edits]);
+  /** A new reading: corrections and choices made for the previous one are dropped. */
+  const setRows = (next: ImportedRow[] | null) => {
+    setReadRows(next);
+    setEdits({});
+    setChoices({ rules: "doc", function: "doc", xc: "doc" });
+    setReview(null);
+  };
   const [source, setSource] = useState<string | null>(null);
   const [share, setShare] = useState(false);
   const [photos, setPhotos] = useState<{ data: string; type: string }[]>([]);
@@ -186,16 +196,22 @@ export default function ImportScreen() {
     }
   };
 
-  const ok = useMemo(() => (rows ?? []).filter((r) => r.input && !r.errors.length), [rows]);
-  const prepare = async () => {
-    setBusy("save");
-    try {
-      const prepared = await prepareImportedRows(store, pilot, app.aircraftTypes, flights, ok, "import");
-      setReview({ prepared, check: checkImport(rows ?? [], prepared.pairs, prepared.duplicates, table ? 2 : 1) });
-    } finally {
-      setBusy(null);
-    }
-  };
+  const ok = useMemo(() => (rows ?? []).filter((r) => r.input && !r.errors.length && !("excluded" in r && r.excluded)), [rows]);
+  // the flights as they would be saved, compared with what was read: worked out again after every change
+  useEffect(() => {
+    if (!rows) return;
+    let stale = false;
+    const h = setTimeout(() => {
+      void prepareImportedRows(store, pilot, app.aircraftTypes, flights, ok, "import").then((prepared) => {
+        if (!stale) setReview({ prepared, check: checkImport(rows, prepared.pairs, prepared.duplicates, table ? 2 : 1) });
+      });
+    }, 250);
+    return () => {
+      stale = true;
+      clearTimeout(h);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ok]);
   const save = async () => {
     if (!review) return;
     setBusy("save");
@@ -206,7 +222,6 @@ export default function ImportScreen() {
       if (table && r.imported) void call({ kind: "learn", header: table.header, mapping: mappingToTitles(table.header, table.mapping), source: source ?? undefined }).catch(() => undefined);
       await app.reload();
       Alert.alert(t("uimp.title"), t("more.importDone", { n: r.imported, d: r.duplicates, s: rows!.length - ok.length + r.skipped }));
-      setReview(null);
       setRows(null);
       router.back();
     } finally {
@@ -239,84 +254,22 @@ export default function ImportScreen() {
     </Pressable>
   );
 
-  if (rows && review) {
-    const ck = review.check;
-    const shown = ck.lines.filter((l) => l.file !== undefined || l.geardown > 0);
-    const v = (f: string, n: number | undefined) => (n === undefined ? "—" : f === "landings" ? String(n) : formatDuration(n));
-    return (
-      <Screen>
-        <Card>
-          <Txt variant="h2">{t("uimp.checkTitle")}</Txt>
-          <Txt variant="small">{t("uimp.checkIntro", { n: ck.kept })}</Txt>
-          <Row style={{ justifyContent: "space-between" }}>
-            <Txt variant="small" style={{ flex: 1.3, fontWeight: "700" }}>{t("uimp.colField")}</Txt>
-            <Txt variant="small" style={{ flex: 1, textAlign: "right", fontWeight: "700" }}>{t("uimp.colFile")}</Txt>
-            <Txt variant="small" style={{ flex: 1, textAlign: "right", fontWeight: "700" }}>Geardown</Txt>
-          </Row>
-          {shown.map((l) => (
-            <View key={l.field} style={{ gap: 1 }}>
-              <Row style={{ justifyContent: "space-between" }}>
-                <Txt style={{ flex: 1.3 }}>{t(`uimp.f.${l.field}` as I18nKey)}</Txt>
-                <Txt mono style={{ flex: 1, textAlign: "right" }}>{v(l.field, l.file)}</Txt>
-                <Txt mono style={{ flex: 1, textAlign: "right", fontWeight: "700" }} color={l.rows.length ? c.caution : undefined}>{v(l.field, l.geardown)}</Txt>
-              </Row>
-              {l.rows.length ? <Txt variant="small" color={c.caution}>{t("uimp.diffRows", { rows: l.rows.slice(0, 20).join(", ") })}</Txt> : null}
-            </View>
-          ))}
-          {ck.lines.some((l) => l.rows.length) ? <Txt variant="small">{t("uimp.diffHelp")}</Txt> : null}
-          {ck.airportsToCheck.length ? (
-            <View style={{ gap: 2 }}>
-              <Txt style={{ fontWeight: "700" }} color={c.caution}>{t("uimp.airportsTitle")}</Txt>
-              <Txt variant="small">{t("uimp.airportsText", { rows: ck.airportsToCheck.slice(0, 20).join(", ") })}</Txt>
-            </View>
-          ) : null}
-          {ck.timesToCheck.length ? (
-            <View style={{ gap: 2 }}>
-              <Txt style={{ fontWeight: "700" }} color={c.caution}>{t("uimp.timesTitle")}</Txt>
-              <Txt variant="small">{t("uimp.timesText", { rows: ck.timesToCheck.slice(0, 20).join(", ") })}</Txt>
-            </View>
-          ) : null}
-        </Card>
-        {ck.rejected.length ? (
-          <Card>
-            <Txt style={{ fontWeight: "700" }}>{t("uimp.rejected", { n: ck.rejected.length })}</Txt>
-            {ck.rejected.slice(0, 60).map((r) => (
-              <Txt key={r.row} variant="small">{t("uimp.rejectedLine", { row: r.row, reasons: r.reasons.map((x) => t(`uimp.reason.${x}` as I18nKey)).join(", ") })}</Txt>
-            ))}
-          </Card>
-        ) : null}
-        <Row gap={10}>
-          <Button style={{ flex: 1 }} kind="secondary" title={t("uimp.fix")} onPress={() => setReview(null)} />
-          <Button style={{ flex: 1 }} title={t("uimp.confirm", { n: ck.kept })} disabled={!ck.kept || busy === "save"} onPress={() => void save()} />
-        </Row>
-        <Button kind="secondary" title={t("uimp.cancelImport")} onPress={() => { setReview(null); setRows(null); }} />
-      </Screen>
-    );
-  }
-
   if (rows) {
     return (
       <Screen>
-        <Card>
-          <Txt variant="h2">{t("uimp.found", { n: ok.length })}</Txt>
-          {source ? <Txt variant="small" color={c.accent}>{source === "learned" ? t("uimp.learned") : source === "report" ? t("uimp.report") : t("uimp.ai", { source })}</Txt> : null}
-          {rows.length - ok.length ? <Txt variant="small" color={c.warning}>{t("uimp.skipped", { n: rows.length - ok.length })}</Txt> : null}
-        </Card>
-        <Card>
-          <Txt variant="small">{t("uimp.choicesHelp")}</Txt>
-          <Segmented label={t("uimp.rules")} value={choices.rules} onChange={(rules) => setChoices({ ...choices, rules })} options={(["doc", "VFR", "IFR"] as const).map((v) => ({ value: v, label: v === "doc" ? t("uimp.asDoc") : v }))} />
-          <Segmented label={t("uimp.function")} value={choices.function} onChange={(fn) => setChoices({ ...choices, function: fn })} options={(["doc", "PIC", "SIC", "DUAL"] as const).map((v) => ({ value: v, label: v === "doc" ? t("uimp.asDoc") : v === "DUAL" ? "Dual" : v }))} />
-        </Card>
-        {ok.slice(0, 200).map((r) => (
-          <Row key={r.rowIndex} style={{ justifyContent: "space-between", paddingHorizontal: 6 }}>
-            <Txt mono style={{ fontSize: 13 }}>{`${r.input!.date}  ${r.input!.depIcao} → ${r.input!.arrIcao}`}</Txt>
-            <Txt mono variant="small">{[r.input!.out, r.input!.in].filter(Boolean).join("–") || (r.explicit.total ? `${Math.floor(r.explicit.total / 60)}:${String(r.explicit.total % 60).padStart(2, "0")}` : "")}</Txt>
-          </Row>
-        ))}
-        <Row gap={10}>
-          <Button style={{ flex: 1 }} kind="secondary" title={t("common.cancel")} onPress={() => setRows(null)} />
-          <Button style={{ flex: 1 }} title={t("uimp.checkN", { n: ok.length })} disabled={!ok.length || busy === "save"} onPress={() => void prepare()} />
-        </Row>
+        <ImportReview
+          rows={rows}
+          check={review?.check ?? null}
+          firstRow={table ? 2 : 1}
+          choices={choices}
+          onChoices={setChoices}
+          edits={edits}
+          onEdit={(i, e) => setEdits((all) => ({ ...all, [i]: e }))}
+          onConfirm={() => void save()}
+          onCancel={() => setRows(null)}
+          busy={busy === "save"}
+          source={source ? (source === "learned" ? t("uimp.learned") : source === "report" ? t("uimp.report") : t("uimp.ai", { source })) : null}
+        />
       </Screen>
     );
   }
