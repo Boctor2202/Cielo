@@ -11,7 +11,7 @@ import { GAINS_EVENT } from "@/lib/gains";
 import { useDuration } from "@/lib/hooks";
 import { TIER_COLORS } from "@/lib/badgeArt";
 import { Emblem, Wings } from "./Achievements";
-import { BadgeCelebration } from "./BadgeCelebration";
+import { BadgeCelebration, type Celebration } from "./BadgeCelebration";
 import { Meter } from "./ui";
 
 /** After a flight is saved or a file imported: what it brought to the logbook, and the badges it unlocked. */
@@ -32,7 +32,7 @@ export function GainsToast() {
       const [flights, opening] = await Promise.all([db().t("flights").toArray(), db().t("opening_balances").toArray()]);
       const gains = logbookGains(flights, ids, (icao) => airports.get(icao), opening);
       if (!gains.flights) return;
-      if (gains.badges.length) setParty(gains);
+      if (gains.badges.length || gains.level) setParty(gains);
       else setG(gains);
     };
     window.addEventListener(GAINS_EVENT, on);
@@ -57,7 +57,11 @@ export function GainsToast() {
       ].filter(Boolean) as { icon: typeof Clock; text: string; sub: string; detail?: string }[]
     : [];
 
-  if (party) return <BadgeCelebration badges={party.badges} onDone={() => { setG(party); setParty(null); }} />;
+  if (party) {
+    // the new wings first, then the badges
+    const items: Celebration[] = [...(party.level ? [{ kind: "level" as const, hours: party.level.hours, tier: party.level.tier }] : []), ...party.badges.map((badge) => ({ kind: "badge" as const, badge }))];
+    return <BadgeCelebration items={items} onDone={() => { setG(party); setParty(null); }} />;
+  }
   return (
     <AnimatePresence>
       {g && (

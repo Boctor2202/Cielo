@@ -2,10 +2,15 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, Animated, Easing, Modal, Pressable, useWindowDimensions, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import Svg, { Circle, Defs, G, Mask, Polygon, RadialGradient, Stop } from "react-native-svg";
-import { TIER_COLORS, type DiscoveryBadge } from "@cielo/core";
+import { TIER_COLORS, type DiscoveryBadge, type Tier } from "@cielo/core";
 import { useApp } from "../state";
 import type { I18nKey } from "../i18n";
-import { Emblem } from "./Achievements";
+import { Emblem, Wings } from "./Achievements";
+
+/** What is celebrated: a discovery badge, or a new hour level (wings). */
+export type Celebration = { kind: "badge"; badge: DiscoveryBadge } | { kind: "level"; hours: number; tier: Tier };
+const keyOf = (c: Celebration) => (c.kind === "badge" ? c.badge.id : `h${c.hours}`);
+const tierOf = (c: Celebration) => (c.kind === "badge" ? c.badge.tier : c.tier);
 import { Txt } from "./ui";
 
 const SHOW_MS = 3500;
@@ -16,13 +21,14 @@ const PIECES = 70;
  * metal, confetti, the badge popping in, its name and what it rewards, and a vibration. A tap moves to the next
  * one; "Skip all" closes. Reduced motion: no rays or confetti.
  */
-export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[]; onDone: () => void }) {
+export function BadgeCelebration({ items: badges, onDone }: { items: Celebration[]; onDone: () => void }) {
   const { t } = useApp();
   const { width, height } = useWindowDimensions();
   const [i, setI] = useState(0);
   const [reduce, setReduce] = useState(false);
-  const b = badges[i];
-  const [c1, c2] = b ? TIER_COLORS[b.tier] : ["#fff", "#fff"];
+  const item = badges[i];
+  const b = item?.kind === "badge" ? item.badge : undefined;
+  const [c1, c2] = item ? TIER_COLORS[tierOf(item)] : ["#fff", "#fff"];
 
   const fade = useRef(new Animated.Value(0)).current;
   const spin = useRef(new Animated.Value(0)).current;
@@ -65,7 +71,7 @@ export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[];
 
   // each badge: a vibration, the pop, the texts, the confetti, then the next one
   useEffect(() => {
-    if (!b) return;
+    if (!item) return;
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     leave.setValue(0);
     pop.setValue(0);
@@ -81,7 +87,7 @@ export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i]);
 
-  if (!b) return null;
+  if (!item) return null;
   const R = Math.max(width, height) * 1.1;
   const rays = Array.from({ length: 20 }, (_, k) => {
     const a0 = (k / 20) * Math.PI * 2;
@@ -151,7 +157,7 @@ export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[];
 
           <View style={{ alignItems: "center", paddingHorizontal: 24 }}>
             <Animated.View style={up(0)}>
-              <Txt mono color="#86efac" style={{ fontSize: 13, fontWeight: "700", letterSpacing: 3 }}>{t("badges.unlockedTitle").toUpperCase()}</Txt>
+              <Txt mono color="#86efac" style={{ fontSize: 13, fontWeight: "700", letterSpacing: 3 }}>{t(item.kind === "level" ? "badges.levelTitle" : "badges.unlockedTitle").toUpperCase()}</Txt>
             </Animated.View>
             <Animated.View
               style={{
@@ -165,17 +171,17 @@ export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[];
                 ],
               }}
             >
-              <Emblem badge={b} size={200} />
+              {item.kind === "level" ? <Wings hours={item.hours} tier={item.tier} width={280} /> : <Emblem badge={b!} size={200} />}
             </Animated.View>
             <Animated.View style={up(0.2)}>
-              <Txt color="#fff" style={{ fontSize: 30, fontWeight: "800", textAlign: "center" }}>{t(`badges.d.${b.id}` as I18nKey)}</Txt>
+              <Txt color="#fff" style={{ fontSize: 30, fontWeight: "800", textAlign: "center" }}>{item.kind === "level" ? t(`badges.title.${item.hours}` as I18nKey) : t(`badges.d.${b!.id}` as I18nKey)}</Txt>
             </Animated.View>
             <Animated.View style={up(0.35)}>
-              <Txt color="#c8d4e4" style={{ fontSize: 16, marginTop: 6, textAlign: "center" }}>{t(`badges.dd.${b.id}` as I18nKey)}</Txt>
+              <Txt color="#c8d4e4" style={{ fontSize: 16, marginTop: 6, textAlign: "center" }}>{item.kind === "level" ? t("badges.club", { n: item.hours.toLocaleString() }) : t(`badges.dd.${b!.id}` as I18nKey)}</Txt>
             </Animated.View>
             <Animated.View style={[up(0.5), { marginTop: 14, borderRadius: 99, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: c1 }]}>
               <Txt mono color="#0a1626" style={{ fontSize: 12, fontWeight: "700" }}>
-                {t(`badges.tier.${b.tier}` as I18nKey)}{b.of > 1 ? ` · ${b.rank}/${b.of}` : ""}
+                {t(`badges.tier.${tierOf(item)}` as I18nKey)}{b && b.of > 1 ? ` · ${b.rank}/${b.of}` : ""}
               </Txt>
             </Animated.View>
           </View>
@@ -183,7 +189,7 @@ export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[];
           {badges.length > 1 ? (
             <View style={{ position: "absolute", bottom: 110, flexDirection: "row", gap: 8 }}>
               {badges.map((x, k) => (
-                <View key={x.id} style={{ height: 8, width: k === i ? 22 : 8, borderRadius: 4, backgroundColor: k === i ? "#fff" : "rgba(255,255,255,0.25)" }} />
+                <View key={keyOf(x)} style={{ height: 8, width: k === i ? 22 : 8, borderRadius: 4, backgroundColor: k === i ? "#fff" : "rgba(255,255,255,0.25)" }} />
               ))}
             </View>
           ) : null}

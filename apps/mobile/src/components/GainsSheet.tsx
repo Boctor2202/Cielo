@@ -8,7 +8,7 @@ import { onGains } from "../gains";
 import { useApp } from "../state";
 import { useTheme } from "../theme";
 import { Emblem, TIER, Wings } from "./Achievements";
-import { BadgeCelebration } from "./BadgeCelebration";
+import { BadgeCelebration, type Celebration } from "./BadgeCelebration";
 import { Track } from "./Bars";
 import { Row, Txt } from "./ui";
 import type { I18nKey } from "../i18n";
@@ -31,7 +31,7 @@ export function GainsSheet() {
         const [flights, opening] = await Promise.all([store.all("flights"), store.all("opening_balances")]);
         const gains = logbookGains(flights, ids, lookupAirport, opening);
         if (!gains.flights) return;
-        if (gains.badges.length) setParty(gains);
+        if (gains.badges.length || gains.level) setParty(gains);
         else setG(gains);
       }),
     [store],
@@ -45,7 +45,11 @@ export function GainsSheet() {
     return () => clearTimeout(id);
   }, [g, y]);
 
-  if (party) return <BadgeCelebration badges={party.badges} onDone={() => { setG(party); setParty(null); }} />;
+  if (party) {
+    // the new wings first, then the badges
+    const items: Celebration[] = [...(party.level ? [{ kind: "level" as const, hours: party.level.hours, tier: party.level.tier }] : []), ...party.badges.map((badge) => ({ kind: "badge" as const, badge }))];
+    return <BadgeCelebration items={items} onDone={() => { setG(party); setParty(null); }} />;
+  }
   if (!g) return null;
   const dur = (m: number) => formatDuration(m, pilot?.timeDisplay);
   const chips = [
