@@ -2434,18 +2434,18 @@
     ]
   },
   "immersive": {
-    "canvasLabel": "Scroll-driven film: a business jet descends at dusk over a sea of clouds, goes through the layer, breaks out on final facing the runway and lowers its gear, then the Earth seen from space with flight routes, which you can turn.",
+    "canvasLabel": "Scroll-driven film: an airliner on final approach on a summer midday lowers its gear, touches down, then leaves the runway and taxis to its gate, followed by the Earth seen from space with flight routes, which you can turn.",
     "scroll": "Scroll",
     "chapters": [
-      "Night time",
+      "Landing",
       "Your logbook",
       "Your routes",
       "Compliance"
     ],
     "c1": {
-      "label": "01 · Night time",
-      "title": "The sun drops below −6°. Geardown logs it.",
-      "text": "EASA night begins at the end of evening civil twilight. Geardown follows the aircraft's position minute by minute and works out night time, night takeoffs and night landings, with nothing for you to type."
+      "label": "01 · Landing",
+      "title": "Gear down, on the runway. Geardown logs it.",
+      "text": "Enter the flight once, or fetch it from ADS-B: Geardown works out block time, day or night landings and night time from civil twilight along your route, with nothing to add up."
     },
     "machine": {
       "label": "02 · Your logbook",
@@ -2479,12 +2479,13 @@
       "cta": "Create my logbook"
     },
     "hud": {
-      "sun": "Sun elevation",
-      "utc": "UTC",
-      "night": "Night time",
-      "day": "DAY",
-      "nightOn": "NIGHT",
-      "threshold": "EASA threshold −6°"
+      "landing": "Landing",
+      "dayLdg": "Day landings",
+      "onBlock": "On block",
+      "block": "Block time",
+      "night": "Night",
+      "inFlight": "IN PROGRESS",
+      "logged": "LOGGED"
     },
     "picker": {
       "flying": "You fly the",
@@ -2501,9 +2502,10 @@
     },
     "drag": "Click and drag to turn the Earth",
     "phase": {
-      "descent": "DESCENT",
       "approach": "FINAL APPROACH",
       "gearDown": "GEAR DOWN · 3 GREENS",
+      "touchdown": "TOUCHDOWN",
+      "taxi": "TAXI TO GATE",
       "logged": "FLIGHT LOGGED"
     }
   },

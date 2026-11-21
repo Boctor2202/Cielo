@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { EARTH_CREDITS, FILM_CREDITS } from "@/lib/aircraft-visuals";
 import { StoreBadges } from "../sections";
-import { createReadouts, GLOBE_FROM, readoutsAt, SHOTS, type Readouts } from "./timeline";
+import { createReadouts, GLOBE_FROM, ON_BLOCK_AT, readoutsAt, SHOTS, TOUCHDOWN_AT, utcAt, type Readouts } from "./timeline";
 import type { FlightScene } from "./scene";
 
 const CHAPTER_VH = 180;
@@ -18,12 +18,10 @@ const fmtClock = (m: number) => {
   return `${String(Math.floor(mm / 60)).padStart(2, "0")}:${String(mm % 60).padStart(2, "0")}Z`;
 };
 const fmtDur = (m: number) => `${Math.floor(m / 60)}:${String(Math.round(m) % 60).padStart(2, "0")}`;
-const fmtElev = (e: number) => `${e >= 0 ? "+" : "−"}${Math.abs(e).toFixed(1)}°`;
 
 /**
- * Immersive home, the same for every visitor. A sticky stage plays a film scrubbed by the scroll — a business jet descending
- * over a sea of clouds at dusk, into the layer, breaking out on final with the runway ahead and the gear coming down — then
- * hands over to a photographic 3D Earth with the pilot's routes, which the visitor turns by click-and-drag.
+ * Immersive home, the same for every visitor. A sticky stage plays a film scrubbed by the scroll — an airliner on final
+ * on a summer midday, the gear coming down, touchdown, then the taxi to its gate — then hands over to a photographic 3D Earth with the pilot's routes, which the visitor turns by click-and-drag.
  * The story is real DOM text on top (indexable, screen-reader friendly); with reduced motion the film is
  * replaced by still frames.
  */
@@ -134,10 +132,14 @@ export function ImmersiveHome() {
   };
 
   /* ---------- choreography ---------- */
-  // into the cloud layer at the end of the descent, out of it at the start of the final
-  const whiteout = useTransform(p, [SHOTS.descent.to - 0.03, SHOTS.descent.to, SHOTS.final.from + 0.025], [0, 0.85, 0]);
-  // the film fades to night before the Earth appears
-  const dusk = useTransform(p, [SHOTS.final.to - 0.02, GLOBE_FROM + 0.02], [0, 0.55]);
+  // a short dip between shots, like a cut in a film
+  const cut = useTransform(
+    p,
+    [SHOTS.approach.to - 0.012, SHOTS.approach.to, SHOTS.touchdown.from + 0.012, SHOTS.touchdown.to - 0.012, SHOTS.touchdown.to, SHOTS.taxi.from + 0.012],
+    [0, 0.6, 0, 0, 0.6, 0],
+  );
+  // the film fades out before the Earth appears
+  const dusk = useTransform(p, [SHOTS.taxi.to - 0.02, GLOBE_FROM + 0.02], [0, 0.55]);
   const filmOpacity = useTransform(p, [GLOBE_FROM - 0.015, GLOBE_FROM + 0.03], [1, 0]);
   const globeOpacity = useTransform(p, [GLOBE_FROM - 0.025, GLOBE_FROM + 0.02], [0, 1]);
 
@@ -164,7 +166,7 @@ export function ImmersiveHome() {
         {/* Film */}
         <motion.div className="absolute inset-0" style={{ opacity: filmOpacity }} aria-hidden>
           <Film base={film.base} poster={film.poster} p={p} reduce={reduce} />
-          <motion.div className="absolute inset-0 bg-[#e9edf2]" style={{ opacity: whiteout }} />
+          <motion.div className="absolute inset-0 bg-[#02040b]" style={{ opacity: cut }} />
           <motion.div className="absolute inset-0 bg-[#02040b]" style={{ opacity: dusk }} />
         </motion.div>
 
@@ -224,7 +226,7 @@ export function ImmersiveHome() {
             <Label>{t("c1.label")}</Label>
             <Title>{t("c1.title")}</Title>
             <p className="mt-4 leading-relaxed text-white/80">{t("c1.text")}</p>
-            <NightHud readouts={readouts} />
+            <LogHud readouts={readouts} />
           </Panel>
         </Chapter>
 
@@ -263,7 +265,7 @@ export function ImmersiveHome() {
 
 type ShotId = keyof typeof SHOTS;
 const SHOT_IDS = Object.keys(SHOTS) as ShotId[];
-const FRAME_COUNT: Record<ShotId, number> = { descent: 193, final: 193 };
+const FRAME_COUNT: Record<ShotId, number> = { approach: 192, touchdown: 135, taxi: 192 };
 const FILM = { base: "/immersive/film/landing", poster: "/immersive/film/landing/poster" };
 
 
@@ -312,7 +314,7 @@ function afterFirstPaint(cb: () => void, onInteractionOnly = false): () => void 
  * so the whole sequence is scrubbable within a second and sharpens as the rest arrives.
  */
 function Film({ base, poster, p, reduce }: { base: string; poster: string; p: MotionValue<number>; reduce: boolean }) {
-  const frames = useRef<Record<ShotId, (HTMLImageElement | null)[]>>({ descent: [], final: [] });
+  const frames = useRef<Record<ShotId, (HTMLImageElement | null)[]>>({ approach: [], touchdown: [], taxi: [] });
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -320,7 +322,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
     // frame size from the pixels actually drawn (CSS width × device pixel ratio, capped as in the draw loop)
     const small = window.innerWidth < 900 || (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
     const drawn = window.innerWidth * Math.min(window.devicePixelRatio || 1, 1.5);
-    const q = small ? "720" : drawn >= 1700 ? "1920" : "1280";
+    const q = small ? "720" : drawn >= 1500 ? "1920" : "1280";
     let alive = true;
     const queue: [ShotId, number][] = [];
     const seen = new Set<string>();
@@ -347,7 +349,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
         }
         if (!alive) return;
         frames.current[id][i] = img;
-        if (id === "descent" && i === 0) setReady(true);
+        if (id === SHOT_IDS[0] && i === 0) setReady(true);
       }
     };
     // fewer parallel downloads on phones and slow links, so the page stays responsive
@@ -360,7 +362,7 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
     };
   }, [base, reduce]);
 
-  // Draw loop: a slow dolly-in on the descent; no shake or zoom blur, so the frame stays sharp.
+  // Draw loop: a slow dolly-in on the approach; no shake or zoom blur, so the frame stays sharp.
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (reduce) return;
@@ -454,18 +456,20 @@ function Film({ base, poster, p, reduce }: { base: string; poster: string; p: Mo
 function speedFx(id: ShotId, v: number): { push: number; cy: number } {
   const s = SHOTS[id];
   const k = Math.min(1, Math.max(0, (v - s.from) / (s.to - s.from)));
-  if (id === "descent") return { push: 1 + 0.05 * k, cy: 0.45 };
+  if (id === "approach") return { push: 1 + 0.04 * k, cy: 0.5 };
   return { push: 1, cy: 0.5 };
 }
 
 /** Reduced motion: a few still frames that cross-fade instead of a moving film. */
 function StillFrames({ base, p }: { base: string; p: MotionValue<number> }) {
-  const b = useTransform(p, [SHOTS.descent.to - 0.04, SHOTS.descent.to], [0, 1]);
-  const c = useTransform(p, [SHOTS.final.to - 0.12, SHOTS.final.to - 0.06], [0, 1]);
+  const a = useTransform(p, [SHOTS.approach.to * 0.3, SHOTS.approach.to * 0.5], [0, 1]);
+  const b = useTransform(p, [SHOTS.approach.to - 0.02, SHOTS.approach.to], [0, 1]);
+  const c = useTransform(p, [SHOTS.touchdown.to - 0.02, SHOTS.touchdown.to], [0, 1]);
   return (
     <>
-      <motion.img src={`${base}/still-approach-1280.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: b }} />
-      <motion.img src={`${base}/still-gear-1280.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: c }} />
+      <motion.img src={`${base}/still-approach-1280.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: a }} />
+      <motion.img src={`${base}/still-touchdown-1280.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: b }} />
+      <motion.img src={`${base}/still-gate-1280.webp`} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: c }} />
     </>
   );
 }
@@ -548,59 +552,53 @@ function useLiveText(readouts: React.RefObject<Readouts>, write: (r: Readouts) =
   }, [readouts, write]);
 }
 
-function NightHud({ readouts }: { readouts: React.RefObject<Readouts> }) {
+/** The logbook line of the flight being filmed, filled in as it happens: landing at touchdown, block time at the gate. */
+function LogHud({ readouts }: { readouts: React.RefObject<Readouts> }) {
   const t = useTranslations("immersive.hud");
-  const elev = useRef<HTMLSpanElement>(null);
-  const utc = useRef<HTMLSpanElement>(null);
-  const night = useRef<HTMLSpanElement>(null);
+  const ldg = useRef<HTMLSpanElement>(null);
+  const ldgDay = useRef<HTMLSpanElement>(null);
+  const onBlock = useRef<HTMLSpanElement>(null);
+  const block = useRef<HTMLSpanElement>(null);
   const badge = useRef<HTMLSpanElement>(null);
-  const needle = useRef<HTMLSpanElement>(null);
-  const labels = useRef({ day: t("day"), night: t("nightOn") });
+  const labels = useRef({ inFlight: t("inFlight"), logged: t("logged") });
+  // a 1 h 42 block: off block 1 h 42 before the aircraft reaches its gate
+  const BLOCK_MIN = 102;
   const write = useRef((r: Readouts) => {
-    if (elev.current) elev.current.textContent = fmtElev(r.sunElevation);
-    if (utc.current) utc.current.textContent = fmtClock(r.utcMinutes);
-    if (night.current) night.current.textContent = fmtDur(r.nightMinutes);
-    const isNight = r.sunElevation < -6;
+    const landed = r.progress >= TOUCHDOWN_AT;
+    const parked = r.progress >= ON_BLOCK_AT;
+    if (ldg.current) ldg.current.textContent = landed ? fmtClock(utcAt(TOUCHDOWN_AT)) : "—";
+    if (ldgDay.current) ldgDay.current.textContent = landed ? "1" : "0";
+    if (onBlock.current) onBlock.current.textContent = parked ? fmtClock(utcAt(ON_BLOCK_AT)) : "—";
+    if (block.current) block.current.textContent = parked ? fmtDur(BLOCK_MIN) : "—";
     if (badge.current) {
-      badge.current.textContent = isNight ? labels.current.night : labels.current.day;
-      badge.current.dataset.night = String(isNight);
+      badge.current.textContent = parked ? labels.current.logged : labels.current.inFlight;
+      badge.current.dataset.logged = String(parked);
     }
-    if (needle.current) needle.current.style.left = `${Math.min(100, Math.max(0, ((8 - r.sunElevation) / 20) * 100))}%`;
   }).current;
   useLiveText(readouts, write);
-
+  const cell = (label: string, ref: React.RefObject<HTMLSpanElement | null>, init: string, accent = false) => (
+    <div>
+      <p className="mono-label !text-[10px] !text-white/55">{label}</p>
+      <span ref={ref} className={`num mt-1 block text-2xl font-semibold ${accent ? "text-[#86efac]" : ""}`}>{init}</span>
+    </div>
+  );
   return (
     <div className="mt-6 rounded-xl border border-white/10 bg-black/30 p-4" aria-hidden>
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <p className="mono-label !text-[10px] !text-white/55">{t("sun")}</p>
-          <span ref={elev} className="num mt-1 block text-2xl font-semibold">+1.0°</span>
-        </div>
-        <div>
-          <p className="mono-label !text-[10px] !text-white/55">{t("utc")}</p>
-          <span ref={utc} className="num mt-1 block text-2xl font-semibold">17:32Z</span>
-        </div>
-        <div>
-          <p className="mono-label !text-[10px] !text-white/55">{t("night")}</p>
-          <span ref={night} className="num mt-1 block text-2xl font-semibold text-[#86efac]">0:00</span>
-        </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {cell(t("landing"), ldg, "—")}
+        {cell(t("dayLdg"), ldgDay, "0", true)}
+        {cell(t("onBlock"), onBlock, "—")}
+        {cell(t("block"), block, "—", true)}
       </div>
-      <div className="mt-4">
-        <div className="relative h-2 rounded-full bg-gradient-to-r from-[#f2c08a] via-[#7a4d78] to-[#0b1533]">
-          <span className="absolute -top-1 bottom-[-4px] w-px bg-white/70" style={{ left: "70%" }} />
-          <span ref={needle} className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#22c55e] shadow-[0_0_14px_#22c55e]" style={{ left: "75%" }} />
-        </div>
-        <div className="mt-2 flex items-center justify-between text-[11px] text-white/55">
-          <span className="num">+8°</span>
-          <span className="num">{t("threshold")}</span>
-          <span
-            ref={badge}
-            className="num rounded px-1.5 py-0.5 font-semibold data-[night=false]:bg-[#fbbf24]/20 data-[night=false]:text-[#fbbf24] data-[night=true]:bg-[#22c55e]/20 data-[night=true]:text-[#86efac]"
-            data-night="false"
-          >
-            {t("day")}
-          </span>
-        </div>
+      <div className="mt-4 flex items-center justify-between text-[11px] text-white/55">
+        <span className="num">{t("night")} 0:00</span>
+        <span
+          ref={badge}
+          className="num rounded px-1.5 py-0.5 font-semibold data-[logged=false]:bg-[#fbbf24]/20 data-[logged=false]:text-[#fbbf24] data-[logged=true]:bg-[#22c55e]/20 data-[logged=true]:text-[#86efac]"
+          data-logged="false"
+        >
+          {t("inFlight")}
+        </span>
       </div>
     </div>
   );
@@ -611,15 +609,17 @@ function FlightStrip({ readouts }: { readouts: React.RefObject<Readouts> }) {
   const t = useTranslations("immersive.phase");
   const phase = useRef<HTMLSpanElement>(null);
   const ias = useRef<HTMLSpanElement>(null);
+  const spd = useRef<HTMLSpanElement>(null);
   const alt = useRef<HTMLSpanElement>(null);
   const labels = useRef<Record<string, string>>({});
-  for (const k of ["descent", "approach", "gearDown", "logged"]) labels.current[k] = t(k);
+  for (const k of ["approach", "gearDown", "touchdown", "taxi", "logged"]) labels.current[k] = t(k);
   const write = useRef((r: Readouts) => {
     if (phase.current) {
       phase.current.textContent = labels.current[r.phase] ?? "";
       phase.current.dataset.phase = r.phase;
     }
-    if (ias.current) ias.current.textContent = r.phase === "logged" ? "—" : `${Math.round(r.ias)} kt`;
+    if (ias.current) ias.current.textContent = r.phase === "logged" ? "—" : `${Math.round(r.speed)} kt`;
+    if (spd.current) spd.current.textContent = r.phase === "taxi" || r.phase === "logged" ? "GS" : "IAS";
     if (alt.current) alt.current.textContent = r.phase === "logged" ? "—" : r.altitudeFt >= 10000 ? `FL${Math.round(r.altitudeFt / 100)}` : `${Math.round(r.altitudeFt / 10) * 10} ft`;
   }).current;
   useLiveText(readouts, write);
@@ -627,7 +627,7 @@ function FlightStrip({ readouts }: { readouts: React.RefObject<Readouts> }) {
   return (
     <div className="num pointer-events-none absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-4 whitespace-nowrap rounded-full border border-white/10 bg-[#02040b]/55 px-4 py-2 text-[11px] text-white/85 backdrop-blur-md sm:gap-6 sm:px-5 sm:text-xs" aria-hidden>
       <span ref={phase} className="font-semibold text-[#86efac] data-[phase=gearDown]:text-[#4ade80]" />
-      <span className={item}><span className="text-white/45">IAS</span>{/* before the film starts (or without WebGL): no figure rather than a meaningless 0 */}<span ref={ias}>—</span></span>
+      <span className={item}><span ref={spd} className="text-white/45">IAS</span>{/* before the film starts (or without WebGL): no figure rather than a meaningless 0 */}<span ref={ias}>—</span></span>
       <span className={item}><span className="text-white/45">ALT</span><span ref={alt}>—</span></span>
     </div>
   );

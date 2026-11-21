@@ -114,11 +114,11 @@ export const DEFAULT_VISUAL = AIRCRAFT_VISUALS.find((v) => v.id === "c68a")!;
 
 export const FILM_CREDITS: Credit[] = [
   {
-    subject: "Descent and approach film (AI-generated, not a real aircraft or airport)",
+    subject: "Approach, landing and taxi film (AI-generated, not a real aircraft or airport)",
     author: "Geardown",
-    license: "Generated with Seedance via SYZEL",
-    licenseUrl: "https://seed.bytedance.com/",
-    sourceUrl: "https://seed.bytedance.com/",
+    license: "Generated with Veo 3.1 via OpenArt",
+    licenseUrl: "https://openart.ai/",
+    sourceUrl: "https://openart.ai/",
   },
 ];
 
