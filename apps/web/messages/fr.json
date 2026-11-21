@@ -1477,7 +1477,18 @@
       "title": "Carte des vols",
       "routes": "{count, plural, one {# route} other {# routes}}",
       "airports": "{count, plural, one {# aéroport} other {# aéroports}}",
-      "filterYear": "Année"
+      "filterYear": "Année",
+      "filterType": "Type d'avion",
+      "allTypes": "Tous les types",
+      "last12": "12 derniers mois",
+      "olderYears": "Plus ancien…",
+      "flights": "{count, plural, one {vol} other {vols}}",
+      "airportsLabel": "{count, plural, one {aéroport} other {aéroports}}",
+      "nmFlown": "NM parcourus",
+      "countries": "{count, plural, one {pays visité} other {pays visités}}",
+      "share": "Partager",
+      "shareTitle": "Partager ma carte",
+      "shareText": "{fl} vols, {ap} aéroports, {nm} NM et {ct} pays dans mon carnet Geardown"
     },
     "settings": {
       "title": "Paramètres",

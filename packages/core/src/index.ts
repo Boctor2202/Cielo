@@ -30,6 +30,7 @@ export * from "./rosterLayovers";
 export * from "./rosterMerge";
 export * from "./profile";
 export * from "./achievements";
+export * from "./routeMap";
 export * from "./art";
 export * from "./flightReport";
 export * from "./airFranceEp5";
