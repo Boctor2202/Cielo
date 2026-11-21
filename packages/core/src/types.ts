@@ -72,6 +72,8 @@ export interface Pilot extends SyncedRecord {
   subscriptionTier: SubscriptionTier;
   subscriptionSource: SubscriptionSource;
   subscriptionExpiresAt?: ISODateTime | null;
+  /** Start of the free trial (server-owned): an address's first account, so a re-created account gets no new one */
+  trialStartedAt?: ISODateTime | null;
 }
 
 export type AircraftCategory = "airplane" | "helicopter" | "glider" | "tmg" | "balloon" | "airship" | "ulm";

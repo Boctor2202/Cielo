@@ -14,8 +14,8 @@ import { setWriteAllowed } from "./write-guard";
 export function useAccess(): Access {
   const pilot = usePilot();
   const cloud = useCloud();
-  // the trial runs from the account's creation, not from the day this browser first opened the app
-  const a = accessFor(pilot, { signedIn: !!cloud.session, accountCreatedAt: cloud.session?.user.created_at, noCardTrialDays: noCardTrialDays(process.env.NEXT_PUBLIC_NO_CARD_TRIAL_DAYS) });
+  // the trial runs from the account's trial start (server), else its creation, never from this browser's first visit
+  const a = accessFor(pilot, { signedIn: !!cloud.session, accountCreatedAt: pilot?.trialStartedAt ?? cloud.session?.user.created_at, noCardTrialDays: noCardTrialDays(process.env.NEXT_PUBLIC_NO_CARD_TRIAL_DAYS) });
   setWriteAllowed(a.canWrite);
   return a;
 }
