@@ -1460,7 +1460,7 @@
       "byYear": "Hours by year",
       "conditions": "Conditions",
       "airports": "Most visited airports",
-      "registrations": "Registrations",
+      "registrations": "My aircraft",
       "day": "Day",
       "night": "Night",
       "vfr": "VFR",
@@ -1471,7 +1471,11 @@
       "countries": "Countries",
       "longest": "Longest flight",
       "earthLaps": "≈ {n} times around the Earth",
-      "movements": "{n, plural, one {# movement} other {# movements}}"
+      "movements": "{n, plural, one {# movement} other {# movements}}",
+      "movementsShort": "movements",
+      "hoursShort": "hours",
+      "flightsShort": "{count, plural, one {flight} other {flights}}",
+      "mostFlown": "Most flown"
     },
     "map": {
       "title": "Flight map",

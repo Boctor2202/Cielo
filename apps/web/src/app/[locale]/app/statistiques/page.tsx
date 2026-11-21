@@ -3,7 +3,8 @@
 import { Roll } from "@/components/ui/Roll";
 import { useCallback, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { countryName, distanceNm, groupTotals, sumFlights } from "@cielo/core";
+import { countryName, distanceNm, groupTotals, normalizeRegistration, sumFlights } from "@cielo/core";
+import { Fleet, TopAirports, type FleetItem } from "@/components/app/StatsLists";
 import { Card, Modal, PageTitle, Readout } from "@/components/app/ui";
 import { HoursBars, SplitBar } from "@/components/app/Charts";
 import { useAirports } from "@/lib/airports";
@@ -73,7 +74,20 @@ export default function StatsPage() {
       byYear: groupTotals(list, "year").sort((a, b) => a.key.localeCompare(b.key)),
       byFunction: (["PIC", "PICUS", "SIC", "DUAL", "FI", "FE"] as const).map((k) => ({ key: k, minutes: list.filter((f) => f.function === k && !f.isFstd).reduce((x, f) => x + f.totalMin, 0) })).filter((x) => x.minutes > 0),
       topAirports: groupTotals(real, "airport").sort((a, b) => b.flights - a.flights).slice(0, 10),
-      regs: groupTotals(real, "registration").slice(0, 8),
+      regs: (() => {
+        // one tile per airframe: "FHOLK" and "F-HOLK" are the same aircraft; its latest type and model
+        const m = new Map<string, FleetItem & { last: string }>();
+        for (const f of real) {
+          const reg = normalizeRegistration(f.registration);
+          if (!reg) continue;
+          const e = m.get(reg) ?? { reg, minutes: 0, flights: 0, last: "" };
+          e.minutes += f.totalMin;
+          e.flights++;
+          if (f.date >= e.last) Object.assign(e, { last: f.date, type: f.aircraftTypeIcao || e.type, model: f.aircraftModel || e.model });
+          m.set(reg, e);
+        }
+        return [...m.values()].sort((a, b) => b.minutes - a.minutes).slice(0, 8);
+      })(),
     };
   }, [list, airports]);
   const nf = new Intl.NumberFormat(locale === "fr" ? "fr-FR" : "en-GB");
@@ -156,29 +170,11 @@ export default function StatsPage() {
         <Card title={t("byFunction")}>
           <HoursBars horizontal data={s.byFunction.map((x) => ({ label: tfn(x.key).match(/\(([^)]+)\)/)?.[1] ?? x.key, minutes: x.minutes }))} format={(m) => d(m)} height={160} />
         </Card>
-        <Card title={t("airports")} pad={false}>
-          <ul className="divide-y divide-border text-sm">
-            {s.topAirports.map((a, i) => (
-              <li key={a.key} className="flex items-center justify-between gap-3 px-5 py-2.5">
-                <span className="flex min-w-0 items-center gap-3">
-                  <span className="num w-5 text-xs text-muted">{i + 1}</span>
-                  <span className="num font-semibold">{a.key}</span>
-                  <span className="min-w-0 truncate text-muted">{airports?.get(a.key)?.name}</span>
-                </span>
-                <span className="shrink-0 whitespace-nowrap text-muted">{t("visits", { count: a.flights })}</span>
-              </li>
-            ))}
-          </ul>
+        <Card title={t("airports")} pad={false} className="lg:col-span-2">
+          <TopAirports items={s.topAirports} airport={airportOf} locale={locale} />
         </Card>
-        <Card title={t("registrations")} pad={false}>
-          <ul className="divide-y divide-border text-sm">
-            {s.regs.map((r) => (
-              <li key={r.key} className="flex items-center justify-between px-5 py-2.5">
-                <span className="num font-semibold">{r.key}</span>
-                <span className="num"><Roll>{d(r.minutes)}</Roll> <span className="text-muted">· {r.flights}</span></span>
-              </li>
-            ))}
-          </ul>
+        <Card title={t("registrations")} pad={false} className="lg:col-span-2">
+          <Fleet items={s.regs} format={d} locale={locale} />
         </Card>
       </div>
       {flights && (
