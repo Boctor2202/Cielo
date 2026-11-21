@@ -1,5 +1,6 @@
 "use client";
 
+import { useAutoSign } from "./Signature";
 import {
   BadgeCheck, BarChart3, FileDown, ScanSearch, Upload, UserRound, Hotel, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Globe2, Wifi, WifiOff, Radar, Lock, ShieldCheck, Bug,
 } from "lucide-react";
@@ -91,6 +92,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 function Shell({ children }: { children: ReactNode }) {
   const cloud = useCloud();
+  // the pilot's own flights, signed the day after when automatic signature is on
+  useAutoSign();
   const t = useTranslations("app.nav");
   const pathname = usePathname();
   const access = useAccess();

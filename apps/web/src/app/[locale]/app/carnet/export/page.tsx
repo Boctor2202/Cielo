@@ -1,6 +1,6 @@
 "use client";
 
-import { FileDown } from "lucide-react";
+import { FileDown, PenLine } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { openingTotals } from "@cielo/core";
@@ -10,6 +10,9 @@ import { Card, Field, PageTitle, Toggle } from "@/components/app/ui";
 import { useFlights, usePilot, useTable } from "@/lib/hooks";
 import { downloadBlob } from "@/lib/download";
 import { track } from "@/lib/metrics";
+import { signaturesFor } from "@/lib/repo";
+import { useAccess } from "@/lib/access";
+import { Link } from "@/i18n/navigation";
 
 type Format = LayoutId | "csv" | "xlsx";
 
@@ -27,6 +30,10 @@ export default function ExportPage() {
   const [opening, setOpening] = useState(true);
   const [decimal, setDecimal] = useState(false);
   const [busy, setBusy] = useState(false);
+  const access = useAccess();
+  // the logbook signed by the holder with their saved signature (offered whenever they have one)
+  const [holderSigns, setHolderSigns] = useState(true);
+  const canSign = access.has("signature") && !!pilot?.signatureDataUrl;
 
   const selected = useMemo(() => (flights ?? []).filter((f) => (!from || f.date >= from) && (!to || f.date <= to)), [flights, from, to]);
 
@@ -35,12 +42,14 @@ export default function ExportPage() {
     const stamp = new Date().toISOString().slice(0, 10);
     const name = `geardown-logbook-${stamp}`;
     try {
+      // the flights' signatures always go with the logbook
+      const signatures = await signaturesFor(selected);
       if (format === "csv") {
-        downloadBlob(flightsToCsv(selected, { decimal }), `${name}.csv`, "text/csv;charset=utf-8");
+        downloadBlob(flightsToCsv(selected, { decimal, signatures }), `${name}.csv`, "text/csv;charset=utf-8");
         track("export");
       } else if (format === "xlsx") {
         const { default: writeXlsxFile } = await import("write-excel-file/browser");
-        const data = [[...TABULAR_HEADERS].map((h) => ({ value: h, fontWeight: "bold" as const })), ...flightsToRows(selected, { decimal }).map((r) => r.map((v) => ({ value: v === "" ? null : v })))];
+        const data = [[...TABULAR_HEADERS].map((h) => ({ value: h, fontWeight: "bold" as const })), ...flightsToRows(selected, { decimal, signatures }).map((r) => r.map((v) => ({ value: v === "" ? null : v })))];
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const blob = (await writeXlsxFile(data as any, { sheet: "Logbook" }).toBlob?.()) as Blob | undefined;
         if (blob) downloadBlob(blob, `${name}.xlsx`, blob.type);
@@ -59,6 +68,8 @@ export default function ExportPage() {
           opening: sumFlights(before, base),
           locale: pilot?.locale ?? "fr",
           holderDetails: format === "HKCAD" && pilot?.employer ? [["Employer", pilot.employer]] : undefined,
+          signatures,
+          holderSignature: canSign && holderSigns ? { image: pilot!.signatureDataUrl!, date: new Date().toLocaleDateString("en-GB") } : undefined,
         });
         downloadBlob(bytes as BlobPart, `${name}-${format}.pdf`, "application/pdf");
         track("export");
@@ -96,6 +107,27 @@ export default function ExportPage() {
             {["EASA", "FAA", "CASA"].includes(format) && <Toggle checked={opening} onChange={setOpening} label={t("includeOpening")} />}
             {["csv", "xlsx"].includes(format) && <Toggle checked={decimal} onChange={setDecimal} label={t("decimal")} />}
           </div>
+          {/* the holder signs the logbook they export */}
+          {!["csv", "xlsx"].includes(format) && access.has("signature") ? (
+            <div className="mt-5 rounded-xl border border-accent/40 bg-accent/5 p-4">
+              <p className="flex items-center gap-2 text-sm font-semibold"><PenLine size={16} className="text-accent" /> {t("signTitle")}</p>
+              {canSign ? (
+                <>
+                  <p className="mt-1 text-xs text-muted">{t("signBody")}</p>
+                  <div className="mt-3 flex items-center gap-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={pilot!.signatureDataUrl!} alt="" className="h-12 rounded bg-white p-1" />
+                    <Toggle checked={holderSigns} onChange={setHolderSigns} label={t("signToggle")} />
+                  </div>
+                </>
+              ) : (
+                <p className="mt-1 text-xs text-muted">
+                  {t("signNone")}{" "}
+                  <Link href="/app/profil" className="font-semibold text-accent underline">{t("signCreate")}</Link>
+                </p>
+              )}
+            </div>
+          ) : null}
         </Card>
         <div className="card self-start p-5">
           <p className="label-caps">{t("period")}</p>

@@ -121,7 +121,7 @@ async function matchedFlights(db: Db, requesterFlights: FlightRow[], targetId: s
  * `since` limits automatic requests to recent flights (older ones are asked for explicitly).
  */
 export async function createRequests(db: Db, requesterId: string, opts: { linkId?: string; since?: string } = {}): Promise<number> {
-  let q = db.from("crew_links").select("id, target_id, crew_name, responded_at").eq("requester_id", requesterId).eq("status", "accepted");
+  let q = db.from("crew_links").select("id, target_id, crew_name, responded_at, auto_approve").eq("requester_id", requesterId).eq("status", "accepted");
   if (opts.linkId) q = q.eq("id", opts.linkId);
   const { data: links } = await q;
   if (!links?.length) return 0;
@@ -150,11 +150,28 @@ export async function createRequests(db: Db, requesterId: string, opts: { linkId
           matched_flight_id: matched.get(f.id) ?? null,
         };
       });
-      const { error } = await db.from("signature_requests").insert(rows);
-      if (!error) n += rows.length;
+      const { data: made, error } = await db.from("signature_requests").insert(rows).select("*");
+      if (error) continue;
+      n += rows.length;
+      // the signer chose to approve this colleague's requests: signed at once with their saved signature
+      if (l.auto_approve && made?.length) await autoSign(db, l.target_id, requesterId, made);
     }
   }
   return n;
+}
+
+/** Signs a colleague's new requests with the signer's saved signature, and tells the signer. */
+export async function autoSign(db: Db, targetId: string, requesterId: string, reqs: Record<string, unknown>[]): Promise<number> {
+  const signer = await savedSigner(db, targetId);
+  if (!signer) return 0;
+  const { signed } = await signRequests(db, reqs, signer, { auto: true });
+  if (signed) {
+    const who = (await namesOf(db, [requesterId])).get(requesterId)?.name ?? "—";
+    const { data: me } = await db.from("pilots").select("locale").eq("id", targetId).maybeSingle();
+    const fr = me?.locale === "fr";
+    await notify(db, targetId, fr ? "Signature automatique" : "Signed automatically", fr ? `${signed} vol${signed > 1 ? "s" : ""} de ${who} signé${signed > 1 ? "s" : ""} avec votre signature.` : `${signed} flight${signed > 1 ? "s" : ""} of ${who} signed with your signature.`);
+  }
+  return signed;
 }
 
 /** Names of pilots by id (only for pilots linked or asking to be linked). */
@@ -164,6 +181,78 @@ export async function namesOf(db: Db, ids: string[]): Promise<Map<string, { name
   const { data } = await db.from("pilots").select("id, full_name, display_name, licence_number").in("id", [...new Set(ids)]);
   for (const p of data ?? []) m.set(p.id, { name: p.display_name || p.full_name || "—", licence: p.licence_number ?? undefined });
   return m;
+}
+
+/** What the signer signs with: the signature drawn now, or the one they saved. */
+export interface SignerInput {
+  image: string;
+  name: string;
+  licence: string | null;
+  /** the role saved with the signature; unset: instructor for dual flights, captain otherwise */
+  role?: "instructor" | "captain" | "examiner" | "other" | null;
+}
+
+/** The signer's saved signature, if they drew one. */
+export async function savedSigner(db: Db, pilotId: string): Promise<SignerInput | null> {
+  const { data: p } = await db.from("pilots").select("full_name, display_name, licence_number, signature_data_url, signature_role").eq("id", pilotId).maybeSingle();
+  const image = typeof p?.signature_data_url === "string" && p.signature_data_url.startsWith("data:image/") ? p.signature_data_url : "";
+  const name = (p?.full_name || p?.display_name || "").trim();
+  return image && name ? { image, name, licence: p?.licence_number || null, role: p?.signature_role ?? null } : null;
+}
+
+/**
+ * Signs requests: each flight must still be the one the signer saw (`seen` hash, or the request's when signed
+ * automatically); a changed flight goes back to the signer with its new content.
+ */
+export async function signRequests(
+  db: Db,
+  reqs: Record<string, unknown>[],
+  signer: SignerInput,
+  opts: { seen?: Map<string, string>; auto?: boolean } = {},
+): Promise<{ signed: number; changed: number; gone: number }> {
+  const now = new Date().toISOString();
+  const result = { signed: 0, changed: 0, gone: 0 };
+  for (const r of reqs as { id: string; flight_id: string; requester_id: string; content_hash: string }[]) {
+    const { data: row } = await db.from("flights").select("*").eq("id", r.flight_id).eq("pilot_id", r.requester_id).maybeSingle();
+    if (!row || row.deleted_at || row.signature_id) {
+      await db.from("signature_requests").update({ status: "cancelled", updated_at: now }).eq("id", r.id);
+      result.gone++;
+      continue;
+    }
+    const f = flightFromRow(row);
+    const h = contentHash(f);
+    const seen = opts.seen ? opts.seen.get(r.id) : r.content_hash;
+    if (h !== r.content_hash || h !== seen) {
+      // the pilot changed the flight after asking: the signer must see the new version before signing
+      await db.from("signature_requests").update({ flight: snapshot(f), content_hash: h, updated_at: now }).eq("id", r.id);
+      result.changed++;
+      continue;
+    }
+    const role = signer.role === "instructor" || signer.role === "examiner" ? signer.role : f.function === "DUAL" ? "instructor" : "captain";
+    const { data: sig, error } = await db
+      .from("signatures")
+      .insert({ pilot_id: r.requester_id, flight_id: r.flight_id, signer_name: signer.name, signer_role: role, signer_licence_number: signer.licence, signed_at: now, image_data_url: signer.image, content_hash: h, updated_at: now })
+      .select("id")
+      .single();
+    if (error || !sig) continue;
+    await db.from("flights").update({ signature_id: sig.id, locked: true, updated_at: now }).eq("id", r.flight_id);
+    // the flight's audit trail: signed on Geardown's side
+    await db.from("flight_revisions").insert({ pilot_id: r.requester_id, flight_id: r.flight_id, at: now, action: "sign", source: "server", changes: [{ field: "signatureId", from: null, to: sig.id }], updated_at: now });
+    await db.from("signature_requests").update({ status: "signed", signature_id: sig.id, auto: !!opts.auto, responded_at: now, updated_at: now }).eq("id", r.id);
+    result.signed++;
+  }
+  return result;
+}
+
+/** A notification on the pilot's phones (Expo push), best effort. */
+export async function notify(db: Db, pilotId: string, title: string, body: string): Promise<void> {
+  const { data: tokens } = await db.from("push_tokens").select("token").eq("pilot_id", pilotId);
+  if (!tokens?.length) return;
+  await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(tokens.map(({ token }) => ({ to: token, title, body, sound: "default", data: { url: "/crew" } }))),
+  }).catch(() => null);
 }
 
 export { myFlights, norm };

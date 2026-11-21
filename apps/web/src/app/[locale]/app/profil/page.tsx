@@ -1,5 +1,6 @@
 "use client";
 
+import { MySignatureCard } from "@/components/app/Signature";
 import { Roll } from "@/components/ui/Roll";
 import { Settings2, BadgeCheck, Camera, Check, Pencil, Plane, Trash2, X } from "lucide-react";
 import { CountryInput } from "@/components/app/CountryInput";
@@ -254,6 +255,8 @@ export default function ProfilePage() {
           <p className="max-w-[70ch] whitespace-pre-line leading-relaxed">{pilot.bio}</p>
         </Card>
       )}
+
+      <MySignatureCard />
 
       <Card title={t("experience")} action={hours?.asOf ? <span className="text-xs text-muted">{t("asOf", { date: hours.asOf })}</span> : null}>
         <dl className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">

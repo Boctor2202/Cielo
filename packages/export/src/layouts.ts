@@ -36,7 +36,8 @@ const remarks = (f: Flight) => {
   if (f.loggedShare && f.loggedShare < 1) parts.push(`Augmented crew ${shareLabel(f.loggedShare)}`);
   if (f.safetyPilotName) parts.push(`Safety pilot/instr. ${f.safetyPilotName}`);
   if (f.purpose) parts.push(f.purpose);
-  if (f.signatureId) parts.push("Signed");
+  // who signed, when the export knows it (see buildLogbookPdf's signatures)
+  if (f.signatureId) parts.push((f as Flight & { signedLabel?: string }).signedLabel ?? "Signed");
   if (f.remarks) parts.push(f.remarks);
   return parts.join(" / ");
 };

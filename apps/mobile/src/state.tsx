@@ -54,6 +54,8 @@ export interface AppState extends AppData {
   access: Access;
   /** Upsert (sets updatedAt via stamp) and reload. */
   put<T extends TableName>(table: T, row: Partial<TableMap[T]>): Promise<TableMap[T]>;
+  /** Several upserts in one go (one reload and one sync at the end), e.g. signing many flights. */
+  putMany<T extends TableName>(table: T, rows: Partial<TableMap[T]>[]): Promise<TableMap[T][]>;
   /** Soft delete (deletedAt) so the deletion propagates through sync. */
   remove(table: TableName, id: string): Promise<void>;
   savePilot(patch: Partial<Pilot>): Promise<void>;
@@ -186,6 +188,24 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
       void syncRef.current?.syncNow().catch(() => undefined);
       return rec;
     };
+    const putMany: AppState["putMany"] = async (table, rows) => {
+      if (!access.canWrite && table !== "pilots") throw new ReadOnlyError();
+      const recs = rows.map((row) => stamp(row as Partial<SyncedRecord>) as unknown as TableMap[typeof table]);
+      if (table === "flights") {
+        const revs = [];
+        for (const rec of recs) {
+          const prev = await store.get("flights", (rec as { id: string }).id);
+          const r = flightRevision(prev, rec as unknown as Flight, Platform.OS === "android" ? "android" : "ios");
+          if (r) revs.push(stamp(r as Partial<SyncedRecord>) as unknown as FlightRevision);
+        }
+        await store.bulkPut(table, recs);
+        if (revs.length) await store.bulkPut("flight_revisions", revs);
+      } else await store.bulkPut(table, recs);
+      setData(await loadAll(store));
+      void syncRef.current?.refresh().catch(() => undefined);
+      void syncRef.current?.syncNow().catch(() => undefined);
+      return recs;
+    };
     return {
       ...data,
       store,
@@ -194,6 +214,7 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
       session,
       access,
       put,
+      putMany,
       async remove(table, id) {
         const row = await store.get(table, id);
         if (!row) return;

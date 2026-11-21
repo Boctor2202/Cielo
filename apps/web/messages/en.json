@@ -1122,7 +1122,12 @@
         "SACAA": "SACAA logbook PDF (SA-CATS 61)",
         "HKCAD": "Hong Kong CAD logbook PDF (CAD 54)"
       },
-      "pdfMine": "your authority"
+      "pdfMine": "your authority",
+      "signTitle": "Sign the logbook",
+      "signBody": "Your saved signature and today's date go in the certification at the foot of every page and on the cover. The flights' signatures are always included.",
+      "signToggle": "Sign the exported logbook",
+      "signNone": "The flights' signatures are included. To sign the logbook too, save your signature:",
+      "signCreate": "create my signature"
     },
     "carry": {
       "title": "Carry forward totals",
@@ -2524,6 +2529,31 @@
       "airports": "Your airports",
       "base": "Home base",
       "legendZoom": "Zoom and pan like any map. Colours: standard UTC offset. Shaded: night right now. Click anywhere for its local time."
+    },
+    "mysig": {
+      "title": "My signature",
+      "hint": "Draw it once: it signs your flights, the flights colleagues ask you to sign, and your logbook when you export it. Kept on your account, shared with the app.",
+      "save": "Save my signature",
+      "cancel": "Cancel",
+      "needName": "Add your full name in your profile first: it goes with the signature.",
+      "role": "I sign as",
+      "auto": "Sign my flights automatically",
+      "autoHint": "Each flight from today is signed the day after (time to correct it). A flight changed after signing shows as invalid.",
+      "redraw": "Draw again",
+      "remove": "Delete",
+      "removeBody": "Delete your saved signature? Flights already signed keep their signature.",
+      "signThis": "Sign with my signature",
+      "confirmOne": "This flight will be signed by {name} and locked. Changing it later makes the signature invalid.",
+      "signMine": "Sign my flights",
+      "none": "You have no saved signature yet.",
+      "create": "Create my signature",
+      "unsigned": "{n, plural, one {# unsigned flight} other {# unsigned flights}}",
+      "all": "Check all",
+      "none_": "Uncheck all",
+      "hashNote": "Each flight keeps the hash of its content (SHA-256): a flight changed later shows as invalid.",
+      "signN": "Sign {n, plural, one {# flight} other {# flights}} · {total}",
+      "done": "{n, plural, one {# flight signed} other {# flights signed}}.",
+      "signing": "Signing…"
     }
   },
   "why": {

@@ -1,6 +1,6 @@
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import { SYNC_TABLES, frameworkOf, isoDate, openingTotals, type LocalStore, type OpeningBalance, type Flight, type Pilot } from "@cielo/core";
+import { SYNC_TABLES, frameworkOf, isoDate, openingTotals, type LocalStore, type OpeningBalance, type Flight, type Pilot, type SignedInfo } from "@cielo/core";
 import { TABULAR_HEADERS, buildLogbookPdf, layoutForAuthority, buildXlsx, flightsToCsv, flightsToRows, type LayoutId } from "@cielo/export";
 
 export async function shareFile(name: string, content: string | Uint8Array, mimeType: string, UTI: string): Promise<void> {
@@ -18,7 +18,19 @@ export async function shareFile(name: string, content: string | Uint8Array, mime
 const slug = (s: string) => s.normalize("NFD").replace(/[^\w-]+/g, "_").replace(/_+/g, "_").slice(0, 40) || "pilot";
 
 /** Paper-logbook layout PDF (EASA / FAA / CASA) produced by @cielo/export. */
-export async function exportLogbookPdf(flights: Flight[], balances: OpeningBalance[], pilot: Pilot): Promise<void> {
+/** What an export carries of the signatures: the flights' ones, and the holder's certification of the logbook. */
+export interface ExportSigning {
+  signatures?: Record<string, SignedInfo>;
+  /** sign the logbook with the saved signature (each page's certification) */
+  holderSigns?: boolean;
+}
+
+const today = () => {
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+};
+
+export async function exportLogbookPdf(flights: Flight[], balances: OpeningBalance[], pilot: Pilot, signing: ExportSigning = {}): Promise<void> {
   // the layout of the pilot's authority (UK CAA, Transport Canada, SACAA, Hong Kong CAD have their own)
   const layout: LayoutId = layoutForAuthority(pilot.authority, frameworkOf(pilot));
   const bytes = await buildLogbookPdf(flights, {
@@ -30,19 +42,21 @@ export async function exportLogbookPdf(flights: Flight[], balances: OpeningBalan
     appName: "Geardown",
     generatedAt: new Date(),
     holderDetails: layout === "HKCAD" && pilot.employer ? [["Employer", pilot.employer]] : undefined,
+    signatures: signing.signatures,
+    holderSignature: signing.holderSigns && pilot.signatureDataUrl ? { image: pilot.signatureDataUrl, date: today() } : undefined,
   });
   await shareFile(`geardown-logbook-${layout}-${slug(pilot.fullName)}-${isoDate(Date.now())}.pdf`, bytes, "application/pdf", "com.adobe.pdf");
 }
 
 /** The whole logbook as an Excel workbook (same columns as the CSV and the website export). */
-export async function exportLogbookXlsx(flights: Flight[], pilot: Pilot): Promise<void> {
-  const rows = flightsToRows(flights, { decimal: pilot.timeDisplay === "decimal" });
+export async function exportLogbookXlsx(flights: Flight[], pilot: Pilot, signing: ExportSigning = {}): Promise<void> {
+  const rows = flightsToRows(flights, { decimal: pilot.timeDisplay === "decimal", signatures: signing.signatures });
   const bytes = buildXlsx([{ name: "Logbook", header: true, rows: [[...TABULAR_HEADERS], ...rows] }]);
   await shareFile(`geardown-logbook-${isoDate(Date.now())}.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "org.openxmlformats.spreadsheetml.sheet");
 }
 
-export async function exportLogbookCsv(flights: Flight[], pilot: Pilot): Promise<void> {
-  const csv = flightsToCsv(flights, { decimal: pilot.timeDisplay === "decimal" });
+export async function exportLogbookCsv(flights: Flight[], pilot: Pilot, signing: ExportSigning = {}): Promise<void> {
+  const csv = flightsToCsv(flights, { decimal: pilot.timeDisplay === "decimal", signatures: signing.signatures });
   await shareFile(`geardown-logbook-${isoDate(Date.now())}.csv`, "﻿" + csv, "text/csv", "public.comma-separated-values-text");
 }
 

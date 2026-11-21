@@ -8,6 +8,7 @@ import { LogbookCalendar } from "../../src/components/LogbookCalendar";
 import Storage from "expo-sqlite/kv-store";
 import { formatDate, formatMonth } from "../../src/i18n";
 import { useApp } from "../../src/state";
+import { signWithSaved } from "../../src/signing";
 import { airports } from "../../src/airports";
 import { airlines } from "../../src/airlines";
 import { OperatorField } from "../../src/components/OperatorField";
@@ -25,7 +26,8 @@ interface Section {
 }
 
 export default function Logbook() {
-  const { access, t, locale, flights, pilot, remove, session, aircraft, put } = useApp();
+  const app = useApp();
+  const { access, t, locale, flights, pilot, remove, session, aircraft, put } = app;
   const wide = useWide();
   const sync = useSyncStatus();
   // flights changed on this phone and not yet on the server (none to show when not signed in)
@@ -114,6 +116,31 @@ export default function Logbook() {
     for (const f of flights) if (picked.has(f.id) && (f.operator ?? undefined) !== op) await put("flights", { ...f, operator: op });
     Alert.alert(t("log.assign.title"), op ? t("log.assign.done", { n, op: opLabel(op)! }) : t("log.assign.cleared", { n }));
     stopSelecting();
+  };
+  // signing the selection with the pilot's saved signature
+  const [signing, setSigning] = useState(false);
+  const pickedUnsigned = flights.filter((f) => picked.has(f.id) && !f.signatureId && !f.deletedAt);
+  const pickUnsigned = () => setPicked(new Set(shown.filter((f) => !f.signatureId).map((f) => f.id)));
+  const signPicked = () => {
+    if (!pilot.signatureDataUrl)
+      return Alert.alert(t("mysig.title"), t("mysig.none"), [
+        { text: t("common.cancel"), style: "cancel" },
+        { text: t("mysig.create"), onPress: () => router.push("/profile") },
+      ]);
+    const n = pickedUnsigned.length;
+    Alert.alert(t("mysig.signN", { n }), t("mysig.confirmMany", { n, total: formatDuration(sumFlights(pickedUnsigned).totalMin, pilot.timeDisplay), name: pilot.fullName }), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("mysig.sign"),
+        onPress: () => {
+          setSigning(true);
+          void signWithSaved(app, pickedUnsigned)
+            .then((done) => (tap("success"), Alert.alert(t("mysig.title"), t("mysig.done", { n: done })), stopSelecting()))
+            .catch((e) => Alert.alert(t("common.error"), e instanceof Error ? e.message : String(e)))
+            .finally(() => setSigning(false));
+        },
+      },
+    ]);
   };
   const sum = useMemo(() => sumFlights(shown), [shown]);
   /** flights the CV cannot place: no operator typed or recognised */
@@ -461,6 +488,17 @@ export default function Logbook() {
               </Pressable>
             ))}
           </Row>
+          {access.has("signature") ? (
+            <Row gap={8}>
+              <Pressable onPress={pickUnsigned} style={{ paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.25)" }}>
+                <Txt color="#fff">{t("mysig.unsigned", { n: shown.filter((f) => !f.signatureId).length })}</Txt>
+              </Pressable>
+              <Pressable disabled={!pickedUnsigned.length || signing} onPress={signPicked} style={{ flex: 1, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center", paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: c.accent, opacity: pickedUnsigned.length ? 1 : 0.5 }}>
+                <Ionicons name="create-outline" size={16} color={c.accent} />
+                <Txt color={c.accent} style={{ fontWeight: "700" }}>{t("mysig.signN", { n: pickedUnsigned.length })}</Txt>
+              </Pressable>
+            </Row>
+          ) : null}
           <Row gap={8}>
             <Pressable disabled={!picked.size} onPress={() => void assign()} style={{ flex: 1, alignItems: "center", paddingVertical: 11, borderRadius: 12, backgroundColor: picked.size ? c.accent : c.accent + "55" }}>
               <Txt color="#fff" style={{ fontWeight: "700" }}>{assignTo.trim() ? t("log.assign.go") : t("log.assign.clear")}</Txt>

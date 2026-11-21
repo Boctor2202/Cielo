@@ -52,7 +52,12 @@ export interface Pilot extends SyncedRecord {
   defaultIfr: IfrDefault;
   defaultPilotFlying: PilotFlyingRule;
   timeDisplay: TimeDisplay;
+  /** the pilot's saved signature (SVG or PNG data URL), drawn once and used to sign flights */
   signatureDataUrl?: string;
+  /** the role the pilot signs in with the saved signature */
+  signatureRole?: "instructor" | "captain" | "examiner" | "other";
+  /** own flights dated from this day are signed automatically with the saved signature (null: off) */
+  autoSignFrom?: ISODate | null;
   /** Profile photo: small square JPEG data URL, resized on the device */
   photoDataUrl?: string;
   /** Position, e.g. "Captain", "First Officer", "Flight Instructor" */

@@ -5,6 +5,7 @@ import { formatPhoneIntl, AUTHORITIES, RANKS, ageOn, countryName, flagEmoji, lic
 import { DateField, isValidDate } from "../../src/components/DateField";
 import { CountryField } from "../../src/components/CountryField";
 import { Badge, Button, Card, Chip, Field, Row, Screen, Txt } from "../../src/components/ui";
+import { MySignature } from "../../src/components/MySignature";
 import { SuggestField } from "../../src/components/SuggestField";
 import { AirportField } from "../../src/components/AirportField";
 import { useApp } from "../../src/state";
@@ -137,6 +138,7 @@ export default function Profile() {
           {!pilot.currentTypes?.length && suggested.length ? <Txt variant="small">{t("profile.typesAuto")}</Txt> : null}
         </View>
       </Card>
+      <MySignature />
       <Card>
         <Field label={t("more.fullName")} value={d.fullName} onChangeText={(v) => set("fullName", v)} autoCapitalize="words" />
         <SuggestField label={t("profile.rank")} value={d.rank ?? ""} onChange={(v) => set("rank", v)} options={RANKS} placeholder={t("profile.rankPh")} />

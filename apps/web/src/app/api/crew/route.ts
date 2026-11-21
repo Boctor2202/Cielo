@@ -1,6 +1,6 @@
 import { adminDb, userFrom } from "@/lib/server/admin";
 import { rateLimited } from "@/lib/places";
-import { canSign, contentHash, createRequests, flightFromRow, flightMatches, myFlights, namesOf, norm, normLicence, snapshot } from "@/lib/server/crew";
+import { autoSign, canSign, createRequests, flightMatches, myFlights, namesOf, norm, normLicence, savedSigner, signRequests } from "@/lib/server/crew";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -9,7 +9,7 @@ export const maxDuration = 60;
  * Signatures between Geardown pilots.
  * GET  /api/crew → the pilot's captains (names in the PIC column) and their link, flight matches with other
  *                  logbooks, link requests received, flights to sign.
- * POST /api/crew { action, … } → link | respondLink | unlink | requestOlder | sign | refuse
+ * POST /api/crew { action, … } → link | respondLink | unlink | requestOlder | sign | refuse | autoApprove
  */
 
 const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
@@ -25,11 +25,11 @@ export async function GET(req: Request) {
   await createRequests(db, me).catch(() => 0);
 
   const [{ data: self }, flights, { data: links }, { data: reqs }, { data: incoming }, { data: toSign }] = await Promise.all([
-    db.from("pilots").select("full_name, display_name, licence_number").eq("id", me).maybeSingle(),
+    db.from("pilots").select("full_name, display_name, licence_number, signature_data_url").eq("id", me).maybeSingle(),
     myFlights(db, me),
     db.from("crew_links").select("id, target_id, crew_name, via, status, created_at").eq("requester_id", me).order("created_at", { ascending: false }),
     db.from("signature_requests").select("flight_id, status, link_id").eq("requester_id", me),
-    db.from("crew_links").select("id, requester_id, crew_name, via, status, created_at").eq("target_id", me).in("status", ["pending", "accepted"]),
+    db.from("crew_links").select("id, requester_id, crew_name, via, status, created_at, auto_approve").eq("target_id", me).in("status", ["pending", "accepted"]),
     db.from("signature_requests").select("id, requester_id, flight, content_hash, matched_flight_id, created_at").eq("target_id", me).eq("status", "pending").order("created_at"),
   ]);
   const selfNames = new Set([norm(self?.full_name), norm(self?.display_name)].filter(Boolean));
@@ -90,13 +90,16 @@ export async function GET(req: Request) {
       from: names.get(l.requester_id)?.name ?? "—",
       crewName: l.crew_name,
       via: l.via,
+      autoApprove: !!l.auto_approve,
       createdAt: l.created_at,
       ...(l.status === "pending" ? await shared(l.requester_id, l.crew_name) : { flights: 0, shared: 0 }),
     })),
   );
 
   return Response.json({
-    me: { name: self?.display_name || self?.full_name || "", licence: self?.licence_number ?? "" },
+    me: { name: self?.display_name || self?.full_name || "", licence: self?.licence_number ?? "", savedSignature: typeof self?.signature_data_url === "string" && self.signature_data_url.startsWith("data:image/") },
+    // what was signed automatically for colleagues these last 30 days
+    autoSigned: await autoSignedRecently(db, me),
     captains,
     linkRequests,
     toSign: (toSign ?? []).map((r) => ({ id: r.id, from: names.get(r.requester_id)?.name ?? "—", flight: r.flight, hash: r.content_hash, inMyLogbook: !!r.matched_flight_id })),
@@ -173,51 +176,29 @@ export async function POST(req: Request) {
 
     case "sign": {
       const items = (Array.isArray(body.items) ? body.items : []).slice(0, 500) as { id?: string; hash?: string }[];
-      const image = typeof body.image === "string" && body.image.startsWith("data:image/") && body.image.length < 400_000 ? body.image : "";
-      const signerName = clip(body.signerName, 120);
-      const licence = clip(body.licence, 60) || null;
-      if (!items.length || !image || !signerName) return Response.json({ error: "input" }, { status: 400 });
+      // the signature drawn now, or the one the pilot saved
+      const drawn = typeof body.image === "string" && body.image.startsWith("data:image/") && body.image.length < 400_000 ? body.image : "";
+      const signer = body.useSaved ? await savedSigner(db, me) : drawn && clip(body.signerName, 120) ? { image: drawn, name: clip(body.signerName, 120), licence: clip(body.licence, 60) || null } : null;
+      if (!items.length || !signer) return Response.json({ error: body.useSaved ? "no_saved_signature" : "input" }, { status: 400 });
       const { data: reqs } = await db.from("signature_requests").select("*").eq("target_id", me).eq("status", "pending").in("id", items.map((i) => String(i.id)));
-      const result = { signed: 0, changed: 0, gone: 0 };
-      for (const r of reqs ?? []) {
-        const seen = items.find((i) => i.id === r.id)?.hash;
-        const { data: row } = await db.from("flights").select("*").eq("id", r.flight_id).eq("pilot_id", r.requester_id).maybeSingle();
-        if (!row || row.deleted_at || row.signature_id) {
-          await db.from("signature_requests").update({ status: "cancelled", updated_at: now }).eq("id", r.id);
-          result.gone++;
-          continue;
-        }
-        const f = flightFromRow(row);
-        const h = contentHash(f);
-        if (h !== r.content_hash || h !== seen) {
-          // the pilot changed the flight after asking: the captain must see the new version before signing
-          await db.from("signature_requests").update({ flight: snapshot(f), content_hash: h, updated_at: now }).eq("id", r.id);
-          result.changed++;
-          continue;
-        }
-        const { data: sig, error } = await db
-          .from("signatures")
-          .insert({
-            pilot_id: r.requester_id,
-            flight_id: r.flight_id,
-            signer_name: signerName,
-            signer_role: f.function === "DUAL" ? "instructor" : "captain",
-            signer_licence_number: licence,
-            signed_at: now,
-            image_data_url: image,
-            content_hash: h,
-            updated_at: now,
-          })
-          .select("id")
-          .single();
-        if (error || !sig) continue;
-        await db.from("flights").update({ signature_id: sig.id, locked: true, updated_at: now }).eq("id", r.flight_id);
-        // the flight's audit trail: signed on Geardown's side
-        await db.from("flight_revisions").insert({ pilot_id: r.requester_id, flight_id: r.flight_id, at: now, action: "sign", source: "server", changes: [{ field: "signatureId", from: null, to: sig.id }], updated_at: now });
-        await db.from("signature_requests").update({ status: "signed", signature_id: sig.id, responded_at: now, updated_at: now }).eq("id", r.id);
-        result.signed++;
+      const seen = new Map(items.map((i) => [String(i.id), String(i.hash ?? "")]));
+      return Response.json(await signRequests(db, reqs ?? [], signer, { seen }));
+    }
+
+    case "autoApprove": {
+      // the signer approves (or stops approving) one colleague's requests with their saved signature
+      const id = clip(body.linkId, 40);
+      const on = body.on === true;
+      if (on && !(await savedSigner(db, me))) return Response.json({ error: "no_saved_signature" }, { status: 400 });
+      const { data: l } = await db.from("crew_links").update({ auto_approve: on, updated_at: now }).eq("id", id).eq("target_id", me).eq("status", "accepted").select("id, requester_id").maybeSingle();
+      if (!l) return Response.json({ error: "not_found" }, { status: 404 });
+      // what that colleague already asked is signed now
+      let signed = 0;
+      if (on) {
+        const { data: pending } = await db.from("signature_requests").select("*").eq("link_id", id).eq("target_id", me).eq("status", "pending");
+        if (pending?.length) signed = await autoSign(db, me, l.requester_id, pending);
       }
-      return Response.json(result);
+      return Response.json({ ok: true, signed });
     }
 
     case "refuse": {
@@ -233,4 +214,14 @@ export async function POST(req: Request) {
     }
   }
   return Response.json({ error: "action" }, { status: 400 });
+}
+
+/** Flights signed automatically for colleagues in the last 30 days, by colleague. */
+async function autoSignedRecently(db: NonNullable<ReturnType<typeof adminDb>>, me: string) {
+  const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const { data } = await db.from("signature_requests").select("requester_id").eq("target_id", me).eq("status", "signed").eq("auto", true).gte("responded_at", since);
+  const count = new Map<string, number>();
+  for (const r of data ?? []) count.set(r.requester_id, (count.get(r.requester_id) ?? 0) + 1);
+  const names = await namesOf(db, [...count.keys()]);
+  return [...count.entries()].map(([id, n]) => ({ from: names.get(id)?.name ?? "—", flights: n }));
 }

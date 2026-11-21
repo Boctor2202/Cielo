@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Share, View } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { formatDuration } from "@cielo/core";
-import { Badge, Button, Card, EmptyState, Field, Row, Screen, Txt, tap } from "../../src/components/ui";
+import { Badge, Button, Card, EmptyState, Field, Row, Screen, ToggleRow, Txt, tap } from "../../src/components/ui";
 import { Requires } from "../../src/components/Access";
 import { SignaturePad, signatureSvg } from "../../src/components/SignaturePad";
 import { createSignLink, crewAction, loadCrew, type Captain, type CrewData, type ToSign } from "../../src/crew";
@@ -78,6 +78,17 @@ function Crew() {
     <Screen>
       <Txt variant="small">{t("crew.intro")}</Txt>
 
+      {data.autoSigned?.length ? (
+        <Card>
+          <Row style={{ alignItems: "center" }}>
+            <Ionicons name="flash-outline" size={18} color={c.accent} />
+            <Txt style={{ fontWeight: "700", flex: 1 }}>{t("crew.autoSignedTitle")}</Txt>
+          </Row>
+          {data.autoSigned.map((a) => (
+            <Txt key={a.from} variant="small">{t("crew.autoSignedRow", { name: a.from, n: a.flights })}</Txt>
+          ))}
+        </Card>
+      ) : null}
       {data.toSign.length ? <ToSignCard items={data.toSign} me={data.me} token={token} onDone={refresh} /> : null}
 
       {pendingLinks.map((l) => (
@@ -108,7 +119,8 @@ function Crew() {
         <Card>
           <Txt variant="label">{t("crew.iSignFor")}</Txt>
           {acceptedLinks.map((l) => (
-            <Row key={l.id} style={{ justifyContent: "space-between", alignItems: "center" }}>
+            <View key={l.id} style={{ gap: 4 }}>
+            <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
               <Txt style={{ flex: 1 }}>{`${l.from} · « ${l.crewName} »`}</Txt>
               <Pressable
                 hitSlop={8}
@@ -122,6 +134,21 @@ function Crew() {
                 <Txt variant="small" color={c.warning}>{t("crew.unlink")}</Txt>
               </Pressable>
             </Row>
+            {/* this colleague's requests signed at once with the saved signature (off unless turned on here) */}
+            <ToggleRow
+              label={t("crew.autoApprove", { name: l.from })}
+              hint={t("crew.autoApproveHint")}
+              value={!!l.autoApprove}
+              onChange={(on) => {
+                if (on && !data.me.savedSignature)
+                  return Alert.alert(t("mysig.title"), t("mysig.none"), [
+                    { text: t("common.cancel"), style: "cancel" },
+                    { text: t("mysig.create"), onPress: () => router.push("/profile") },
+                  ]);
+                void act(`auto${l.id}`, { action: "autoApprove", linkId: l.id, on });
+              }}
+            />
+            </View>
           ))}
         </Card>
       ) : null}
@@ -224,10 +251,11 @@ function ToSignCard({ items, me, token, onDone }: { items: ToSign[]; me: CrewDat
   const toggle = (id: string) => setSelected((s) => (s.has(id) ? (s.delete(id), new Set(s)) : new Set(s.add(id))));
   const hm = (iso: string | null) => (iso ? iso.slice(11, 16) : "");
 
-  const sign = async () => {
+  const sign = async (useSaved = false) => {
     setBusy(true);
     try {
-      const r = await crewAction(token, { action: "sign", items: chosen.map((i) => ({ id: i.id, hash: i.hash })), image: signatureSvg(paths), signerName: name.trim(), licence: licence.trim() });
+      const items = chosen.map((i) => ({ id: i.id, hash: i.hash }));
+      const r = await crewAction(token, useSaved ? { action: "sign", items, useSaved: true } : { action: "sign", items, image: signatureSvg(paths), signerName: name.trim(), licence: licence.trim() });
       tap("success");
       setOpen(false);
       setPaths([]);
@@ -272,7 +300,22 @@ function ToSignCard({ items, me, token, onDone }: { items: ToSign[]; me: CrewDat
       ))}
       <Txt variant="small">{t("crew.inLogbookHint")}</Txt>
       <Row gap={space.xs}>
-        <Button style={{ flex: 1 }} title={t("crew.signN", { n: chosen.length })} disabled={!chosen.length} onPress={() => setOpen(true)} />
+        {me.savedSignature ? (
+          <Button
+            style={{ flex: 1 }}
+            title={t("crew.signN", { n: chosen.length })}
+            loading={busy}
+            disabled={!chosen.length}
+            onPress={() =>
+              Alert.alert(t("crew.signN", { n: chosen.length }), t("mysig.confirmMany", { n: chosen.length, total: formatDuration(chosen.reduce((x, i) => x + i.flight.totalMin, 0), pilot.timeDisplay), name: me.name }), [
+                { text: t("common.cancel"), style: "cancel" },
+                { text: t("mysig.sign"), onPress: () => void sign(true) },
+              ])
+            }
+          />
+        ) : (
+          <Button style={{ flex: 1 }} title={t("crew.signN", { n: chosen.length })} disabled={!chosen.length} onPress={() => setOpen(true)} />
+        )}
         <Button style={{ flex: 1 }} kind="secondary" title={t("crew.refuse")} disabled={!chosen.length} onPress={refuse} />
       </Row>
       <Modal visible={open} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setOpen(false)}>
