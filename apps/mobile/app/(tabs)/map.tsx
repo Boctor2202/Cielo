@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Vie
 import MapView, { Marker, Polyline } from "react-native-maps";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { File, Paths } from "expo-file-system";
-import { encodeShareRoutes, shareLinkUrl, routeMapChoices, routeMapFlights, routeMapTotals, type Airport } from "@cielo/core";
+import { encodeShareRoutes, createShareLink, routeMapChoices, routeMapFlights, routeMapTotals, type Airport } from "@cielo/core";
 import { API_URL } from "../../src/api";
 import { Glass, Row, Txt } from "../../src/components/ui";
 import { lookupAirport } from "../../src/airports";
@@ -56,7 +56,7 @@ export default function RoutesMap() {
       if (file.exists) file.delete();
       file.create();
       file.write(new Uint8Array(await r.arrayBuffer()));
-      await Share.share({ url: file.uri, message: `${t("map.shareText", { fl: totals.flights.toLocaleString(), ap: totals.airports, nm: totals.nm.toLocaleString(), ct: totals.countries })} · ${shareLinkUrl(API_URL, lang, q)}` });
+      await Share.share({ url: file.uri, message: `${t("map.shareText", { fl: totals.flights.toLocaleString(), ap: totals.airports, nm: totals.nm.toLocaleString(), ct: totals.countries })} · ${await createShareLink(API_URL, lang, q)}` });
     } catch {
       Alert.alert(t("badges.shareError"));
     } finally {
