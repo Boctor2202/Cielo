@@ -30,6 +30,7 @@ import {
   type WidgetPlacement,
 } from "@cielo/core";
 import { Link } from "@/i18n/navigation";
+import { CityPhoto } from "./CityPhoto";
 import { Meter, type Level } from "@/components/app/ui";
 import { useAirports } from "@/lib/airports";
 import { useDuration, useFormatDate, useTable } from "@/lib/hooks";
@@ -117,7 +118,7 @@ export function OverviewWidgets({
 
   // each widget: a figure for the compact card, and a list for the large one
   type Href = React.ComponentProps<typeof Link>["href"];
-  type Body = { value: ReactNode; sub?: ReactNode; level?: Level; href?: Href; list?: ReactNode; chip?: string };
+  type Body = { value: ReactNode; sub?: ReactNode; level?: Level; href?: Href; list?: ReactNode; chip?: string; banner?: ReactNode };
   // "in 11 h", "in 3 d": how long until a duty starts
   const inTime = (iso: string) => {
     const min = Math.max(0, Math.round((Date.parse(iso) - Date.now()) / 60_000));
@@ -203,7 +204,14 @@ export function OverviewWidgets({
           list: rows(byOperator.map((x) => ({ key: x.key, label: x.key === "—" ? t("noOperator") : x.key, value: d(x.minutes), ratio: x.minutes / (byOperator[0]?.minutes || 1) }))),
         }
       : null,
-    nextLayover: layover ? { value: layover.airportIcao, sub: layover.hotelName || (layover.arrivalUtc ? fd(layover.arrivalUtc.slice(0, 10), { day: "numeric", month: "short" }) : undefined), href: "/app/escales" } : { value: "—", sub: t("noLayover"), href: "/app/escales" },
+    nextLayover: layover
+      ? {
+          value: airports?.get(layover.airportIcao)?.city || layover.airportIcao,
+          sub: [layover.airportIcao, layover.hotelName || (layover.arrivalUtc ? fd(layover.arrivalUtc.slice(0, 10), { day: "numeric", month: "short" }) : undefined)].filter(Boolean).join(" · "),
+          chip: layover.arrivalUtc ? inTime(layover.arrivalUtc) : undefined,
+          banner: <CityPhoto icao={layover.airportIcao} height={120} />,
+          href: "/app/escales",
+        } : { value: "—", sub: t("noLayover"), href: "/app/escales" },
     nextBadge: badge
       ? {
           value: (
@@ -272,6 +280,7 @@ export function OverviewWidgets({
         style={{ ["--tone" as string]: look.tone }}
       >
         <span aria-hidden className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(120% 90% at 100% 0%, ${look.tone}1f 0%, transparent 55%)` }} />
+        {b?.banner && !locked(w.id) ? <div className="relative -mx-5 -mt-5 mb-4">{b.banner}</div> : null}
         <div className="relative flex items-center gap-2.5">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl" style={{ background: `${look.tone}22`, color: look.tone }}>
             <Icon size={16} />

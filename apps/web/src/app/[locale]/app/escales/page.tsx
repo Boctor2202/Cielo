@@ -1,5 +1,6 @@
 "use client";
 
+import { CityPhoto } from "@/components/app/CityPhoto";
 import { PauseCircle, BedDouble, CalendarDays, ChevronRight, Globe2, Hotel, MapPin, Plus, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -87,6 +88,8 @@ export default function LayoversPage() {
         className="group relative block overflow-hidden rounded-2xl border border-border bg-surface/70 p-5 backdrop-blur transition hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-[0_12px_40px_-12px_rgba(34,197,94,0.35)]"
       >
         <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-accent/15 blur-3xl transition group-hover:bg-accent/25" />
+        {/* the city's landmark (Google photo), across the top of the card */}
+        <CityPhoto icao={l.airportIcao} className="-mx-5 -mt-5 mb-4" />
         <div className="relative flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             {cc ? <span className="scale-150 pl-1">{<Flag code={cc} />}</span> : <MapPin size={20} className="text-muted" />}

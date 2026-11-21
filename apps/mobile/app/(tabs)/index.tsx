@@ -47,6 +47,7 @@ import { useCurrency } from "../../src/currency";
 import { space, useTheme, withAlpha } from "../../src/theme";
 import { lookupAirport } from "../../src/airports";
 import { Emblem } from "../../src/components/Achievements";
+import { CityPhoto } from "../../src/components/CityPhoto";
 
 /** Each widget's icon and colour, as on the website, so the cards read at a glance ("" = the pilot's colour). */
 const LOOK: Record<WidgetId, { icon: React.ComponentProps<typeof Ionicons>["name"]; tone: string }> = {
@@ -342,6 +343,18 @@ export default function Dashboard() {
     jobs: { value: t("dash.jobsValue"), sub: t("dash.jobsSub"), color: c.accent, go: () => router.navigate("/jobs") },
   };
   const tile = (id: WidgetId) => {
+    // the next layover: its city's landmark (Google photo) across the top
+    if (id === "nextLayover" && layover && access.has("jobs"))
+      return (
+        <Card onPress={() => router.navigate("/layovers")} style={{ flex: 1, gap: 4, paddingTop: 0, overflow: "hidden" }}>
+          <View style={{ marginHorizontal: -18, marginBottom: 6 }}>
+            <CityPhoto icao={layover.airportIcao} height={86} />
+          </View>
+          <Txt variant="small" numberOfLines={1} style={{ fontWeight: "700", letterSpacing: 0.6, textTransform: "uppercase", fontSize: 10 }}>{widgetLabel(id, locale)}</Txt>
+          <Txt numberOfLines={1} style={{ fontSize: 18, fontWeight: "800" }}>{lookupAirport(layover.airportIcao)?.city || layover.airportIcao}</Txt>
+          <Txt variant="small" numberOfLines={1}>{[layover.airportIcao, layover.arrivalUtc ? formatDate(layover.arrivalUtc.slice(0, 10), locale) : layover.hotelName].filter(Boolean).join(" · ")}</Txt>
+        </Card>
+      );
     // the next badge: its emblem, what it takes, how far along
     if (id === "nextBadge" && badge)
       return (
