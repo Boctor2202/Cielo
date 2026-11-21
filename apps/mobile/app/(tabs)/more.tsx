@@ -55,7 +55,8 @@ export default function More() {
         style: "destructive",
         onPress: () =>
           void run("wipe", async () => {
-            await app.signOut();
+            // the pilot asked to erase this device: no copy kept here (the account keeps what reached the server)
+            await app.signOut({ forget: true });
             await app.wipeAll();
           }),
       },

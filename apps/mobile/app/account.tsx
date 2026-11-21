@@ -81,7 +81,7 @@ export default function Account() {
             setBusy(null);
             return Alert.alert(t("account.deleteTitle"), t("account.error"));
           }
-          await app.signOut().catch(() => undefined);
+          await app.signOut({ forget: true }).catch(() => undefined);
           setBusy(null);
           Alert.alert(t("account.deleteTitle"), t("account.deleteDone"));
           router.replace("/");

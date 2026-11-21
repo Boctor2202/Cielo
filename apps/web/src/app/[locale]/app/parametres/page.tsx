@@ -227,7 +227,7 @@ export default function SettingsPage() {
           {cloud.session && (
             <div className="mt-4 flex flex-wrap gap-2">
               <button type="button" className="btn btn-secondary btn-sm" onClick={cloud.syncNow} disabled={cloud.syncing}><RefreshCw size={14} className={cloud.syncing ? "animate-spin" : ""} /> {t("syncNow")}</button>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={cloud.signOut}><LogOut size={14} /> {tn("signOut")}</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => void cloud.signOut()}><LogOut size={14} /> {tn("signOut")}</button>
               {cloud.lastSync && <p className="w-full text-xs text-muted">{cloud.lastSync.finishedAt.slice(0, 16).replace("T", " ")} UTC {cloud.lastSync.ok ? "✓" : `· ${cloud.lastSync.errors.length} erreur(s)`}</p>}
             </div>
           )}
@@ -279,7 +279,7 @@ export default function SettingsPage() {
             onClick={async () => {
               if (cloud.session) {
                 await cloud.invoke("gdpr-delete", { confirm: "DELETE" });
-                await cloud.signOut();
+                await cloud.signOut({ forget: true });
               }
               await deleteAllLocal();
               window.location.assign(`/${locale}`);
