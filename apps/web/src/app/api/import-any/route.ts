@@ -4,6 +4,7 @@ import { accessFor, noCardTrialDays, ep5Legs, parseAirFranceEp5, parseFlightRepo
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { pdfText } from "@/lib/server/pdf";
 import { extractLegs, ImportAiError, mapTable } from "@/lib/server/importAi";
+import { pageImages } from "@/lib/server/pageImages";
 import { rateLimited } from "@/lib/places";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,26 @@ export async function POST(req: Request) {
   const kind = body.kind;
   const share = body.share === true;
   const fileName = typeof body.fileName === "string" ? body.fileName.slice(0, 120) : null;
+  /**
+   * A failed import, kept for the team (feedback, kind "error"): what was sent and what went wrong, never the
+   * document itself, so readers can be fixed without asking the pilot.
+   */
+  const logImport = async (code: string, extra: Record<string, unknown> = {}) => {
+    if (!db) return;
+    const images = Array.isArray(body.images) ? (body.images as { data?: unknown }[]) : [];
+    const context = {
+      kind: String(kind),
+      code,
+      images: images.length || undefined,
+      bytes: images.length ? images.map((i) => (typeof i.data === "string" ? Math.round((i.data.length * 3) / 4) : 0)) : typeof body.pdf === "string" ? Math.round((body.pdf.length * 3) / 4) : typeof body.text === "string" ? body.text.length : undefined,
+      ext: fileName?.match(/\.[a-z0-9]{2,5}$/i)?.[0] ?? undefined,
+      ...extra,
+    };
+    await db
+      .from("feedback")
+      .insert({ pilot_id: user.id, kind: "error", message: `Import ${String(kind)}: ${code}`, page: "/api/import-any", platform: req.headers.get("x-client") === "ios" ? "ios" : "web", user_agent: req.headers.get("user-agent")?.slice(0, 300) ?? null, context, fingerprint: `import:${String(kind)}:${code}:${Date.now()}` })
+      .then(() => undefined, () => undefined);
+  };
 
   // a confirmed table layout: only column titles are stored
   if (kind === "learn") {
@@ -46,7 +67,10 @@ export async function POST(req: Request) {
     return Response.json({ ok: true });
   }
 
-  if (rateLimited(`importany:${user.id}`, 30, 3_600_000)) return Response.json({ error: "rate_limited" }, { status: 429 });
+  if (rateLimited(`importany:${user.id}`, 30, 3_600_000)) {
+    await logImport("rate_limited");
+    return Response.json({ error: "rate_limited" }, { status: 429 });
+  }
 
   // an Excel workbook (the phone app cannot unzip it): its first sheet as a table of text cells, no AI
   if (kind === "sheet") {
@@ -99,7 +123,10 @@ export async function POST(req: Request) {
   // 2. anything else: Claude (Max plan)
   const { data: p } = db ? await db.from("pilots").select("created_at, trial_started_at, subscription_tier, subscription_expires_at").eq("id", user.id).maybeSingle() : { data: null };
   const access = accessFor(p ? { createdAt: p.trial_started_at ?? p.created_at, subscriptionTier: p.subscription_tier, subscriptionExpiresAt: p.subscription_expires_at } : undefined, { signedIn: true, noCardTrialDays: noCardTrialDays(process.env.NEXT_PUBLIC_NO_CARD_TRIAL_DAYS) });
-  if (!(access.plan === "premium" && !access.demo) && !isAdminId(user.id)) return Response.json({ error: "plan" }, { status: 403 });
+  if (!(access.plan === "premium" && !access.demo) && !isAdminId(user.id)) {
+    await logImport("plan", { tier: p?.subscription_tier ?? null });
+    return Response.json({ error: "plan" }, { status: 403 });
+  }
   if (!process.env.ANTHROPIC_API_KEY) return Response.json({ error: "unsupported" }, { status: 422 });
 
   // the document, kept for 90 days when the pilot shared it, to write a dedicated reader
@@ -123,18 +150,33 @@ export async function POST(req: Request) {
     else if (kind === "images") {
       const images = (Array.isArray(body.images) ? body.images : []).slice(0, MAX_IMAGES) as { data?: unknown; type?: unknown }[];
       const ok = images.filter((i) => typeof i.data === "string" && i.data.length < 7_000_000 && IMAGE_TYPES.includes(String(i.type)));
-      if (!ok.length) return Response.json({ error: "bad_request" }, { status: 400 });
-      content = ok.map((i) => ({ type: "image" as const, source: { type: "base64" as const, media_type: i.type as "image/jpeg", data: i.data as string } }));
+      if (!ok.length) {
+        await logImport("bad_request", { types: images.map((i) => String(i.type)).slice(0, 12) });
+        return Response.json({ error: "bad_request" }, { status: 400 });
+      }
+      content = await pageImages(ok as { data: string; type: string }[]);
       text = `[${ok.length} photo(s)]`;
     } else if (kind === "text" && text.trim()) content = [{ type: "text", text: `Document:\n${text}` }];
     else return Response.json({ error: "bad_request" }, { status: 400 });
-    const r = await extractLegs(content, today);
+    // handwritten pages take more care to read than a printed statement
+    const r = await extractLegs(content, today, kind === "images" ? "high" : "medium");
     await keep(`ai:${r.source}`, r.legs.length);
+    if (!r.legs.length) await logImport("none", { reader: r.source });
     return Response.json({ reader: "ai", source: r.source, timeBasis: r.timeBasis, legs: r.legs }, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
-    if (e instanceof ImportAiError) return Response.json({ error: e.code }, { status: 422 });
-    if (e instanceof SyntaxError) return Response.json({ error: "unreadable" }, { status: 422 });
-    if (e instanceof Anthropic.RateLimitError) return Response.json({ error: "busy" }, { status: 429 });
+    if (e instanceof ImportAiError) {
+      await logImport(e.code);
+      return Response.json({ error: e.code }, { status: 422 });
+    }
+    if (e instanceof SyntaxError) {
+      await logImport("unreadable");
+      return Response.json({ error: "unreadable" }, { status: 422 });
+    }
+    if (e instanceof Anthropic.RateLimitError) {
+      await logImport("busy");
+      return Response.json({ error: "busy" }, { status: 429 });
+    }
+    await logImport("upstream", { detail: e instanceof Anthropic.APIError ? `${e.status} ${e.message}`.slice(0, 300) : String(e).slice(0, 300) });
     await reportAiFailure(`import ${String(kind)}`, e);
     return Response.json({ error: "upstream" }, { status: 502 });
   }

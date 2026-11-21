@@ -30,6 +30,8 @@ export interface ImportCheck {
   rejected: { row: number; reasons: RejectReason[] }[];
   /** rows read and kept */
   kept: number;
+  /** rows whose off-block / on-block times do not match the total written in the file (the total is kept) */
+  timesToCheck: number[];
 }
 
 /** Same minute, or a one-minute rounding (decimal hours in the file). */
@@ -39,11 +41,13 @@ const same = (a: number, b: number) => Math.abs(a - b) <= 1;
  * @param rows   the rows read from the file (ImportedRow), in file order
  * @param built  for each kept row, the flight as Geardown would save it (same order as the kept rows)
  * @param duplicates file row indexes skipped as already in the logbook (or twice in the file)
+ * @param firstRow  number shown for the first row: 2 in a table (its header is row 1), 1 for flights read from a
+ *                  document (a photo, a PDF: flight 1 is the first line of the page)
  */
-export function checkImport(rows: ImportedRow[], built: { rowIndex: number; flight: Flight }[], duplicates: number[] = []): ImportCheck {
+export function checkImport(rows: ImportedRow[], built: { rowIndex: number; flight: Flight }[], duplicates: number[] = [], firstRow = 2): ImportCheck {
   const byRow = new Map(built.map((b) => [b.rowIndex, b.flight]));
   const lines: TotalLine[] = [];
-  const fileRow = (i: number) => i + 2; // header is row 1
+  const fileRow = (i: number) => i + firstRow;
   for (const field of Object.keys(FLIGHT_KEY) as Exclude<CheckField, "landings">[]) {
     let file: number | undefined;
     let geardown = 0;
@@ -87,5 +91,14 @@ export function checkImport(rows: ImportedRow[], built: { rowIndex: number; flig
       row: fileRow(r.rowIndex),
       reasons: (dup.has(r.rowIndex) ? ["duplicate"] : r.errors.length ? r.errors.map((e) => (e === "date" || e === "route" || e === "times" ? e : "other")) : ["date"]) as RejectReason[],
     }));
-  return { lines, rejected, kept: built.length };
+  // times that disagree with the written total: the total is kept, the times are worth a look (a misread hour)
+  const timesToCheck: number[] = [];
+  for (const r of rows) {
+    const f = byRow.get(r.rowIndex);
+    const written = r.explicit.total;
+    if (!f || written === undefined || !f.outUtc || !f.inUtc) continue;
+    const block = Math.round((Date.parse(f.inUtc) - Date.parse(f.outUtc)) / 60_000);
+    if (Math.abs(block - written) > 5) timesToCheck.push(fileRow(r.rowIndex));
+  }
+  return { lines, rejected, kept: built.length, timesToCheck };
 }

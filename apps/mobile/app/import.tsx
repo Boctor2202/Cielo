@@ -7,20 +7,21 @@ import * as Clipboard from "expo-clipboard";
 import { File } from "expo-file-system";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
-  analyseTable, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, titlesToMapping,
-  type ImportField, type ImportedRow, type LogbookLeg, type StoredMapping,
+  analyseTable, applyImportChoices, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, titlesToMapping,
+  type ImportChoices, type ImportField, type ImportedRow, type LogbookLeg, type StoredMapping,
 } from "@cielo/core";
 import { API_URL } from "../src/api";
 import { lookupAirport, toIcao } from "../src/airports";
 import { prepareImportedRows, savePrepared, type PreparedImport } from "../src/importer";
 import { checkImport, formatDuration, type ImportCheck } from "@cielo/core";
-import { Button, Card, Row, Screen, Txt, tap } from "../src/components/ui";
+import { Button, Card, Row, Screen, Segmented, Txt, tap } from "../src/components/ui";
 import { useApp } from "../src/state";
 import { useTheme } from "../src/theme";
 import type { I18nKey } from "../src/i18n";
 
 /** A request stays under the server's 4.5 MB body limit: photos go in batches. */
 const BATCH_BYTES = 3_300_000;
+const PHOTO_BATCH_BYTES = 4_200_000;
 
 type Result = { table?: string[][]; legs?: LogbookLeg[]; role?: string | null; reader?: string; source?: string; mapping?: StoredMapping; mappingIndex?: Record<string, number>; error?: string };
 
@@ -33,7 +34,10 @@ export default function ImportScreen() {
   const { t, session, pilot, flights, store } = app;
   const c = useTheme();
   const [busy, setBusy] = useState<string | null>(null);
-  const [rows, setRows] = useState<ImportedRow[] | null>(null);
+  const [readRows, setRows] = useState<ImportedRow[] | null>(null);
+  // VFR / IFR and PIC / SIC / dual for every flight of the import, when the document does not say it
+  const [choices, setChoices] = useState<ImportChoices>({ rules: "doc", function: "doc" });
+  const rows = useMemo(() => (readRows ? applyImportChoices(readRows, choices) : null), [readRows, choices]);
   const [source, setSource] = useState<string | null>(null);
   const [share, setShare] = useState(false);
   const [photos, setPhotos] = useState<{ data: string; type: string }[]>([]);
@@ -68,7 +72,7 @@ export default function ImportScreen() {
   const fail = (code?: string) => Alert.alert(t("uimp.title"), t(`uimp.err.${["plan", "unauthorized", "rate_limited", "unsupported", "too_big", "busy", "xls", "unreadable"].includes(code ?? "") ? code : "error"}` as never));
   const show = (legs: LogbookLeg[], role?: string | null, src?: string | null) => {
     const fn = role === "CDB" || role === "CDT" ? "PIC" : role ? "SIC" : pilot.defaultFunction;
-    setRows(legsToRows(legs, (code) => toIcao(code), { function: fn, pilotFlying: false }));
+    setRows(legsToRows(legs, (code) => toIcao(code), { function: fn, pilotFlying: false, airline: src === "Air France · EP5" }));
     setSource(src ?? null);
     setTable(null);
     if (!legs.length) Alert.alert(t("uimp.title"), t("uimp.none"));
@@ -93,7 +97,8 @@ export default function ImportScreen() {
         size = 0;
       };
       for (const p of list) {
-        if (size + p.data.length > BATCH_BYTES) await flush();
+        // as many photos per request as the server takes (4.5 MB): a left and a right page read together line up
+        if (size + p.data.length > PHOTO_BATCH_BYTES) await flush();
         batch.push(p);
         size += p.data.length;
       }
@@ -111,7 +116,7 @@ export default function ImportScreen() {
     tap();
     const perm = camera ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) return;
-    const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ["images"], quality: 0.45, base64: true, allowsMultipleSelection: !camera, selectionLimit: 12 };
+    const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ["images"], quality: 0.35, base64: true, allowsMultipleSelection: !camera, selectionLimit: 12 };
     const r = camera ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
     if (r.canceled) return;
     const next = [...photos, ...r.assets.filter((a) => a.base64).map((a) => ({ data: a.base64!, type: "image/jpeg" }))].slice(0, 12);
@@ -186,7 +191,7 @@ export default function ImportScreen() {
     setBusy("save");
     try {
       const prepared = await prepareImportedRows(store, pilot, app.aircraftTypes, flights, ok, "import");
-      setReview({ prepared, check: checkImport(rows ?? [], prepared.pairs, prepared.duplicates) });
+      setReview({ prepared, check: checkImport(rows ?? [], prepared.pairs, prepared.duplicates, table ? 2 : 1) });
     } finally {
       setBusy(null);
     }
@@ -259,6 +264,12 @@ export default function ImportScreen() {
             </View>
           ))}
           {ck.lines.some((l) => l.rows.length) ? <Txt variant="small">{t("uimp.diffHelp")}</Txt> : null}
+          {ck.timesToCheck.length ? (
+            <View style={{ gap: 2 }}>
+              <Txt style={{ fontWeight: "700" }} color={c.caution}>{t("uimp.timesTitle")}</Txt>
+              <Txt variant="small">{t("uimp.timesText", { rows: ck.timesToCheck.slice(0, 20).join(", ") })}</Txt>
+            </View>
+          ) : null}
         </Card>
         {ck.rejected.length ? (
           <Card>
@@ -284,6 +295,11 @@ export default function ImportScreen() {
           <Txt variant="h2">{t("uimp.found", { n: ok.length })}</Txt>
           {source ? <Txt variant="small" color={c.accent}>{source === "learned" ? t("uimp.learned") : source === "report" ? t("uimp.report") : t("uimp.ai", { source })}</Txt> : null}
           {rows.length - ok.length ? <Txt variant="small" color={c.warning}>{t("uimp.skipped", { n: rows.length - ok.length })}</Txt> : null}
+        </Card>
+        <Card>
+          <Txt variant="small">{t("uimp.choicesHelp")}</Txt>
+          <Segmented label={t("uimp.rules")} value={choices.rules} onChange={(rules) => setChoices({ ...choices, rules })} options={(["doc", "VFR", "IFR"] as const).map((v) => ({ value: v, label: v === "doc" ? t("uimp.asDoc") : v }))} />
+          <Segmented label={t("uimp.function")} value={choices.function} onChange={(fn) => setChoices({ ...choices, function: fn })} options={(["doc", "PIC", "SIC", "DUAL"] as const).map((v) => ({ value: v, label: v === "doc" ? t("uimp.asDoc") : v === "DUAL" ? "Dual" : v }))} />
         </Card>
         {ok.slice(0, 200).map((r) => (
           <Row key={r.rowIndex} style={{ justifyContent: "space-between", paddingHorizontal: 6 }}>

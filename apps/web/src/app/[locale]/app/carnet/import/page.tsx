@@ -4,8 +4,8 @@ import { CalendarDays, Camera, FileSpreadsheet, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  analyseTable, checkMapping, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
-  type DateOrder, type ImportField, type ImportedRow, type LogbookLeg, type StoredMapping,
+  analyseTable, applyImportChoices, checkMapping, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
+  type DateOrder, type ImportChoices, type ImportField, type ImportedRow, type LogbookLeg, type StoredMapping,
 } from "@cielo/core";
 import { apiFetch } from "@/lib/report";
 import { Link } from "@/i18n/navigation";
@@ -19,7 +19,7 @@ import { checkImport, formatDuration, operatorIndex, type Flight, type ImportChe
 import { DropZone } from "@/components/app/DropZone";
 import { Paywall, useAccess } from "@/lib/access";
 import { track } from "@/lib/metrics";
-import { useFormatDate } from "@/lib/hooks";
+import { useFormatDate, usePilot } from "@/lib/hooks";
 
 type Tab = "file" | "roster" | "scan";
 
@@ -108,6 +108,7 @@ async function readTable(file: File): Promise<string[][]> {
 /** The universal import: a file, a PDF, photos (a paper logbook) or pasted text, in one place. */
 function FileImport({ photos = false }: { photos?: boolean }) {
   const t = useTranslations("app.import");
+  const pilot = usePilot();
   const airports = useAirports();
   const airlines = useAirlineDirectory();
   const { toast, toastNode } = useToast();
@@ -126,7 +127,9 @@ function FileImport({ photos = false }: { photos?: boolean }) {
   const [share, setShare] = useState(false);
   const [paste, setPaste] = useState("");
   const tableRows = useMemo<ImportedRow[]>(() => (rows && mapping ? rowsToFlights(rows.slice(1), mapping, { dateOrder: order, timezoneOf: (c) => airports?.get(c.length === 3 ? airports.iataToIcao(c) ?? c : c)?.timezone }) : []), [rows, mapping, order, airports]);
-  const parsed = pdfRows ?? tableRows;
+  // VFR / IFR and PIC / SIC / dual for every flight of the import, when the document does not say it (a student's page)
+  const [choices, setChoices] = useState<ImportChoices>({ rules: "doc", function: "doc" });
+  const parsed = useMemo(() => applyImportChoices(pdfRows ?? tableRows, choices), [pdfRows, tableRows, choices]);
   const recognised = mapping ? Object.values(mapping).filter((i) => i >= 0).length : 0;
   // cross-checks on the data itself, recomputed whenever a column is changed by hand
   const checks = useMemo(() => (rows && mapping ? checkMapping(rows.slice(1), mapping) : []), [rows, mapping]);
@@ -171,8 +174,10 @@ function FileImport({ photos = false }: { photos?: boolean }) {
         d = { ...last, legs };
       } else d = await importAny({ ...body, share });
       if (d.error || !d.legs) return setPdfState(d.error ?? "error");
-      const role = d.role === "CDB" || d.role === "CDT" ? "PIC" : "SIC";
-      setPdfRows(legsToRows(d.legs, (c) => airports?.get(c)?.icao, { function: role, pilotFlying: false }));
+      // an airline statement gives the role (CDB / OPL); a paper logbook or an e-mail does not: the pilot's usual function
+      const ep5 = d.reader === "airfrance-ep5";
+      const role = d.role === "CDB" || d.role === "CDT" ? "PIC" : ep5 || d.role ? "SIC" : pilot?.defaultFunction ?? "PIC";
+      setPdfRows(legsToRows(d.legs, (c) => airports?.get(c)?.icao, { function: role, pilotFlying: false, airline: ep5 }));
       setApp(d.reader === "airfrance-ep5" ? "Air France · Carnet de vol EP5" : undefined);
       setSource(d.reader === "ai" ? d.source ?? "?" : d.reader === "report" ? "report" : null);
       setPdfState(d.legs.length ? null : "none");
@@ -248,7 +253,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
         pairs.push({ rowIndex: r.rowIndex, flight: f });
       }
     }
-    setReview({ built: pairs.map((p) => p.flight), check: checkImport(parsed, pairs, dups) });
+    setReview({ built: pairs.map((p) => p.flight), check: checkImport(parsed, pairs, dups, pdfRows ? 1 : 2) });
     setBusy(false);
   }
 
@@ -296,7 +301,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
       {review ? (
         <TotalsCheck check={review.check} busy={busy} onConfirm={run} onFix={() => setReview(null)} onCancel={() => { setReview(null); setRows(null); setMapping(null); setPdfRows(null); }} />
       ) : (
-        pdfRows && <PreviewCard parsed={pdfRows} ok={ok.length} onImport={prepare} busy={busy || !airports} />
+        pdfRows && <PreviewCard parsed={parsed} ok={ok.length} onImport={prepare} busy={busy || !airports} choices={choices} onChoices={setChoices} />
       )}
       <p className="mt-2 text-xs text-muted">{t("fromApps")}</p>
       {app && (rows || pdfRows) && <p className="mt-2 text-sm font-semibold text-accent">{t("appRecognised", { app })}</p>}
@@ -336,7 +341,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
             </div>
             </details>
           </Card>
-          {!review && <PreviewCard parsed={parsed} ok={ok.length} onImport={prepare} busy={busy || !airports} />}
+          {!review && <PreviewCard parsed={parsed} ok={ok.length} onImport={prepare} busy={busy || !airports} choices={choices} onChoices={setChoices} />}
         </>
       )}
       <ImportBatches />
@@ -449,6 +454,12 @@ function TotalsCheck({ check, busy, onConfirm, onFix, onCancel }: { check: Impor
           <p className="mt-2 text-xs text-muted">{t("totals.diffHelp")}</p>
         </div>
       )}
+      {check.timesToCheck.length > 0 && (
+        <div className="mt-4 rounded-xl bg-[var(--caution)]/10 p-3 text-sm">
+          <p className="font-semibold">{t("totals.timesTitle")}</p>
+          <p className="mt-1">{t("totals.timesText", { rows: check.timesToCheck.slice(0, 30).join(", ") + (check.timesToCheck.length > 30 ? "…" : "") })}</p>
+        </div>
+      )}
       {check.rejected.length > 0 && (
         <div className="mt-4 text-sm">
           <p className="font-semibold">{t("totals.rejected", { count: check.rejected.length })}</p>
@@ -468,10 +479,21 @@ function TotalsCheck({ check, busy, onConfirm, onFix, onCancel }: { check: Impor
   );
 }
 
-function PreviewCard({ parsed, ok, onImport, busy }: { parsed: ImportedRow[]; ok: number; onImport: () => void; busy: boolean }) {
+function PreviewCard({ parsed, ok, onImport, busy, choices, onChoices }: { parsed: ImportedRow[]; ok: number; onImport: () => void; busy: boolean; choices: ImportChoices; onChoices: (c: ImportChoices) => void }) {
   const t = useTranslations("app.import");
   return (
     <Card title={t("preview")} action={<span className="text-sm text-muted">{t("rowsOk", { ok, total: parsed.length })}</span>} pad={false}>
+      <div className="flex flex-wrap items-end gap-4 border-b border-border p-4">
+        <p className="w-full text-sm text-muted">{t("choices.help")}</p>
+        <div>
+          <p className="label-caps mb-1">{t("choices.rules")}</p>
+          <Segmented value={choices.rules} onChange={(rules) => onChoices({ ...choices, rules })} options={(["doc", "VFR", "IFR"] as const).map((v) => ({ value: v, label: v === "doc" ? t("choices.doc") : v }))} />
+        </div>
+        <div>
+          <p className="label-caps mb-1">{t("choices.function")}</p>
+          <Segmented value={choices.function} onChange={(fn) => onChoices({ ...choices, function: fn })} options={(["doc", "PIC", "SIC", "DUAL"] as const).map((v) => ({ value: v, label: v === "doc" ? t("choices.doc") : t(`choices.fn.${v}`) }))} />
+        </div>
+      </div>
       <div className="max-h-96 overflow-auto">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-surface text-left">

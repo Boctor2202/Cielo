@@ -153,6 +153,9 @@ export interface LogbookLeg {
   function?: string;
   picName?: string;
   remarks?: string;
+  /** a simulator (FSTD) session: device type and session time, instead of a flight */
+  fstdType?: string;
+  fstdMin?: number;
 }
 
 export const ep5Legs = (ep5: Ep5): LogbookLeg[] => ep5.legs.map((l) => ({ date: l.date, dep: l.dep, arr: l.arr, out: l.out, in: l.in, totalMin: l.totalMin, nightMin: l.nightMin, registration: l.registration }));
@@ -160,10 +163,17 @@ export const ep5Legs = (ep5: Ep5): LogbookLeg[] => ep5.legs.map((l) => ({ date: 
 const FUNCTIONS = ["PIC", "PICUS", "SIC", "DUAL", "FI", "FE"];
 
 /** Legs as import rows (the document's totals win over computed values). */
-export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string | undefined, base: Pick<FlightFormInput, "function" | "pilotFlying">): ImportedRow[] {
+/**
+ * Legs read from a document, as rows to import. `airline`: an airline statement (EP5…), where every leg is a
+ * multi-pilot IFR flight; otherwise (a paper logbook, an e-mail) IFR and multi-pilot come from the document or,
+ * when it does not say, from the aircraft type — never assumed.
+ */
+export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string | undefined, base: Pick<FlightFormInput, "function" | "pilotFlying"> & { airline?: boolean }): ImportedRow[] {
   return legs.map((l, i) => {
-    const dep = toIcao(l.dep);
-    const arr = toIcao(l.arr);
+    // a simulator session (FNPT II, FFS…) has no airports
+    const sim = (l.fstdMin ?? 0) > 0;
+    const dep = sim ? "FSTD" : toIcao(l.dep);
+    const arr = sim ? "FSTD" : toIcao(l.arr);
     const errors: string[] = [];
     if (!/^\d{4}-\d{2}-\d{2}$/.test(l.date)) errors.push("date");
     if (!dep) errors.push(`unknown airport ${l.dep}`);
@@ -184,9 +194,11 @@ export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string 
       function: fn,
       picName: l.picName,
       pilotFlying: base.pilotFlying,
-      ifr: true,
-      isFstd: false,
-      operation: l.multiPilotMin === 0 ? "single_pilot" : "multi_pilot",
+      ifr: base.airline ? true : (l.ifrMin ?? 0) > 0,
+      isFstd: sim,
+      fstdType: sim ? l.fstdType || undefined : undefined,
+      fstdMin: sim ? l.fstdMin : undefined,
+      operation: l.multiPilotMin !== undefined ? (l.multiPilotMin > 0 ? "multi_pilot" : "single_pilot") : base.airline ? "multi_pilot" : undefined,
       autoLandings: false,
       takeoffsDay: l.landingsDay ?? 0,
       takeoffsNight: l.landingsNight ?? 0,

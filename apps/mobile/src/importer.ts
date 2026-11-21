@@ -88,7 +88,8 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
     const type = input.aircraftTypeIcao ? types.find((t) => t.icao.toUpperCase() === input.aircraftTypeIcao!.toUpperCase()) : undefined;
     const d = deriveFlightTimes(input, { airports: lookupAirport, aircraftType: type });
     const ex = r.explicit;
-    if (ex.total !== undefined && d.totalMin === 0 && !input.isFstd) {
+    // no clock times, or times that disagree with the total written: the logbook's total is kept
+    if (ex.total !== undefined && !input.isFstd && (d.totalMin === 0 || Math.abs(d.totalMin - ex.total) > 5)) {
       d.totalMin = d.airMin = ex.total;
       const mp = ex.multiPilot !== undefined ? ex.multiPilot > 0 : !!type?.multiPilot;
       d.multiPilotMin = mp ? ex.total : 0;
@@ -102,6 +103,7 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
       d.examinerMin = input.function === "FE" ? ex.total : 0;
       if (input.ifr && ex.ifr === undefined) d.ifrMin = ex.total;
     }
+    d.nightMin = Math.min(d.nightMin, d.totalMin);
     if (ex.night !== undefined) d.nightMin = Math.min(ex.night, d.totalMin);
     if (ex.ifr !== undefined) d.ifrMin = Math.min(ex.ifr, d.totalMin);
     if (ex.pic !== undefined) d.picMin = Math.min(ex.pic, d.totalMin);

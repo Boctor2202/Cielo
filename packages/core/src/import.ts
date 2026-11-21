@@ -647,3 +647,39 @@ export function rowsToFlights(
     return { rowIndex, input, explicit, errors };
   });
 }
+
+/** Set for every flight of an import by the pilot: flight rules and function, or "doc" to keep what was read. */
+export interface ImportChoices {
+  rules: "doc" | "VFR" | "IFR";
+  function: "doc" | "PIC" | "SIC" | "DUAL";
+}
+
+/**
+ * Applies the pilot's choice to every row of an import (a student's page: VFR, dual). The function chosen
+ * replaces the function-time columns read (they would contradict it); VFR clears the IFR time, IFR makes the
+ * whole flight IFR unless the document gave its IFR time.
+ */
+export function applyImportChoices(rows: ImportedRow[], c: ImportChoices): ImportedRow[] {
+  if (c.rules === "doc" && c.function === "doc") return rows;
+  return rows.map((r) => {
+    if (!r.input) return r;
+    const input = { ...r.input };
+    const explicit = { ...r.explicit };
+    if (c.rules === "VFR") {
+      input.ifr = false;
+      input.ifrOverrideMin = 0;
+      explicit.ifr = 0;
+    } else if (c.rules === "IFR") {
+      input.ifr = true;
+      if (!explicit.ifr) {
+        input.ifrOverrideMin = undefined;
+        explicit.ifr = undefined;
+      }
+    }
+    if (c.function !== "doc") {
+      input.function = c.function;
+      explicit.pic = explicit.picus = explicit.copilot = explicit.dual = explicit.instructor = undefined;
+    }
+    return { ...r, input, explicit };
+  });
+}

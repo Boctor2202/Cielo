@@ -929,7 +929,7 @@
         "noColumn": "Not in the file",
         "diffTitle": "Rows to look at",
         "rows": "rows {rows}",
-        "diffHelp": "Geardown works out total time from the block times and night from the times and airports, so a column of your file may differ by a minute here and there (decimal rounding) or reveal a mistake. Fix the column mapping or your file, or confirm knowingly.",
+        "diffHelp": "Geardown keeps the total time written in your logbook; it works out night time from the times and airports when your file does not give it. A column may differ by a minute (decimal rounding) or reveal a mistake: fix the column mapping or your file, or confirm knowingly.",
         "rejected": "{count, plural, one {# row not imported} other {# rows not imported}}",
         "rejectedLine": "Row {row}: {reasons}",
         "reason": {
@@ -941,7 +941,20 @@
         },
         "cancel": "Cancel the import",
         "fix": "Fix the columns",
-        "confirm": "Confirm and import ({count, plural, one {# flight} other {# flights}})"
+        "confirm": "Confirm and import ({count, plural, one {# flight} other {# flights}})",
+        "timesTitle": "Times to check",
+        "timesText": "Rows {rows}: the departure and arrival times do not match the total time written. Geardown keeps the written total; check the times (a misread or miswritten hour) before or after importing."
+      },
+      "choices": {
+        "help": "For every flight of this import, when the document does not say it:",
+        "rules": "Flight rules",
+        "function": "Function",
+        "doc": "As in the document",
+        "fn": {
+          "PIC": "PIC",
+          "SIC": "SIC (co-pilot)",
+          "DUAL": "Dual (instruction)"
+        }
       }
     },
     "audit": {
