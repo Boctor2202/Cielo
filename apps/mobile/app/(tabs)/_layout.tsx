@@ -8,6 +8,7 @@ import { Tabs } from "expo-router/js-tabs";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useApp } from "../../src/state";
 import { SyncBadge } from "../../src/components/SyncBadge";
+import { TrialPill } from "../../src/components/TrialPill";
 import { BackButton } from "../../src/components/BackButton";
 import { font, glass, useTheme } from "../../src/theme";
 
@@ -32,13 +33,15 @@ export default function TabsLayout() {
     </View>
   );
   const mark = () => (
-    <View style={{ marginRight: 16 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginRight: 16 }}>
+      <TrialPill />
       <ThreeGreensO size={22} color={c.text} />
     </View>
   );
   // the account (profile, licences, subscription, data, settings): from the avatar, with the sync state beside it
   const account = () => (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginRight: 14 }}>
+      <TrialPill />
       <SyncBadge />
       <Pressable accessibilityRole="button" accessibilityLabel={t("tabs.account")} hitSlop={8} onPress={() => router.navigate("/more")}>
         <Ionicons name="person-circle-outline" size={28} color={c.text} />
