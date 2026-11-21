@@ -733,9 +733,9 @@ export default function GlassWorkspace({
           "--gw-blur": `${material.blur}px`,
           "--gw-opacity": material.opacity,
           "--gw-saturation": material.saturation,
-          "--gw-tint": useHostTheme
-            ? `color-mix(in srgb, var(--color-background, Canvas) 80%, ${material.tint})`
-            : material.tint,
+          "--gw-tint": material.tint,
+          // white (the default) only lifts the glass a little; a colour really tints it
+          "--gw-tint-strength": material.tint.toLowerCase() === "#ffffff" ? 0.05 : 0.3,
           "--gw-edge": material.edge,
           ...style,
         } as CSSProperties
@@ -1527,10 +1527,15 @@ const styles = `
   margin: auto;
 }
 .gw-glass {
-  background: color-mix(
+  background-color: color-mix(
     in srgb,
     var(--gw-surface) calc(var(--gw-opacity) * 100%),
     transparent
+  );
+  /* the tint, laid over the glass under its content */
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--gw-tint) calc(var(--gw-tint-strength, 0.12) * 100%), transparent),
+    color-mix(in srgb, var(--gw-tint) calc(var(--gw-tint-strength, 0.12) * 100%), transparent)
   );
   backdrop-filter: blur(var(--gw-blur)) saturate(var(--gw-saturation));
   -webkit-backdrop-filter: blur(var(--gw-blur)) saturate(var(--gw-saturation));
@@ -1549,15 +1554,6 @@ const styles = `
       ),
     0 20px 52px -25px var(--gw-shadow);
   position: relative;
-}
-.gw-glass:before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--gw-tint);
-  opacity: 0.12;
-  pointer-events: none;
-  border-radius: inherit;
 }
 .gw-topbar {
   height: 62px;
