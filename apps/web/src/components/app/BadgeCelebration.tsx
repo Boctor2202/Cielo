@@ -4,7 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { useReducedMotion } from "motion/react";
-import { badgeEmblemSvg, TIER_COLORS, type DiscoveryBadge } from "@cielo/core";
+import { badgeEmblemSvg, TIER_COLORS, type DiscoveryBadge, type Tier } from "@cielo/core";
+import { Wings } from "./Achievements";
+
+/** What is celebrated: a discovery badge, or a new hour level (wings). */
+export type Celebration = { kind: "badge"; badge: DiscoveryBadge } | { kind: "level"; hours: number; tier: Tier };
+const keyOf = (c: Celebration) => (c.kind === "badge" ? c.badge.id : `h${c.hours}`);
+const tierOf = (c: Celebration) => (c.kind === "badge" ? c.badge.tier : c.tier);
 
 /** How long each badge stays on screen before the next one comes. */
 const SHOW_MS = 3500;
@@ -15,14 +21,15 @@ const OUT_MS = 450;
  * confetti, the badge popping in with a shine, its name and what it rewards. A click (or Space / Enter) moves to
  * the next one, Escape skips them all. Reduced motion: no rays, no confetti, a plain fade.
  */
-export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[]; onDone: () => void }) {
+export function BadgeCelebration({ items: badges, onDone }: { items: Celebration[]; onDone: () => void }) {
   const t = useTranslations("app.badges");
   const reduce = useReducedMotion();
   const [i, setI] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const canvas = useRef<HTMLCanvasElement>(null);
   const burst = useRef<(c: string[]) => void>(() => {});
-  const b = badges[i];
+  const item = badges[i];
+  const b = item?.kind === "badge" ? item.badge : undefined;
 
   const next = () => {
     if (leaving) return;
@@ -36,8 +43,8 @@ export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[];
 
   // each badge: confetti, then the next one after a few seconds
   useEffect(() => {
-    if (!b) return;
-    if (!reduce) burst.current([...TIER_COLORS[b.tier], "#22c55e", "#86efac", "#ffffff", "#60a5fa"]);
+    if (!item) return;
+    if (!reduce) burst.current([...TIER_COLORS[tierOf(item)], "#22c55e", "#86efac", "#ffffff", "#60a5fa"]);
     const id = setTimeout(next, SHOW_MS);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -96,7 +103,7 @@ export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[];
     };
     raf = requestAnimationFrame(tick);
     // the first badge was set before the canvas was ready
-    if (b) burst.current([...TIER_COLORS[b.tier], "#22c55e", "#86efac", "#ffffff", "#60a5fa"]);
+    if (item) burst.current([...TIER_COLORS[tierOf(item)], "#22c55e", "#86efac", "#ffffff", "#60a5fa"]);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", size);
@@ -106,14 +113,14 @@ export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[];
 
   const svg = useMemo(() => (b ? badgeEmblemSvg({ series: b.series, id: b.id, tier: b.tier, rank: b.rank, of: b.of, size: 220, key: `cel-${b.id}` }) : ""), [b]);
   const mask = `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
-  if (!b || typeof document === "undefined") return null;
-  const [c1, c2] = TIER_COLORS[b.tier];
+  if (!item || typeof document === "undefined") return null;
+  const [c1, c2] = TIER_COLORS[tierOf(item)];
 
   return createPortal(
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={t("unlockedTitle")}
+      aria-label={item.kind === "level" ? t("levelTitle") : t("unlockedTitle")}
       onClick={next}
       className="badge-cel fixed inset-0 z-[100] flex cursor-pointer select-none flex-col items-center justify-center overflow-hidden"
       style={{ ["--c1" as string]: c1, ["--c2" as string]: c2, background: "radial-gradient(circle at 50% 42%, #1c2f52 0%, #07101f 70%)" }}
@@ -123,7 +130,12 @@ export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[];
       {!reduce && <div className="bc-rays" />}
       <canvas ref={canvas} className="pointer-events-none absolute inset-0 h-full w-full" />
       <div key={i} className={`relative flex flex-col items-center px-6 text-center ${leaving ? "bc-out" : "bc-in"}`}>
-        <p className="bc-kick font-mono text-[13px] font-bold uppercase tracking-[0.25em] text-[#86efac]">{t("unlockedTitle")}</p>
+        <p className="bc-kick font-mono text-[13px] font-bold uppercase tracking-[0.25em] text-[#86efac]">{item.kind === "level" ? t("levelTitle") : t("unlockedTitle")}</p>
+        {item.kind === "level" ? (
+          <div className="bc-badge relative mt-8 mb-6">
+            <Wings hours={item.hours} tier={item.tier} width={300} />
+          </div>
+        ) : b ? (
         <div className="bc-badge relative mt-5 mb-3" style={{ width: 220, height: (220 * 68) / 64 }}>
           <div dangerouslySetInnerHTML={{ __html: svg }} />
           {!reduce && (
@@ -132,16 +144,17 @@ export function BadgeCelebration({ badges, onDone }: { badges: DiscoveryBadge[];
             </div>
           )}
         </div>
-        <h2 className="bc-name text-[32px] font-extrabold leading-tight text-white">{t(`d.${b.id}`)}</h2>
-        <p className="bc-desc mt-1.5 text-base text-[#c8d4e4]">{t(`dd.${b.id}`)}</p>
+        ) : null}
+        <h2 className="bc-name text-[32px] font-extrabold leading-tight text-white">{item.kind === "level" ? t(`title.${item.hours}`) : t(`d.${b!.id}`)}</h2>
+        <p className="bc-desc mt-1.5 text-base text-[#c8d4e4]">{item.kind === "level" ? t("club", { n: item.hours.toLocaleString() }) : t(`dd.${b!.id}`)}</p>
         <p className="bc-tier mt-3.5 rounded-full px-3 py-1 font-mono text-xs font-bold text-[#0a1626]" style={{ background: `linear-gradient(135deg, ${c1}, ${c2})` }}>
-          {t(`tiers.${b.tier}`)}{b.of > 1 ? ` · ${b.rank}/${b.of}` : ""}
+          {t(`tiers.${tierOf(item)}`)}{b && b.of > 1 ? ` · ${b.rank}/${b.of}` : ""}
         </p>
       </div>
       {badges.length > 1 && (
         <div className="absolute bottom-24 flex gap-2">
           {badges.map((x, k) => (
-            <span key={x.id} className={`h-2 rounded-full transition-all ${k === i ? "w-6 bg-white" : "w-2 bg-white/25"}`} />
+            <span key={keyOf(x)} className={`h-2 rounded-full transition-all ${k === i ? "w-6 bg-white" : "w-2 bg-white/25"}`} />
           ))}
         </div>
       )}

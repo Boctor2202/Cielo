@@ -2435,7 +2435,8 @@
         "platinum": "Platinum",
         "diamond": "Diamond",
         "legend": "Legend"
-      }
+      },
+      "levelTitle": "New hour level"
     },
     "share": {
       "mail": "E-mail",
