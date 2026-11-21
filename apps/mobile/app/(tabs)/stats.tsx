@@ -4,7 +4,8 @@ import { Modal, Pressable, ScrollView, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { Flag } from "../../src/components/Flag";
-import { countryName, distanceNm, formatDuration, groupTotals, sumFlights, type Flight } from "@cielo/core";
+import { countryName, distanceNm, formatDuration, groupTotals, normalizeRegistration, sumFlights, type Flight } from "@cielo/core";
+import { Fleet, TopAirports, type FleetItem } from "../../src/components/StatsLists";
 import { Card, Row, Screen, Segmented, Stat, Txt, tap } from "../../src/components/ui";
 import { BarRow } from "../../src/components/Bars";
 import { lookupAirport } from "../../src/airports";
@@ -56,7 +57,20 @@ export default function Stats() {
       byYear: groupTotals(list, "year").sort((a, b) => b.key.localeCompare(a.key)).slice(0, 8),
       byType: groupTotals(list, "aircraftTypeIcao").slice(0, 8),
       topAirports: groupTotals(real, "airport").sort((a, b) => b.flights - a.flights).slice(0, 8),
-      regs: groupTotals(real, "registration").slice(0, 6),
+      regs: (() => {
+        // one tile per airframe: "FHOLK" and "F-HOLK" are the same aircraft; its latest type and model
+        const m = new Map<string, FleetItem & { last: string }>();
+        for (const f of real) {
+          const reg = normalizeRegistration(f.registration);
+          if (!reg) continue;
+          const e = m.get(reg) ?? { reg, minutes: 0, flights: 0, last: "" };
+          e.minutes += f.totalMin;
+          e.flights++;
+          if (f.date >= e.last) Object.assign(e, { last: f.date, type: f.aircraftTypeIcao || e.type, model: f.aircraftModel || e.model });
+          m.set(reg, e);
+        }
+        return [...m.values()].sort((a, b) => b.minutes - a.minutes).slice(0, 8);
+      })(),
       fn: fn.filter((x) => x.minutes > 0),
     };
   }, [flights, range, today]);
@@ -159,8 +173,8 @@ export default function Stats() {
       ) : null}
       {section(t("stats.byYear"), s.byYear)}
       {section(t("stats.byType"), s.byType)}
-      {section(t("stats.airports"), s.topAirports, true)}
-      {section(t("stats.registrations"), s.regs)}
+      <TopAirports title={t("stats.airports")} items={s.topAirports} />
+      <Fleet title={t("stats.registrations")} items={s.regs} format={fmt} />
       <View style={{ height: space.md }} />
     </Screen>
   );

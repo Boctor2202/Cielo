@@ -13,7 +13,7 @@ import { api } from "../api";
 import { useApp } from "../state";
 import { Glass, Row, Txt } from "./ui";
 
-interface Photo {
+export interface Photo {
   id: string;
   src: string;
   width: number;
@@ -25,15 +25,17 @@ interface Photo {
 // JSON only (allowed up to 24 h by the terms; here only for the app session)
 const metadata = new Map<string, Photo | null>();
 
-export function AircraftPhoto({ registration }: { registration?: string }) {
-  const { t, access, pilot } = useApp();
+/** The Planespotters photo of an exact aircraft: undefined while loading, null when there is none. */
+export function useAircraftPhoto(registration: string | undefined): Photo | null | undefined {
+  const { access, pilot } = useApp();
   // demo data uses fictional registrations: a real aircraft wearing them would show the wrong photo
   const fictional = access.demo || isDemoAccount(pilot.email);
   const reg = registration?.trim().toUpperCase();
-  const [photo, setPhoto] = useState<Photo | null>(reg ? (metadata.get(reg) ?? null) : null);
+  const [photo, setPhoto] = useState<Photo | null | undefined>(reg ? metadata.get(reg) : null);
   useEffect(() => {
     if (fictional || !reg || reg.length < 3) return setPhoto(null);
     if (metadata.has(reg)) return setPhoto(metadata.get(reg)!);
+    setPhoto(undefined);
     let alive = true;
     api<{ photo: Photo | null }>(`/api/aircraft-photo?reg=${encodeURIComponent(reg)}`)
       .then((d) => {
@@ -45,6 +47,13 @@ export function AircraftPhoto({ registration }: { registration?: string }) {
       alive = false;
     };
   }, [reg, fictional]);
+  return photo;
+}
+
+export function AircraftPhoto({ registration }: { registration?: string }) {
+  const { t } = useApp();
+  const reg = registration?.trim().toUpperCase();
+  const photo = useAircraftPhoto(reg);
   if (!photo) return null;
   const open = () => void Linking.openURL(photo.link);
   // Planespotters' largest free size is about 420 px wide: shown at 160 pt it stays sharp on a Retina screen,
