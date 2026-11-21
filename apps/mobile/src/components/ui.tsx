@@ -126,8 +126,15 @@ export function Txt({
 export const WIDE = 700;
 export const useWide = () => useWindowDimensions().width >= WIDE;
 
+/**
+ * Lets a child stop the screen from scrolling while a finger is on it (the signature pad): otherwise the
+ * scroll view takes the gesture as soon as the finger moves.
+ */
+export const ScrollLock = createContext<(locked: boolean) => void>(() => {});
+
 export function Screen({ children, scroll = true, style, backdrop, columns }: { children: React.ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle>; backdrop?: boolean; columns?: boolean }) {
   const wide = useWide();
+  const [locked, setLocked] = React.useState(false);
   if (!scroll)
     return (
       <View style={[{ flex: 1, backgroundColor: "transparent" }, style]}>
@@ -143,7 +150,9 @@ export function Screen({ children, scroll = true, style, backdrop, columns }: { 
       </View>
     );
   return (
+    <ScrollLock.Provider value={setLocked}>
     <ScrollView
+      scrollEnabled={!locked}
       style={{ flex: 1, backgroundColor: "transparent" }}
       contentContainerStyle={[
         { padding: space.lg, gap: space.lg, paddingBottom: 130 },
@@ -182,6 +191,7 @@ export function Screen({ children, scroll = true, style, backdrop, columns }: { 
         ))
       )}
     </ScrollView>
+    </ScrollLock.Provider>
   );
 }
 
