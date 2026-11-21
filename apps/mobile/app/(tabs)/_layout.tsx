@@ -7,6 +7,7 @@ import { router } from "expo-router";
 import { Tabs } from "expo-router/js-tabs";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useApp } from "../../src/state";
+import { useAutoSign } from "../../src/signing";
 import { SyncBadge } from "../../src/components/SyncBadge";
 import { TrialPill } from "../../src/components/TrialPill";
 import { BackButton } from "../../src/components/BackButton";
@@ -16,6 +17,8 @@ type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
 export default function TabsLayout() {
   const { t } = useApp();
+  // the pilot's own flights, signed the day after when they turned automatic signature on
+  useAutoSign();
   const c = useTheme();
   const g = glass(c);
   const icon = (name: IconName) => ({ color, size }: { color: ColorValue; size: number }) => <Ionicons name={name} color={color as string} size={size} />;

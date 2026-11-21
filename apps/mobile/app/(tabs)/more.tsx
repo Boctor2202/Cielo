@@ -11,6 +11,7 @@ import { runningVersion } from "../../src/updates";
 import { layoutForAuthority } from "@cielo/export";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { exportAllDataJson, exportLogbookCsv, exportLogbookPdf, exportLogbookXlsx } from "../../src/exporters";
+import { signaturesFor } from "../../src/signing";
 import { isCloudEnabled } from "../../src/auth";
 import { sendReport } from "../../src/api";
 import { useApp } from "../../src/state";
@@ -37,6 +38,26 @@ export default function More() {
     } finally {
       setBusy(null);
     }
+  };
+
+  /**
+   * The PDF: the pilot is offered to sign the logbook (their saved signature and the date in each page's
+   * certification); without a saved signature, to draw one first. The flights' signatures always go with it.
+   */
+  const exportPdf = () => {
+    const go = (holderSigns: boolean) => run("pdf", async () => exportLogbookPdf(flights, balances, pilot, { signatures: await signaturesFor(app.store, flights), holderSigns }));
+    if (!app.access.has("signature")) return void go(false);
+    if (!pilot.signatureDataUrl)
+      return Alert.alert(t("mysig.exportTitle"), t("mysig.exportNone"), [
+        { text: t("mysig.create"), onPress: () => router.push("/profile") },
+        { text: t("mysig.exportUnsigned"), onPress: () => void go(false) },
+        { text: t("common.cancel"), style: "cancel" },
+      ]);
+    Alert.alert(t("mysig.exportTitle"), t("mysig.exportBody", { name: pilot.fullName }), [
+      { text: t("mysig.exportSigned"), onPress: () => void go(true) },
+      { text: t("mysig.exportUnsigned"), onPress: () => void go(false) },
+      { text: t("common.cancel"), style: "cancel" },
+    ]);
   };
 
   // signing out clears the phone: say so, and warn when changes have not reached the server yet
@@ -189,19 +210,19 @@ export default function More() {
           kind="secondary"
           title={busy === "pdf" ? t("more.exporting") : t("more.exportPdf", { layout: layoutForAuthority(pilot.authority, frameworkOf(pilot)).replace("TCCA", "Transport Canada").replace("HKCAD", "CAD Hong Kong").replace("UK", "UK CAA") })}
           loading={busy === "pdf"}
-          onPress={() => run("pdf", () => exportLogbookPdf(flights, balances, pilot))}
+          onPress={exportPdf}
         />
         <Button
           kind="secondary"
           title={t("more.exportCsv")}
           loading={busy === "csv"}
-          onPress={() => run("csv", () => exportLogbookCsv(flights, pilot))}
+          onPress={() => run("csv", async () => exportLogbookCsv(flights, pilot, { signatures: await signaturesFor(app.store, flights) }))}
         />
         <Button
           kind="secondary"
           title={t("more.exportXlsx")}
           loading={busy === "xlsx"}
-          onPress={() => run("xlsx", () => exportLogbookXlsx(flights, pilot))}
+          onPress={() => run("xlsx", async () => exportLogbookXlsx(flights, pilot, { signatures: await signaturesFor(app.store, flights) }))}
         />
       </Card>
 

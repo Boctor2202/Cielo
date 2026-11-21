@@ -9,13 +9,15 @@ import { useTheme } from "../theme";
 import { Button, Card, Chip, Field, Row, Txt } from "./ui";
 import { SignatureImage, SignaturePad, signatureSvg } from "./SignaturePad";
 import { createSignLink } from "../crew";
+import { signWithSaved } from "../signing";
 
 const ROLES = ["instructor", "captain", "examiner", "other"] as const;
 const hash = (f: Flight) => Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, canonicalFlightContent(f));
 
 /** Signature of a logged flight: who signed, and whether the flight is unchanged since (SHA-256 of its content). */
 export function FlightSignature({ flight }: { flight: Flight }) {
-  const { t, locale, store, pilot, put, remove, access, session } = useApp();
+  const app = useApp();
+  const { t, locale, store, pilot, put, remove, access, session } = app;
   const [linkBusy, setLinkBusy] = useState(false);
   const c = useTheme();
   const [sig, setSig] = useState<{ s: Signature; valid: boolean } | null | undefined>(undefined);
@@ -102,6 +104,24 @@ export function FlightSignature({ flight }: { flight: Flight }) {
       ) : (
         <>
           <Txt variant="small">{t("sig.hint")}</Txt>
+          {pilot.signatureDataUrl ? (
+            <Button
+              title={t("mysig.signThis")}
+              loading={saving}
+              onPress={() =>
+                Alert.alert(t("mysig.signThis"), t("mysig.confirmOne", { name: pilot.fullName }), [
+                  { text: t("common.cancel"), style: "cancel" },
+                  {
+                    text: t("mysig.sign"),
+                    onPress: () => {
+                      setSaving(true);
+                      void signWithSaved(app, [flight]).finally(() => setSaving(false));
+                    },
+                  },
+                ])
+              }
+            />
+          ) : null}
           <Button kind="secondary" title={t("sig.ask")} onPress={() => setOpen(true)} />
         </>
       )}

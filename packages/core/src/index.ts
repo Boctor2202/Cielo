@@ -31,6 +31,7 @@ export * from "./rosterMerge";
 export * from "./profile";
 export * from "./achievements";
 export * from "./routeMap";
+export * from "./signing";
 export * from "./art";
 export * from "./flightReport";
 export * from "./airFranceEp5";

@@ -1,7 +1,9 @@
-import { formatClock, formatDuration, toCsv, type Flight } from "@cielo/core";
+import { formatClock, formatDuration, SIGNER_ROLE_SHORT, toCsv, type Flight, type SignedInfo } from "@cielo/core";
 
 export interface TabularOptions {
   decimal?: boolean;
+  /** the flights' signatures (by flight id): who signed, their role and licence, when, and whether still valid */
+  signatures?: Record<string, SignedInfo>;
 }
 
 export const TABULAR_HEADERS = [
@@ -9,7 +11,8 @@ export const TABULAR_HEADERS = [
   "Aircraft type", "Aircraft model", "Registration", "SE", "ME", "Multi-pilot", "Total", "Function", "PIC name",
   "PIC", "PICUS", "Co-pilot", "Dual", "Instructor", "Examiner", "Night", "IFR", "Actual IMC", "Cross-country",
   "Takeoffs day", "Takeoffs night", "Landings day", "Landings night", "Pilot flying", "Approaches",
-  "FSTD", "FSTD type", "FSTD time", "Remarks", "Signed",
+  "FSTD", "FSTD type", "FSTD time", "Remarks", "Signed", "Signed by", "Signer role", "Signer licence", "Signed at (UTC)",
+  "Signature valid",
 ] as const;
 
 /** One row per entry, in chronological order, durations as h:mm (or decimal). */
@@ -26,7 +29,13 @@ export function flightsToRows(flights: Flight[], opts: TabularOptions = {}): (st
       d(f.xcMin), f.takeoffsDay, f.takeoffsNight, f.landingsDay, f.landingsNight, f.pilotFlying ? "Y" : "",
       (f.approaches ?? []).map((a) => `${a.count}x ${a.type}${a.runway ? " " + a.runway : ""}`).join("; "),
       f.isFstd ? "Y" : "", f.fstdType ?? "", d(f.fstdMin), f.remarks ?? "", f.signatureId ? "Y" : "",
+      ...signatureCells(f.signatureId ? opts.signatures?.[f.id] : undefined),
     ]);
+}
+
+function signatureCells(s: SignedInfo | undefined): string[] {
+  if (!s) return ["", "", "", "", ""];
+  return [s.signerName, SIGNER_ROLE_SHORT[s.signerRole] || s.signerRole, s.signerLicenceNumber ?? "", s.signedAt.slice(0, 16).replace("T", " "), s.valid ? "Y" : "N (entry changed after signing)"];
 }
 
 export function flightsToCsv(flights: Flight[], opts: TabularOptions & { delimiter?: string } = {}): string {

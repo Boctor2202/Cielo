@@ -40,6 +40,8 @@ export interface LinkRequest {
   via: "email" | "licence" | "flight";
   flights: number;
   shared: number;
+  /** the pilot signs this colleague's requests automatically with their saved signature */
+  autoApprove?: boolean;
 }
 export interface ToSign {
   id: string;
@@ -49,7 +51,9 @@ export interface ToSign {
   inMyLogbook: boolean;
 }
 export interface CrewData {
-  me: { name: string; licence: string };
+  me: { name: string; licence: string; savedSignature?: boolean };
+  /** flights signed automatically for colleagues these last 30 days */
+  autoSigned?: { from: string; flights: number }[];
   captains: Captain[];
   linkRequests: LinkRequest[];
   toSign: ToSign[];
