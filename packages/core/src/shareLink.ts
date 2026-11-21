@@ -2,7 +2,8 @@
  * The public link of a shared achievement: the share image's settings packed in the path, so the page needs no
  * storage. Its preview (Open Graph) is the image, which every network shows with the link.
  */
-const ALLOWED = ["type", "id", "h", "on", "name", "rank", "hrs", "ap", "ct", "nm", "lang"];
+// map cards also carry their routes (r), flights (fl), period (per) and aircraft type (ty)
+const ALLOWED = ["type", "id", "h", "on", "name", "rank", "hrs", "ap", "ct", "nm", "lang", "r", "fl", "per", "ty"];
 
 /** The public page of a shared achievement, e.g. https://geardown.app/fr/b/dHlwZT1… */
 export const shareLinkUrl = (site: string, lang: string, params: URLSearchParams | Record<string, string>) => `${site.replace(/\/$/, "")}/${lang === "fr" ? "fr" : "en"}/b/${packShare(params)}`;

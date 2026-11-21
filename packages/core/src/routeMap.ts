@@ -68,8 +68,11 @@ export function routeMapChoices(flights: Flight[]): { years: string[]; types: st
   return { years: [...years].sort().reverse(), types: [...types.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t) };
 }
 
-/** The routes for the share image, as "LFPG.EGLL.3" joined by commas (the most flown first, up to `max`). */
-export const encodeShareRoutes = (routes: { a: string; b: string; n: number }[], max = 300) =>
+/**
+ * The routes for the share image, as "LFPG.EGLL.3" joined by commas (the most flown first, up to `max`, which
+ * keeps the public link short enough for every messaging app).
+ */
+export const encodeShareRoutes = (routes: { a: string; b: string; n: number }[], max = 150) =>
   routes
     .slice(0, max)
     .map((r) => `${r.a}.${r.b}.${r.n}`)
