@@ -51,28 +51,28 @@
     "items": {
       "logbook": {
         "title": "Carnet de vol et exports au format des autorités",
-        "text": "Toutes les colonnes de l'AMC1 FCL.050, totaux par page et reports automatiques. Export PDF aux formats EASA, FAA et CASA, plus CSV et Excel.",
+        "text": "Vos vols mois par mois avec leurs totaux, filtrés par année, type ou exploitant. Saisissez l'immatriculation : Geardown retrouve les aéroports et les heures grâce aux signaux ADS-B. Export PDF aux formats EASA, FAA et CASA, plus CSV et Excel.",
         "points": [
-          "Temps de nuit calculé au crépuscule civil",
+          "Toutes les colonnes de l'AMC1 FCL.050, temps de nuit au crépuscule civil",
           "SE / ME / multipilote déduits de l'avion",
           "Report des totaux de votre carnet papier"
         ]
       },
       "import": {
-        "title": "Import automatique",
-        "text": "Importez votre roster compagnie (iCal, CSV), vos anciens fichiers CSV ou Excel, ou photographiez les pages de votre carnet papier.",
+        "title": "Import de n'importe quel carnet",
+        "text": "Fichiers CSV ou Excel, exports d'autres applications, relevés PDF de compagnie, roster, e-mail de fin de vol collé tel quel ou photos de vos pages papier. Rien n'est enregistré avant que vous ayez vérifié vos totaux.",
         "points": [
-          "Détection automatique des colonnes",
-          "Aperçu et correction avant import",
-          "Scan photo avec reconnaissance de texte"
+          "Détection automatique des colonnes, correction avant import",
+          "Écran « Vérifiez vos totaux » avant d'enregistrer",
+          "Un import se défait sans toucher au reste du carnet"
         ]
       },
       "audit": {
         "title": "Audit automatique",
-        "text": "Geardown relit votre carnet comme un examinateur : chevauchements, heures incohérentes, doublons, temps de nuit supérieur au total, ruptures de continuité.",
+        "text": "Geardown relit votre carnet comme un examinateur : chevauchements, heures incohérentes, doublons, temps de nuit supérieur au total, ruptures de continuité. Chaque alerte explique pourquoi elle apparaît et ce qui est normal.",
         "points": [
-          "17 règles de contrôle",
-          "Lien direct vers le vol à corriger",
+          "17 contrôles de cohérence",
+          "Bouton « Expliquer » et lien direct vers le vol",
           "Avant chaque contrôle en vol ou embauche"
         ]
       },
@@ -87,34 +87,34 @@
       },
       "ftl": {
         "title": "Temps de repos et limites FTL",
-        "text": "Temps de service de vol et de repos calculés selon EASA ORO.FTL ou EU-OPS Subpart Q (aviation d'affaires) à partir de vos vols et de votre roster, avec alertes avant dépassement.",
+        "text": "Un calcul indicatif selon EASA ORO.FTL ou EU-OPS Subpart Q (aviation d'affaires), à partir de vos vols et de votre roster. Un outil d'aide : il ne remplace pas le suivi FTL de votre exploitant.",
         "points": [
-          "FDP maximum selon l'heure de présentation",
+          "FDP maximum selon l'heure de présentation, split duty si votre exploitant l'applique",
           "Cumuls 7 j, 14 j, 28 j, 12 mois",
           "Repos minimum et repos hebdomadaire"
         ]
       },
       "stats": {
-        "title": "Carte de vos vols et statistiques",
-        "text": "Vos routes sur une carte, vos heures par type, par fonction, de nuit et IFR, vos aéroports les plus fréquentés.",
+        "title": "Expérience et statistiques",
+        "text": "Vos heures par type, par fonction, de nuit et IFR, année par année, et toutes vos routes sur la carte du monde. L'accueil se compose de widgets que vous choisissez : objectifs, expérience récente, rapports.",
         "points": [
-          "Grand cercle exact entre aéroports",
-          "Périodes 28 j / 90 j / 12 mois",
-          "19 000 aérodromes référencés"
+          "Grand cercle exact entre 19 000 aérodromes",
+          "Périodes 7 j / 30 j / 90 j / 12 mois",
+          "Objectifs calculés depuis votre carnet et la FCL.060"
         ]
       },
       "signature": {
         "title": "Signature numérique des vols",
-        "text": "Faites signer un vol par votre instructeur ou votre commandant de bord directement sur l'écran. Le vol est verrouillé et son empreinte scellée.",
+        "text": "Faites signer un vol par votre instructeur ou votre commandant de bord sur l'écran, ou envoyez-lui un lien de signature. Le vol est verrouillé et son empreinte scellée.",
         "points": [
           "Empreinte SHA-256 : toute modification après signature est détectée",
-          "Toute modification invalide la signature",
+          "Signature sur place ou à distance par lien",
           "Mention dans l'export PDF"
         ]
       },
       "offline": {
         "title": "Hors ligne et synchronisé",
-        "text": "Geardown fonctionne sans réseau, en vol comme en escale. Vos données se synchronisent dès que vous retrouvez une connexion, sur tous vos appareils.",
+        "text": "Geardown fonctionne sans réseau, en vol comme en escale. Vos données se synchronisent dès que vous retrouvez une connexion, entre le web et votre téléphone.",
         "points": [
           "Base locale sur chaque appareil",
           "Hébergement en Europe (Londres)",
@@ -123,19 +123,19 @@
       },
       "jobs": {
         "title": "Offres d'emploi pilote",
-        "text": "Les offres publiées par les compagnies et opérateurs sur leurs propres pages carrières, classées par région du monde, expérience exigée et salaire quand il est indiqué. Geardown calcule votre pourcentage de correspondance à partir de votre carnet, sur votre appareil. La couverture porte d'abord sur l'Europe et l'aviation d'affaires ; d'autres régions sont encore peu alimentées.",
+        "text": "Les offres publiées par les compagnies et opérateurs sur leurs propres pages carrières. Pour chacune, Geardown compare les critères de l'annonce à votre carnet : atteint, non atteint ou à vérifier, avec l'extrait de l'offre. La couverture porte d'abord sur l'Europe et l'aviation d'affaires.",
         "points": [
-          "Classement par région : licence et droit de travailler pris en compte",
+          "Filtre « Sur mes types uniquement », région, licence et droit de travailler",
           "Heures exigées, qualification de type, salaire lus dans l'annonce",
-          "% de correspondance « pour vous » calculé sur votre appareil"
+          "% de correspondance calculé sur votre appareil : votre carnet n'est jamais envoyé"
         ]
       },
       "cv": {
-        "title": "CV pilote",
-        "text": "Un CV généré depuis votre carnet, avec les heures par catégorie (total, PIC, multipilote, turbine, nuit, IFR, par type) et une mise en page pensée pour les logiciels de tri des compagnies.",
+        "title": "CV pilote et dossier de candidature",
+        "text": "Un CV généré depuis votre carnet, avec les heures par catégorie (total, PIC, multipilote, turbine, nuit, IFR, par type), à adapter à une offre précise, et une mise en page pensée pour les logiciels de tri des compagnies.",
         "points": [
           "Heures par catégorie et par type, toujours à jour",
-          "Contrôle de lisibilité par les logiciels de tri (ATS), sans garantie de résultat",
+          "Contrôle avant envoi pour les logiciels de tri (ATS), sans garantie de résultat",
           "Export PDF, texte et JSON Resume, en français ou en anglais"
         ]
       }

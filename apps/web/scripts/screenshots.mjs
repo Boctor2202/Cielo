@@ -22,6 +22,8 @@ const LOCALES = (process.argv[3] ?? "fr,en").split(",");
 const ONLY = process.argv[4]?.split(",");
 const want = (...names) => !ONLY || names.some((n) => ONLY.includes(n));
 const OUT = path.resolve("public/screens");
+/** the demo notice above each page is for visitors trying the demo, not for marketing screenshots */
+const hideDemo = (page) => page.evaluate(() => document.querySelectorAll('main p[class*="border-accent/40"]').forEach((e) => e.remove()));
 
 const L = {
   fr: {
@@ -39,7 +41,9 @@ const L = {
     newFlight: "/fr/app/carnet/nouveau",
     jobs: "/fr/app/emplois",
     cv: "/fr/app/cv",
-    importBtn: /Importer \d/,
+    importBtn: /Vérifier les totaux \(\d/,
+    confirmBtn: /Valider et importer \(\d/,
+    onTypeOnly: /Sur mes types uniquement/,
     sign: /Faire signer/,
     signer: "Cdt A. Moreau",
     csv: [
@@ -65,7 +69,9 @@ const L = {
     newFlight: "/en/app/logbook/new",
     jobs: "/en/app/jobs",
     cv: "/en/app/cv",
-    importBtn: /Import \d/,
+    importBtn: /Check the totals \(\d/,
+    confirmBtn: /Confirm and import \(\d/,
+    onTypeOnly: /My types only/,
     sign: /Get it signed/,
     signer: "Capt. A. Moore",
     csv: [
@@ -116,7 +122,11 @@ async function shoot(locale, theme) {
     await page.goto(BASE + p, { waitUntil: "networkidle" });
     await page.waitForTimeout(wait);
   };
-  const snap = (name) => (want(name) ? page.screenshot({ path: path.join(dir, `${name}.png`) }) : null);
+  const snap = async (name) => {
+    if (!want(name)) return;
+    await hideDemo(page);
+    await page.screenshot({ path: path.join(dir, `${name}.png`) });
+  };
 
   await login(page, l);
   if (want("dashboard", "logbook")) {
@@ -136,7 +146,10 @@ async function shoot(locale, theme) {
   await page.mouse.wheel(0, 180);
   await page.waitForTimeout(400);
   await snap("import");
+  // the import goes through the "Check your totals" step before anything is saved
   await page.getByRole("button", { name: l.importBtn }).click();
+  await page.waitForTimeout(1200);
+  await page.getByRole("button", { name: l.confirmBtn }).click();
   await page.waitForTimeout(1500);
   fs.rmSync(tmp);
   await go(l.audit);
@@ -156,7 +169,11 @@ async function shoot(locale, theme) {
   // Signature: open the latest flight and draw
   if (want("signature")) {
   await go(l.logbook);
-  await page.locator("tbody tr").first().click();
+  // first flight of the list (rows link to /app/carnet/<id>, /en/app/logbook/<id>)
+  await page.locator("a[href]").filter({ has: page.locator("text=/\\d:\\d\\d/") }).evaluateAll((as) => {
+    const a = as.find((x) => /\/(carnet|logbook)\/[^/]{12,}$/.test(x.getAttribute("href") ?? ""));
+    a?.click();
+  });
   await page.waitForTimeout(2000);
   // the button sits low in the form and the dialog locks scrolling when it opens: open it from the top of
   // the page, with a DOM click that does not scroll the button into view
@@ -187,6 +204,16 @@ async function shoot(locale, theme) {
   await ctx.setOffline(false);
 
   await go(l.jobs, 6000);
+  // offers on the demo pilot's type only, and employers' names and places blurred: the screenshot shows the
+  // feature, not who is hiring
+  await page.getByText(l.onTypeOnly).first().click().catch(() => {});
+  await page.waitForTimeout(800);
+  await page.evaluate(() => {
+    document.querySelectorAll("p.text-accent.font-semibold, svg.lucide-map-pin").forEach((e) => {
+      const el = e.tagName === "svg" ? e.parentElement : e;
+      if (el) el.style.filter = "blur(5px)";
+    });
+  });
   await snap("jobs");
   await go(l.cv, 2500);
   await snap("cv");
@@ -200,9 +227,11 @@ async function shoot(locale, theme) {
   await login(m, l);
   await m.goto(BASE + l.logbook, { waitUntil: "networkidle" });
   await m.waitForTimeout(1800);
+  await hideDemo(m);
   await m.screenshot({ path: path.join(dir, "mobile-logbook.png") });
   await m.goto(BASE + l.app, { waitUntil: "networkidle" });
   await m.waitForTimeout(2500);
+  await hideDemo(m);
   await m.screenshot({ path: path.join(dir, "mobile-dashboard.png") });
   }
 
