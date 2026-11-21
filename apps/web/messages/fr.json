@@ -1898,7 +1898,10 @@
       "haveAccount": "Déjà abonné ? Se connecter",
       "demoAccount": "Compte de démonstration : pilote et données fictifs (Thomas Mercier, Skyline Airways).",
       "demoLocal": "Démonstration — données fictives — modifications locales, sur ce navigateur uniquement. En créant un compte, elles sont effacées : votre carnet démarre vide (ou avec vos propres données).",
-      "trial": "Essai gratuit, sans carte : {days, plural, one {encore # jour} other {encore # jours}}. Ensuite, sans abonnement, votre carnet passe en lecture seule ; rien n'est supprimé."
+      "trial": "Essai gratuit, sans carte : {days, plural, one {encore # jour} other {encore # jours}}. Ensuite, sans abonnement, votre carnet passe en lecture seule ; rien n'est supprimé.",
+      "pill": "Essai · {days} j",
+      "pillDemo": "Démo · {days} j",
+      "pillLabel": "L'essai gratuit se termine dans {days} jours. Voir les abonnements."
     },
     "photo": {
       "alt": "Photo de l'appareil {reg}",

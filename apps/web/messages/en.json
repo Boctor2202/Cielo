@@ -1898,7 +1898,10 @@
       "haveAccount": "Already subscribed? Sign in",
       "demoAccount": "Demo account: fictional pilot and data (Thomas Mercier, Skyline Airways).",
       "demoLocal": "Demo — fictional data — local changes, in this browser only. Creating an account erases them: your logbook starts empty (or with your own data).",
-      "trial": "Free trial, no card: {days, plural, one {# day} other {# days}} left. After that, without a subscription, your logbook becomes read-only; nothing is deleted."
+      "trial": "Free trial, no card: {days, plural, one {# day} other {# days}} left. After that, without a subscription, your logbook becomes read-only; nothing is deleted.",
+      "pill": "Trial · {days} d",
+      "pillDemo": "Demo · {days} d",
+      "pillLabel": "Free trial ends in {days} days. See the plans."
     },
     "photo": {
       "alt": "Photo of aircraft {reg}",

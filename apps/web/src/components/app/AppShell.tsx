@@ -13,7 +13,7 @@ import { usePilot } from "@/lib/hooks";
 import { isDemoAccount } from "@cielo/core";
 import { DEMO_META, localStore } from "@/lib/db";
 import { useTrackAutoFetch } from "@/lib/tracks";
-import { AccessBanner, useAccess, usePendingCheckout } from "@/lib/access";
+import { AccessBanner, TrialPill, useAccess, usePendingCheckout } from "@/lib/access";
 import { useFlags, type Flags } from "@/lib/flags";
 import { apiFetch, installErrorReporter } from "@/lib/report";
 import { ReportDialog } from "./ReportDialog";
@@ -125,10 +125,11 @@ function Shell({ children }: { children: ReactNode }) {
         <div className="app-room" aria-hidden="true" />
         <div className="sticky top-0 hidden h-dvh p-3 pr-0 lg:block">
         <aside className="app-glass app-glass-strong flex h-full flex-col rounded-[28px]">
-          <div className="flex h-16 items-center px-5">
+          <div className="flex h-16 items-center justify-between gap-2 px-5">
             <Link href="/" aria-label="Geardown">
               <Logo />
             </Link>
+            <TrialPill />
           </div>
           <div className="px-3">
             <Link href="/app/carnet/nouveau" className="btn btn-primary w-full">
@@ -185,6 +186,7 @@ function Shell({ children }: { children: ReactNode }) {
               <Logo />
             </Link>
             <div className="flex items-center gap-1">
+              <TrialPill />
               <span className="mr-1 flex items-center gap-1 text-xs text-muted">
                 {online ? <Wifi size={12} className="text-success" /> : <WifiOff size={12} className="text-caution" />}
               </span>

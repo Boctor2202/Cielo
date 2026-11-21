@@ -18,6 +18,7 @@ import { Backdrop, KeyboardDoneBar, Txt } from "../src/components/ui";
 import { glass } from "../src/theme";
 import { Splash, SplashOverlay } from "../src/components/Splash";
 import { ThreeGreensO } from "../src/components/Logo";
+import { TrialPill } from "../src/components/TrialPill";
 import { launchReady, markShown } from "../src/updates";
 import { LogReminderSync } from "../src/logReminders";
 
@@ -87,7 +88,12 @@ function Navigator() {
           headerLeft: ({ canGoBack }) => (canGoBack ? <BackButton /> : null),
           contentStyle: { backgroundColor: "transparent" },
           // the lit "O" of the logo on every page opened over the tabs (a screen's own button replaces it)
-          headerRight: () => <ThreeGreensO size={22} color={c.text} />,
+          headerRight: () => (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <TrialPill />
+              <ThreeGreensO size={22} color={c.text} />
+            </View>
+          ),
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
