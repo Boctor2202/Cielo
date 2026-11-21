@@ -42,6 +42,19 @@ async function searchText(body: Record<string, unknown>, fields: string): Promis
   return ((await r.json()) as { places?: Hit[] }).places ?? [];
 }
 
+/** Landmarks chosen by hand where the automatic choice is not the city's emblem (searched by name). */
+const PICKS: Record<string, string> = {
+  cairo: "Pyramids of Giza",
+  riyadh: "Kingdom Centre Tower Riyadh",
+  lagos: "National Theatre Lagos",
+  madrid: "Royal Palace of Madrid",
+  dublin: "Trinity College Dublin",
+  johannesburg: "Constitution Hill Johannesburg",
+  rome: "Colosseum",
+  miami: "South Beach Miami",
+  "new york": "Empire State Building",
+};
+
 const box = (c: { lat: number; lon: number }, d: number) => ({ rectangle: { low: { latitude: c.lat - d, longitude: c.lon - d * 1.4 }, high: { latitude: c.lat + d, longitude: c.lon + d * 1.4 } } });
 
 /**
@@ -57,6 +70,16 @@ async function landmarkOf(city: string, country: string, near: { lat: number; lo
   const town = (await searchText({ textQuery: city, includedType: "locality", languageCode: "en", locationBias: { circle: { center: { latitude: near.lat, longitude: near.lon }, radius: 50000 } }, pageSize: 1 }, "places.location").catch(() => []))[0]?.location;
   const centre = town ? { lat: town.latitude, lon: town.longitude } : near;
   const fields = "places.id,places.displayName,places.userRatingCount,places.types,places.formattedAddress,places.location,places.photos.name";
+  // a landmark chosen by hand for this city
+  const pick = PICKS[city.toLowerCase()];
+  if (pick) {
+    const p = (await searchText({ textQuery: pick, languageCode: lang, locationBias: { circle: { center: { latitude: centre.lat, longitude: centre.lon }, radius: 50000 } }, pageSize: 3 }, fields).catch(() => [])).find((x) => x.photos?.length);
+    if (p) {
+      const hit = { id: p.id, name: p.displayName?.text ?? pick };
+      landmarks.set(k, hit);
+      return hit;
+    }
+  }
   const around = (q: string) => searchText({ textQuery: q, languageCode: lang, locationRestriction: box(centre, town ? 0.18 : 0.32), pageSize: 20 }, fields).catch(() => [] as Hit[]);
   const found = [...(await around(`famous landmark ${city}`)), ...(await around(`monument ${city}`))];
   const NOT = ["airport", "lodging", "shopping_mall", "store", "restaurant", "stadium", "zoo", "amusement_park", "water_park", "casino", "aquarium"];
