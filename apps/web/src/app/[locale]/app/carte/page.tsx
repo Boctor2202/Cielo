@@ -78,7 +78,7 @@ export default function MapPage() {
     if (!totals) return;
     setSharing(true);
     const lang = locale === "fr" ? "fr" : "en";
-    const q = new URLSearchParams({ type: "map", lang, r: encodeShareRoutes(totals.routes), fl: String(totals.flights), ap: String(totals.airports), nm: String(totals.nm), ct: String(totals.countries), per: periodLabel, ty: type, name: pilot?.fullName ?? "", rank: pilot?.rank ?? "" });
+    const q = new URLSearchParams({ type: "map", lang, r: encodeShareRoutes(totals.routes), fl: String(totals.flights), ap: String(totals.airports), nm: String(totals.nm), ct: String(totals.countries), per: periodLabel, ty: type, th: dark ? "" : "light", name: pilot?.fullName ?? "", rank: pilot?.rank ?? "" });
     const base = `/api/share-card?${q}`;
     const text = t("shareText", { fl: totals.flights.toLocaleString(locale), ap: totals.airports, nm: totals.nm.toLocaleString(locale), ct: totals.countries });
     // the public page of this map: its preview is the map image, on every network

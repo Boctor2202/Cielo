@@ -53,7 +53,8 @@ export interface MapPoint {
  * The route map of a share image, as an SVG (land, great-circle routes with a glow, airports sized by visits),
  * framed on the airports flown, and where each airport lands in pixels (to write the busiest ones' codes).
  */
-export function routeMapSvg(routes: { a: MapPoint; b: MapPoint; n: number }[], points: MapPoint[], W: number, H: number, k: number) {
+export function routeMapSvg(routes: { a: MapPoint; b: MapPoint; n: number }[], points: MapPoint[], W: number, H: number, k: number, light = false) {
+  const C = light ? { land: "#ffffff", coast: "#c9d3de", glow: "#22c55e", line: "#16a34a", dot: "#0e2a47", ring: "#ffffff" } : { land: "#14304f", coast: "#24507e", glow: "#22c55e", line: "#4ade80", dot: "#ffffff", ring: "#07101f" };
   // the longitudes as one continuous run: across the Pacific, the Americas are moved east by 360°
   const span = (ls: number[]) => Math.max(...ls) - Math.min(...ls);
   const lons = points.map((p) => p.lon);
@@ -130,12 +131,12 @@ export function routeMapSvg(routes: { a: MapPoint; b: MapPoint; n: number }[], p
 <defs>
 <filter id="g" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${6 * k}"/></filter>
 </defs>
-<path d="${landPath}" fill="#14304f" stroke="#24507e" stroke-width="${0.8 * k}" stroke-linejoin="round"/>
+<path d="${landPath}" fill="${C.land}" stroke="${C.coast}" stroke-width="${0.8 * k}" stroke-linejoin="round"/>
 <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-<g filter="url(#g)" opacity="0.55">${lines.map((l) => `<path d="${l.d}" stroke="#22c55e" stroke-width="${l.sw * 2.6}"/>`).join("")}</g>
-${lines.map((l) => `<path d="${l.d}" stroke="#4ade80" stroke-width="${l.sw}" opacity="0.92"/>`).join("")}
+<g filter="url(#g)" opacity="${light ? 0.3 : 0.55}">${lines.map((l) => `<path d="${l.d}" stroke="${C.glow}" stroke-width="${l.sw * 2.6}"/>`).join("")}</g>
+${lines.map((l) => `<path d="${l.d}" stroke="${C.line}" stroke-width="${l.sw}" opacity="0.92"/>`).join("")}
 </g>
-${dots.map((d) => `<circle cx="${f(d.x)}" cy="${f(d.y)}" r="${f(d.r)}" fill="#ffffff" stroke="#07101f" stroke-width="${2 * k}"/>`).join("")}
+${dots.map((d) => `<circle cx="${f(d.x)}" cy="${f(d.y)}" r="${f(d.r)}" fill="${C.dot}" stroke="${C.ring}" stroke-width="${2 * k}"/>`).join("")}
 </svg>`;
   return { svg, dots };
 }
