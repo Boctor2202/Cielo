@@ -185,13 +185,53 @@ export interface AirportFile {
   rows: [string, string, string, string, string, number, number, number | null, string, number][];
 }
 
+/**
+ * The city an airport serves, as pilots and passengers say it, where the source gives the town it stands in
+ * (Linate is in Segrate, Charles de Gaulle in Roissy, Marseille Provence in Marignane).
+ */
+export const SERVED_CITY: Record<string, string> = {
+  // France
+  LFPG: "Paris", LFPO: "Paris", LFPB: "Paris", LFML: "Marseille", LFLL: "Lyon", LFLY: "Lyon", LFBO: "Toulouse", LFMN: "Nice", LFSB: "Basel-Mulhouse",
+  LFBD: "Bordeaux", LFRS: "Nantes", LFST: "Strasbourg", LFQQ: "Lille", LFMT: "Montpellier", LFRN: "Rennes", LFRB: "Brest", LFLS: "Grenoble",
+  LFKJ: "Ajaccio", LFKB: "Bastia", LFMP: "Perpignan", LFOB: "Beauvais", LFMD: "Cannes", LFTH: "Toulon", LFBZ: "Biarritz", LFLB: "Chambéry",
+  // Italy
+  LIML: "Milan", LIMC: "Milan", LIME: "Bergamo", LIRF: "Rome", LIRA: "Rome", LIPZ: "Venice", LIPH: "Treviso", LIRN: "Naples", LIRQ: "Florence",
+  LIMF: "Turin", LIPE: "Bologna", LIPX: "Verona", LICC: "Catania", LICJ: "Palermo", LIEO: "Olbia", LIEE: "Cagliari", LIBD: "Bari", LIMJ: "Genoa", LIRP: "Pisa",
+  // UK & Ireland
+  EGLL: "London", EGKK: "London", EGSS: "London", EGGW: "London", EGLC: "London", EGMC: "London", EGCC: "Manchester", EGBB: "Birmingham",
+  EGPH: "Edinburgh", EGPF: "Glasgow", EGNX: "East Midlands", EGGD: "Bristol", EGAA: "Belfast", EIDW: "Dublin", EGJJ: "Jersey", EGJB: "Guernsey",
+  // Iberia
+  LEBL: "Barcelona", LEMD: "Madrid", LEPA: "Palma", LEMG: "Málaga", LEAL: "Alicante", LEVC: "Valencia", LEZL: "Seville", LEBB: "Bilbao", LEIB: "Ibiza",
+  GCLP: "Gran Canaria", GCTS: "Tenerife", LPPT: "Lisbon", LPPR: "Porto", LPFR: "Faro", LPMA: "Funchal",
+  // Central & northern Europe
+  EBBR: "Brussels", EBCI: "Charleroi", EHAM: "Amsterdam", EHRD: "Rotterdam", ELLX: "Luxembourg", EDDF: "Frankfurt", EDDM: "Munich", EDDB: "Berlin",
+  EDDH: "Hamburg", EDDL: "Düsseldorf", EDDK: "Cologne", EDDS: "Stuttgart", EDDP: "Leipzig", EDDN: "Nuremberg", EDDG: "Münster", LSZH: "Zurich",
+  LSGG: "Geneva", LOWW: "Vienna", LOWS: "Salzburg", LKPR: "Prague", LZIB: "Bratislava", LHBP: "Budapest", EPWA: "Warsaw", EPMO: "Warsaw", EPKK: "Kraków",
+  EKCH: "Copenhagen", ESSA: "Stockholm", ESKN: "Stockholm", ESGG: "Gothenburg", ENGM: "Oslo", ENBR: "Bergen", EFHK: "Helsinki", BIKF: "Reykjavík",
+  EVRA: "Riga", EYVI: "Vilnius", EETN: "Tallinn",
+  // South-east Europe & Turkey
+  LGAV: "Athens", LGTS: "Thessaloniki", LGIR: "Heraklion", LDZA: "Zagreb", LDSP: "Split", LDDU: "Dubrovnik", LJLJ: "Ljubljana", LBSF: "Sofia",
+  LROP: "Bucharest", LYBE: "Belgrade", LMML: "Malta", LCLK: "Larnaca", LTFM: "Istanbul", LTBA: "Istanbul", LTFJ: "Istanbul", LTAI: "Antalya",
+  // Africa & Middle East
+  GMMN: "Casablanca", GMMX: "Marrakesh", DTTA: "Tunis", DTTJ: "Djerba", DAAG: "Algiers", HECA: "Cairo", FAOR: "Johannesburg", FACT: "Cape Town",
+  OMDB: "Dubai", OMDW: "Dubai", OMAA: "Abu Dhabi", OTHH: "Doha", OERK: "Riyadh", OEJN: "Jeddah", LLBG: "Tel Aviv", OLBA: "Beirut",
+  // Americas, Asia, Oceania
+  KJFK: "New York", KEWR: "New York", KLGA: "New York", KIAD: "Washington", KDCA: "Washington", KORD: "Chicago", KLAX: "Los Angeles",
+  KSFO: "San Francisco", KBOS: "Boston", KMIA: "Miami", CYYZ: "Toronto", CYUL: "Montreal", SBGR: "São Paulo", SBGL: "Rio de Janeiro",
+  SAEZ: "Buenos Aires", MMMX: "Mexico City", RJAA: "Tokyo", RJTT: "Tokyo", RKSI: "Seoul", VHHH: "Hong Kong", WSSS: "Singapore",
+  VTBS: "Bangkok", ZBAA: "Beijing", ZSPD: "Shanghai", YSSY: "Sydney", YMML: "Melbourne", UUEE: "Moscow", UUDD: "Moscow",
+};
+
+/** The source's town, tidied: "Paris (Roissy-en-France, Val-d'Oise)" → "Paris", "Nice, Alpes-Maritimes" → "Nice". */
+export const tidyCity = (city: string) => city.replace(/\s*\([^)]*\)/g, "").split(/\s*[,/]\s*/)[0]!.trim();
+
 export function expandAirports(file: AirportFile): Airport[] {
   return file.rows.map(([icao, iata, name, city, country, lat, lon, elevationFt, timezone, size]) => ({
     id: icao,
     icao,
     iata: iata || undefined,
     name,
-    city: city || undefined,
+    city: SERVED_CITY[icao] ?? (city ? tidyCity(city) || city : undefined),
     country,
     lat,
     lon,
