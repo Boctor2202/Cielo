@@ -4,8 +4,11 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { GoogleRoutesMap } from "@/components/app/GoogleRoutesMap";
-import { greatCirclePath } from "@cielo/core";
-import { PageTitle } from "@/components/app/ui";
+import { encodeShareRoutes, greatCirclePath, routeMapChoices, routeMapFlights, routeMapTotals } from "@cielo/core";
+import { Plane, MapPin, Route, Globe2, Share2 } from "lucide-react";
+import { ShareSheet } from "@/components/app/ShareSheet";
+import { usePilot } from "@/lib/hooks";
+import { Modal, PageTitle } from "@/components/app/ui";
 import { MapThemeToggle } from "@/components/app/MapThemeToggle";
 import { useMapTheme } from "@/lib/mapTheme";
 import { useAirports } from "@/lib/airports";
@@ -31,32 +34,33 @@ function geardownStyle(dark: boolean): import("maplibre-gl").StyleSpecification 
 export default function MapPage() {
   const t = useTranslations("app.map");
   const tl = useTranslations("app.logbook");
+  const tb = useTranslations("app.badges");
   const flights = useFlights();
   const airports = useAirports();
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
-  const [year, setYear] = useState("");
+  const [period, setPeriod] = useState("all");
+  const [type, setType] = useState("");
+  const pilot = usePilot();
+  const [preview, setPreview] = useState<{ base: string; text: string; link: string; square: boolean } | null>(null);
+  const [sharing, setSharing] = useState(false);
   const locale = useLocale();
   // Google Maps when a browser key is configured, else the built-in vector map
   const googleKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY;
   const [googleFailed, setGoogleFailed] = useState(false);
   const useGoogle = !!googleKey && !googleFailed;
   const { dark, setMode } = useMapTheme();
-  const years = useMemo(() => [...new Set((flights ?? []).map((f) => f.date.slice(0, 4)))].sort().reverse(), [flights]);
+  const choices = useMemo(() => routeMapChoices(flights ?? []), [flights]);
+
+  const totals = useMemo(() => {
+    if (!flights || !airports) return null;
+    return routeMapTotals(routeMapFlights(flights, { period, type }), (i) => airports.get(i));
+  }, [flights, airports, period, type]);
 
   const geo = useMemo(() => {
-    if (!flights || !airports) return null;
-    const routes = new Map<string, { a: string; b: string; n: number }>();
-    const used = new Map<string, number>();
-    for (const f of flights) {
-      if (f.isFstd || (year && !f.date.startsWith(year)) || f.depIcao === f.arrIcao) continue;
-      const [a, b] = [f.depIcao, f.arrIcao].sort() as [string, string];
-      const k = `${a}-${b}`;
-      routes.set(k, { a, b, n: (routes.get(k)?.n ?? 0) + 1 });
-      used.set(f.depIcao, (used.get(f.depIcao) ?? 0) + 1);
-      used.set(f.arrIcao, (used.get(f.arrIcao) ?? 0) + 1);
-    }
-    const lines = [...routes.values()].flatMap((r) => {
+    if (!totals || !airports) return null;
+    const used = totals.visits;
+    const lines = totals.routes.flatMap((r) => {
       const A = airports.get(r.a);
       const B = airports.get(r.b);
       return A && B ? [{ type: "Feature" as const, properties: { n: r.n }, geometry: { type: "LineString" as const, coordinates: greatCirclePath(A, B, 48) } }] : [];
@@ -66,7 +70,33 @@ export default function MapPage() {
       return A ? [{ type: "Feature" as const, properties: { icao, n, name: A.name, city: A.city ?? "" }, geometry: { type: "Point" as const, coordinates: [A.lon, A.lat] } }] : [];
     });
     return { lines: { type: "FeatureCollection" as const, features: lines }, points: { type: "FeatureCollection" as const, features: points } };
-  }, [flights, airports, year]);
+  }, [totals, airports]);
+
+  const periodLabel = period === "all" ? "" : period === "12m" ? t("last12") : period;
+  /** The map as an image (drawn by the server from the routes and totals), in the share sheet. */
+  const share = async () => {
+    if (!totals) return;
+    setSharing(true);
+    const lang = locale === "fr" ? "fr" : "en";
+    const q = new URLSearchParams({ type: "map", lang, r: encodeShareRoutes(totals.routes), fl: String(totals.flights), ap: String(totals.airports), nm: String(totals.nm), ct: String(totals.countries), per: periodLabel, ty: type, name: pilot?.fullName ?? "", rank: pilot?.rank ?? "" });
+    const base = `/api/share-card?${q}`;
+    const text = t("shareText", { fl: totals.flights.toLocaleString(locale), ap: totals.airports, nm: totals.nm.toLocaleString(locale), ct: totals.countries });
+    const link = window.location.origin;
+    try {
+      const blob = await (await fetch(base)).blob();
+      const file = new File([blob], "geardown-map.png", { type: "image/png" });
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (nav.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], text: `${text} · ${link}` });
+        return;
+      }
+      setPreview({ base, text, link, square: false });
+    } catch (e) {
+      if ((e as Error)?.name !== "AbortError") setPreview({ base, text, link, square: false });
+    } finally {
+      setSharing(false);
+    }
+  };
 
   useEffect(() => {
     if (useGoogle || !ref.current || mapRef.current) return;
@@ -113,26 +143,81 @@ export default function MapPage() {
     return () => clearInterval(i);
   }, [geo]);
 
+  const chip = (v: string, label: string) => (
+    <button key={v} type="button" onClick={() => setPeriod(v)} aria-pressed={period === v} className={`rounded-full border px-3 py-1 text-sm font-semibold transition ${period === v ? "border-accent bg-accent text-white" : "border-border text-muted hover:border-accent hover:text-accent"}`}>
+      {label}
+    </button>
+  );
+  const tiles = [
+    { icon: Plane, v: totals?.flights, l: t("flights", { count: totals?.flights ?? 0 }) },
+    { icon: MapPin, v: totals?.airports, l: t("airportsLabel", { count: totals?.airports ?? 0 }) },
+    { icon: Route, v: totals?.nm, l: t("nmFlown") },
+    { icon: Globe2, v: totals?.countries, l: t("countries", { count: totals?.countries ?? 0 }) },
+  ];
+
   return (
     <>
       <PageTitle
         title={t("title")}
-        subtitle={geo ? `${t("routes", { count: geo.lines.features.length })} · ${t("airports", { count: geo.points.features.length })}` : "…"}
+        subtitle={geo ? t("routes", { count: geo.lines.features.length }) : "…"}
         actions={
           <>
             <MapThemeToggle dark={dark} onChange={(d) => setMode(d ? "dark" : "light")} />
-            <select className="input !w-auto" value={year} onChange={(e) => setYear(e.target.value)} aria-label={t("filterYear")}>
-              <option value="">{tl("allYears")}</option>
-              {years.map((y) => <option key={y}>{y}</option>)}
-            </select>
+            <button type="button" className="btn btn-primary" onClick={() => void share()} disabled={!totals || !totals.flights || sharing}>
+              <Share2 size={15} /> {t("share")}
+            </button>
           </>
         }
       />
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {chip("all", tl("allYears"))}
+        {chip("12m", t("last12"))}
+        {choices.years.slice(0, 4).map((y) => chip(y, y))}
+        {choices.years.length > 4 ? (
+          <select className="input !w-auto !py-1 text-sm" value={choices.years.slice(4).includes(period) ? period : ""} onChange={(e) => e.target.value && setPeriod(e.target.value)} aria-label={t("filterYear")}>
+            <option value="">{t("olderYears")}</option>
+            {choices.years.slice(4).map((y) => <option key={y}>{y}</option>)}
+          </select>
+        ) : null}
+        {choices.types.length > 1 ? (
+          <select className="input ml-auto !w-auto !py-1 text-sm" value={type} onChange={(e) => setType(e.target.value)} aria-label={t("filterType")}>
+            <option value="">{t("allTypes")}</option>
+            {choices.types.map((x) => <option key={x}>{x}</option>)}
+          </select>
+        ) : null}
+      </div>
+      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {tiles.map(({ icon: Icon, v, l }) => (
+          <div key={l} className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent/10 text-accent"><Icon size={18} /></span>
+            <div className="min-w-0">
+              <p className="font-mono text-xl font-bold leading-tight tabular-nums">{v === undefined ? "…" : v.toLocaleString(locale)}</p>
+              <p className="truncate text-xs text-muted">{l}</p>
+            </div>
+          </div>
+        ))}
+      </div>
       {useGoogle ? (
         <GoogleRoutesMap apiKey={googleKey!} lang={locale} dark={dark} lines={geo?.lines} points={geo?.points} onError={() => setGoogleFailed(true)} />
       ) : (
-        <div ref={ref} className="h-[calc(100dvh-220px)] min-h-[420px] overflow-hidden rounded-xl border border-border" />
+        <div ref={ref} className="h-[calc(100dvh-320px)] min-h-[420px] overflow-hidden rounded-xl border border-border" />
       )}
+      <Modal open={!!preview} onClose={() => setPreview(null)} title={t("shareTitle")}>
+        {preview && (
+          <div className="space-y-4">
+            <div className="flex justify-center gap-2">
+              {[false, true].map((sq) => (
+                <button key={String(sq)} type="button" onClick={() => setPreview({ ...preview, square: sq })} className={`rounded-full px-3 py-1 text-xs font-semibold ${preview.square === sq ? "bg-accent text-black" : "border border-border text-muted"}`}>
+                  {sq ? tb("fmtSquare") : tb("fmtPortrait")}
+                </button>
+              ))}
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`${preview.base}${preview.square ? "&fmt=square" : ""}`} alt={preview.text} className="mx-auto max-h-[55vh] w-auto rounded-xl border border-border" />
+            <ShareSheet image={`${preview.base}${preview.square ? "&fmt=square" : ""}`} text={preview.text} link={preview.link} />
+          </div>
+        )}
+      </Modal>
     </>
   );
 }

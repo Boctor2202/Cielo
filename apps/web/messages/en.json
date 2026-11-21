@@ -1477,7 +1477,18 @@
       "title": "Flight map",
       "routes": "{count, plural, one {# route} other {# routes}}",
       "airports": "{count, plural, one {# airport} other {# airports}}",
-      "filterYear": "Year"
+      "filterYear": "Year",
+      "filterType": "Aircraft type",
+      "allTypes": "All types",
+      "last12": "Last 12 months",
+      "olderYears": "Older…",
+      "flights": "{count, plural, one {flight} other {flights}}",
+      "airportsLabel": "{count, plural, one {airport} other {airports}}",
+      "nmFlown": "NM flown",
+      "countries": "{count, plural, one {country visited} other {countries visited}}",
+      "share": "Share",
+      "shareTitle": "Share my map",
+      "shareText": "{fl} flights, {ap} airports, {nm} NM and {ct} countries in my Geardown logbook"
     },
     "settings": {
       "title": "Settings",
