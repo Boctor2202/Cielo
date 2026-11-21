@@ -3,7 +3,7 @@
 import { Check, ChevronLeft, ChevronRight, Hotel, NotebookPen, Plus, Trash2, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ROSTER_KINDS, mergeRosterImport, printedDutiesToEvents, type PrintedDuty, combineUtc, detectMapping, icalToRosterEvent, isoDate, parseCsv, parseFlexibleDate, parseIcal, stamp, type RosterEvent, type RosterEventKind, rosterLayovers } from "@cielo/core";
+import { ROSTER_KINDS, analyseTable, mergeRosterImport, printedDutiesToEvents, type PrintedDuty, combineUtc, icalToRosterEvent, isoDate, parseCsv, parseFlexibleDate, parseIcal, stamp, type RosterEvent, type RosterEventKind, rosterLayovers } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { DropZone } from "@/components/app/DropZone";
@@ -130,11 +130,12 @@ export default function RosterPage() {
         return stamp({ ...prev, ...r, id: prev?.id, rosterId: roster.id, flightId: prev?.flightId ?? null } as RosterEvent);
       });
     } else {
-      const table = parseCsv(text);
-      const map = detectMapping(table[0] ?? []);
-      for (const r of table.slice(1)) {
+      // header row (title lines above it skipped), columns from names and values, and the date order (31/12 vs 12/31)
+      const a = analyseTable(parseCsv(text.replace(/^\uFEFF/, "")));
+      const map = a.mapping;
+      for (const r of a.rows) {
         const g = (k: keyof typeof map) => (map[k] >= 0 ? (r[map[k]] ?? "").trim() : "");
-        const date = parseFlexibleDate(g("date"));
+        const date = parseFlexibleDate(g("date"), a.dateOrder);
         if (!date) continue;
         const start = combineUtc(date, g("out") || "00:00");
         const end = combineUtc(date, g("in") || "23:59", start);

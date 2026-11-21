@@ -4,7 +4,7 @@ import { CalendarDays, Camera, FileSpreadsheet, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  analyseTable, checkMapping, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, titlesToMapping,
+  analyseTable, checkMapping, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
   type DateOrder, type ImportField, type ImportedRow, type LogbookLeg, type StoredMapping,
 } from "@cielo/core";
 import { apiFetch } from "@/lib/report";
@@ -87,21 +87,22 @@ async function importAny(body: Record<string, unknown>) {
   return r.ok ? d : { ...d, error: d.error ?? "error" };
 }
 
+/** Errors shown to the pilot with their own message (see app.import.pdf.*). */
+class ImportFileError extends Error {}
+
 async function readTable(file: File): Promise<string[][]> {
-  if (/\.xlsx?$/i.test(file.name)) {
+  // Excel 97-2003 (.xls) is a binary format the reader cannot open: ask for .xlsx or CSV rather than fail silently
+  if (/\.xls$/i.test(file.name) || file.type === "application/vnd.ms-excel") throw new ImportFileError("xls");
+  if (/\.xlsx$/i.test(file.name) || file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
     const { readSheet } = await import("read-excel-file/browser");
-    const rows = (await readSheet(file)) as unknown[][];
-    return rows.map((r) =>
-      r.map((c: unknown) => {
-        if (c instanceof Date) {
-          // Excel times arrive as dates on 1899-12-30 — keep the clock part only.
-          return c.getUTCFullYear() < 1901 ? c.toISOString().slice(11, 16) : c.toISOString().slice(0, 10);
-        }
-        return c === null || c === undefined ? "" : String(c);
-      }),
-    );
+    try {
+      // Excel times arrive as dates on 1899-12-30: the clock part is kept (sheetCellText)
+      return ((await readSheet(file)) as unknown[][]).map((r) => r.map(sheetCellText));
+    } catch {
+      throw new ImportFileError("unreadable");
+    }
   }
-  return parseCsv(await file.text());
+  return parseCsv((await file.text()).replace(/^\uFEFF/, ""));
 }
 
 /** The universal import: a file, a PDF, photos (a paper logbook) or pasted text, in one place. */
@@ -179,12 +180,24 @@ function FileImport({ photos = false }: { photos?: boolean }) {
       setPdfState((e as Error).message || "error");
     }
   }
-  const onPdf = async (file: File) => fromServer({ kind: "pdf", pdf: await b64(file), fileName: file.name });
+  const onPdf = async (file: File) => {
+    const pdf = await b64(file);
+    // the server accepts requests up to 4.5 MB: a heavier PDF (usually a scan) is refused with a clear message
+    if (pdf.length > 4_200_000) return setPdfState("too_big");
+    return fromServer({ kind: "pdf", pdf, fileName: file.name });
+  };
 
   async function onFiles(files: File[]) {
-    const images = files.filter((f) => f.type.startsWith("image/"));
-    if (images.length) return fromServer({ kind: "images", images: await Promise.all(images.slice(0, 12).map(shrinkImage)), fileName: images[0]!.name });
-    return onFile(files[0]!);
+    try {
+      const images = files.filter((f) => f.type.startsWith("image/"));
+      if (images.length) return await fromServer({ kind: "images", images: await Promise.all(images.slice(0, 12).map(shrinkImage)), fileName: images[0]!.name });
+      return await onFile(files[0]!);
+    } catch (e) {
+      setRows(null);
+      setMapping(null);
+      setPdfRows(null);
+      setPdfState(e instanceof ImportFileError ? e.message : "error");
+    }
   }
 
   async function onFile(file: File) {
@@ -266,7 +279,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
   return (
     <div className="space-y-5">
       {photos && <p className="text-sm text-muted">{t("photosHelp")}</p>}
-      <DropZone accept={photos ? "image/*" : ".csv,.txt,.tsv,.xlsx,.pdf,image/*"} onFiles={(f) => void onFiles(f)} label={photos ? t("photosDrop") : t("dropAny")} />
+      <DropZone accept={photos ? "image/*" : ".csv,.txt,.tsv,.xlsx,.xls,.pdf,image/*"} onFiles={(f) => void onFiles(f)} label={photos ? t("photosDrop") : t("dropAny")} />
       <details className="rounded-xl border border-border p-3">
         <summary className="cursor-pointer text-sm font-semibold text-accent">{t("pasteTitle")}</summary>
         <textarea className="input num mt-3 min-h-32 text-xs" value={paste} onChange={(e) => setPaste(e.target.value)} placeholder={t("pastePh")} />
@@ -278,7 +291,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
         <input type="checkbox" className="mt-0.5" checked={share} onChange={(e) => setShare(e.target.checked)} />
         <span>{t("share")}</span>
       </label>
-      {pdfState && <p className={`mt-2 text-sm ${pdfState === "reading" || pdfState === "mapping" ? "text-accent" : "text-[var(--warning)]"}`}>{t(`pdf.${["reading", "mapping", "plan", "unauthorized", "rate_limited", "none", "busy"].includes(pdfState) ? pdfState : "error"}`)}</p>}
+      {pdfState && <p className={`mt-2 text-sm ${pdfState === "reading" || pdfState === "mapping" ? "text-accent" : "text-[var(--warning)]"}`}>{t(`pdf.${["reading", "mapping", "plan", "unauthorized", "rate_limited", "none", "busy", "too_big", "xls", "unreadable"].includes(pdfState) ? pdfState : "error"}`)}</p>}
       {source && <p className="text-sm font-semibold text-accent">{source === "learned" ? t("readLearned") : source === "report" ? t("readReport") : t("readAi", { source })}</p>}
       {review ? (
         <TotalsCheck check={review.check} busy={busy} onConfirm={run} onFix={() => setReview(null)} onCancel={() => { setReview(null); setRows(null); setMapping(null); setPdfRows(null); }} />

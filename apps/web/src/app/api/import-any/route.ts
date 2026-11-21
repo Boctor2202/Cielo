@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { reportAiFailure } from "@/lib/server/anthropic";
-import { accessFor, noCardTrialDays, ep5Legs, parseAirFranceEp5, parseFlightReport, tableSignature, type LogbookLeg, type StoredMapping } from "@cielo/core";
+import { accessFor, noCardTrialDays, ep5Legs, parseAirFranceEp5, parseFlightReport, sheetCellText, tableSignature, type LogbookLeg, type StoredMapping } from "@cielo/core";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { pdfText } from "@/lib/server/pdf";
 import { extractLegs, ImportAiError, mapTable } from "@/lib/server/importAi";
@@ -16,6 +16,7 @@ export const maxDuration = 300;
  *  { kind: "text", text }                       a pasted e-mail or summary
  *  { kind: "table", header, rows }              a CSV / Excel the app could not map by itself
  *  { kind: "learn", header, mapping, source }   a table layout the pilot confirmed: kept for everyone
+ *  { kind: "sheet", data: base64 }              an Excel workbook (.xlsx) read into a table, for the phone app
  * with share: true when the pilot agrees to send an unknown layout so a dedicated reader can be written.
  * Known layouts are read without AI on every plan; anything else is read by Claude (Max plan).
  */
@@ -46,6 +47,19 @@ export async function POST(req: Request) {
   }
 
   if (rateLimited(`importany:${user.id}`, 30, 3_600_000)) return Response.json({ error: "rate_limited" }, { status: 429 });
+
+  // an Excel workbook (the phone app cannot unzip it): its first sheet as a table of text cells, no AI
+  if (kind === "sheet") {
+    const data = typeof body.data === "string" ? body.data.replace(/\s+/g, "") : "";
+    if (!data || data.length > 8_000_000 || !/^[A-Za-z0-9+/=]+$/.test(data)) return Response.json({ error: "bad_request" }, { status: 400 });
+    try {
+      const { readSheet } = await import("read-excel-file/node");
+      const rows = (await readSheet(Buffer.from(data, "base64"))) as unknown[][];
+      return Response.json({ reader: "sheet", table: rows.slice(0, 20_000).map((r) => r.map(sheetCellText)) });
+    } catch {
+      return Response.json({ error: "unreadable" }, { status: 422 });
+    }
+  }
 
   // 1. what we read without AI
   let text = "";

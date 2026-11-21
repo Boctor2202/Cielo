@@ -41,7 +41,7 @@ const SYNONYMS: Record<ImportField, string[]> = {
   landingsNight: ["landings night", "ldgs night", "ldg night", "night ldgs", "landing night", "night landings", "ldg night", "night ldg", "atterrissages nuit", "att nuit", "night landings full stop"],
   takeoffsDay: ["takeoffs day", "takeoff day", "tos day", "tkof day", "day takeoffs", "to day", "t o day", "decollages jour", "dec jour", "takeoffs"],
   takeoffsNight: ["takeoffs night", "takeoff night", "tos night", "tkof night", "night takeoffs", "to night", "t o night", "decollages nuit", "dec nuit"],
-  pic: ["pic", "duration pic", "pic time", "time pic", "pilot function time pic", "temps cdb", "cdb temps", "commandant de bord", "p1"],
+  pic: ["pic", "duration pic", "pic time", "time pic", "pilot function time pic", "temps cdb", "cdb temps", "commandant de bord", "p1", "cdb", "cdt", "heures cdb"],
   // PIC under supervision: its own column, never read as PIC (nor as a block time)
   picus: ["picus", "picus time", "time picus", "duration picus", "pic us", "pic u s", "p1 us", "p1 u s", "p1us", "p1s", "pic under supervision", "puis", "cdb sous supervision", "temps picus"],
   // single-pilot single / multi-engine time: recognised so they are not taken for block times; Geardown works them
@@ -88,10 +88,31 @@ const norm = (s: string) =>
 
 type Kind = "date" | "icao" | "clock" | "duration" | "reg" | "actype" | "func" | "int" | "text" | "hm";
 
-const DATE_RE = /^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})([ t]\d{1,2}:\d{2}(:\d{2})?)?$/i;
+const DATE_RE = /^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})([ t]\d{1,2}:\d{2}(:\d{2}(\.\d+)?)?\s*(z|utc)?)?$/i;
+/** 15-Mar-2024, 15 Mar 2024, 15 mars 2024, Mar 15, 2024, March 15 2024 */
+const MONTHS: Record<string, number> = {
+  jan: 1, january: 1, janv: 1, janvier: 1, januar: 1, ene: 1, enero: 1,
+  feb: 2, february: 2, fev: 2, fevr: 2, fevrier: 2, februar: 2, febrero: 2,
+  mar: 3, march: 3, mars: 3, marz: 3, maerz: 3, marzo: 3,
+  apr: 4, april: 4, avr: 4, avril: 4, abr: 4, abril: 4,
+  may: 5, mai: 5, mayo: 5,
+  jun: 6, june: 6, juin: 6, juni: 6, junio: 6,
+  jul: 7, july: 7, juil: 7, juillet: 7, juli: 7, julio: 7,
+  aug: 8, august: 8, aout: 8, ago: 8, agosto: 8,
+  sep: 9, sept: 9, september: 9, septembre: 9, septiembre: 9,
+  oct: 10, october: 10, octobre: 10, okt: 10, oktober: 10, octubre: 10,
+  nov: 11, november: 11, novembre: 11, noviembre: 11,
+  dec: 12, december: 12, decembre: 12, dez: 12, dezember: 12, dic: 12, diciembre: 12,
+};
+const monthOf = (w: string) => MONTHS[w.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\.$/, "")];
+const NAMED_DATE_RE = /^(?:[a-z]{3,9}\.?,?\s+)?(\d{1,2})(?:st|nd|rd|th|er)?[\s\-/.]+([a-zA-Z\u00c0-\u00ff]{3,9}\.?)[\s\-/.,]+(\d{2,4})|^([a-zA-Z\u00c0-\u00ff]{3,9}\.?)[\s\-/.]+(\d{1,2})(?:st|nd|rd|th)?,?[\s\-/.]+(\d{2,4})/i;
+const isNamedDate = (v: string) => {
+  const m = v.match(NAMED_DATE_RE);
+  return !!m && !!monthOf(m[2] ?? m[4] ?? "");
+};
 const ICAO_RE = /^[A-Z]{4}$|^[A-Z]{3}$/;
 const CLOCK_RE = /^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}[ T])?([01]?\d|2[0-3])[:h.]?[0-5]\d(:\d{2})?z?$/i;
-const DUR_RE = /^\d{1,4}[:h]\d{2}$|^\d{1,3}[.,]\d{1,2}$/;
+const DUR_RE = /^\d{1,4}[:h]\d{2}(:\d{2})?$|^\d{1,3}[.,]\d{1,2}$/;
 const REG_RE = /^([A-Z]{1,2}|[A-Z]\d|\d[A-Z])-[A-Z0-9]{2,5}$|^N\d{1,5}[A-Z]{0,2}$|^HL\d{4}$|^JA[0-9A-Z]{4}$|^B-?\d{4,5}$/;
 const TYPE_RE = /^[A-Z][A-Z0-9]{1,3}$/;
 const FUNC_RE = /^(pic|sic|picus|p1|p2|p1s|p1us|fo|f\/o|cdb|opl|cpt|capt|captain|dual|fi|fe|tri|tre|cfi|instructor|student|copilot|co-pilot|copilote|eleve)$/i;
@@ -104,7 +125,7 @@ function profile(values: string[]): Profile {
   if (!vals.length) return p;
   for (const v of vals) {
     const u = v.toUpperCase();
-    if (DATE_RE.test(v) || /^\d{5}$/.test(v) && +v > 20000 && +v < 60000) p.date++;
+    if (DATE_RE.test(v) || isNamedDate(v) || /^\d{5}$/.test(v) && +v > 20000 && +v < 60000) p.date++;
     if (ICAO_RE.test(u) && u === v) p.icao++;
     if (CLOCK_RE.test(v)) p.clock++;
     if (DUR_RE.test(v) || /^\d{1,2}$/.test(v)) p.duration++;
@@ -112,7 +133,7 @@ function profile(values: string[]): Profile {
     if (TYPE_RE.test(u) && /\d/.test(u)) p.actype++;
     if (FUNC_RE.test(v)) p.func++;
     if (/^\d{1,2}$/.test(v)) p.int++;
-    if (/^\d{1,4}[:h]\d{2}$|^\d{1,3}[.,]\d{1,2}$/.test(v)) p.hm++;
+    if (/^\d{1,4}[:h]\d{2}(:\d{2})?$|^\d{1,3}[.,]\d{1,2}$/.test(v)) p.hm++;
     if (/[a-z]{3,}/i.test(v) && v.length > 3) p.text++;
   }
   for (const k of Object.keys(p) as (keyof Profile)[]) if (k !== "filled") p[k] /= vals.length;
@@ -385,6 +406,9 @@ export function analyseTable(table: string[][]): TableAnalysis {
       headerRow = i;
     }
   }
+  // a two-row header whose second row (Place / Time, Day / Night…) names more fields than the first: start one row up
+  const above = rows[headerRow - 1];
+  if (above && hits(above) >= 2 && !above.some((c) => DATE_RE.test((c ?? "").trim())) && profile(rows[headerRow]!).clock < 0.2 && rows[headerRow]!.filter((c) => (c ?? "").trim()).length > above.filter((c) => (c ?? "").trim()).length) headerRow--;
   let header = (rows[headerRow] ?? []).map((c) => (c ?? "").trim());
   let dataStart = headerRow + 1;
   // two-row header: the next row holds sub-headers (Place / Time, Day / Night, SE / ME…) and no data
@@ -437,12 +461,18 @@ export function parseFlexibleDate(input: string, order: DateOrder = "dmy"): stri
   const s = input.trim();
   let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
   if (m) return iso(+m[1]!, +m[2]!, +m[3]!);
-  m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
+  // 15/03/2024, 15.03.24, and with a time after it as spreadsheets export dates ("15/03/2024 00:00")
+  m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})(?:[ t]\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?\s*(?:z|utc)?)?$/i);
   if (m) {
-    let y = +m[3]!;
-    if (y < 100) y += y > 70 ? 1900 : 2000;
+    const y = fullYear(+m[3]!);
     const [a, b] = [+m[1]!, +m[2]!];
     return order === "mdy" ? iso(y, a, b) : iso(y, b, a);
+  }
+  // 15-Mar-2024, 15 mars 2024, Mar 15, 2024
+  m = s.match(NAMED_DATE_RE);
+  if (m) {
+    const mo = monthOf(m[2] ?? m[4] ?? "");
+    if (mo) return iso(fullYear(+(m[3] ?? m[6])!), mo, +(m[1] ?? m[5])!);
   }
   // Excel serial date
   if (/^\d{5}$/.test(s)) {
@@ -451,6 +481,8 @@ export function parseFlexibleDate(input: string, order: DateOrder = "dmy"): stri
   }
   return null;
 }
+
+const fullYear = (y: number) => (y < 100 ? y + (y > 70 ? 1900 : 2000) : y);
 
 function iso(y: number, mo: number, d: number): string | null {
   if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
