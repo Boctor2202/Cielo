@@ -4,9 +4,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { GoogleRoutesMap } from "@/components/app/GoogleRoutesMap";
-import { encodeShareRoutes, greatCirclePath, routeMapChoices, routeMapFlights, routeMapTotals } from "@cielo/core";
+import { encodeShareRoutes, greatCirclePath, shareLinkUrl, routeMapChoices, routeMapFlights, routeMapTotals } from "@cielo/core";
 import { Plane, MapPin, Route, Globe2, Share2 } from "lucide-react";
-import { ShareSheet } from "@/components/app/ShareSheet";
+import { prefersNativeShare, ShareSheet } from "@/components/app/ShareSheet";
 import { usePilot } from "@/lib/hooks";
 import { Modal, PageTitle } from "@/components/app/ui";
 import { MapThemeToggle } from "@/components/app/MapThemeToggle";
@@ -81,12 +81,13 @@ export default function MapPage() {
     const q = new URLSearchParams({ type: "map", lang, r: encodeShareRoutes(totals.routes), fl: String(totals.flights), ap: String(totals.airports), nm: String(totals.nm), ct: String(totals.countries), per: periodLabel, ty: type, name: pilot?.fullName ?? "", rank: pilot?.rank ?? "" });
     const base = `/api/share-card?${q}`;
     const text = t("shareText", { fl: totals.flights.toLocaleString(locale), ap: totals.airports, nm: totals.nm.toLocaleString(locale), ct: totals.countries });
-    const link = window.location.origin;
+    // the public page of this map: its preview is the map image, on every network
+    const link = shareLinkUrl(window.location.origin, lang, q);
     try {
       const blob = await (await fetch(base)).blob();
       const file = new File([blob], "geardown-map.png", { type: "image/png" });
       const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-      if (nav.canShare?.({ files: [file] })) {
+      if (prefersNativeShare() && nav.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], text: `${text} · ${link}` });
         return;
       }
