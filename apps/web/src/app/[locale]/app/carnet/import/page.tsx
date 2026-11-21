@@ -454,6 +454,12 @@ function TotalsCheck({ check, busy, onConfirm, onFix, onCancel }: { check: Impor
           <p className="mt-2 text-xs text-muted">{t("totals.diffHelp")}</p>
         </div>
       )}
+      {check.airportsToCheck.length > 0 && (
+        <div className="mt-4 rounded-xl bg-[var(--caution)]/10 p-3 text-sm">
+          <p className="font-semibold">{t("totals.airportsTitle")}</p>
+          <p className="mt-1">{t("totals.airportsText", { rows: check.airportsToCheck.slice(0, 30).join(", ") })}</p>
+        </div>
+      )}
       {check.timesToCheck.length > 0 && (
         <div className="mt-4 rounded-xl bg-[var(--caution)]/10 p-3 text-sm">
           <p className="font-semibold">{t("totals.timesTitle")}</p>

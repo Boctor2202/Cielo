@@ -163,31 +163,75 @@ export const ep5Legs = (ep5: Ep5): LogbookLeg[] => ep5.legs.map((l) => ({ date: 
 const FUNCTIONS = ["PIC", "PICUS", "SIC", "DUAL", "FI", "FE"];
 
 /** Legs as import rows (the document's totals win over computed values). */
+/** Characters a handwritten or scanned code is often misread as (0/O, 1/I/L, 5/S, 8/B…). */
+const LOOK_ALIKE: Record<string, string[]> = {
+  "0": ["O", "D"], O: ["0", "D", "Q"], D: ["O", "0"], Q: ["O"], "1": ["I", "L"], I: ["1", "L", "T"], L: ["1", "I"], T: ["I", "F"],
+  "5": ["S"], S: ["5"], "8": ["B"], B: ["8", "R"], R: ["B", "P"], P: ["F", "R"], F: ["P", "E", "T"], E: ["F"], "2": ["Z"], Z: ["2"],
+  "6": ["G"], G: ["6", "C"], C: ["G"], X: ["K"], K: ["X"], U: ["V"], V: ["U"], N: ["M", "H"], M: ["N"], H: ["N"],
+};
+
+/**
+ * An airport code as read, made a known airport: as written, else the only look-alike reading that is a known
+ * airport (preferring one already used in the same document). Unknown codes are kept as written, to check.
+ */
+function resolveAirport(raw: string, toIcao: (code: string) => string | undefined, used: Set<string>): { code: string; known: boolean } {
+  const c = raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!c) return { code: "", known: false };
+  const direct = toIcao(c);
+  if (direct) return { code: direct, known: true };
+  const found = new Set<string>();
+  for (let i = 0; i < c.length; i++)
+    for (const alt of LOOK_ALIKE[c[i]!] ?? []) {
+      const v = toIcao(c.slice(0, i) + alt + c.slice(i + 1));
+      if (v) found.add(v);
+    }
+  const inDoc = [...found].filter((v) => used.has(v));
+  if (inDoc.length === 1) return { code: inDoc[0]!, known: true };
+  if (found.size === 1) return { code: [...found][0]!, known: true };
+  return { code: c, known: false };
+}
+
+const REG_PREFIX_2 = ["EC", "OO", "PH", "HB", "OE", "LX", "CS", "EI", "SE", "OY", "LN", "OH", "SP", "OK", "OM", "HA", "YR", "LZ", "SX", "TC", "9H", "5B", "VH", "ZK", "ZS", "VT", "JA", "HL", "VP", "VQ", "A6", "A7", "9V", "CN", "TF", "ES", "YL", "LY", "UR", "S5", "9A", "4X"];
+/** "FHAEC" -> "F-HAEC", "phabc" -> "PH-ABC"; US (N…) and already hyphenated registrations unchanged. */
+export function normalizeRegistration(raw?: string): string | undefined {
+  const r = (raw ?? "").trim().toUpperCase().replace(/\s+/g, "");
+  if (!r) return undefined;
+  if (r.includes("-") || /^N\d/.test(r)) return r;
+  const two = REG_PREFIX_2.find((p) => r.startsWith(p) && r.length - p.length >= 3 && r.length - p.length <= 4);
+  if (two) return `${two}-${r.slice(two.length)}`;
+  if (/^[FGDIC][A-Z]{4}$/.test(r)) return `${r[0]}-${r.slice(1)}`;
+  return r;
+}
+
 /**
  * Legs read from a document, as rows to import. `airline`: an airline statement (EP5…), where every leg is a
  * multi-pilot IFR flight; otherwise (a paper logbook, an e-mail) IFR and multi-pilot come from the document or,
  * when it does not say, from the aircraft type — never assumed.
  */
 export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string | undefined, base: Pick<FlightFormInput, "function" | "pilotFlying"> & { airline?: boolean }): ImportedRow[] {
+  // airports read without doubt in this document: a misread code is matched to one of them first
+  const used = new Set(legs.flatMap((l) => [toIcao((l.dep ?? "").trim().toUpperCase()), toIcao((l.arr ?? "").trim().toUpperCase())]).filter((c): c is string => !!c));
   return legs.map((l, i) => {
     // a simulator session (FNPT II, FFS…) has no airports
     const sim = (l.fstdMin ?? 0) > 0;
-    const dep = sim ? "FSTD" : toIcao(l.dep);
-    const arr = sim ? "FSTD" : toIcao(l.arr);
+    const d = resolveAirport(l.dep ?? "", toIcao, used);
+    const a = resolveAirport(l.arr ?? "", toIcao, used);
+    const dep = sim ? "FSTD" : d.code;
+    const arr = sim ? "FSTD" : a.code;
     const errors: string[] = [];
     if (!/^\d{4}-\d{2}-\d{2}$/.test(l.date)) errors.push("date");
-    if (!dep) errors.push(`unknown airport ${l.dep}`);
-    if (!arr) errors.push(`unknown airport ${l.arr}`);
+    // a missing airport leaves the flight out; an unknown one is kept as written, to check
+    if (!sim && (!dep || !arr)) errors.push("route");
     const fn = l.function && FUNCTIONS.includes(l.function.toUpperCase()) ? (l.function.toUpperCase() as FlightFormInput["function"]) : base.function;
     const input: FlightFormInput = {
       date: l.date,
-      depIcao: dep ?? l.dep,
-      arrIcao: arr ?? l.arr,
+      depIcao: dep,
+      arrIcao: arr,
       out: l.out,
       off: l.off,
       on: l.on,
       in: l.in,
-      registration: l.registration,
+      registration: sim ? undefined : normalizeRegistration(l.registration),
       remarks: l.remarks,
       aircraftTypeIcao: l.aircraftType && /^[A-Z][A-Z0-9]{1,3}$/.test(l.aircraftType) ? l.aircraftType : undefined,
       flightNumber: l.flightNumber,
@@ -208,6 +252,7 @@ export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string 
     return {
       rowIndex: i,
       input,
+      warnings: !sim && ((dep && !d.known) || (arr && !a.known)) ? ["airport"] : undefined,
       explicit: { total: l.totalMin, night: l.nightMin, ifr: l.ifrMin, pic: l.picMin, copilot: l.copilotMin, dual: l.dualMin, instructor: l.instructorMin, multiPilot: l.multiPilotMin },
       errors,
     };

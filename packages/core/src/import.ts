@@ -519,6 +519,8 @@ export interface ImportedRow {
   /** When the file provides totals, they win over computed values. */
   explicit: { total?: number; night?: number; ifr?: number; pic?: number; picus?: number; copilot?: number; dual?: number; instructor?: number; multiPilot?: number };
   errors: string[];
+  /** read but worth a look: "airport" (a code that is not a known airport, kept as written) */
+  warnings?: string[];
 }
 
 export function rowsToFlights(
