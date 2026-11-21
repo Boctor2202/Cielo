@@ -422,7 +422,10 @@ select.input {
 @font-face { font-family: "CV Inter"; src: url("/fonts/cv/Inter-700.ttf") format("truetype"); font-weight: 700; font-display: swap; }
 
 /* Radar: airport codes readable over the map in both themes */
-.radar-airport-label { text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg), 0 0 2px var(--bg); transform: translateY(2px); }
+/* the code over the map: a thin halo in the map's own colour (not the app's), so it reads without a blur */
+.radar-airport-label { transform: translateY(2px); letter-spacing: 0.02em; }
+.radar-label-light { text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 1px #fff; }
+.radar-label-dark { text-shadow: 0 0 2px #0a1626, 0 0 2px #0a1626, 0 0 1px #0a1626; }
 
 /* a detail row unrolling under its line */
 @keyframes unroll {

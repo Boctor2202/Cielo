@@ -136,7 +136,7 @@ function RadarScreen() {
       alive = false;
     };
   }, [ac]);
-  const labelOf = (icao: string) => (seen[icao] ? `${icao} ${seen[icao]}` : rwy[icao] ? `${icao} ≈${rwy[icao]}` : icao);
+  const labelOf = (icao: string) => (seen[icao] ? `${icao} ${seen[icao]}` : rwy[icao] ? `${icao} · ${rwy[icao]}` : icao);
   /** Airports in view: large ones when zoomed out, medium, then every aerodrome closer in. */
   const placeAirports = useCallback((r: Region) => {
     const span = Math.max(r.latitudeDelta, r.longitudeDelta);
