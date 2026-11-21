@@ -111,14 +111,32 @@ export function RadarMap({ apiKey, lang, dark, myRegs, fallback, onError }: { ap
   const tracker = useRef(new RunwayUseTracker());
   const [useTick, setUseTick] = useState(0);
   const trafficOf = (icao: string): RunwayUseSummary | null => tracker.current.summary(icao);
+  /** The code, and zoomed in the runway in use (seen from the traffic) or favoured by the wind (METAR). */
   const labelFor = (icao: string) => {
+    if ((map.current?.getZoom() ?? 0) < 9) return icao;
     const seen = runwayUseLabel(tracker.current.summary(icao));
     const wind = windRwy.current.get(icao);
-    return seen ? `${icao} ${seen}` : wind ? `${icao} ≈${wind}` : icao;
+    return seen ? `${icao} ${seen}` : wind ? `${icao} · ${wind}` : icao;
   };
+  /**
+   * Labels that do not overlap: the larger aerodromes keep theirs first; one closer than ~70 px to a labelled
+   * one shows its ring only (its code comes back when zooming in).
+   */
   const relabel = useCallback(() => {
-    for (const [icao, mk] of airportMarkers.current) {
-      const text = labelFor(icao);
+    const m = map.current;
+    const proj = m?.getProjection?.();
+    const scale = 2 ** (m?.getZoom() ?? 0);
+    const placed: { x: number; y: number }[] = [];
+    const order = [...airportMarkers.current.entries()].sort((a, b) => (sizeOf.current.get(b[0]) ?? 0) - (sizeOf.current.get(a[0]) ?? 0));
+    for (const [icao, mk] of order) {
+      let text = labelFor(icao);
+      if (proj) {
+        const p = proj.fromLatLngToPoint(mk.getPosition());
+        const x = p.x * scale;
+        const y = p.y * scale;
+        if (placed.some((q) => Math.abs(q.x - x) < 72 && Math.abs(q.y - y) < 22)) text = " ";
+        else placed.push({ x, y });
+      }
       if (mk.getLabel()?.text !== text) mk.setLabel({ ...mk.getLabel(), text });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -149,7 +167,7 @@ export function RadarMap({ apiKey, lang, dark, myRegs, fallback, onError }: { ap
             zIndex: 0,
             cursor: "pointer",
             icon: { path: google.maps.SymbolPath.CIRCLE, scale: sz === 3 ? 4.5 : 3.5, fillColor: dark ? "#0a1626" : "#ffffff", fillOpacity: 1, strokeColor: dark ? "#e8eef5" : "#0e2a47", strokeWeight: 1.6, labelOrigin: new google.maps.Point(0, 3.4) },
-            label: { text: labelFor(icao), fontSize: "10px", fontWeight: "600", color: dark ? "#e8eef5" : "#0e2a47", className: "radar-airport-label" },
+            label: { text: labelFor(icao), fontSize: "10px", fontWeight: "600", color: dark ? "#e8eef5" : "#0e2a47", className: dark ? "radar-airport-label radar-label-dark" : "radar-airport-label radar-label-light" },
           }),
         );
         shown.get(icao).addListener("click", () => {
@@ -163,6 +181,7 @@ export function RadarMap({ apiKey, lang, dark, myRegs, fallback, onError }: { ap
       mk.setMap(null);
       shown.delete(icao);
     }
+    relabel();
     // runway the wind favours, next to the code: METARs of the larger aerodromes in view (40 at most)
     const ids = [...want].filter((i) => (sizeOf.current.get(i) ?? 1) >= 2).sort((a, b) => (sizeOf.current.get(b) ?? 0) - (sizeOf.current.get(a) ?? 0)).slice(0, 40);
     if (!ids.length) return;
