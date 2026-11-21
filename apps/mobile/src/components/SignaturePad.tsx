@@ -1,7 +1,8 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useContext, useMemo, useRef, useState } from "react";
 import { PanResponder, View } from "react-native";
 import Svg, { Path, SvgXml } from "react-native-svg";
 import { useTheme } from "../theme";
+import { ScrollLock } from "./ui";
 
 const W = 320;
 const H = 150;
@@ -9,6 +10,10 @@ const H = 150;
 /** Strokes drawn with the finger, kept as SVG paths in a fixed 320×150 box. */
 export function SignaturePad({ onChange }: { onChange: (paths: string[]) => void }) {
   const c = useTheme();
+  // the screen must not scroll while the finger signs
+  const lock = useContext(ScrollLock);
+  const lockRef = useRef(lock);
+  lockRef.current = lock;
   const [paths, setPaths] = useState<string[]>([]);
   const current = useRef<string>("");
   const size = useRef({ w: W, h: H });
@@ -17,8 +22,12 @@ export function SignaturePad({ onChange }: { onChange: (paths: string[]) => void
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
         onMoveShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
         onPanResponderTerminationRequest: () => false,
+        onShouldBlockNativeResponder: () => true,
+        onPanResponderTerminate: () => lockRef.current(false),
         onPanResponderGrant: (e) => {
           current.current = `M${scale(e.nativeEvent.locationX, e.nativeEvent.locationY)}`;
           setPaths((p) => [...p, current.current]);
@@ -28,6 +37,7 @@ export function SignaturePad({ onChange }: { onChange: (paths: string[]) => void
           setPaths((p) => [...p.slice(0, -1), current.current]);
         },
         onPanResponderRelease: () => {
+          lockRef.current(false);
           setPaths((p) => {
             onChange(p);
             return p;
@@ -40,6 +50,10 @@ export function SignaturePad({ onChange }: { onChange: (paths: string[]) => void
   return (
     <View
       {...pan.panHandlers}
+      // locks the scroll at the very first touch, before the scroll view can claim the gesture
+      onTouchStart={() => lock(true)}
+      onTouchEnd={() => lock(false)}
+      onTouchCancel={() => lock(false)}
       onLayout={(e) => (size.current = { w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
       style={{ height: 160, borderRadius: 12, borderWidth: 1, borderColor: c.border, backgroundColor: "#ffffff", overflow: "hidden" }}
     >
