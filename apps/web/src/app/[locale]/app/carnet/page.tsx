@@ -2,6 +2,7 @@
 
 import { X, BookCopy, Building2, CalendarRange, Check, ListChecks, Clock, CloudFog, FileDown, MapPin, Moon, NotebookPen, Plane, PenLine, PlaneLanding, Plus, ScanSearch, ShieldCheck, Upload } from "lucide-react";
 import { SignManyModal } from "@/components/app/Signature";
+import { TrashButton } from "@/components/app/Trash";
 import { useAccess } from "@/lib/access";
 import { useAirports } from "@/lib/airports";
 import { useEffect, useMemo, useState } from "react";
@@ -150,6 +151,7 @@ export default function Logbook() {
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => setSignMany(true)}><PenLine size={15} /> {tm("signMine")}</button>
             ) : null}
             <Link href="/app/carnet/audit" className="btn btn-secondary btn-sm"><ScanSearch size={15} /> {t("audit")}</Link>
+            <TrashButton />
             <Link href="/app/carnet/report" className="btn btn-secondary btn-sm"><BookCopy size={15} /> {t("carry")}</Link>
             <Link href="/app/carnet/nouveau" className="btn btn-primary btn-sm"><Plus size={15} /> {tn("newFlight")}</Link>
           </>

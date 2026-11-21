@@ -9,6 +9,7 @@ import Storage from "expo-sqlite/kv-store";
 import { formatDate, formatMonth } from "../../src/i18n";
 import { useApp } from "../../src/state";
 import { signWithSaved } from "../../src/signing";
+import { TrashSheet, useDeletedFlights } from "../../src/components/TrashSheet";
 import { airports } from "../../src/airports";
 import { airlines } from "../../src/airlines";
 import { OperatorField } from "../../src/components/OperatorField";
@@ -117,6 +118,9 @@ export default function Logbook() {
     Alert.alert(t("log.assign.title"), op ? t("log.assign.done", { n, op: opLabel(op)! }) : t("log.assign.cleared", { n }));
     stopSelecting();
   };
+  // the flights deleted by mistake, to restore
+  const deletedFlights = useDeletedFlights();
+  const [trashOpen, setTrashOpen] = useState(false);
   // signing the selection with the pilot's saved signature
   const [signing, setSigning] = useState(false);
   const pickedUnsigned = flights.filter((f) => picked.has(f.id) && !f.signatureId && !f.deletedAt);
@@ -266,6 +270,12 @@ export default function Logbook() {
                   <Ionicons name={hideSim ? "checkbox" : "square-outline"} size={15} color={hideSim ? c.accent : c.muted} />
                   <Txt variant="small" color={hideSim ? c.accent : c.muted}>{t("log.hideSim")}</Txt>
                 </Pressable>
+                {access.canWrite && deletedFlights.length ? (
+                  <Pressable onPress={() => (tap(), setTrashOpen(true))} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Ionicons name="trash-outline" size={15} color={c.muted} />
+                    <Txt variant="small" color={c.muted}>{t("trash.button", { n: deletedFlights.length })}</Txt>
+                  </Pressable>
+                ) : null}
                 {access.canWrite ? (
                   <Pressable onPress={() => (tap(), selecting ? stopSelecting() : setSelecting(true))} hitSlop={6} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                     <Ionicons name="checkbox-outline" size={15} color={selecting ? c.accent : c.muted} />
@@ -439,6 +449,7 @@ export default function Logbook() {
           );
         }}
       />
+      <TrashSheet open={trashOpen} onClose={() => setTrashOpen(false)} />
       {selecting ? (
         <View style={{ position: "absolute", left: 12, right: 12, bottom: 24, gap: 8, padding: 12, borderRadius: 18, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", backgroundColor: "rgba(6,18,38,0.97)" }}>
           <Row style={{ justifyContent: "space-between", alignItems: "center" }}>

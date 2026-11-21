@@ -2556,6 +2556,15 @@
       "signN": "Sign {n, plural, one {# flight} other {# flights}} · {total}",
       "done": "{n, plural, one {# flight signed} other {# flights signed}}.",
       "signing": "Signing…"
+    },
+    "trash": {
+      "button": "Trash ({n})",
+      "title": "Deleted flights",
+      "hint": "Deleted flights are kept here and on your account. Restore one to put it back in the logbook, as it was.",
+      "deletedOn": "deleted on {date}",
+      "restore": "Restore",
+      "restoreAll": "Restore all ({n})",
+      "empty": "No deleted flight."
     }
   },
   "why": {
