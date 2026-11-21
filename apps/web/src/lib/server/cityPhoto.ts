@@ -42,19 +42,22 @@ async function landmarkOf(city: string, country: string, near: { lat: number; lo
   const search = async (textQuery: string) => {
     const r = await fetch("https://places.googleapis.com/v1/places:searchText", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey(), "X-Goog-FieldMask": "places.id,places.displayName,places.userRatingCount,places.types,places.photos.name" },
+      headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey(), "X-Goog-FieldMask": "places.id,places.displayName,places.userRatingCount,places.types,places.formattedAddress,places.photos.name" },
       body: JSON.stringify({ textQuery, languageCode: lang, locationRestriction: box, pageSize: 20 }),
       cache: "no-store",
     });
     if (!r.ok) throw new PlacesError("upstream", `Places API ${r.status}`);
-    return ((await r.json()) as { places?: { id: string; displayName?: { text: string }; userRatingCount?: number; types?: string[]; photos?: unknown[] }[] }).places ?? [];
+    return ((await r.json()) as { places?: { id: string; displayName?: { text: string }; userRatingCount?: number; types?: string[]; formattedAddress?: string; photos?: unknown[] }[] }).places ?? [];
   };
-  const found = [...(await search("famous landmark")), ...(await search(`monument ${city}`).catch(() => []))];
+  const found = [...(await search(`famous landmark ${city}`)), ...(await search(`monument ${city}`).catch(() => []))];
   // a sight people visit, not a shop, an airport or a hotel
   const NOT = ["airport", "lodging", "shopping_mall", "store", "restaurant", "stadium", "place_of_worship_small"];
-  const best = found
-    .filter((p) => p.photos?.length && !(p.types ?? []).some((t) => NOT.includes(t)))
-    .sort((a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0))[0];
+  const sights = found.filter((p) => p.photos?.length && !(p.types ?? []).some((t) => NOT.includes(t)));
+  // in the city itself first (its address names it: Notre-Dame de la Garde for Marseille, not a castle in
+  // Provence), then anywhere around
+  const plain = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const inCity = sights.filter((p) => plain(p.formattedAddress ?? "").includes(plain(city)));
+  const best = (inCity.length ? inCity : sights).sort((a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0))[0];
   const hit = best ? { id: best.id, name: best.displayName?.text ?? city } : null;
   void country;
   landmarks.set(k, hit);
