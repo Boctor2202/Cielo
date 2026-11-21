@@ -32,6 +32,8 @@ export interface ImportCheck {
   kept: number;
   /** rows whose off-block / on-block times do not match the total written in the file (the total is kept) */
   timesToCheck: number[];
+  /** rows with an airport code that is not a known airport (kept as written) */
+  airportsToCheck: number[];
 }
 
 /** Same minute, or a one-minute rounding (decimal hours in the file). */
@@ -100,5 +102,6 @@ export function checkImport(rows: ImportedRow[], built: { rowIndex: number; flig
     const block = Math.round((Date.parse(f.inUtc) - Date.parse(f.outUtc)) / 60_000);
     if (Math.abs(block - written) > 5) timesToCheck.push(fileRow(r.rowIndex));
   }
-  return { lines, rejected, kept: built.length, timesToCheck };
+  const airportsToCheck = rows.filter((r) => byRow.has(r.rowIndex) && r.warnings?.includes("airport")).map((r) => fileRow(r.rowIndex));
+  return { lines, rejected, kept: built.length, timesToCheck, airportsToCheck };
 }

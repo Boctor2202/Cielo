@@ -264,6 +264,12 @@ export default function ImportScreen() {
             </View>
           ))}
           {ck.lines.some((l) => l.rows.length) ? <Txt variant="small">{t("uimp.diffHelp")}</Txt> : null}
+          {ck.airportsToCheck.length ? (
+            <View style={{ gap: 2 }}>
+              <Txt style={{ fontWeight: "700" }} color={c.caution}>{t("uimp.airportsTitle")}</Txt>
+              <Txt variant="small">{t("uimp.airportsText", { rows: ck.airportsToCheck.slice(0, 20).join(", ") })}</Txt>
+            </View>
+          ) : null}
           {ck.timesToCheck.length ? (
             <View style={{ gap: 2 }}>
               <Txt style={{ fontWeight: "700" }} color={c.caution}>{t("uimp.timesTitle")}</Txt>

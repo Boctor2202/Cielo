@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { analyseTable, applyImportChoices, detectDelimiter, legsToRows, parseCsv, parseDuration, parseFlexibleDate, rowsToFlights, sheetCellText } from "../src";
+import { analyseTable, applyImportChoices, detectDelimiter, legsToRows, normalizeRegistration, parseCsv, parseDuration, parseFlexibleDate, rowsToFlights, sheetCellText } from "../src";
 
 /**
  * Real-world logbook files, read end to end as the apps read them: delimiter, header row, column mapping, date
@@ -206,5 +206,29 @@ describe("simulator sessions and the pilot's choices", () => {
     const [r] = applyImportChoices(rows, { rules: "VFR", function: "DUAL" });
     expect(r!.input).toMatchObject({ ifr: false, function: "DUAL" });
     expect(r!.explicit).toMatchObject({ ifr: 0, pic: undefined, total: 61 });
+  });
+});
+
+describe("complete logbook lines from a photo", () => {
+  const known = new Set(["LFPN", "LFOX", "LFPT", "LFOZ"]);
+  const toIcao = (c: string) => (known.has(c) ? c : undefined);
+  it("a misread airport code is matched to the known one used on the page; an unknown one is kept to check", () => {
+    const rows = legsToRows(
+      [
+        { date: "2021-08-03", dep: "LFPN", arr: "LFOX", totalMin: 61, registration: "FHAEC", aircraftType: "C172" },
+        { date: "2021-08-04", dep: "LF0X", arr: "LFPH", totalMin: 62, registration: "fheel" },
+        { date: "2021-08-05", dep: "LFPN", arr: "ABCD", totalMin: 60, registration: "PHABC" },
+      ],
+      toIcao,
+      { function: "DUAL", pilotFlying: false },
+    );
+    expect(rows.map((r) => r.errors)).toEqual([[], [], []]);
+    expect(rows[1]!.input).toMatchObject({ depIcao: "LFOX", arrIcao: "LFPN", registration: "F-HEEL" });
+    expect(rows[0]!.input).toMatchObject({ registration: "F-HAEC", aircraftTypeIcao: "C172" });
+    expect(rows[2]!.input).toMatchObject({ arrIcao: "ABCD", registration: "PH-ABC" });
+    expect(rows[2]!.warnings).toEqual(["airport"]);
+  });
+  it("registrations get their national prefix", () => {
+    expect([normalizeRegistration("FHAEC"), normalizeRegistration("G-EUUA"), normalizeRegistration("N172SP"), normalizeRegistration("ECmxv"), normalizeRegistration("HBZAB")]).toEqual(["F-HAEC", "G-EUUA", "N172SP", "EC-MXV", "HB-ZAB"]);
   });
 });
