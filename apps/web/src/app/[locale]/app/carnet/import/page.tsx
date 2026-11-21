@@ -125,7 +125,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
   const [learned, setLearned] = useState(false);
   const [share, setShare] = useState(false);
   const [paste, setPaste] = useState("");
-  const tableRows = useMemo<ImportedRow[]>(() => (rows && mapping ? rowsToFlights(rows.slice(1), mapping, { dateOrder: order }) : []), [rows, mapping, order]);
+  const tableRows = useMemo<ImportedRow[]>(() => (rows && mapping ? rowsToFlights(rows.slice(1), mapping, { dateOrder: order, timezoneOf: (c) => airports?.get(c.length === 3 ? airports.iataToIcao(c) ?? c : c)?.timezone }) : []), [rows, mapping, order, airports]);
   const parsed = pdfRows ?? tableRows;
   const recognised = mapping ? Object.values(mapping).filter((i) => i >= 0).length : 0;
   // cross-checks on the data itself, recomputed whenever a column is changed by hand

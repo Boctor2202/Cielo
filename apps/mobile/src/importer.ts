@@ -95,8 +95,12 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
       d.singlePilotSeMin = !mp && (type?.engineCount ?? 1) <= 1 ? ex.total : 0;
       d.singlePilotMeMin = !mp && (type?.engineCount ?? 1) > 1 ? ex.total : 0;
       d.picMin = input.function === "PIC" ? ex.total : 0;
+      d.picusMin = input.function === "PICUS" ? ex.total : 0;
       d.copilotMin = input.function === "SIC" ? ex.total : 0;
       d.dualMin = input.function === "DUAL" ? ex.total : 0;
+      d.instructorMin = input.function === "FI" ? ex.total : 0;
+      d.examinerMin = input.function === "FE" ? ex.total : 0;
+      if (input.ifr && ex.ifr === undefined) d.ifrMin = ex.total;
     }
     if (ex.night !== undefined) d.nightMin = Math.min(ex.night, d.totalMin);
     if (ex.ifr !== undefined) d.ifrMin = Math.min(ex.ifr, d.totalMin);

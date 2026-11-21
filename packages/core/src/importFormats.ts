@@ -30,9 +30,12 @@ function detectApp(header: string[], raw: string[][]): LogbookApp | undefined {
   const has = (re: RegExp) => h.some((x) => re.test(x));
   const firstCells = raw.slice(0, 5).map((r) => lc(r[0] ?? ""));
   if (firstCells.some((c) => c.includes("foreflight"))) return "ForeFlight";
-  if (has(/^flight_/) || has(/^aircraft_/)) return "LogTen";
+  // LogTen names its columns flight_flightDate, flight_from… (Flylog's FLIGHT_NUMBER is not one of them)
+  if (has(/^flight_(flightdate|from|to|totaltime)$/) || has(/^aircraft_aircraftid$/)) return "LogTen";
+  if (has(/^duration_block$/) || has(/^time_block_start$/)) return "Flylog";
+  if (has(/^pilotlog_date$/) || has(/^is_prevexp$/) || has(/crewlounge/)) return "CrewLounge";
   if (has(/^mcc_|pilotlog/)) return "mccPILOTLOG";
-  if (has(/crewlounge/)) return "CrewLounge";
+  if (has(/^holder's operating capacity$/) || has(/^day t-o$/)) return "Safelog";
   if (has(/^category\/class$/) && has(/^tail number$/)) return "MyFlightbook";
   if (has(/flylog/)) return "Flylog";
   if (has(/^apdl/)) return "APDL";
@@ -78,7 +81,40 @@ export function prepareLogbookTable(raw: string[][]): PreparedTable {
   const header = (rows[at] ?? []).map((c) => c.trim());
   const app = detectApp(header, rows);
   const cleanHeader = app === "LogTen" ? header.map((c) => c.replace(/^(flight|aircraft|aircraftType|pilot)_/i, "")) : header;
+  if (app === "Safelog") return withRoute(sumSplitColumns({ header: cleanHeader, rows: rows.slice(at + 1), app }));
   return withRoute({ header: cleanHeader, rows: rows.slice(at + 1), app });
+}
+
+const toMin = (v: string) => {
+  const m = v.trim().match(/^(\d+):(\d{2})$/) ?? v.trim().match(/^(\d+)[.,](\d+)$/);
+  if (!m) return 0;
+  return v.includes(":") ? +m[1]! * 60 + +m[2]! : Math.round(parseFloat(`${m[1]}.${m[2]}`) * 60);
+};
+const hhmm = (n: number) => (n ? `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}` : "");
+
+/**
+ * Safelog (EASA layout) splits each function time by day / night and single / multi-engine ("Night Multi-Engine
+ * (ME) Co-Pilot"): the parts are added up into one column per function, plus the night time, and the split
+ * columns are dropped so no single part is read as the whole.
+ */
+function sumSplitColumns(t: PreparedTable): PreparedTable {
+  const groups: [string, RegExp][] = [
+    ["PIC", /\bin command\b/i],
+    ["PICUS", /\bpicus\b/i],
+    ["Dual", /\bdual\b/i],
+    ["Co-pilot", /\b(co-?pilot|p2)\b/i],
+  ];
+  const split = (h: string) => /^(day|night)\b.*\b(single|multi)-engine\b/i.test(h);
+  const idx = t.header.map((h, i) => (split(h) ? i : -1)).filter((i) => i >= 0);
+  if (!idx.length) return t;
+  const keep = t.header.map((_, i) => i).filter((i) => !idx.includes(i));
+  const header = [...keep.map((i) => t.header[i]!), ...groups.map(([name]) => name), "Night"];
+  const rows = t.rows.map((r) => {
+    const sums = groups.map(([, re]) => idx.filter((i) => re.test(t.header[i]!)).reduce((n, i) => n + toMin(r[i] ?? ""), 0));
+    const night = idx.filter((i) => /^night\b/i.test(t.header[i]!)).reduce((n, i) => n + toMin(r[i] ?? ""), 0);
+    return [...keep.map((i) => r[i] ?? ""), ...sums.map(hhmm), hhmm(night)];
+  });
+  return { ...t, header, rows };
 }
 
 /** A single route column and no From / To columns: add them from the route. */

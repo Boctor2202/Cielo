@@ -11,7 +11,7 @@ import {
   type ImportField, type ImportedRow, type LogbookLeg, type StoredMapping,
 } from "@cielo/core";
 import { API_URL } from "../src/api";
-import { toIcao } from "../src/airports";
+import { lookupAirport, toIcao } from "../src/airports";
 import { prepareImportedRows, savePrepared, type PreparedImport } from "../src/importer";
 import { checkImport, formatDuration, type ImportCheck } from "@cielo/core";
 import { Button, Card, Row, Screen, Txt, tap } from "../src/components/ui";
@@ -157,7 +157,7 @@ export default function ImportScreen() {
           src = d.source ?? "ai";
         } else if (d.error && d.error !== "plan") return fail(d.error);
       }
-      setRows(rowsToFlights(an.rows, mapping, { dateOrder: an.dateOrder, defaultFunction: pilot.defaultFunction }));
+      setRows(rowsToFlights(an.rows, mapping, { dateOrder: an.dateOrder, defaultFunction: pilot.defaultFunction, timezoneOf: (c) => lookupAirport(toIcao(c))?.timezone }));
       setTable({ header: an.header, mapping });
       setSource(src);
     } catch {

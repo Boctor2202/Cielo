@@ -102,3 +102,79 @@ describe("cell readers", () => {
     expect(sheetCellText(null)).toBe("");
   });
 });
+
+/**
+ * Exports of other logbook apps, with their real column names (ForeFlight, MyFlightbook from their sources; the
+ * others from public importers' samples): every flight read, simulator sessions recognised, times in the right unit.
+ */
+const readApp = (name: string, timezoneOf?: (c: string) => string | undefined) => {
+  const text = readFileSync(new URL(`./fixtures/import/apps/${name}`, import.meta.url), "utf8").replace(/^﻿/, "");
+  const a = analyseTable(parseCsv(text));
+  const rows = rowsToFlights(a.rows, a.mapping, { dateOrder: a.dateOrder, timezoneOf });
+  return { a, rows, ok: rows.filter((r) => !r.errors.length) };
+};
+
+describe("exports of other logbook apps", () => {
+  it("ForeFlight: two sections, decimal hours, a flag column not taken for a flight number", () => {
+    const { a, rows, ok } = readApp("foreflight-logbook.csv");
+    expect(a.app).toBe("ForeFlight");
+    expect(ok).toHaveLength(3);
+    expect(rows[2]!.input).toMatchObject({ date: "2022-12-10", depIcao: "KPOU", arrIcao: "KHPN", out: "22:40", in: "00:01", registration: "N812RR", aircraftTypeIcao: "C172", landingsNight: 1 });
+    expect(rows[2]!.input!.flightNumber).toBeUndefined();
+    expect(rows[2]!.explicit).toMatchObject({ total: 84, night: 84, pic: 84 });
+  });
+
+  it("LogTen Pro: actual (not scheduled) times, simulator session", () => {
+    const { a, rows, ok } = readApp("logten-pro-export-flights.txt");
+    expect(a.app).toBe("LogTen");
+    expect(ok).toHaveLength(3);
+    expect(rows[0]!.input).toMatchObject({ out: "10:00", off: "10:12", on: "11:02", in: "11:10", flightNumber: "KL1023", registration: "PH-ABC" });
+    expect(rows[1]!.input!.function).toBe("SIC");
+    expect(rows[2]!.input).toMatchObject({ isFstd: true, fstdMin: 240 });
+  });
+
+  it("mccPILOTLOG: simulator flagged 'sim' with its total as session time", () => {
+    const { ok, rows } = readApp("mccpilotlog-export.csv");
+    expect(ok).toHaveLength(3);
+    expect(rows[1]!.input).toMatchObject({ function: "SIC", registration: "PH-ABC" });
+    expect(rows[2]!.input).toMatchObject({ isFstd: true, fstdMin: 180 });
+  });
+
+  it("CrewLounge: durations in minutes, registration without hyphen, previous experience left out", () => {
+    const { a, rows, ok } = readApp("crewlounge-pilotlog-export.csv");
+    expect(a.app).toBe("CrewLounge");
+    expect(ok).toHaveLength(2);
+    expect(rows[0]!.explicit.total).toBe(80);
+    expect(rows[1]!.explicit).toMatchObject({ total: 86, night: 86, copilot: 86 });
+    expect(rows[0]!.input).toMatchObject({ registration: "PHXYZ", isFstd: false });
+  });
+
+  it("MyFlightbook: decimal hours, IMC as IFR, route split into airports", () => {
+    const { rows, ok } = readApp("myflightbook-export.csv");
+    expect(ok).toHaveLength(3);
+    expect(rows[2]!.input).toMatchObject({ depIcao: "KPAE", arrIcao: "KPDX", registration: "N4321K", aircraftTypeIcao: "P28A" });
+    expect(rows[2]!.explicit.total).toBe(141);
+    expect(rows[0]!.explicit.ifr).toBe(24);
+    expect(rows[1]!.input!.function).toBe("DUAL");
+  });
+
+  it("Safelog: split function columns added up, local times converted to UTC", () => {
+    const { a, rows, ok } = readApp("safelog-export.csv", (c) => (c.startsWith("EH") ? "Europe/Amsterdam" : undefined));
+    expect(a.app).toBe("Safelog");
+    expect(ok).toHaveLength(3);
+    expect(rows[0]!.input).toMatchObject({ out: "08:00", in: "08:50", function: "PIC" });
+    expect(rows[0]!.explicit.pic).toBe(50);
+    // 09:00 LOCAL in Amsterdam in January = 08:00 UTC
+    expect(rows[1]!.input).toMatchObject({ out: "08:00", in: "08:45", function: "DUAL" });
+    expect(rows[1]!.explicit.dual).toBe(45);
+    expect(rows[2]!.input).toMatchObject({ isFstd: true, fstdType: "FNPT2", fstdMin: 75 });
+  });
+
+  it("Flylog: not mistaken for LogTen, every column found", () => {
+    const { a, rows, ok } = readApp("flylog-export.csv");
+    expect(a.app).toBe("Flylog");
+    expect(ok).toHaveLength(2);
+    expect(rows[1]!.input).toMatchObject({ flightNumber: "FL101", registration: "PHFAKE", off: "16:20", on: "17:12" });
+    expect(rows[1]!.explicit).toMatchObject({ total: 75, night: 40, copilot: 75 });
+  });
+});
