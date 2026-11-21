@@ -944,6 +944,17 @@
         "confirm": "Confirm and import ({count, plural, one {# flight} other {# flights}})",
         "timesTitle": "Times to check",
         "timesText": "Rows {rows}: the departure and arrival times do not match the total time written. Geardown keeps the written total; check the times (a misread or miswritten hour) before or after importing."
+      },
+      "choices": {
+        "help": "For every flight of this import, when the document does not say it:",
+        "rules": "Flight rules",
+        "function": "Function",
+        "doc": "As in the document",
+        "fn": {
+          "PIC": "PIC",
+          "SIC": "SIC (co-pilot)",
+          "DUAL": "Dual (instruction)"
+        }
       }
     },
     "audit": {

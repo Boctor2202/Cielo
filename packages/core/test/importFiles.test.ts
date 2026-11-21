@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { analyseTable, detectDelimiter, legsToRows, parseCsv, parseDuration, parseFlexibleDate, rowsToFlights, sheetCellText } from "../src";
+import { analyseTable, applyImportChoices, detectDelimiter, legsToRows, parseCsv, parseDuration, parseFlexibleDate, rowsToFlights, sheetCellText } from "../src";
 
 /**
  * Real-world logbook files, read end to end as the apps read them: delimiter, header row, column mapping, date
@@ -192,5 +192,19 @@ describe("legs read from a document", () => {
   it("what the document says wins", () => {
     const [r] = legsToRows([{ ...leg, ifrMin: 30, multiPilotMin: 0 }], (c) => c, { function: "PIC", pilotFlying: false, airline: true });
     expect(r!.input).toMatchObject({ ifr: true, operation: "single_pilot" });
+  });
+});
+
+describe("simulator sessions and the pilot's choices", () => {
+  it("a session read from the right page is an FSTD session, not a flight", () => {
+    const [r] = legsToRows([{ date: "2021-08-18", dep: "", arr: "", fstdType: "FNPT II", fstdMin: 75, dualMin: 75 }], () => undefined, { function: "DUAL", pilotFlying: false });
+    expect(r!.errors).toEqual([]);
+    expect(r!.input).toMatchObject({ isFstd: true, fstdType: "FNPT II", fstdMin: 75, depIcao: "FSTD" });
+  });
+  it("VFR and dual for every flight of a student's page", () => {
+    const rows = legsToRows([{ date: "2021-08-03", dep: "LFPN", arr: "LFPN", totalMin: 61, picMin: 61, ifrMin: 61 }], (c) => c, { function: "PIC", pilotFlying: false });
+    const [r] = applyImportChoices(rows, { rules: "VFR", function: "DUAL" });
+    expect(r!.input).toMatchObject({ ifr: false, function: "DUAL" });
+    expect(r!.explicit).toMatchObject({ ifr: 0, pic: undefined, total: 61 });
   });
 });

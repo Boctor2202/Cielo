@@ -944,6 +944,17 @@
         "confirm": "Valider et importer ({count, plural, one {# vol} other {# vols}})",
         "timesTitle": "Heures à vérifier",
         "timesText": "Lignes {rows} : les heures de départ et d'arrivée ne correspondent pas au temps total écrit. Geardown garde le temps total écrit ; vérifiez les heures (une heure mal lue ou mal écrite) avant ou après l'import."
+      },
+      "choices": {
+        "help": "Pour tous les vols de cet import, quand le document ne le précise pas :",
+        "rules": "Règles de vol",
+        "function": "Fonction",
+        "doc": "Selon le document",
+        "fn": {
+          "PIC": "PIC",
+          "SIC": "SIC (copilote)",
+          "DUAL": "Dual (double commande)"
+        }
       }
     },
     "audit": {
