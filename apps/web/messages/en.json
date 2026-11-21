@@ -51,28 +51,28 @@
     "items": {
       "logbook": {
         "title": "Logbook and exports in authority formats",
-        "text": "Every AMC1 FCL.050 column, page totals and automatic carry-forward. PDF export in EASA, FAA and CASA formats, plus CSV and Excel.",
+        "text": "Your flights month by month with their totals, filtered by year, type or operator. Type the registration: Geardown finds the airports and times from the aircraft's ADS-B signals. PDF export in EASA, FAA and CASA formats, plus CSV and Excel.",
         "points": [
-          "Night time from civil twilight",
+          "Every AMC1 FCL.050 column, night time from civil twilight",
           "SE / ME / multi-pilot derived from the aircraft",
           "Carry forward your paper logbook totals"
         ]
       },
       "import": {
-        "title": "Automatic import",
-        "text": "Import your airline roster (iCal, CSV), your old CSV or Excel files, or take photos of your paper logbook pages.",
+        "title": "Import any logbook",
+        "text": "CSV or Excel files, exports from other logbook apps, airline PDF statements, your roster, an end-of-flight e-mail pasted as is, or photos of your paper pages. Nothing is saved until you have checked your totals.",
         "points": [
-          "Automatic column detection",
-          "Preview and fix before import",
-          "Photo scan with text recognition"
+          "Automatic column detection, fix before import",
+          "“Check your totals” screen before saving",
+          "Any import can be undone without touching the rest"
         ]
       },
       "audit": {
         "title": "Automatic audit",
-        "text": "Geardown reads your logbook like an examiner: overlaps, inconsistent times, duplicates, night time above total, broken continuity.",
+        "text": "Geardown reads your logbook like an examiner: overlaps, inconsistent times, duplicates, night time above total, broken continuity. Every warning explains why it shows and what is normal.",
         "points": [
-          "17 consistency rules",
-          "Direct link to the flight to fix",
+          "17 consistency checks",
+          "“Explain” button and a direct link to the flight",
           "Before every check ride or interview"
         ]
       },
@@ -87,34 +87,34 @@
       },
       "ftl": {
         "title": "Rest and FTL limits",
-        "text": "Flight duty and rest periods computed under EASA ORO.FTL or EU-OPS Subpart Q (business aviation) from your flights and roster, with alerts before you exceed a limit.",
+        "text": "An indicative calculation under EASA ORO.FTL or EU-OPS Subpart Q (business aviation), from your flights and your roster. An aid: it does not replace your operator's FTL monitoring.",
         "points": [
-          "Max FDP from reporting time",
+          "Max FDP from reporting time, split duty if your operator applies it",
           "7, 14, 28-day and 12-month totals",
           "Minimum rest and weekly rest"
         ]
       },
       "stats": {
-        "title": "Flight map and statistics",
-        "text": "Your routes on a map, your hours by type, by function, at night and IFR, your most visited airports.",
+        "title": "Experience and statistics",
+        "text": "Your hours by type, by function, at night and IFR, year by year, and every route on the world map. Your home screen is made of widgets you choose: goals, recent experience, reports.",
         "points": [
-          "Exact great circle between airports",
-          "28 / 90-day / 12-month periods",
-          "19,000 aerodromes in the database"
+          "Exact great circle across 19,000 aerodromes",
+          "7 / 30 / 90-day / 12-month periods",
+          "Goals computed from your logbook and FCL.060"
         ]
       },
       "signature": {
         "title": "Digital flight signature",
-        "text": "Have a flight signed by your instructor or captain right on the screen. The entry is locked and its fingerprint sealed.",
+        "text": "Have a flight signed by your instructor or captain on the screen, or send them a signing link. The entry is locked and its fingerprint sealed.",
         "points": [
           "SHA-256 fingerprint: any change after signing is detected",
-          "Any change voids the signature",
+          "Sign in person or remotely by link",
           "Shown in the PDF export"
         ]
       },
       "offline": {
         "title": "Offline and in sync",
-        "text": "Geardown works without a network, in flight or on a layover. Your data syncs as soon as you're back online, on all your devices.",
+        "text": "Geardown works without a network, in flight or on a layover. Your data syncs as soon as you're back online, between the web and your phone.",
         "points": [
           "Local database on each device",
           "Hosted in Europe (London)",
@@ -123,19 +123,19 @@
       },
       "jobs": {
         "title": "Pilot jobs",
-        "text": "Openings posted by airlines and operators on their own careers pages, sorted by world region, required experience and salary when stated. Geardown works out your match percentage from your logbook, on your device. Coverage is first of all Europe and business aviation; other regions are still thinly covered.",
+        "text": "Openings posted by airlines and operators on their own careers pages. For each one, Geardown checks the ad's criteria against your logbook: met, not met or to verify, with the quote from the ad. Coverage is first of all Europe and business aviation.",
         "points": [
-          "Sorted by region: licence and right to work taken into account",
+          "“My types only” filter, region, licence and right to work",
           "Required hours, type rating and salary read from the posting",
-          "“For you” match percentage computed on your device"
+          "Match % computed on your device: your logbook is never sent"
         ]
       },
       "cv": {
-        "title": "Pilot CV",
-        "text": "A CV built from your logbook, with your hours by category (total, PIC, multi-pilot, turbine, night, IFR, per type) and a layout designed for the screening software airlines use.",
+        "title": "Pilot CV and application file",
+        "text": "A CV built from your logbook, with your hours by category (total, PIC, multi-pilot, turbine, night, IFR, per type), tailored to a specific job ad, with a layout designed for the screening software airlines use.",
         "points": [
           "Hours by category and by type, always up to date",
-          "Readability check for applicant tracking systems (ATS), with no guaranteed outcome",
+          "Pre-send check for applicant tracking systems (ATS), with no guaranteed outcome",
           "PDF, text and JSON Resume export, in English or French"
         ]
       }
