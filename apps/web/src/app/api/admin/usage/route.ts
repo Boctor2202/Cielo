@@ -78,7 +78,7 @@ export function GET(req: Request) {
     const elapsed = (now.getTime() - monthStart.getTime()) / 86400_000;
     const fa = await flightAwareActual(m0);
 
-    const SERVICES = ["anthropic", "google", "flightaware", "adzuna", "resend", "expo", "adsblol"];
+    const SERVICES = ["anthropic", "google", "flightaware", "openaip", "openmeteo", "adzuna", "resend", "expo", "adsblol"];
     const services = SERVICES.map((service) => {
       const mine = thisMonth.filter((r) => r.service === service);
       const prev = lastMonth.filter((r) => r.service === service);

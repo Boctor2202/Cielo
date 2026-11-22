@@ -2005,7 +2005,27 @@
         "history_off": "Ce vol est trop ancien pour retrouver sa trace."
       },
       "sourceFa": "Trace enregistrée par",
-      "fromFa": "La trace ADS-B se récupère automatiquement pour les vols des dernières 24 h (réseau ADS-B)."
+      "fromFa": "La trace ADS-B se récupère automatiquement pour les vols des dernières 24 h (réseau ADS-B).",
+      "context": {
+        "loading": "Espaces aériens et vent…",
+        "airspaces": "Espaces aériens traversés",
+        "airspaceSoon": "Les espaces aériens traversés s'afficheront ici dès que la source openAIP sera activée.",
+        "none": "Aucun espace aérien contrôlé ou réglementé traversé.",
+        "error": "Indisponible pour le moment.",
+        "class": "classe {c}",
+        "inside": "dedans de {from} à {to} UTC",
+        "firs": "Régions d'information :",
+        "cruise": "En croisière · {fl}",
+        "windSoon": "Le vent en croisière s'affichera ici dès que la source météo sera activée.",
+        "wind": "Vent",
+        "headwind": "Vent de face",
+        "tailwind": "Vent arrière",
+        "crosswind": "Vent traversier",
+        "fromRight": "de droite",
+        "fromLeft": "de gauche",
+        "oat": "Température extérieure",
+        "disclaimer": "Pour information, pas pour la navigation. Espaces aériens © openAIP ; vent et température : modèles Open-Meteo, à l'heure la plus proche."
+      }
     },
     "access": {
       "demo": "Démo : {days, plural, one {encore # jour} other {encore # jours}} pour tout essayer. Créez votre compte pour continuer avec %TRIAL% jours d'essai.",
@@ -2256,7 +2276,9 @@
           "adzuna": "Adzuna",
           "resend": "Resend (e-mails)",
           "expo": "Expo (notifications)",
-          "adsblol": "adsb.lol"
+          "adsblol": "adsb.lol",
+          "openaip": "openAIP",
+          "openmeteo": "Open-Meteo"
         },
         "what": {
           "anthropic": "imports photo et PDF, plannings, lettres de motivation",
@@ -2265,7 +2287,9 @@
           "adzuna": "offres d'emploi",
           "resend": "e-mails de contact et de signature",
           "expo": "notifications push",
-          "adsblol": "traces ADS-B récentes"
+          "adsblol": "traces ADS-B récentes",
+          "openaip": "espaces aériens traversés",
+          "openmeteo": "vent et température en croisière"
         },
         "basis": {
           "anthropic": "estimé sur les tokens",
@@ -2274,7 +2298,9 @@
           "adzuna": "gratuit",
           "resend": "gratuit jusqu'au quota",
           "expo": "gratuit",
-          "adsblol": "gratuit"
+          "adsblol": "gratuit",
+          "openaip": "selon l'accord openAIP",
+          "openmeteo": "abonnement Open-Meteo"
         },
         "op": {
           "import": "Import photo / PDF",
@@ -2295,7 +2321,9 @@
           "contact": "Formulaire de contact",
           "signLink": "Demande de signature",
           "push": "Notification",
-          "trace": "Trace ADS-B"
+          "trace": "Trace ADS-B",
+          "airspaces": "Espaces aériens (tuile 1°)",
+          "wind": "Vent en altitude"
         },
         "fixedTitle": "Abonnements fixes",
         "fixed": {

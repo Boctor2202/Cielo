@@ -5,7 +5,7 @@ import { adminDb } from "./admin";
  * estimates from the public price lists (USD) below; the free allowances are applied on the dashboard, per month.
  * Never throws and never delays the caller: a failed count is only logged.
  */
-export type Service = "anthropic" | "google" | "flightaware" | "adzuna" | "resend" | "expo" | "adsblol";
+export type Service = "anthropic" | "google" | "flightaware" | "adzuna" | "resend" | "expo" | "adsblol" | "openaip" | "openmeteo";
 
 /** Claude Sonnet, USD per million tokens. */
 export const AI_PRICE = { input: 2, output: 10, cacheRead: 0.1, cacheWrite: 2.5 };
