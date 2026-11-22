@@ -45,6 +45,7 @@ interface User {
   lastActivity?: string | null;
   subscription?: { source: string; tier: string; status: string } | null;
   stage: Stage;
+  test?: boolean;
   since: string;
   trialEndsAt?: string;
   renewsAt?: string | null;
@@ -228,15 +229,16 @@ function StageBadge({ stage }: { stage: Stage }) {
   return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${tone}`}>{t(stage)}</span>;
 }
 
-function PlanAction({ u, busy, grant }: { u: User; busy: boolean; grant: (u: User, tier: "basic" | "premium" | "free") => void }) {
+function PlanAction({ u, busy, grant }: { u: User; busy: boolean; grant: (u: User, tier: "basic" | "premium" | "free" | "test" | "untest") => void }) {
   const t = useTranslations("app.admin.users");
   const tp = useTranslations("app.plans");
   return (
-    <select className="input !w-auto !py-1 text-xs" value="" disabled={busy} onChange={(e) => e.target.value && grant(u, e.target.value as "basic" | "premium" | "free")} aria-label={t("action")}>
+    <select className="input !w-auto !py-1 text-xs" value="" disabled={busy} onChange={(e) => e.target.value && grant(u, e.target.value as "basic" | "premium" | "free" | "test" | "untest")} aria-label={t("action")}>
       <option value="">{t("action")}</option>
       <option value="premium">{t("grant", { plan: tp("premium") })}</option>
       <option value="basic">{t("grant", { plan: tp("basic") })}</option>
       <option value="free">{t("revoke")}</option>
+      {u.test ? <option value="untest">{t("untest")}</option> : <option value="test">{t("markTest")}</option>}
     </select>
   );
 }
@@ -250,16 +252,23 @@ function UsersTab() {
   const [filter, setFilter] = useState<"all" | Exclude<Stage, "comped">>("all");
   const { data, error, reload } = useApi<{ users: User[]; adminsHidden: number }>(`/api/admin/users${query ? `?q=${encodeURIComponent(query)}` : ""}`);
   const [busy, setBusy] = useState<string | null>(null);
-  const grant = async (u: User, tier: "basic" | "premium" | "free") => {
-    if (tier !== "free" && !confirm(t("confirmGrant", { plan: tp(tier), who: u.email ?? u.id }))) return;
-    if (tier === "free" && !confirm(t("confirmRevoke", { who: u.email ?? u.id }))) return;
+  const grant = async (u: User, tier: "basic" | "premium" | "free" | "test" | "untest") => {
     setBusy(u.id);
-    await apiFetch("/api/admin/users", { method: "POST", body: JSON.stringify({ pilotId: u.id, tier }) });
+    if (tier === "test" || tier === "untest") {
+      const r = await apiFetch("/api/admin/users", { method: "POST", body: JSON.stringify({ pilotId: u.id, test: tier === "test" }) });
+      if (!r.ok) alert(t("testError"));
+    } else {
+      if (tier !== "free" && !confirm(t("confirmGrant", { plan: tp(tier), who: u.email ?? u.id }))) return setBusy(null);
+      if (tier === "free" && !confirm(t("confirmRevoke", { who: u.email ?? u.id }))) return setBusy(null);
+      await apiFetch("/api/admin/users", { method: "POST", body: JSON.stringify({ pilotId: u.id, tier }) });
+    }
     setBusy(null);
     reload();
   };
-  const subscribers = (data?.users ?? []).filter((u) => u.stage !== "comped");
-  const comped = (data?.users ?? []).filter((u) => u.stage === "comped");
+  const real = (data?.users ?? []).filter((u) => !u.test);
+  const tests = (data?.users ?? []).filter((u) => u.test);
+  const subscribers = real.filter((u) => u.stage !== "comped");
+  const comped = real.filter((u) => u.stage === "comped");
   const count = (s: Stage) => subscribers.filter((u) => u.stage === s).length;
   const shown = filter === "all" ? subscribers : subscribers.filter((u) => u.stage === filter);
   const who = (u: User) => (
@@ -398,6 +407,25 @@ function UsersTab() {
               {comped.length === 0 && <p className="p-4 text-sm text-muted">{t("noneComped")}</p>}
             </div>
           </Card>
+
+          {tests.length > 0 && (
+            <details className="card group">
+              <summary className="cursor-pointer list-none p-4 font-semibold">
+                {t("testTitle", { n: tests.length })} <span className="ml-1 text-xs font-normal text-muted">{t("testNote")}</span>
+              </summary>
+              <ul className="border-t border-border/50">
+                {tests.map((u) => (
+                  <li key={u.id} className="flex items-center justify-between gap-3 border-b border-border/30 px-4 py-2.5 text-sm last:border-0">
+                    <div>{who(u)}</div>
+                    <div className="flex items-center gap-3">
+                      <StageBadge stage={u.stage} />
+                      <PlanAction u={u} busy={busy === u.id} grant={(x, tier) => void grant(x, tier)} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </>
       )}
     </div>

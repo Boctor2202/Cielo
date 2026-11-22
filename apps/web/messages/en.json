@@ -2133,7 +2133,7 @@
         "noEnd": "no end date",
         "compedTitle": "Complimentary access ({n})",
         "noneComped": "No complimentary access.",
-        "adminsHidden": "{n, plural, one {# admin account} other {# admin accounts}} left out of the list and the figures.",
+        "adminsHidden": "{n, plural, one {# admin account} other {# admin accounts}} left out of the list and the figures; test accounts are at the bottom.",
         "stage": {
           "trial": "Trial",
           "paying": "Paying",
@@ -2150,7 +2150,12 @@
           "canceled": "Cancelled",
           "expired": "Expired",
           "refunded": "Refunded"
-        }
+        },
+        "markTest": "Mark as test account",
+        "untest": "Not a test account",
+        "testError": "Not possible yet: migration 0032 is not applied.",
+        "testTitle": "Test accounts ({n})",
+        "testNote": "left out of the list and the figures"
       },
       "reports": {
         "open": "To handle",

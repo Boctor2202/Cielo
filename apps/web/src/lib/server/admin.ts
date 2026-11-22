@@ -25,6 +25,12 @@ export async function userFrom(req: Request) {
   return data.user ?? null;
 }
 
+/** Accounts marked as test accounts from the admin (none until migration 0032 is applied). */
+export async function testIds(db: SupabaseClient): Promise<string[]> {
+  const { data, error } = await db.from("pilots").select("id").eq("test_account", true);
+  return error ? [] : (data ?? []).map((r: { id: string }) => r.id);
+}
+
 export const isAdminId = (id?: string | null) => !!id && adminIds().includes(id);
 
 export class HttpError extends Error {

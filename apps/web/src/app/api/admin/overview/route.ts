@@ -1,5 +1,5 @@
 import { PRICES_EUR } from "@cielo/core";
-import { adminIds, handle, requireAdmin } from "@/lib/server/admin";
+import { adminIds, handle, requireAdmin, testIds } from "@/lib/server/admin";
 import { latestSubs, stageOf, type PilotRow, type SubRow } from "@/lib/server/pilotStage";
 import { thresholdStatus, type Revenue } from "@/lib/server/thresholds";
 
@@ -12,7 +12,8 @@ export function GET(req: Request) {
   return handle(async () => {
     const { db } = await requireAdmin(req);
     const yearStart = `${new Date().getUTCFullYear()}-01-01T00:00:00Z`;
-    const admins = adminIds();
+    // the admin and test accounts are left out of every figure
+    const admins = [...adminIds(), ...(await testIds(db))];
     const notAdmin = <T extends { not: (c: string, o: string, v: string) => T }>(q: T, col: string) => (admins.length ? q.not(col, "in", `(${admins.join(",")})`) : q);
     const [{ data: pilots }, { data: subs }, { data: stats }, { count: openReports }, { count: flights }, { data: revenue }] = await Promise.all([
       notAdmin(db.from("pilots").select("id, created_at, trial_started_at, subscription_tier, subscription_source, subscription_expires_at").is("deleted_at", null), "id"),

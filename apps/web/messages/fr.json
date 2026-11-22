@@ -2133,7 +2133,7 @@
         "noEnd": "sans date de fin",
         "compedTitle": "Accès offerts ({n})",
         "noneComped": "Aucun accès offert.",
-        "adminsHidden": "{n, plural, one {# compte admin exclu} other {# comptes admin exclus}} de la liste et des chiffres.",
+        "adminsHidden": "{n, plural, one {# compte admin exclu} other {# comptes admin exclus}} de la liste et des chiffres ; les comptes test sont en bas.",
         "stage": {
           "trial": "Essai",
           "paying": "Payant",
@@ -2150,7 +2150,12 @@
           "canceled": "Résilié",
           "expired": "Expiré",
           "refunded": "Remboursé"
-        }
+        },
+        "markTest": "Marquer comme compte test",
+        "untest": "Ce n'est pas un compte test",
+        "testError": "Impossible pour l'instant : la migration 0032 n'est pas appliquée.",
+        "testTitle": "Comptes test ({n})",
+        "testNote": "exclus de la liste et des chiffres"
       },
       "reports": {
         "open": "À traiter",

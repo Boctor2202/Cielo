@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { adminIds, handle, HttpError, requireAdmin } from "@/lib/server/admin";
+import { adminIds, handle, HttpError, requireAdmin, testIds } from "@/lib/server/admin";
 import { latestSubs, stageOf, type PilotRow, type SubRow } from "@/lib/server/pilotStage";
 
 export const dynamic = "force-dynamic";
@@ -38,10 +38,11 @@ export function GET(req: Request) {
     const { data: pilots, error } = await query;
     if (error) throw error;
     const ids = (pilots ?? []).map((p) => p.id);
-    const [{ data: stats }, { data: subs }, signIns] = await Promise.all([
+    const [{ data: stats }, { data: subs }, signIns, tests] = await Promise.all([
       db.from("admin_pilot_stats").select("pilot_id, flights, last_flight_change").in("pilot_id", ids),
       db.from("subscriptions").select("pilot_id, source, tier, status, created_at, current_period_end").in("pilot_id", ids),
       lastSignIns(db),
+      testIds(db).then((t) => new Set(t)),
     ]);
     const st = new Map((stats ?? []).map((s) => [s.pilot_id, s]));
     const sub = latestSubs(subs as SubRow[]);
@@ -57,6 +58,7 @@ export function GET(req: Request) {
         flights: st.get(p.id)?.flights ?? 0,
         lastActivity: latest(signIns.get(p.id), st.get(p.id)?.last_flight_change, p.updated_at),
         subscription: s ? { source: s.source, tier: s.tier, status: s.status } : null,
+        test: tests.has(p.id),
         ...stageOf(p as PilotRow, s),
       };
     });
@@ -64,11 +66,19 @@ export function GET(req: Request) {
   });
 }
 
-/** POST /api/admin/users {pilotId, tier: "basic" | "premium" | "free", until?: ISO} — grant or remove a plan by hand. */
+/**
+ * POST /api/admin/users {pilotId, tier: "basic" | "premium" | "free", until?: ISO} — grant or remove a plan by hand;
+ * {pilotId, test: boolean} — mark or unmark a test account.
+ */
 export function POST(req: Request) {
   return handle(async () => {
     const { db } = await requireAdmin(req);
-    const b = (await req.json().catch(() => null)) as { pilotId?: string; tier?: string; until?: string | null } | null;
+    const b = (await req.json().catch(() => null)) as { pilotId?: string; tier?: string; until?: string | null; test?: boolean } | null;
+    if (b?.pilotId && typeof b.test === "boolean") {
+      const { error } = await db.from("pilots").update({ test_account: b.test }).eq("id", b.pilotId);
+      if (error) throw new HttpError(503, "migration_0032");
+      return Response.json({ ok: true });
+    }
     if (!b?.pilotId || !["basic", "premium", "free"].includes(b.tier ?? "")) throw new HttpError(400, "bad_request");
     const until = b.until && !Number.isNaN(Date.parse(b.until)) ? new Date(b.until).toISOString() : null;
     const { error } = await db
