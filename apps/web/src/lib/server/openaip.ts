@@ -62,17 +62,28 @@ async function openaipGet(path: string, key: string): Promise<Response> {
   return meteredFetch("openaip", "airspaces", `${BASE}${path}${path.includes("?") ? "&" : "?"}apiKey=${encodeURIComponent(key)}`, { headers, cache: "no-store" });
 }
 
-/** Admin diagnosis: openAIP's raw answer for one small box (status and the start of the body). */
-export async function openaipProbe(): Promise<{ status: number; body: string } | { error: string }> {
-  const key = process.env.OPENAIP_API_KEY?.trim();
+/** Admin diagnosis: openAIP's answer for one small box, key in the header, in the query, and without a key. */
+export async function openaipProbe(): Promise<unknown> {
+  const raw = process.env.OPENAIP_API_KEY;
+  const key = raw?.trim();
   if (!key) return { error: "OPENAIP_API_KEY is not set" };
-  if (key !== process.env.OPENAIP_API_KEY) return { error: "the key has spaces or a line break around it" };
-  try {
-    const r = await openaipGet("/airspaces?bbox=2,48,3,49&limit=2", key);
-    return { status: r.status, body: (await r.text()).slice(0, 600) };
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : "error" };
+  const text = async (r: Response) => (await r.text()).replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300);
+  const url = `${BASE}/airspaces?bbox=2,48,3,49&limit=2`;
+  const variants: [string, string, Record<string, string>][] = [
+    ["header", url, { "x-openaip-api-key": key }],
+    ["query", `${url}&apiKey=${encodeURIComponent(key)}`, {}],
+    ["no key", url, {}],
+  ];
+  const out: Record<string, unknown> = { keyLength: key.length, spaces: key !== raw };
+  for (const [name, u, h] of variants) {
+    try {
+      const r = await fetch(u, { headers: { Accept: "application/json", ...h }, cache: "no-store" });
+      out[name] = { status: r.status, server: r.headers.get("server"), body: await text(r) };
+    } catch (e) {
+      out[name] = { error: e instanceof Error ? e.message : "error" };
+    }
   }
+  return out;
 }
 
 // one answer per 1° tile, kept a week on this instance (airspace changes every AIRAC cycle, 28 days)
