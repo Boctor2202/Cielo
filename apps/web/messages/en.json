@@ -2962,37 +2962,44 @@
       "import": {
         "label": "Import",
         "title": "Your old logbook, imported without retyping",
-        "text": "Excel, CSV, LogTen, Safelog, CrewLounge, a roster or just a photo of the paper logbook: every line is read and checked, then you confirm the totals before importing."
+        "text": "Excel, CSV, LogTen, Safelog, CrewLounge, a roster or just a photo of the paper logbook: every line is read and checked, then you confirm the totals before importing.",
+        "tags": "Excel & CSV|LogTen, Safelog, CrewLounge|Photo of a paper logbook"
       },
       "logbook": {
         "label": "Logbook",
         "title": "A logbook that is right, column by column",
-        "text": "Night time from civil twilight along the route, IFR, multi-pilot, PIC, PICUS and SIC: every flight fills the right columns, and the page totals follow."
+        "text": "Night time from civil twilight along the route, IFR, multi-pilot, PIC, PICUS and SIC: every flight fills the right columns, and the page totals follow.",
+        "tags": "Night by civil twilight|PIC · PICUS · SIC|Page totals"
       },
       "map": {
         "label": "Statistics",
         "title": "Your whole career on the map",
-        "text": "Routes, airports, nautical miles and countries visited, filtered by year or type. A map you can share in one tap."
+        "text": "Routes, airports, nautical miles and countries visited, filtered by year or type. A map you can share in one tap.",
+        "tags": "Routes & airports|Nautical miles|Countries visited"
       },
       "ftl": {
         "label": "FTL",
         "title": "Your flight time limitations, always up to date",
-        "text": "ORO.FTL or Subpart Q: flight and duty time over 7 days, 28 days, the year and 12 months, worked out from your logbook and roster."
+        "text": "ORO.FTL or Subpart Q: flight and duty time over 7 days, 28 days, the year and 12 months, worked out from your logbook and roster.",
+        "tags": "7 days|28 days|12 months"
       },
       "licences": {
         "label": "Licences",
         "title": "Licences, medical and recency under control",
-        "text": "Every expiry is tracked, with a reminder before it lapses. Recent experience (passengers, night) is checked with each flight."
+        "text": "Every expiry is tracked, with a reminder before it lapses. Recent experience (passengers, night) is checked with each flight.",
+        "tags": "Expiry reminders|Medical|Recency"
       },
       "signature": {
         "label": "Signatures",
         "title": "Sign your flights, or have them signed",
-        "text": "Your signature is saved once. Sign a flight, a selection or the whole logbook, and ask a captain or an instructor to sign. A flight changed later shows as invalid."
+        "text": "Your signature is saved once. Sign a flight, a selection or the whole logbook, and ask a captain or an instructor to sign. A flight changed later shows as invalid.",
+        "tags": "Saved signature|Captain or instructor|Whole logbook"
       },
       "jobs": {
         "label": "Career",
         "title": "Your CV and the jobs that fit you",
-        "text": "Your pilot CV fills in with your hours. Job offers are sorted by your experience, type and licences."
+        "text": "Your pilot CV fills in with your hours. Job offers are sorted by your experience, type and licences.",
+        "tags": "Pilot CV|Offers matched to you|Type & licences"
       }
     },
     "more": {

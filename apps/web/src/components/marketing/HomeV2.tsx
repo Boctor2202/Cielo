@@ -167,22 +167,62 @@ const STEPS: Step[] = [
   { key: "jobs", Screen: JobsLive },
 ];
 
-function StepText({ k, i, active, onActive }: { k: string; i: number; active: boolean; onActive: (i: number) => void }) {
-  const t = useTranslations("home2.steps");
+/** Invisible markers, one per step: the one crossing the middle of the screen sets the step shown. */
+function StepMarker({ i, onActive }: { i: number; onActive: (i: number) => void }) {
   const ref = useRef<HTMLDivElement>(null);
-  // the step crossing the middle of the screen is the one shown
   const inView = useInView(ref, { margin: "-48% 0px -48% 0px" });
   useEffect(() => {
     if (inView) onActive(i);
   }, [inView, i, onActive]);
+  return <div ref={ref} id={`step-${i}`} className="h-[54vh]" aria-hidden />;
+}
+
+/** Short facts of a step, written "a|b|c" in the messages. */
+function Tags({ k }: { k: string }) {
+  const t = useTranslations("home2.steps");
   return (
-    <div ref={ref} className="flex min-h-[54vh] items-center">
-      <div className={`rounded-2xl border p-6 transition-colors duration-300 ${active ? "border-accent/50 bg-accent/[0.06]" : "border-transparent"}`}>
-        <p className="mono-label !text-accent">{String(i + 1).padStart(2, "0")} · {t(`${k}.label`)}</p>
-        <h3 className="mt-2 text-balance font-display text-[1.9rem] font-semibold leading-tight tracking-[-0.01em]">{t(`${k}.title`)}</h3>
-        <p className="mt-3 max-w-md text-pretty leading-relaxed text-muted">{t(`${k}.text`)}</p>
-      </div>
+    <div className="mt-4 flex flex-wrap gap-2">
+      {t(`${k}.tags`)
+        .split("|")
+        .map((x) => (
+          <span key={x} className="rounded-full border border-border bg-surface-2/70 px-3 py-1 text-xs font-semibold text-text/85">{x}</span>
+        ))}
     </div>
+  );
+}
+
+/** The list of steps: a sober list between hairlines, only the step on screen open. */
+function StepList({ active }: { active: number }) {
+  const t = useTranslations("home2.steps");
+  const reduce = !!useReducedMotion();
+  const go = (i: number) => document.getElementById(`step-${i}`)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+  return (
+    <ol className="border-b border-border">
+      {STEPS.map((s, i) => {
+        const on = i === active;
+        return (
+          <li key={s.key} className="border-t border-border">
+            <button type="button" onClick={() => go(i)} className="group flex w-full items-baseline gap-4 py-5 text-left" aria-current={on ? "step" : undefined}>
+              <span className={`w-7 shrink-0 text-[13px] font-medium tabular-nums transition-colors duration-300 ${on ? "text-accent" : "text-muted"}`}>{String(i + 1).padStart(2, "0")}</span>
+              <span className={`text-balance font-sans font-bold leading-[1.15] tracking-[-0.02em] transition-all duration-300 ${on ? "text-[1.9rem] text-text" : "text-xl text-text/40 group-hover:text-text/70"}`}>{t(`${s.key}.title`)}</span>
+            </button>
+            <AnimatePresence initial={false}>
+              {on && (
+                <motion.div key="body" initial={reduce ? false : { height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={reduce ? undefined : { height: 0, opacity: 0 }} transition={{ duration: 0.35, ease }} className="overflow-hidden">
+                  <div className="pb-6 pl-11">
+                    <p className="max-w-md text-pretty leading-relaxed text-muted">{t(`${s.key}.text`)}</p>
+                    <Tags k={s.key} />
+                    <div className="mt-5 h-0.5 overflow-hidden rounded-full bg-border" aria-hidden>
+                      <motion.div className="h-full rounded-full bg-gradient-to-r from-accent to-[#4ade80]" initial={false} animate={{ width: `${((i + 1) / STEPS.length) * 100}%` }} transition={{ duration: 0.5, ease }} />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -199,15 +239,20 @@ export function FeatureScroll() {
         <p className="mt-4 max-w-2xl text-lg text-muted">{t("subtitle")}</p>
       </div>
 
-      {/* large screens: the steps scroll, the screen stays */}
-      <div className="mx-auto hidden max-w-6xl grid-cols-[0.9fr_1.25fr] gap-12 px-6 pb-24 lg:grid">
-        <div>
+      {/* large screens: the list and the screen stay, the page scrolls past one marker per step */}
+      <div className="mx-auto hidden max-w-6xl grid-cols-[0.9fr_1.25fr] gap-12 px-6 pb-24 pt-10 lg:grid">
+        <div className="relative">
           {STEPS.map((s, i) => (
-            <StepText key={s.key} k={s.key} i={i} active={i === active} onActive={setActive} />
+            <StepMarker key={s.key} i={i} onActive={setActive} />
           ))}
+          <div className="absolute inset-0">
+            <div className="sticky top-[max(6rem,calc(50vh-300px))]">
+              <StepList active={active} />
+            </div>
+          </div>
         </div>
         <div>
-          <div className="sticky top-[calc(50vh-230px)]">
+          <div className="sticky top-[max(6rem,calc(50vh-230px))]">
             <div className="relative min-h-[420px]">
               <AnimatePresence initial={false}>
                 <motion.div key={active} className="absolute inset-x-0 top-0" initial={reduce ? false : { opacity: 0, y: 28, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={reduce ? undefined : { opacity: 0, y: -28, scale: 0.98 }} transition={{ duration: 0.4, ease }}>
@@ -215,17 +260,12 @@ export function FeatureScroll() {
                 </motion.div>
               </AnimatePresence>
             </div>
-            <div className="mt-6 flex gap-1.5" aria-hidden>
-              {STEPS.map((s, i) => (
-                <span key={s.key} className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i <= active ? "bg-accent" : "bg-border"}`} />
-              ))}
-            </div>
           </div>
         </div>
       </div>
 
       {/* phones and tablets: each step with its screen */}
-      <div className="mx-auto max-w-2xl space-y-16 px-4 pb-20 pt-10 sm:px-6 lg:hidden">
+      <div className="mx-auto max-w-2xl px-4 pb-20 pt-10 sm:px-6 lg:hidden">
         {STEPS.map((s, i) => (
           <MobileStep key={s.key} k={s.key} i={i} Screen={s.Screen} />
         ))}
@@ -237,10 +277,13 @@ export function FeatureScroll() {
 function MobileStep({ k, i, Screen }: { k: string; i: number; Screen: Step["Screen"] }) {
   const t = useTranslations("home2.steps");
   return (
-    <div>
-      <p className="mono-label !text-accent">{String(i + 1).padStart(2, "0")} · {t(`${k}.label`)}</p>
-      <h3 className="mt-2 font-display text-2xl font-semibold">{t(`${k}.title`)}</h3>
-      <p className="mt-2 text-muted">{t(`${k}.text`)}</p>
+    <div className="border-t border-border py-10">
+      <div className="flex items-baseline gap-3">
+        <span className="text-[13px] font-medium tabular-nums text-accent">{String(i + 1).padStart(2, "0")}</span>
+        <h3 className="text-balance font-sans text-2xl font-bold leading-tight tracking-[-0.02em]">{t(`${k}.title`)}</h3>
+      </div>
+      <p className="mt-3 text-pretty leading-relaxed text-muted">{t(`${k}.text`)}</p>
+      <Tags k={k} />
       <Screen className="mt-6 w-full" />
     </div>
   );
