@@ -2054,7 +2054,8 @@
         "overview": "Vue d'ensemble",
         "users": "Abonnés",
         "reports": "Signalements",
-        "platform": "Plateforme"
+        "platform": "Plateforme",
+        "apis": "API"
       },
       "overview": {
         "error": "Impossible de charger les chiffres.",
@@ -2063,7 +2064,7 @@
         "paying": "Abonnés payants",
         "sources": "Web {stripe} · App Store {apple} · Google Play {google}",
         "trials": "Essais en cours",
-        "comped": "{n} accès offerts",
+        "comped": "{n} accès offerts · {ended} essais terminés",
         "pilots": "Comptes",
         "signups": "+{d7} en 7 j · +{d30} en 30 j",
         "active7": "Actifs (7 derniers jours)",
@@ -2115,7 +2116,41 @@
         "confirmGrant": "Offrir {plan} à {who} ?",
         "confirmRevoke": "Retirer l'accès de {who} ? Son carnet passera en lecture seule.",
         "none": "Aucun compte.",
-        "compNote": "Un accès offert n'est lié à aucun paiement. S'il souscrit ensuite un abonnement, c'est l'abonnement qui prend le relais."
+        "compNote": "Un accès offert n'est lié à aucun paiement. S'il souscrit ensuite un abonnement, c'est l'abonnement qui prend le relais.",
+        "subscribers": "Abonnés ({n})",
+        "all": "Tous",
+        "phase": "Phase",
+        "since": "Depuis",
+        "next": "Échéance",
+        "today": "aujourd'hui",
+        "daysAgo": "il y a {n} j",
+        "inDays": "dans {n} j",
+        "noCard": "sans carte",
+        "trialEnds": "Fin de l'essai",
+        "renews": "Renouvellement",
+        "endsOn": "Se termine le",
+        "trialEnded": "Essai terminé le {date}",
+        "noEnd": "sans date de fin",
+        "compedTitle": "Accès offerts ({n})",
+        "noneComped": "Aucun accès offert.",
+        "adminsHidden": "{n, plural, one {# compte admin exclu} other {# comptes admin exclus}} de la liste et des chiffres.",
+        "stage": {
+          "trial": "Essai",
+          "paying": "Payant",
+          "ended": "Essai terminé",
+          "canceled": "Résilié",
+          "comped": "Offert"
+        },
+        "source": {
+          "stripe": "Web",
+          "apple": "App Store",
+          "google": "Google Play"
+        },
+        "status": {
+          "canceled": "Résilié",
+          "expired": "Expiré",
+          "refunded": "Remboursé"
+        }
       },
       "reports": {
         "open": "À traiter",
@@ -2163,6 +2198,89 @@
           "flightaware": "Horaires réels (FlightAware)",
           "anthropic": "Lecture par IA (Anthropic)"
         }
+      },
+      "apis": {
+        "error": "Impossible de charger l'usage des API.",
+        "notReady": "Le suivi des API démarre dès que la migration 0031 (table api_usage) est appliquée. Les appels sont comptés à partir de ce moment-là.",
+        "month": "Coût du mois (API)",
+        "monthSub": "estimé, quotas gratuits déduits",
+        "projected": "Projection fin de mois",
+        "projectedSub": "au rythme actuel, abonnements fixes compris ({fixed})",
+        "lastMonth": "Mois dernier",
+        "lastMonthSub": "API + abonnements fixes",
+        "calls": "Appels ce mois",
+        "countedSince": "comptés depuis le {date}",
+        "noData": "aucun appel compté pour l'instant",
+        "chart": "Appels par jour (30 derniers jours)",
+        "services": "Par service",
+        "service": "Service",
+        "callsMonth": "Appels (mois)",
+        "today": "Aujourd'hui",
+        "errors": "Erreurs",
+        "cost": "Coût du mois",
+        "projection": "Projection",
+        "prev": "Mois dernier",
+        "tokens": "{in} tokens lus · {out} écrits",
+        "quotaDay": "{n} / {max} gratuits aujourd'hui",
+        "quotaMonth": "{n} / {max} gratuits ce mois",
+        "actual": "chiffre FlightAware",
+        "callsShort": "appels",
+        "errorsShort": "erreurs",
+        "perMonth": "{amount} / mois",
+        "name": {
+          "anthropic": "Claude (Anthropic)",
+          "google": "Google Places",
+          "flightaware": "FlightAware AeroAPI",
+          "adzuna": "Adzuna",
+          "resend": "Resend (e-mails)",
+          "expo": "Expo (notifications)",
+          "adsblol": "adsb.lol"
+        },
+        "what": {
+          "anthropic": "imports photo et PDF, plannings, lettres de motivation",
+          "google": "photos des villes, hôtels et activités en escale",
+          "flightaware": "heures réelles et traces des vols",
+          "adzuna": "offres d'emploi",
+          "resend": "e-mails de contact et de signature",
+          "expo": "notifications push",
+          "adsblol": "traces ADS-B récentes"
+        },
+        "basis": {
+          "anthropic": "estimé sur les tokens",
+          "google": "estimé, crédits gratuits déduits",
+          "flightaware": "estimé, 5 $ offerts / mois",
+          "adzuna": "gratuit",
+          "resend": "gratuit jusqu'au quota",
+          "expo": "gratuit",
+          "adsblol": "gratuit"
+        },
+        "op": {
+          "import": "Import photo / PDF",
+          "importTable": "Import tableur (colonnes)",
+          "roster": "Planning PDF",
+          "coverLetter": "Lettre de motivation",
+          "textSearch.pro": "Recherche (Pro)",
+          "textSearch.enterprise": "Recherche (Enterprise)",
+          "details.essentials": "Fiche lieu (Essentials)",
+          "details.pro": "Fiche lieu (Pro)",
+          "details.enterprise": "Fiche lieu (Enterprise)",
+          "photo": "Photo",
+          "flights": "Vols récents",
+          "historyFlights": "Vols historiques",
+          "track": "Trace récente",
+          "historyTrack": "Trace historique",
+          "search": "Recherche d'offres",
+          "contact": "Formulaire de contact",
+          "signLink": "Demande de signature",
+          "push": "Notification",
+          "trace": "Trace ADS-B"
+        },
+        "fixedTitle": "Abonnements fixes",
+        "fixed": {
+          "supabase": "Supabase Pro (base de données)",
+          "appleDeveloper": "Apple Developer (99 $ / an)"
+        },
+        "disclaimer": "Estimations à partir des tarifs publics (USD) et des appels comptés par le serveur ; la facture réelle de chaque service fait foi. Vercel, Stripe (commission sur les paiements) et les cartes Google affichées dans le navigateur ne sont pas comptés ici."
       }
     },
     "weather": {

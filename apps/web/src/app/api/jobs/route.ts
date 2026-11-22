@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { collectJobs, fetchAdzuna } from "@cielo/jobs";
+import { meter } from "@/lib/server/usage";
 
 /**
  * Adzuna's offers, kept 12 hours in Vercel's data cache, which outlives deployments: each deployment rebuilds
@@ -9,6 +10,7 @@ import { collectJobs, fetchAdzuna } from "@cielo/jobs";
 const adzunaCached = unstable_cache(
   async (appId: string, appKey: string) => {
     const r = await fetchAdzuna(appId, appKey);
+    meter("adzuna", "search", { calls: r.calls, errors: r.errors.length });
     if (!r.raws.length && r.errors.length) throw new Error(`adzuna: ${r.errors.slice(0, 3).join("; ")}`);
     return r;
   },
@@ -31,7 +33,7 @@ export async function GET() {
   const { jobs, sources } = await collectJobs(
     undefined,
     4,
-    appId && appKey ? { adzunaFetch: () => adzunaCached(appId, appKey).catch((e: Error) => ({ raws: [], errors: [e.message.replace(/app_(id|key)=[^&\s]+/g, "")] })) } : {},
+    appId && appKey ? { adzunaFetch: () => adzunaCached(appId, appKey).catch((e: Error) => ({ raws: [], calls: 0, errors: [e.message.replace(/app_(id|key)=[^&\s]+/g, "")] })) } : {},
   );
   // every source down at once is an outage on our side, not offers closing: throwing during a background refresh
   // keeps the previous list cached (an empty list would hide every offer for six hours)

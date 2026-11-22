@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { accessFor, canonicalFlightContent, noCardTrialDays, rowFromDb, type Flight } from "@cielo/core";
+import { meteredFetch } from "./usage";
 
 /**
  * Signatures between Geardown pilots (server side, service role).
@@ -248,7 +249,7 @@ export async function signRequests(
 export async function notify(db: Db, pilotId: string, title: string, body: string): Promise<void> {
   const { data: tokens } = await db.from("push_tokens").select("token").eq("pilot_id", pilotId);
   if (!tokens?.length) return;
-  await fetch("https://exp.host/--/api/v2/push/send", {
+  await meteredFetch("expo", "push", "https://exp.host/--/api/v2/push/send", {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(tokens.map(({ token }) => ({ to: token, title, body, sound: "default", data: { url: "/crew" } }))),

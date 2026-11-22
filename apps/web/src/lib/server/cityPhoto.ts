@@ -1,4 +1,5 @@
 import { PlacesError } from "@/lib/places";
+import { googleSku, meteredFetch } from "./usage";
 
 /**
  * A photo of the city of an airport, for layovers: its best-known landmark (Eiffel Tower for Paris, the Duomo
@@ -32,7 +33,7 @@ function apiKey() {
 type Hit = { id: string; displayName?: { text: string }; userRatingCount?: number; types?: string[]; formattedAddress?: string; location?: { latitude: number; longitude: number }; photos?: unknown[] };
 
 async function searchText(body: Record<string, unknown>, fields: string): Promise<Hit[]> {
-  const r = await fetch("https://places.googleapis.com/v1/places:searchText", {
+  const r = await meteredFetch("google", googleSku("textSearch", fields), "https://places.googleapis.com/v1/places:searchText", {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey(), "X-Goog-FieldMask": fields },
     body: JSON.stringify(body),
@@ -101,7 +102,7 @@ async function landmarkOf(city: string, country: string, near: { lat: number; lo
 export async function cityPhoto(city: string, country: string, near: { lat: number; lon: number }, lang: string, n = 0): Promise<CityPhoto | null> {
   const lm = await landmarkOf(city, country, near, lang);
   if (!lm) return null;
-  const d = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(lm.id)}?languageCode=${lang}`, {
+  const d = await meteredFetch("google", googleSku("details", "displayName,photos"), `https://places.googleapis.com/v1/places/${encodeURIComponent(lm.id)}?languageCode=${lang}`, {
     headers: { "X-Goog-Api-Key": apiKey(), "X-Goog-FieldMask": "displayName,photos" },
     cache: "no-store",
   });
@@ -111,7 +112,7 @@ export async function cityPhoto(city: string, country: string, near: { lat: numb
   const photos = (det.photos ?? []).slice().sort((a, b) => Number(b.widthPx >= b.heightPx) - Number(a.widthPx >= a.heightPx));
   if (!photos.length) return null;
   const ph = photos[((n % photos.length) + photos.length) % photos.length]!;
-  const m = await fetch(`https://places.googleapis.com/v1/${ph.name}/media?maxWidthPx=1200&skipHttpRedirect=true`, { headers: { "X-Goog-Api-Key": apiKey() }, cache: "no-store" });
+  const m = await meteredFetch("google", "photo", `https://places.googleapis.com/v1/${ph.name}/media?maxWidthPx=1200&skipHttpRedirect=true`, { headers: { "X-Goog-Api-Key": apiKey() }, cache: "no-store" });
   if (!m.ok) throw new PlacesError("upstream", `Places photo ${m.status}`);
   const { photoUri } = (await m.json()) as { photoUri?: string };
   if (!photoUri) return null;

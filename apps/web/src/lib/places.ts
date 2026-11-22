@@ -1,3 +1,5 @@
+import { googleSku, meteredFetch } from "./server/usage";
+
 /**
  * Things to do around the crew hotel, from the Google Places API (New), called live from the server.
  * Google's terms allow keeping place IDs only: ratings, names and opening hours are fetched on demand and
@@ -68,7 +70,7 @@ function key() {
 }
 
 async function call(path: string, body: unknown, fieldMask: string) {
-  const r = await fetch(`https://places.googleapis.com/v1/${path}`, {
+  const r = await meteredFetch("google", googleSku(path.includes("searchText") ? "textSearch" : "details", fieldMask), `https://places.googleapis.com/v1/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Goog-Api-Key": key(), "X-Goog-FieldMask": fieldMask },
     body: JSON.stringify(body),
@@ -201,7 +203,7 @@ export async function findHotel(query: string, near: { lat: number; lng: number 
 
 /** Location of a saved hotel (place ID only is stored, per Google's terms). */
 export async function hotelById(id: string, lang: string): Promise<HotelHit> {
-  const r = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}?languageCode=${lang}`, {
+  const r = await meteredFetch("google", googleSku("details", "id,displayName,formattedAddress,location"), `https://places.googleapis.com/v1/places/${encodeURIComponent(id)}?languageCode=${lang}`, {
     headers: { "X-Goog-Api-Key": key(), "X-Goog-FieldMask": "id,displayName,formattedAddress,location" },
     cache: "no-store",
   });

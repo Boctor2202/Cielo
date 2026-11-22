@@ -3,6 +3,7 @@ import { AI_MODEL, anthropic, reportAiFailure } from "@/lib/server/anthropic";
 import { accessFor, noCardTrialDays } from "@cielo/core";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { rateLimited } from "@/lib/places";
+import { meterAi } from "@/lib/server/usage";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -102,6 +103,7 @@ export async function POST(req: Request) {
       system: SYSTEM,
       messages: [{ role: "user", content: userMessage }],
     });
+    meterAi("coverLetter", msg.usage);
     if (msg.stop_reason === "refusal") return Response.json({ error: "refused" }, { status: 422 });
     const letter = msg.content
       .map((c) => (c.type === "text" ? c.text : ""))

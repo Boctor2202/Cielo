@@ -4,6 +4,7 @@ import { accessFor, noCardTrialDays, parseLeonRoster } from "@cielo/core";
 import { pdfText } from "@/lib/server/pdf";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { rateLimited } from "@/lib/places";
+import { meterAi } from "@/lib/server/usage";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -124,6 +125,7 @@ export async function POST(req: Request) {
       ],
     });
     const msg = await stream.finalMessage();
+    meterAi("roster", msg.usage);
     if (msg.stop_reason === "refusal") return Response.json({ error: "refused" }, { status: 422 });
     if (msg.stop_reason === "max_tokens") return Response.json({ error: "too_long" }, { status: 422 });
     const text = msg.content.map((c) => (c.type === "text" ? c.text : "")).join("");

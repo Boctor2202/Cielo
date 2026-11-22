@@ -2054,7 +2054,8 @@
         "overview": "Overview",
         "users": "Subscribers",
         "reports": "Reports",
-        "platform": "Platform"
+        "platform": "Platform",
+        "apis": "APIs"
       },
       "overview": {
         "error": "Could not load the figures.",
@@ -2063,7 +2064,7 @@
         "paying": "Paying subscribers",
         "sources": "Web {stripe} · App Store {apple} · Google Play {google}",
         "trials": "Trials in progress",
-        "comped": "{n} complimentary",
+        "comped": "{n} complimentary · {ended} trials over",
         "pilots": "Accounts",
         "signups": "+{d7} in 7 d · +{d30} in 30 d",
         "active7": "Active (last 7 days)",
@@ -2115,7 +2116,41 @@
         "confirmGrant": "Give {plan} to {who}?",
         "confirmRevoke": "Remove access for {who}? Their logbook becomes read-only.",
         "none": "No accounts.",
-        "compNote": "Complimentary access is not tied to any payment. If the pilot then subscribes, the subscription takes over."
+        "compNote": "Complimentary access is not tied to any payment. If the pilot then subscribes, the subscription takes over.",
+        "subscribers": "Subscribers ({n})",
+        "all": "All",
+        "phase": "Stage",
+        "since": "Since",
+        "next": "Next date",
+        "today": "today",
+        "daysAgo": "{n} d ago",
+        "inDays": "in {n} d",
+        "noCard": "no card",
+        "trialEnds": "Trial ends",
+        "renews": "Renews",
+        "endsOn": "Ends on",
+        "trialEnded": "Trial ended {date}",
+        "noEnd": "no end date",
+        "compedTitle": "Complimentary access ({n})",
+        "noneComped": "No complimentary access.",
+        "adminsHidden": "{n, plural, one {# admin account} other {# admin accounts}} left out of the list and the figures.",
+        "stage": {
+          "trial": "Trial",
+          "paying": "Paying",
+          "ended": "Trial over",
+          "canceled": "Cancelled",
+          "comped": "Complimentary"
+        },
+        "source": {
+          "stripe": "Web",
+          "apple": "App Store",
+          "google": "Google Play"
+        },
+        "status": {
+          "canceled": "Cancelled",
+          "expired": "Expired",
+          "refunded": "Refunded"
+        }
       },
       "reports": {
         "open": "To handle",
@@ -2163,6 +2198,89 @@
           "flightaware": "Actual times (FlightAware)",
           "anthropic": "AI reading (Anthropic)"
         }
+      },
+      "apis": {
+        "error": "Could not load the API usage.",
+        "notReady": "API tracking starts once migration 0031 (api_usage table) is applied. Calls are counted from then on.",
+        "month": "This month (APIs)",
+        "monthSub": "estimated, free quotas deducted",
+        "projected": "Projected month end",
+        "projectedSub": "at the current pace, fixed subscriptions included ({fixed})",
+        "lastMonth": "Last month",
+        "lastMonthSub": "APIs + fixed subscriptions",
+        "calls": "Calls this month",
+        "countedSince": "counted since {date}",
+        "noData": "no calls counted yet",
+        "chart": "Calls per day (last 30 days)",
+        "services": "By service",
+        "service": "Service",
+        "callsMonth": "Calls (month)",
+        "today": "Today",
+        "errors": "Errors",
+        "cost": "This month",
+        "projection": "Projection",
+        "prev": "Last month",
+        "tokens": "{in} tokens read · {out} written",
+        "quotaDay": "{n} / {max} free today",
+        "quotaMonth": "{n} / {max} free this month",
+        "actual": "FlightAware figure",
+        "callsShort": "calls",
+        "errorsShort": "errors",
+        "perMonth": "{amount} / month",
+        "name": {
+          "anthropic": "Claude (Anthropic)",
+          "google": "Google Places",
+          "flightaware": "FlightAware AeroAPI",
+          "adzuna": "Adzuna",
+          "resend": "Resend (e-mails)",
+          "expo": "Expo (notifications)",
+          "adsblol": "adsb.lol"
+        },
+        "what": {
+          "anthropic": "photo and PDF imports, rosters, cover letters",
+          "google": "city photos, layover hotels and places",
+          "flightaware": "actual times and flight tracks",
+          "adzuna": "job offers",
+          "resend": "contact and signature e-mails",
+          "expo": "push notifications",
+          "adsblol": "recent ADS-B traces"
+        },
+        "basis": {
+          "anthropic": "estimated from tokens",
+          "google": "estimated, free credit deducted",
+          "flightaware": "estimated, $5 free / month",
+          "adzuna": "free",
+          "resend": "free up to the quota",
+          "expo": "free",
+          "adsblol": "free"
+        },
+        "op": {
+          "import": "Photo / PDF import",
+          "importTable": "Spreadsheet import (columns)",
+          "roster": "Roster PDF",
+          "coverLetter": "Cover letter",
+          "textSearch.pro": "Search (Pro)",
+          "textSearch.enterprise": "Search (Enterprise)",
+          "details.essentials": "Place details (Essentials)",
+          "details.pro": "Place details (Pro)",
+          "details.enterprise": "Place details (Enterprise)",
+          "photo": "Photo",
+          "flights": "Recent flights",
+          "historyFlights": "Historical flights",
+          "track": "Recent track",
+          "historyTrack": "Historical track",
+          "search": "Job search",
+          "contact": "Contact form",
+          "signLink": "Signature request",
+          "push": "Notification",
+          "trace": "ADS-B trace"
+        },
+        "fixedTitle": "Fixed subscriptions",
+        "fixed": {
+          "supabase": "Supabase Pro (database)",
+          "appleDeveloper": "Apple Developer ($99 / year)"
+        },
+        "disclaimer": "Estimates from public price lists (USD) and the calls counted by the server; each service's own invoice is what counts. Vercel, Stripe (fees on payments) and the Google maps shown in the browser are not counted here."
       }
     },
     "weather": {

@@ -45,7 +45,8 @@ export function segmentOf(text: string): Source["segment"] {
 }
 
 /** All pilot offers Adzuna lists in its countries (two pages per search at most). */
-export async function fetchAdzuna(appId: string, appKey: string, countries: readonly string[] = ADZUNA_COUNTRIES): Promise<{ raws: (RawPosting & { segment: Source["segment"] })[]; errors: string[] }> {
+export async function fetchAdzuna(appId: string, appKey: string, countries: readonly string[] = ADZUNA_COUNTRIES): Promise<{ raws: (RawPosting & { segment: Source["segment"] })[]; errors: string[]; calls: number }> {
+  let calls = 0;
   const raws: (RawPosting & { segment: Source["segment"] })[] = [];
   const errors: string[] = [];
   const seen = new Set<string>();
@@ -56,7 +57,10 @@ export async function fetchAdzuna(appId: string, appKey: string, countries: read
         const { c, q } = job;
         try {
           const url = `https://api.adzuna.com/v1/api/jobs/${c}/search/1?app_id=${encodeURIComponent(appId)}&app_key=${encodeURIComponent(appKey)}&results_per_page=50&${q}&max_days_old=60&content-type=application/json`;
+          calls++;
           const r = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(15000) });
+          // quota used up: the other searches would only use more of it
+          if (r.status === 429) queue.length = 0;
           if (!r.ok) throw new Error(`${r.status}`);
           const d = (await r.json()) as { results?: AdzunaResult[] };
           for (const j of d.results ?? []) {
@@ -87,5 +91,5 @@ export async function fetchAdzuna(appId: string, appKey: string, countries: read
       }
     }),
   );
-  return { raws, errors };
+  return { raws, errors, calls };
 }

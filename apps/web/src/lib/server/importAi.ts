@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { AI_MODEL, anthropic } from "@/lib/server/anthropic";
 import { IMPORT_FIELDS, type LogbookLeg } from "@cielo/core";
+import { meterAi } from "./usage";
 
 /**
  * Claude reading flights from anything a pilot has: an airline statement (PDF), a paper logbook (photos of the
@@ -91,6 +92,7 @@ export async function extractLegs(content: Block[], today: string, effort: "medi
     messages: [{ role: "user", content: [...content, { type: "text", text: `Today is ${today}. Extract the flights.` }] }],
   });
   const msg = await stream.finalMessage();
+  meterAi("import", msg.usage);
   if (msg.stop_reason === "refusal") throw new ImportAiError("refused");
   if (msg.stop_reason === "max_tokens") throw new ImportAiError("too_long");
   const out = JSON.parse(msg.content.map((c) => (c.type === "text" ? c.text : "")).join("")) as LegsResult;
@@ -132,6 +134,7 @@ export async function mapTable(header: string[], rows: string[][]): Promise<{ so
       "You map the columns of a pilot logbook or crew-software export to logbook fields. Fields: date, flightNumber, dep, arr, out (off-block), off (take-off), on (landing), in (on-block), registration, type (aircraft type), function, picName, total, night, ifr, takeoffsDay, takeoffsNight, landingsDay, landingsNight, pic, copilot, dual, instructor, multiPilot, remarks, fstdType, fstdTime. Only map a column you are confident about; leave out the others.",
     messages: [{ role: "user", content: `Tab-separated, first line is the header:\n${csv}` }],
   });
+  meterAi("importTable", msg.usage);
   if (msg.stop_reason === "refusal") throw new ImportAiError("refused");
   const out = JSON.parse(msg.content.map((c) => (c.type === "text" ? c.text : "")).join("")) as { source: string; columns: { field: string; column: number }[] };
   const mapping: Record<string, number> = {};

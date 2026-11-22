@@ -3,6 +3,7 @@ import { adminDb, userFrom } from "@/lib/server/admin";
 import { rateLimited } from "@/lib/places";
 import { canSign, contentHash, flightFromRow, snapshot } from "@/lib/server/crew";
 import { SITE_URL } from "@/lib/seo";
+import { meteredFetch } from "@/lib/server/usage";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -100,7 +101,7 @@ export async function POST(req: Request) {
       const text = fr
         ? `Bonjour ${signerName},\n\n${pilot} vous demande de signer ${n} vol${n > 1 ? "s" : ""} de son carnet de vol Geardown. Vous pouvez vérifier chaque vol puis signer, ou refuser, sans créer de compte :\n\n${url}\n\nCe lien est valable ${DAYS} jours et ne sert qu'une fois.`
         : `Hello ${signerName},\n\n${pilot} asks you to sign ${n} flight${n > 1 ? "s" : ""} of their Geardown logbook. You can check each flight then sign, or decline, without creating an account:\n\n${url}\n\nThis link is valid for ${DAYS} days and works once.`;
-      const r = await fetch("https://api.resend.com/emails", {
+      const r = await meteredFetch("resend", "signLink", "https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
         body: JSON.stringify({
