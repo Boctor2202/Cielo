@@ -26,6 +26,9 @@ import { SignatureModal, SignatureStatus, SignWithSavedButton } from "./Signatur
 import { FlightHistory } from "./FlightHistory";
 
 
+/** A registration or callsign without dashes or spaces, for comparing them. */
+const norm = (s: string) => s.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+
 function blank(pilot: Pilot | undefined): FlightFormInput {
   return {
     date: isoDate(new Date()),
@@ -214,6 +217,8 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                     setV((s) => ({
                       ...s,
                       date: f.date ?? s.date,
+                      // the callsign (AJD19ST), unless it is only the registration; a number typed in is kept
+                      flightNumber: s.flightNumber || (f.ident && norm(f.ident) !== norm(s.registration ?? "") ? f.ident : s.flightNumber),
                       depIcao: f.dep ?? s.depIcao,
                       arrIcao: f.arr ?? s.arrIcao,
                       out: f.out ?? s.out,
@@ -273,6 +278,8 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                     setV((s) => ({
                       ...s,
                       date: f.date ?? s.date,
+                      // the callsign (AJD19ST), unless it is only the registration; a number typed in is kept
+                      flightNumber: s.flightNumber || (f.ident && norm(f.ident) !== norm(s.registration ?? "") ? f.ident : s.flightNumber),
                       depIcao: f.dep ?? s.depIcao,
                       arrIcao: f.arr ?? s.arrIcao,
                       out: f.out ?? s.out,

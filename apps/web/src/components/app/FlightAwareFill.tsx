@@ -24,7 +24,7 @@ export function FlightAwareFill({
   hex?: string;
   registration?: string;
   date: string;
-  onPick: (f: { date?: string; dep?: string; arr?: string; out?: string; off?: string; on?: string; in?: string }) => void;
+  onPick: (f: { date?: string; ident?: string; dep?: string; arr?: string; out?: string; off?: string; on?: string; in?: string }) => void;
 }) {
   const t = useTranslations("app.form.flightaware");
   const locale = useLocale();
@@ -81,7 +81,7 @@ export function FlightAwareFill({
                 type="button"
                 className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-2"
                 onClick={() => {
-                  onPick({ date: (f.out ?? f.off)?.slice(0, 10), dep: f.dep, arr: f.arr, out: hhmm(f.out), off: hhmm(f.off), on: hhmm(f.on), in: hhmm(f.in) });
+                  onPick({ date: (f.out ?? f.off)?.slice(0, 10), ident: f.ident, dep: f.dep, arr: f.arr, out: hhmm(f.out), off: hhmm(f.off), on: hhmm(f.on), in: hhmm(f.in) });
                   setOpen(false);
                 }}
               >
