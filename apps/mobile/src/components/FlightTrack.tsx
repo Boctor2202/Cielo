@@ -3,7 +3,7 @@ import { ActivityIndicator, Linking, Pressable, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { API_URL } from "../api";
 import MapView, { Marker, Polyline } from "react-native-maps";
-import type { FlightTrack as Track, TrackPoint } from "@cielo/core";
+import type { CrossedAirspace, FlightTrack as Track, TrackPoint } from "@cielo/core";
 import { useApp } from "../state";
 import { useTheme } from "../theme";
 import { Card, Row, Stat, Txt } from "./ui";
@@ -102,6 +102,7 @@ export function FlightTrackCard({ flightId }: { flightId: string }) {
         <Stat label={t("track.maxAlt")} value={`${(Math.round(maxAlt / 100) * 100).toLocaleString()} ft`} />
         <Stat label={t("track.maxGs")} value={`${maxGs} kt`} />
       </Row>
+      <FlightContextView flightId={flightId} points={pts} />
       {track.source === "flightaware" ? (
         <Pressable onPress={() => void Linking.openURL("https://www.flightaware.com")}>
           <Txt variant="small">{t("fa.trackFrom")}</Txt>
@@ -112,5 +113,76 @@ export function FlightTrackCard({ flightId }: { flightId: string }) {
         </Pressable>
       )}
     </Card>
+  );
+}
+
+interface Ctx {
+  airspaces: CrossedAirspace[];
+  cruise: { altFt: number; windFrom?: number; windKt?: number; tempC?: number; head?: number; cross?: number } | null;
+  missing: string[];
+}
+const ctxCache = new Map<string, Ctx>();
+const TONE: Record<string, string> = { CTR: "#a5b4fc", ATZ: "#a5b4fc", TMA: "#7dd3fc", CTA: "#7dd3fc", R: "#fca5a5", P: "#fca5a5", D: "#fcd34d", TRA: "#fcd34d", TSA: "#fcd34d" };
+
+/** The airspaces a logged flight crossed and the wind at cruise, from its track (server: openAIP, Open-Meteo). */
+function FlightContextView({ flightId, points }: { flightId: string; points: TrackPoint[] }) {
+  const { t, session } = useApp();
+  const c = useTheme();
+  const [data, setData] = useState<Ctx | null>(ctxCache.get(flightId) ?? null);
+  useEffect(() => {
+    if (data || !session?.access_token || points.length < 2) return;
+    let alive = true;
+    fetch(`${API_URL}/api/flight-context`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ points }) })
+      .then((r) => (r.ok ? (r.json() as Promise<Ctx>) : null))
+      .then((d) => {
+        if (!d || !alive) return;
+        if (!d.missing.some((m) => m.endsWith("Error"))) ctxCache.set(flightId, d);
+        setData(d);
+      })
+      .catch(() => null);
+    return () => {
+      alive = false;
+    };
+  }, [data, session?.access_token, points, flightId]);
+  if (!data) return null;
+  const main = data.airspaces.filter((a) => a.type !== "FIR" && a.type !== "UIR");
+  const firs = data.airspaces.filter((a) => a.type === "FIR" || a.type === "UIR");
+  const cr = data.cruise;
+  return (
+    <View style={{ gap: 8, borderTopWidth: 1, borderTopColor: c.scheme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(10,22,38,0.1)", paddingTop: 10 }}>
+      <Txt variant="label">{t("ctx.airspaces")}</Txt>
+      {data.missing.includes("airspace") ? (
+        <Txt variant="small">{t("ctx.airspaceSoon")}</Txt>
+      ) : main.length + firs.length === 0 ? (
+        <Txt variant="small">{data.missing.includes("airspaceError") ? t("ctx.error") : t("ctx.none")}</Txt>
+      ) : (
+        <>
+          <Row style={{ flexWrap: "wrap" }} gap={6}>
+            {main.map((a) => (
+              <View key={a.id} style={{ borderWidth: 1, borderColor: (TONE[a.type] ?? c.muted) + "88", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
+                <Txt style={{ fontSize: 12, fontWeight: "700" }} color={TONE[a.type] ?? c.text}>{`${a.name}${a.icaoClass ? ` · ${a.icaoClass}` : ""}`}</Txt>
+              </View>
+            ))}
+          </Row>
+          {firs.length ? <Txt variant="small">{`${t("ctx.firs")} ${firs.map((f) => f.name).join(" → ")}`}</Txt> : null}
+        </>
+      )}
+      {cr ? (
+        <>
+          <Txt variant="label">{t("ctx.cruise", { fl: `FL${String(Math.round(cr.altFt / 100)).padStart(3, "0")}` })}</Txt>
+          {cr.windKt == null ? (
+            <Txt variant="small">{data.missing.includes("windError") ? t("ctx.error") : t("ctx.windSoon")}</Txt>
+          ) : (
+            <Row gap={16} style={{ flexWrap: "wrap" }}>
+              <Stat label={t("ctx.wind")} value={`${String(cr.windFrom).padStart(3, "0")}°/${cr.windKt} kt`} />
+              <Stat label={cr.head! >= 0 ? t("ctx.headwind") : t("ctx.tailwind")} value={`${Math.abs(cr.head!)} kt`} />
+              <Stat label={t("ctx.crosswind")} value={`${Math.abs(cr.cross!)} kt`} />
+              <Stat label={t("ctx.oat")} value={`${cr.tempC} °C`} />
+            </Row>
+          )}
+        </>
+      ) : null}
+      <Txt variant="small" style={{ fontSize: 10.5 }}>{t("ctx.disclaimer")}</Txt>
+    </View>
   );
 }

@@ -2005,7 +2005,27 @@
         "history_off": "This flight is too old to find its track."
       },
       "sourceFa": "Track recorded by",
-      "fromFa": "The actual track is fetched automatically for flights of the last 24 h (ADS-B network)."
+      "fromFa": "The actual track is fetched automatically for flights of the last 24 h (ADS-B network).",
+      "context": {
+        "loading": "Airspaces and wind…",
+        "airspaces": "Airspaces crossed",
+        "airspaceSoon": "The airspaces crossed will show here once the openAIP source is switched on.",
+        "none": "No controlled or regulated airspace crossed.",
+        "error": "Unavailable right now.",
+        "class": "class {c}",
+        "inside": "inside {from} to {to} UTC",
+        "firs": "Flight information regions:",
+        "cruise": "At cruise · {fl}",
+        "windSoon": "The cruise wind will show here once the weather source is switched on.",
+        "wind": "Wind",
+        "headwind": "Headwind",
+        "tailwind": "Tailwind",
+        "crosswind": "Crosswind",
+        "fromRight": "from the right",
+        "fromLeft": "from the left",
+        "oat": "Outside air temp.",
+        "disclaimer": "For information, not for navigation. Airspaces © openAIP; wind and temperature: Open-Meteo models, nearest hour."
+      }
     },
     "access": {
       "demo": "Demo: {days, plural, one {# day} other {# days}} left to try everything. Create your account to continue with a %TRIAL%-day trial.",
@@ -2256,7 +2276,9 @@
           "adzuna": "Adzuna",
           "resend": "Resend (e-mails)",
           "expo": "Expo (notifications)",
-          "adsblol": "adsb.lol"
+          "adsblol": "adsb.lol",
+          "openaip": "openAIP",
+          "openmeteo": "Open-Meteo"
         },
         "what": {
           "anthropic": "photo and PDF imports, rosters, cover letters",
@@ -2265,7 +2287,9 @@
           "adzuna": "job offers",
           "resend": "contact and signature e-mails",
           "expo": "push notifications",
-          "adsblol": "recent ADS-B traces"
+          "adsblol": "recent ADS-B traces",
+          "openaip": "airspaces crossed",
+          "openmeteo": "wind and temperature at cruise"
         },
         "basis": {
           "anthropic": "estimated from tokens",
@@ -2274,7 +2298,9 @@
           "adzuna": "free",
           "resend": "free up to the quota",
           "expo": "free",
-          "adsblol": "free"
+          "adsblol": "free",
+          "openaip": "per the openAIP agreement",
+          "openmeteo": "Open-Meteo plan"
         },
         "op": {
           "import": "Photo / PDF import",
@@ -2295,7 +2321,9 @@
           "contact": "Contact form",
           "signLink": "Signature request",
           "push": "Notification",
-          "trace": "ADS-B trace"
+          "trace": "ADS-B trace",
+          "airspaces": "Airspaces (1° tile)",
+          "wind": "Wind aloft"
         },
         "fixedTitle": "Fixed subscriptions",
         "fixed": {

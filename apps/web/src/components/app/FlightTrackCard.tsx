@@ -12,6 +12,7 @@ import { currentTheme } from "@/lib/theme";
 import { useAccess } from "@/lib/access";
 import { DAY, NIGHT, loadGoogle } from "./GoogleRoutesMap";
 import { Card } from "./ui";
+import { FlightContext } from "./FlightContext";
 
 const hhmm = (s: number) => new Date(s * 1000).toISOString().slice(11, 16);
 
@@ -34,6 +35,7 @@ export function FlightTrackCard({ flight }: { flight: Flight }) {
         <>
           <TrackMap points={pts} />
           <Profile points={pts} />
+          <FlightContext flightId={flight.id} points={pts} />
           {track!.source === "flightaware" ? (
             <p className="mt-2 text-[11px] text-muted">
               {t("sourceFa")} <a className="underline" href="https://www.flightaware.com" target="_blank" rel="noreferrer">FlightAware</a>
