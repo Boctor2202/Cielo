@@ -4,6 +4,7 @@ import { accessFor, noCardTrialDays, ep5Legs, parseAirFranceEp5, parseFlightRepo
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { pdfText } from "@/lib/server/pdf";
 import { extractLegs, ImportAiError, mapTable } from "@/lib/server/importAi";
+import { splitPdf } from "@cielo/export";
 import { pageImages } from "@/lib/server/pageImages";
 import { rateLimited } from "@/lib/places";
 
@@ -159,7 +160,7 @@ export async function POST(req: Request) {
     } else if (kind === "text" && text.trim()) content = [{ type: "text", text: `Document:\n${text}` }];
     else return Response.json({ error: "bad_request" }, { status: 400 });
     // handwritten pages take more care to read than a printed statement
-    const r = await extractLegs(content, today, kind === "images" ? "high" : "medium");
+    const r = kind === "pdf" ? await extractPdfLegs(Uint8Array.from(Buffer.from(pdf, "base64")), today) : await extractLegs(content, today, kind === "images" ? "high" : "medium");
     await keep(`ai:${r.source}`, r.legs.length);
     if (!r.legs.length) await logImport("none", { reader: r.source });
     return Response.json({ reader: "ai", source: r.source, timeBasis: r.timeBasis, legs: r.legs }, { headers: { "Cache-Control": "no-store" } });
@@ -180,4 +181,39 @@ export async function POST(req: Request) {
     await reportAiFailure(`import ${String(kind)}`, e);
     return Response.json({ error: "upstream" }, { status: 502 });
   }
+}
+
+/**
+ * A PDF read a few pages at a time, the parts side by side: a whole logbook or a long statement holds more
+ * flights than one answer can carry (it ended "too long"). A part still too long is split again, down to a page.
+ */
+async function extractPdfLegs(bytes: Uint8Array, today: string): Promise<Awaited<ReturnType<typeof extractLegs>>> {
+  let parts: Uint8Array[];
+  try {
+    parts = await splitPdf(bytes, 3);
+  } catch {
+    // a PDF pdf-lib cannot open: sent whole, as before
+    return extractLegs([{ type: "document", source: { type: "base64", media_type: "application/pdf", data: Buffer.from(bytes).toString("base64") } }], today, "medium");
+  }
+  const read = async (part: Uint8Array): Promise<Awaited<ReturnType<typeof extractLegs>>> => {
+    try {
+      return await extractLegs([{ type: "document", source: { type: "base64", media_type: "application/pdf", data: Buffer.from(part).toString("base64") } }], today, "medium");
+    } catch (e) {
+      if (!(e instanceof ImportAiError && e.code === "too_long")) throw e;
+      const pages = await splitPdf(part, 1);
+      if (pages.length < 2) throw e;
+      const halves = await Promise.all(pages.map(read));
+      return { source: halves[0]!.source, timeBasis: halves[0]!.timeBasis, legs: halves.flatMap((h) => h.legs) };
+    }
+  };
+  // four parts at a time, results kept in page order
+  const results: Awaited<ReturnType<typeof extractLegs>>[] = new Array(parts.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(4, parts.length) }, async () => {
+      for (let k = next++; k < parts.length; k = next++) results[k] = await read(parts[k]!);
+    }),
+  );
+  const first = results.find((r) => r.legs.length) ?? results[0]!;
+  return { source: first.source, timeBasis: first.timeBasis, legs: results.flatMap((r) => r.legs) };
 }
