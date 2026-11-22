@@ -23,7 +23,7 @@ const FIXED = [
   { key: "appleDeveloper", usd: 99 / 12 },
 ];
 /** Free allowances of the services billed by volume. */
-const QUOTA = { adzuna: { perDay: 250, perMonth: 2500 }, resend: { perMonth: 3000, perDay: 100 }, adsblol: { perDay: 500 } };
+const QUOTA = { adzuna: { perMonth: 5000 }, resend: { perMonth: 3000, perDay: 100 }, adsblol: { perDay: 500 } };
 
 /** What FlightAware itself counted this month, when the key can read it (a free call). */
 async function flightAwareActual(from: string): Promise<{ calls: number; costUsd: number } | null> {
