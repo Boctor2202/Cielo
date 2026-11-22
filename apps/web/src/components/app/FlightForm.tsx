@@ -210,7 +210,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                 value={v.registration ?? ""}
                 onChange={(e) => setV((s) => ({ ...s, registration: e.target.value.toUpperCase(), aircraftId: null }))}
               />
-              <FlightAwareFill prominent registration={v.registration} date={v.date} onPick={(f) =>
+              <FlightAwareFill prominent hex={aircraft?.icaoHex} registration={v.registration} date={v.date} onPick={(f) =>
                     setV((s) => ({
                       ...s,
                       depIcao: f.dep ?? s.depIcao,
@@ -265,6 +265,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
               title={<SectionTitle icon={Clock}>{t("timesTitle")}</SectionTitle>}
               action={
                 <FlightAwareFill
+                  hex={aircraft?.icaoHex}
                   registration={v.registration}
                   date={v.date}
                   onPick={(f) =>

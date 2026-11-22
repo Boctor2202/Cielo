@@ -33,7 +33,12 @@ export async function GET(req: Request) {
     if (seen && Date.now() - seen.at < seen.ttl && seen.flights.length) return Response.json({ flights: seen.flights, source: "adsb", cached: true }, { headers: { "Cache-Control": "no-store" } });
     if (!rateLimited(`adsb:${user.id}`, 60, 86_400_000)) {
       const hex = (u.searchParams.get("hex") ?? "").toLowerCase();
-      const found = await adsbFlights(reg, date, /^[0-9a-f]{6}$/.test(hex) ? hex : undefined).catch(() => []);
+      let unknown = false;
+      const found = await adsbFlights(reg, date, /^[0-9a-f]{6}$/.test(hex) ? hex : undefined).catch((e: { code?: string }) => {
+        unknown = e?.code === "not_found";
+        return [];
+      });
+      if (unknown && !process.env.FLIGHTAWARE_API_KEY) return Response.json({ flights: [], reason: "unknown_aircraft" }, { headers: { "Cache-Control": "no-store" } });
       if (found.length) {
         cache.set(adsbKey, { at: Date.now(), ttl: 5 * 60_000, flights: found });
         return Response.json({ flights: found, source: "adsb" }, { headers: { "Cache-Control": "no-store" } });

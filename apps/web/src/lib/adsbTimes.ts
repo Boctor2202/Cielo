@@ -36,10 +36,49 @@ function registrations(): Promise<Map<string, string>> {
   return db;
 }
 
+const isHex = (h: unknown): h is string => typeof h === "string" && /^[0-9a-f]{6}$/i.test(h.trim());
+const timeout = () => AbortSignal.timeout(6000);
+
+/** adsbdb.com (open, community): registration → Mode S address. */
+async function adsbdbHex(reg: string): Promise<string | undefined> {
+  const r = await fetch(`https://api.adsbdb.com/v0/aircraft/${encodeURIComponent(reg)}`, { signal: timeout(), cache: "no-store" });
+  if (!r.ok) return undefined;
+  const d = (await r.json()) as { response?: { aircraft?: { mode_s?: string } } | string };
+  const h = typeof d.response === "object" ? d.response.aircraft?.mode_s : undefined;
+  return isHex(h) ? h.trim().toLowerCase() : undefined;
+}
+
+/** hexdb.io (open, community): registration → Mode S address, as plain text. */
+async function hexdbHex(reg: string): Promise<string | undefined> {
+  const r = await fetch(`https://hexdb.io/reg-hex?reg=${encodeURIComponent(reg)}`, { signal: timeout(), cache: "no-store" });
+  if (!r.ok) return undefined;
+  const h = (await r.text()).trim();
+  return isHex(h) ? h.toLowerCase() : undefined;
+}
+
+// answers found by the slower sources, kept on this instance
+const learned = new Map<string, string>();
+
+/**
+ * The aircraft's Mode S address: live on adsb.lol, then the tar1090 database, then adsbdb.com and hexdb.io
+ * (newer registrations, often missing from the first two: recent business jets, re-registered aircraft).
+ */
 export async function hexForRegistration(reg: string): Promise<string | undefined> {
+  const key = reg.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+  if (learned.has(key)) return learned.get(key);
   const live = await aircraftByRegistration(reg).catch(() => []);
   if (live[0]?.hex) return live[0].hex.toLowerCase();
-  return (await registrations()).get(reg.replace(/[^A-Z0-9]/gi, "").toUpperCase());
+  const fromDb = await registrations().then((m) => m.get(key)).catch(() => undefined);
+  if (fromDb) return fromDb;
+  const dashed = reg.toUpperCase();
+  for (const src of [adsbdbHex, hexdbHex]) {
+    const h = await src(dashed).catch(() => undefined);
+    if (h) {
+      learned.set(key, h);
+      return h;
+    }
+  }
+  return undefined;
 }
 
 // airports with a code, for the nearest one to where a flight starts and ends
@@ -63,7 +102,8 @@ function nearestAirport(lat: number, lon: number): string | undefined {
 /** The aircraft's flights that took off on `date` (UTC), from its ADS-B trace. */
 export async function adsbFlights(reg: string, date: string, knownHex?: string): Promise<FoundFlight[]> {
   const hex = knownHex || (await hexForRegistration(reg));
-  if (!hex) return [];
+  // not in any open aircraft database: its ADS-B trace cannot be found from the registration
+  if (!hex) throw new AdsbError("not_found", "unknown aircraft", 404);
   const headers: Record<string, string> = { Accept: "application/json" };
   if (process.env.ADSBLOL_API_KEY) headers["x-api-key"] = process.env.ADSBLOL_API_KEY;
   const r = await meteredFetch("adsblol", "trace", `${BASE}/1/trace/full/${hex}`, { headers, cache: "no-store" });

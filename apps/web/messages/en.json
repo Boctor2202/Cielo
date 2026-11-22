@@ -752,7 +752,8 @@
         "limit": "Daily limit reached, try again tomorrow.",
         "history": "This flight is too old to find its actual times automatically.",
         "window": "Automatic actual times are available for today's and yesterday's flights.",
-        "attributionAdsb": "UTC times from ADS-B signals (adsb.lol, ODbL). Block times are missing when receivers do not see the aircraft on the ground: fill them in and check before saving."
+        "attributionAdsb": "UTC times from ADS-B signals (adsb.lol, ODbL). Block times are missing when receivers do not see the aircraft on the ground: fill them in and check before saving.",
+        "unknownAircraft": "{reg} is not in any open ADS-B aircraft database, so its trace cannot be found from the registration. Enter the times by hand for this flight."
       },
       "extra": {
         "title": "Other entries",
