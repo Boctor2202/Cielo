@@ -8,7 +8,10 @@ import { meteredFetch } from "./server/usage";
 
 export interface FoundFlight {
   id: string;
+  /** the ATC callsign (AFR12AB, AJD19ST) */
   ident?: string;
+  /** the airline's own flight number when FlightAware knows it (AF1234): it is often not the callsign */
+  flightNumber?: string;
   registration?: string;
   aircraftType?: string;
   dep?: string;
@@ -35,6 +38,9 @@ export class FlightAwareError extends Error {
 interface FaFlight {
   fa_flight_id: string;
   ident?: string;
+  ident_iata?: string | null;
+  operator_iata?: string | null;
+  flight_number?: string | null;
   registration?: string | null;
   aircraft_type?: string | null;
   origin?: { code_icao?: string | null; code?: string | null } | null;
@@ -75,6 +81,7 @@ export async function flightsForRegistration(registration: string, date: string,
     .map((f) => ({
       id: f.fa_flight_id,
       ident: f.ident,
+      flightNumber: f.ident_iata ?? (f.operator_iata && f.flight_number ? `${f.operator_iata}${f.flight_number}` : undefined),
       registration: f.registration ?? undefined,
       aircraftType: f.aircraft_type ?? undefined,
       dep: f.origin?.code_icao ?? f.origin?.code ?? undefined,

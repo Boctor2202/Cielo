@@ -8,7 +8,10 @@ import { Row, Txt, tap } from "./ui";
 
 export interface FoundFlight {
   id: string;
+  /** the ATC callsign (AFR12AB) */
   ident?: string;
+  /** the airline's flight number when known (AF1234), often not the callsign */
+  flightNumber?: string;
   source?: "adsb" | "flightaware";
   dep?: string;
   arr?: string;

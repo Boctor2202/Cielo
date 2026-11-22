@@ -509,7 +509,8 @@ function FlightForm() {
                 off: f.off ? formatClock(f.off) : s.off,
                 on: f.on ? formatClock(f.on) : s.on,
                 in: f.in ? formatClock(f.in) : s.in,
-                flightNumber: s.flightNumber || (f.ident && !/^[A-Z]-?[A-Z0-9]{3,5}$/.test(f.ident) ? f.ident : ""),
+                // the airline's flight number (AF1234), else the callsign unless it is only the registration
+                flightNumber: s.flightNumber || f.flightNumber || (f.ident && !/^[A-Z]-?[A-Z0-9]{3,5}$/.test(f.ident) ? f.ident : ""),
               }))
             }
           />
