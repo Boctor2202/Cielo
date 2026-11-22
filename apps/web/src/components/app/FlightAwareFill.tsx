@@ -2,7 +2,7 @@
 
 import { Loader2, Radar, X } from "lucide-react";
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { FoundFlight } from "@/lib/flightaware";
 import { apiFetch } from "@/lib/report";
 
@@ -27,6 +27,7 @@ export function FlightAwareFill({
   onPick: (f: { date?: string; dep?: string; arr?: string; out?: string; off?: string; on?: string; in?: string }) => void;
 }) {
   const t = useTranslations("app.form.flightaware");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<"idle" | "loading" | "error" | "not_configured" | "none" | "signin" | "limit" | "history" | "window" | "unknown">("idle");
   const [flights, setFlights] = useState<FoundFlight[]>([]);
@@ -87,7 +88,11 @@ export function FlightAwareFill({
                 <span className="min-w-0">
                   <span className="num block font-semibold">
                     {f.dep ?? "?"} → {f.arr ?? "?"}
-                    {(f.out ?? f.off)?.slice(0, 10) !== date && <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted">{t("yesterday")}</span>}
+                    {(f.out ?? f.off)?.slice(0, 10) !== date && (
+                      <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted">
+                        {new Date(`${(f.out ?? f.off)!.slice(0, 10)}T12:00:00Z`).toLocaleDateString(locale, { day: "numeric", month: "short", timeZone: "UTC" })}
+                      </span>
+                    )}
                   </span>
                   <span className="block truncate text-xs text-muted">{[f.ident, f.aircraftType, f.diverted ? t("diverted") : undefined].filter(Boolean).join(" · ")}</span>
                 </span>

@@ -795,8 +795,8 @@
       "operator": "Opérateur",
       "operatorPh": "Compagnie ou opérateur",
       "operatorRecognised": "Reconnu automatiquement : tapez pour le changer",
-      "adsbTitle": "Vol d'aujourd'hui ou d'hier ?",
-      "adsbHint": "Saisissez l'immatriculation : Geardown retrouve les aéroports et les heures grâce aux signaux ADS-B de l'avion.",
+      "adsbTitle": "Un vol de ces derniers jours ?",
+      "adsbHint": "Saisissez l'immatriculation : Geardown retrouve les aéroports et les heures réelles de ses vols des 3 derniers jours.",
       "registration": "Immatriculation"
     },
     "signature": {

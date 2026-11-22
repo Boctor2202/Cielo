@@ -795,8 +795,8 @@
       "operator": "Operator",
       "operatorPh": "Airline or operator",
       "operatorRecognised": "Recognised automatically: type to change it",
-      "adsbTitle": "Flight from today or yesterday?",
-      "adsbHint": "Enter the registration: Geardown finds the airports and times from the aircraft's ADS-B signals.",
+      "adsbTitle": "A flight from the last few days?",
+      "adsbHint": "Enter the registration: Geardown finds the airports and actual times of its flights over the last 3 days.",
       "registration": "Registration"
     },
     "signature": {
