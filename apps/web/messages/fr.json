@@ -394,7 +394,7 @@
       "ftl": "FTL",
       "documents": "Licences & médical",
       "stats": "Statistiques",
-      "map": "Carte",
+      "map": "Flightmap",
       "settings": "Paramètres",
       "newFlight": "Nouveau vol",
       "localMode": "Mode local",
@@ -1490,7 +1490,7 @@
       "mostFlown": "Le plus volé"
     },
     "map": {
-      "title": "Carte des vols",
+      "title": "Flightmap",
       "routes": "{count, plural, one {# route} other {# routes}}",
       "airports": "{count, plural, one {# aéroport} other {# aéroports}}",
       "filterYear": "Année",
