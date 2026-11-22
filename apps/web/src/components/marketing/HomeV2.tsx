@@ -304,12 +304,12 @@ export function MobileApp() {
           </ul>
           <StoreBadges className="mt-8" />
         </div>
-        <div className="relative mx-auto h-[540px] w-full max-w-[460px]">
-          <motion.div className="absolute left-0 top-6 w-[220px]" style={{ rotate: r1 }}>
-            <PhoneLive className="h-[460px]" />
+        <div className="relative mx-auto h-[420px] w-full max-w-[360px] sm:h-[540px] sm:max-w-[460px]">
+          <motion.div className="absolute left-0 top-6 w-[48%] sm:w-[220px]" style={{ rotate: r1 }}>
+            <PhoneLive className="h-[360px] sm:h-[460px]" />
           </motion.div>
-          <motion.div className="absolute right-0 top-0 w-[220px]" style={{ rotate: r2, y: y2 }}>
-            <PhoneLive className="h-[460px]" variant="map" />
+          <motion.div className="absolute right-0 top-0 w-[48%] sm:w-[220px]" style={{ rotate: r2, y: y2 }}>
+            <PhoneLive className="h-[360px] sm:h-[460px]" variant="map" />
           </motion.div>
         </div>
       </div>
