@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { FILM_CREDITS } from "@/lib/aircraft-visuals";
 import { StoreBadges } from "./sections";
-import { DashboardLive, FtlLive, ImportLive, JobsLive, LicencesLive, LogbookLive, MapLive, PhoneLive, SignatureLive } from "./live/screens";
+import { DashboardLive, FtlLive, ImportLive, JobsLive, LicencesLive, LogbookLive, MapLive, SignatureLive } from "./live/screens";
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 
@@ -93,7 +93,7 @@ function HeroScreens() {
       <motion.div style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.4, ease }}>
         <DashboardLive className="w-full" />
         <motion.div className="absolute -bottom-24 -right-8 w-[190px]" initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.8, ease }} style={{ translateZ: 60 }}>
-          <PhoneLive className="h-[370px]" />
+          <PhoneShot src="/immersive/phones/dashboard.webp" alt="dashboard" />
         </motion.div>
       </motion.div>
     </motion.div>
@@ -289,6 +289,17 @@ function MobileStep({ k, i, Screen }: { k: string; i: number; Screen: Step["Scre
   );
 }
 
+/** A real screenshot of the iPhone app in a phone frame (names and company details removed). */
+function PhoneShot({ src, alt }: { src: string; alt: "dashboard" | "logbook" | "radar" }) {
+  const t = useTranslations("home2.phones");
+  return (
+    <div className="overflow-hidden rounded-[36px] border-[7px] border-[#0b0b0e] bg-[#0b0b0e] shadow-[0_40px_80px_-25px_rgba(0,0,0,.7)]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt={t(alt)} width={736} height={1600} loading="lazy" decoding="async" className="block h-auto w-full rounded-[29px]" />
+    </div>
+  );
+}
+
 /* ---------- And everything else ---------- */
 
 const MORE = [
@@ -349,10 +360,10 @@ export function MobileApp() {
         </div>
         <div className="relative mx-auto h-[420px] w-full max-w-[360px] sm:h-[540px] sm:max-w-[460px]">
           <motion.div className="absolute left-0 top-6 w-[48%] sm:w-[220px]" style={{ rotate: r1 }}>
-            <PhoneLive className="h-[360px] sm:h-[460px]" />
+            <PhoneShot src="/immersive/phones/logbook.webp" alt="logbook" />
           </motion.div>
           <motion.div className="absolute right-0 top-0 w-[48%] sm:w-[220px]" style={{ rotate: r2, y: y2 }}>
-            <PhoneLive className="h-[360px] sm:h-[460px]" variant="map" />
+            <PhoneShot src="/immersive/phones/radar.webp" alt="radar" />
           </motion.div>
         </div>
       </div>

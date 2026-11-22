@@ -3046,6 +3046,11 @@
         "Signature de vos vols au doigt",
         "Couleurs et fond personnalisables"
       ]
+    },
+    "phones": {
+      "dashboard": "L'app Geardown sur iPhone : vue d'ensemble",
+      "logbook": "L'app Geardown sur iPhone : carnet de vol",
+      "radar": "L'app Geardown sur iPhone : radar"
     }
   }
 }

@@ -3046,6 +3046,11 @@
         "Sign your flights with your finger",
         "Your own colours and background"
       ]
+    },
+    "phones": {
+      "dashboard": "The Geardown iPhone app: overview",
+      "logbook": "The Geardown iPhone app: logbook",
+      "radar": "The Geardown iPhone app: radar"
     }
   }
 }
