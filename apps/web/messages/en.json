@@ -2217,7 +2217,8 @@
           "check": "Check",
           "unknown": "unknown",
           "failed": "error",
-          "error": "Could not check."
+          "error": "Could not check.",
+          "withFa": "Also query FlightAware (2 paid queries)"
         }
       },
       "apis": {

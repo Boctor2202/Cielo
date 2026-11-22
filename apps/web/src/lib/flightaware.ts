@@ -149,3 +149,27 @@ export function stillGood(day: string, fetchedAt: string, flights: FoundFlight[]
   if (!open && flights.length && Date.parse(fetchedAt) > dayEnd) return true;
   return Date.now() - Date.parse(fetchedAt) < 20 * 60_000;
 }
+
+/**
+ * Admin diagnosis: what AeroAPI returns for a registration over the last two days, unfiltered, with
+ * ident_type=registration and without it (FlightAware then guesses). Two paid queries.
+ */
+export async function flightAwareProbe(registration: string): Promise<{ mode: string; status: number; flights: { ident?: string; reg?: string; from?: string; to?: string; out?: string; blocked?: boolean }[]; error?: string }[]> {
+  const key = process.env.FLIGHTAWARE_API_KEY;
+  if (!key) return [{ mode: "no key", status: 0, flights: [] }];
+  const ident = faIdent(registration);
+  const today = new Date().toISOString().slice(0, 10);
+  const out = [];
+  for (const mode of ["registration", "auto"]) {
+    const qs = new URLSearchParams({ start: addDay(today, -2), end: addDay(today, 1), max_pages: "1", ...(mode === "registration" ? { ident_type: "registration" } : {}) });
+    const r = await meteredFetch("flightaware", "flights", `https://aeroapi.flightaware.com/aeroapi/flights/${encodeURIComponent(ident)}?${qs}`, { headers: { "x-apikey": key, Accept: "application/json" }, cache: "no-store" });
+    const d = (await r.json().catch(() => null)) as { flights?: FaFlight[]; title?: string; detail?: string } | null;
+    out.push({
+      mode,
+      status: r.status,
+      error: r.ok ? undefined : `${d?.title ?? ""} ${d?.detail ?? ""}`.trim().slice(0, 200),
+      flights: (d?.flights ?? []).map((f) => ({ ident: f.ident, reg: f.registration ?? undefined, from: f.origin?.code_icao ?? f.origin?.code ?? undefined, to: f.destination?.code_icao ?? f.destination?.code ?? undefined, out: f.actual_out ?? f.actual_off ?? undefined, blocked: f.blocked })),
+    });
+  }
+  return out;
+}

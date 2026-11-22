@@ -2217,7 +2217,8 @@
           "check": "Vérifier",
           "unknown": "inconnu",
           "failed": "erreur",
-          "error": "Vérification impossible."
+          "error": "Vérification impossible.",
+          "withFa": "Interroger aussi FlightAware (2 requêtes payantes)"
         }
       },
       "apis": {

@@ -1,5 +1,6 @@
 import { handle, HttpError, requireAdmin } from "@/lib/server/admin";
-import { HEX_SOURCES } from "@/lib/adsbTimes";
+import { adsbFlights, HEX_SOURCES } from "@/lib/adsbTimes";
+import { flightAwareProbe } from "@/lib/flightaware";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -21,6 +22,11 @@ export function GET(req: Request) {
         }
       }),
     );
-    return Response.json({ reg, sources });
+    // with an address: the flights its ADS-B trace holds (today and yesterday)
+    const hex = sources.find((s) => s.hex)?.hex ?? undefined;
+    const today = new Date().toISOString().slice(0, 10);
+    const adsb = hex ? await adsbFlights(reg, today, hex, true).catch((e: Error) => e.message) : null;
+    const fa = new URL(req.url).searchParams.get("fa") === "1" ? await flightAwareProbe(reg).catch((e: Error) => e.message) : null;
+    return Response.json({ reg, sources, adsb, fa });
   });
 }
