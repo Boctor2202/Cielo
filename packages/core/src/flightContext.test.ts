@@ -45,3 +45,13 @@ describe("flight context", () => {
     expect(windComponents(360, 20, 270).cross).toBe(20);
   });
 });
+
+import { gribAt, type GribField } from "./grib2";
+describe("grib field lookup", () => {
+  it("interpolates between grid points and wraps around longitude", () => {
+    // 4 × 3 grid, 1°, from 90°N 0°E: value = 10 × row + column
+    const f: GribField = { ni: 4, nj: 3, la1: 90, lo1: 0, di: 1, dj: 1, values: Float64Array.from({ length: 12 }, (_, k) => 10 * Math.floor(k / 4) + (k % 4)) };
+    expect(gribAt(f, 89.5, 1.5)).toBeCloseTo(6.5);
+    expect(gribAt(f, 90, -1)).toBeCloseTo(3);
+  });
+});

@@ -2016,7 +2016,7 @@
         "inside": "inside {from} to {to} UTC",
         "firs": "Flight information regions:",
         "cruise": "At cruise · {fl}",
-        "windSoon": "The cruise wind will show here once the weather source is switched on.",
+        "windSoon": "Wind unavailable for this flight.",
         "wind": "Wind",
         "headwind": "Headwind",
         "tailwind": "Tailwind",
@@ -2024,7 +2024,7 @@
         "fromRight": "from the right",
         "fromLeft": "from the left",
         "oat": "Outside air temp.",
-        "disclaimer": "For information, not for navigation. Airspaces © openAIP; wind and temperature: Open-Meteo models, nearest hour."
+        "disclaimer": "For information, not for navigation. Airspaces © openAIP; wind and temperature: NOAA GFS model, nearest forecast step."
       }
     },
     "access": {
@@ -2278,7 +2278,7 @@
           "expo": "Expo (notifications)",
           "adsblol": "adsb.lol",
           "openaip": "openAIP",
-          "openmeteo": "Open-Meteo"
+          "gfs": "NOAA GFS"
         },
         "what": {
           "anthropic": "photo and PDF imports, rosters, cover letters",
@@ -2289,7 +2289,7 @@
           "expo": "push notifications",
           "adsblol": "recent ADS-B traces",
           "openaip": "airspaces crossed",
-          "openmeteo": "wind and temperature at cruise"
+          "gfs": "wind and temperature at cruise"
         },
         "basis": {
           "anthropic": "estimated from tokens",
@@ -2300,7 +2300,7 @@
           "expo": "free",
           "adsblol": "free",
           "openaip": "per the openAIP agreement",
-          "openmeteo": "Open-Meteo plan"
+          "gfs": "free (public domain)"
         },
         "op": {
           "import": "Photo / PDF import",
@@ -2323,7 +2323,8 @@
           "push": "Notification",
           "trace": "ADS-B trace",
           "airspaces": "Airspaces (1° tile)",
-          "wind": "Wind aloft"
+          "wind": "Wind aloft",
+          "field": "Weather field (≈50 kB)"
         },
         "fixedTitle": "Fixed subscriptions",
         "fixed": {

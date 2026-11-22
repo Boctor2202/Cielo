@@ -2016,7 +2016,7 @@
         "inside": "dedans de {from} à {to} UTC",
         "firs": "Régions d'information :",
         "cruise": "En croisière · {fl}",
-        "windSoon": "Le vent en croisière s'affichera ici dès que la source météo sera activée.",
+        "windSoon": "Vent indisponible pour ce vol.",
         "wind": "Vent",
         "headwind": "Vent de face",
         "tailwind": "Vent arrière",
@@ -2024,7 +2024,7 @@
         "fromRight": "de droite",
         "fromLeft": "de gauche",
         "oat": "Température extérieure",
-        "disclaimer": "Pour information, pas pour la navigation. Espaces aériens © openAIP ; vent et température : modèles Open-Meteo, à l'heure la plus proche."
+        "disclaimer": "Pour information, pas pour la navigation. Espaces aériens © openAIP ; vent et température : modèle GFS de la NOAA, à l'échéance la plus proche."
       }
     },
     "access": {
@@ -2278,7 +2278,7 @@
           "expo": "Expo (notifications)",
           "adsblol": "adsb.lol",
           "openaip": "openAIP",
-          "openmeteo": "Open-Meteo"
+          "gfs": "NOAA GFS"
         },
         "what": {
           "anthropic": "imports photo et PDF, plannings, lettres de motivation",
@@ -2289,7 +2289,7 @@
           "expo": "notifications push",
           "adsblol": "traces ADS-B récentes",
           "openaip": "espaces aériens traversés",
-          "openmeteo": "vent et température en croisière"
+          "gfs": "vent et température en croisière"
         },
         "basis": {
           "anthropic": "estimé sur les tokens",
@@ -2300,7 +2300,7 @@
           "expo": "gratuit",
           "adsblol": "gratuit",
           "openaip": "selon l'accord openAIP",
-          "openmeteo": "abonnement Open-Meteo"
+          "gfs": "gratuit (domaine public)"
         },
         "op": {
           "import": "Import photo / PDF",
@@ -2323,7 +2323,8 @@
           "push": "Notification",
           "trace": "Trace ADS-B",
           "airspaces": "Espaces aériens (tuile 1°)",
-          "wind": "Vent en altitude"
+          "wind": "Vent en altitude",
+          "field": "Champ météo (≈50 ko)"
         },
         "fixedTitle": "Abonnements fixes",
         "fixed": {

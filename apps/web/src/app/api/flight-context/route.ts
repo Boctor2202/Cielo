@@ -8,7 +8,7 @@ export const maxDuration = 60;
 
 /**
  * POST /api/flight-context {points: TrackPoint[]} — what a logged flight went through: the airspaces crossed
- * (openAIP) and the wind and temperature at cruise level (Open-Meteo). Max plan; for information only.
+ * (openAIP) and the wind and temperature at cruise level (NOAA GFS model). Max plan; for information only.
  */
 export async function POST(req: Request) {
   const user = await userFrom(req).catch(() => null);
@@ -34,7 +34,6 @@ export async function POST(req: Request) {
       const c = cruiseSample(points);
       if (!c) return null;
       const w = await windAt(c.lat, c.lon, c.altFt, c.t).catch(() => (missing.push("windError"), null));
-      if (w === null && !process.env.OPEN_METEO_API_KEY) missing.push("wind");
       return { ...c, ...(w ? { ...w, ...windComponents(w.windFrom, w.windKt, c.trackDeg) } : {}) };
     })(),
   ]);

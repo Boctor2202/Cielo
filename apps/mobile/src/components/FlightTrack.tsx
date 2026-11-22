@@ -124,7 +124,7 @@ interface Ctx {
 const ctxCache = new Map<string, Ctx>();
 const TONE: Record<string, string> = { CTR: "#a5b4fc", ATZ: "#a5b4fc", TMA: "#7dd3fc", CTA: "#7dd3fc", R: "#fca5a5", P: "#fca5a5", D: "#fcd34d", TRA: "#fcd34d", TSA: "#fcd34d" };
 
-/** The airspaces a logged flight crossed and the wind at cruise, from its track (server: openAIP, Open-Meteo). */
+/** The airspaces a logged flight crossed and the wind at cruise, from its track (server: openAIP, NOAA GFS). */
 function FlightContextView({ flightId, points }: { flightId: string; points: TrackPoint[] }) {
   const { t, session } = useApp();
   const c = useTheme();
