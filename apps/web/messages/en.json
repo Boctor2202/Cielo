@@ -2830,5 +2830,92 @@
     ],
     "cta": "Start the free trial",
     "fine": "The logbook holds the information FCL.050 requires; the pilot remains responsible for its accuracy."
+  },
+  "home2": {
+    "label": "Features",
+    "title": "Your whole logbook, in one place",
+    "subtitle": "From importing your old logbook to the job offer: Geardown does the maths, you stay in control.",
+    "steps": {
+      "import": {
+        "label": "Import",
+        "title": "Your old logbook, imported without retyping",
+        "text": "Excel, CSV, LogTen, Safelog, CrewLounge, a roster or just a photo of the paper logbook: every line is read and checked, then you confirm the totals before importing."
+      },
+      "logbook": {
+        "label": "Logbook",
+        "title": "A logbook that is right, column by column",
+        "text": "Night time from civil twilight along the route, IFR, multi-pilot, PIC, PICUS and SIC: every flight fills the right columns, and the page totals follow."
+      },
+      "map": {
+        "label": "Statistics",
+        "title": "Your whole career on the map",
+        "text": "Routes, airports, nautical miles and countries visited, filtered by year or type. A map you can share in one tap."
+      },
+      "ftl": {
+        "label": "FTL",
+        "title": "Your flight time limitations, always up to date",
+        "text": "ORO.FTL or Subpart Q: flight and duty time over 7 days, 28 days, the year and 12 months, worked out from your logbook and roster."
+      },
+      "licences": {
+        "label": "Licences",
+        "title": "Licences, medical and recency under control",
+        "text": "Every expiry is tracked, with a reminder before it lapses. Recent experience (passengers, night) is checked with each flight."
+      },
+      "signature": {
+        "label": "Signatures",
+        "title": "Sign your flights, or have them signed",
+        "text": "Your signature is saved once. Sign a flight, a selection or the whole logbook, and ask a captain or an instructor to sign. A flight changed later shows as invalid."
+      },
+      "jobs": {
+        "label": "Career",
+        "title": "Your CV and the jobs that fit you",
+        "text": "Your pilot CV fills in with your hours. Job offers are sorted by your experience, type and licences."
+      }
+    },
+    "more": {
+      "title": "And everything else",
+      "audit": {
+        "t": "Logbook audit",
+        "d": "Duplicates, overlaps, inconsistent times: all flagged before a check."
+      },
+      "offline": {
+        "t": "Offline and synced",
+        "d": "Log in flight, without a network. Everything syncs between the iPhone and the website."
+      },
+      "exports": {
+        "t": "Exports in official formats",
+        "d": "PDF in EASA, FAA, CASA, UK CAA and Transport Canada formats, plus CSV or Excel."
+      },
+      "cv": {
+        "t": "CV and application pack",
+        "d": "CV, hours statement, licences and attachments in a single PDF."
+      },
+      "roster": {
+        "t": "Roster import",
+        "d": "Your schedule becomes your flights and layovers, without retyping."
+      },
+      "layovers": {
+        "t": "Layovers",
+        "d": "Hotel, contacts and the best places around, with a photo of the city."
+      },
+      "radar": {
+        "t": "Radar and ADS-B tracks",
+        "d": "Live traffic and the real track of your flights."
+      },
+      "badges": {
+        "t": "Badges and milestones",
+        "d": "Your firsts and hour milestones, to celebrate and share."
+      }
+    },
+    "mobile": {
+      "label": "On iPhone",
+      "title": "Your logbook in your pocket, even offline",
+      "text": "Log a flight in seconds after on-block, check your FTL limits and expiries, share your map.",
+      "points": [
+        "Works without a network, syncs afterwards",
+        "Sign your flights with your finger",
+        "Your own colours and background"
+      ]
+    }
   }
 }
