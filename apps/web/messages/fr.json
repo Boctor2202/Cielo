@@ -2830,5 +2830,92 @@
     ],
     "cta": "Commencer l'essai gratuit",
     "fine": "Le carnet contient les informations exigées par FCL.050 ; le pilote reste responsable de son exactitude."
+  },
+  "home2": {
+    "label": "Fonctionnalités",
+    "title": "Tout votre carnet, au même endroit",
+    "subtitle": "De l'import de votre ancien carnet jusqu'à l'offre d'emploi : Geardown fait les calculs, vous gardez la main.",
+    "steps": {
+      "import": {
+        "label": "Import",
+        "title": "Votre ancien carnet, importé sans rien ressaisir",
+        "text": "Excel, CSV, LogTen, Safelog, CrewLounge, roster ou simple photo du carnet papier : chaque ligne est lue, vérifiée, puis vous validez les totaux avant d'importer."
+      },
+      "logbook": {
+        "label": "Carnet",
+        "title": "Un carnet juste, colonne par colonne",
+        "text": "Temps de nuit selon le crépuscule le long de la route, IFR, multipilote, PIC, PICUS et SIC : chaque vol remplit les bonnes colonnes, et les totaux de page suivent."
+      },
+      "map": {
+        "label": "Statistiques",
+        "title": "Toute votre carrière sur la carte",
+        "text": "Routes, aéroports, milles nautiques et pays visités, filtrés par année ou par type. Une carte que vous pouvez partager en un geste."
+      },
+      "ftl": {
+        "label": "FTL",
+        "title": "Vos limites de temps de vol, toujours à jour",
+        "text": "ORO.FTL ou Subpart Q : temps de vol et de service sur 7 jours, 28 jours, l'année et 12 mois, calculés depuis votre carnet et votre roster."
+      },
+      "licences": {
+        "label": "Licences",
+        "title": "Licences, médical et expérience récente sous contrôle",
+        "text": "Chaque échéance est suivie, avec une alerte avant qu'elle n'expire. L'expérience récente (passagers, nuit) est vérifiée à chaque vol."
+      },
+      "signature": {
+        "label": "Signatures",
+        "title": "Signez vos vols, ou faites-les signer",
+        "text": "Votre signature est enregistrée une fois. Signez un vol, une sélection ou tout le carnet, et demandez la signature d'un commandant ou d'un instructeur. Un vol modifié ensuite apparaît comme invalide."
+      },
+      "jobs": {
+        "label": "Carrière",
+        "title": "Votre CV et les offres qui vous correspondent",
+        "text": "Votre CV pilote se remplit avec vos heures. Les offres d'emploi sont triées selon votre expérience, votre type et vos licences."
+      }
+    },
+    "more": {
+      "title": "Et tout le reste",
+      "audit": {
+        "t": "Audit du carnet",
+        "d": "Doublons, chevauchements, heures incohérentes : tout est signalé avant un contrôle."
+      },
+      "offline": {
+        "t": "Hors ligne et synchronisé",
+        "d": "Saisissez en vol, sans réseau. Tout se synchronise entre l'iPhone et le site."
+      },
+      "exports": {
+        "t": "Exports aux formats officiels",
+        "d": "PDF au format EASA, FAA, CASA, UK CAA, Transport Canada, et CSV ou Excel."
+      },
+      "cv": {
+        "t": "CV et dossier de candidature",
+        "d": "CV, relevé d'heures, licences et pièces jointes dans un seul PDF."
+      },
+      "roster": {
+        "t": "Roster importé",
+        "d": "Votre planning devient vos vols et vos escales, sans ressaisie."
+      },
+      "layovers": {
+        "t": "Escales",
+        "d": "Hôtel, contacts et les meilleures adresses autour, avec une photo de la ville."
+      },
+      "radar": {
+        "t": "Radar et traces ADS-B",
+        "d": "Le trafic en direct et la trace réelle de vos vols."
+      },
+      "badges": {
+        "t": "Badges et paliers",
+        "d": "Vos premières fois et vos paliers d'heures, à célébrer et à partager."
+      }
+    },
+    "mobile": {
+      "label": "Sur iPhone",
+      "title": "Votre carnet dans la poche, même hors ligne",
+      "text": "Saisissez un vol en quelques secondes après le bloc, consultez vos limites FTL et vos échéances, partagez votre carte.",
+      "points": [
+        "Fonctionne sans réseau, synchronise ensuite",
+        "Signature de vos vols au doigt",
+        "Couleurs et fond personnalisables"
+      ]
+    }
   }
 }
