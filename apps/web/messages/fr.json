@@ -2155,7 +2155,13 @@
         "untest": "Ce n'est pas un compte test",
         "testError": "Impossible pour l'instant : la migration 0032 n'est pas appliquée.",
         "testTitle": "Comptes test ({n})",
-        "testNote": "exclus de la liste et des chiffres"
+        "testNote": "exclus de la liste et des chiffres",
+        "viewAs": "Voir ses écrans",
+        "viewError": "Impossible de créer le lien (compte test uniquement).",
+        "viewTitle": "Lien de connexion à « {who} »",
+        "viewHelp": "Le lien est copié. Ouvrez-le dans une fenêtre de navigation privée (ou un autre navigateur) : vous verrez l'app exactement comme ce compte, sans perdre votre session admin ici. Le lien ne sert qu'une fois et expire en 1 heure.",
+        "viewCopy": "Copier",
+        "viewDone": "Fermer"
       },
       "reports": {
         "open": "À traiter",

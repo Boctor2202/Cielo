@@ -2155,7 +2155,13 @@
         "untest": "Not a test account",
         "testError": "Not possible yet: migration 0032 is not applied.",
         "testTitle": "Test accounts ({n})",
-        "testNote": "left out of the list and the figures"
+        "testNote": "left out of the list and the figures",
+        "viewAs": "See their screens",
+        "viewError": "Could not create the link (test accounts only).",
+        "viewTitle": "Sign-in link to “{who}”",
+        "viewHelp": "The link is copied. Open it in a private window (or another browser): you will see the app exactly as this account does, without losing your admin session here. The link works once and expires in 1 hour.",
+        "viewCopy": "Copy",
+        "viewDone": "Close"
       },
       "reports": {
         "open": "To handle",

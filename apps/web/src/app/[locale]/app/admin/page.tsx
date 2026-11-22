@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Loader2, RefreshCw, Search, ShieldCheck, X } from "lucide-react";
+import { Check, Copy, Eye, Loader2, RefreshCw, Search, ShieldCheck, X } from "lucide-react";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Card, PageTitle, Readout, Segmented } from "@/components/app/ui";
@@ -246,6 +246,7 @@ function PlanAction({ u, busy, grant }: { u: User; busy: boolean; grant: (u: Use
 function UsersTab() {
   const t = useTranslations("app.admin.users");
   const tp = useTranslations("app.plans");
+  const locale = useLocale();
   const { date, ago } = useDates();
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
@@ -264,6 +265,16 @@ function UsersTab() {
     }
     setBusy(null);
     reload();
+  };
+  const [viewLink, setViewLink] = useState<{ who: string; link: string } | null>(null);
+  const openAs = async (u: User) => {
+    setBusy(u.id);
+    const r = await apiFetch("/api/admin/users", { method: "POST", body: JSON.stringify({ pilotId: u.id, signIn: true, locale }) });
+    setBusy(null);
+    const j = r.ok ? ((await r.json()) as { link: string }) : null;
+    if (!j?.link) return alert(t("viewError"));
+    await navigator.clipboard?.writeText(j.link).catch(() => null);
+    setViewLink({ who: u.full_name || u.email || u.id, link: j.link });
   };
   const real = (data?.users ?? []).filter((u) => !u.test);
   const tests = (data?.users ?? []).filter((u) => u.test);
@@ -408,6 +419,22 @@ function UsersTab() {
             </div>
           </Card>
 
+          {viewLink && (
+            <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={() => setViewLink(null)}>
+              <div className="card w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+                <h3 className="text-lg font-semibold">{t("viewTitle", { who: viewLink.who })}</h3>
+                <p className="mt-2 text-sm text-muted">{t("viewHelp")}</p>
+                <input readOnly className="input mt-4 font-mono text-xs" value={viewLink.link} onFocus={(e) => e.currentTarget.select()} />
+                <div className="mt-4 flex justify-end gap-2">
+                  <button type="button" className="btn btn-secondary" onClick={() => void navigator.clipboard?.writeText(viewLink.link)}>
+                    <Copy size={14} /> {t("viewCopy")}
+                  </button>
+                  <button type="button" className="btn btn-primary" onClick={() => setViewLink(null)}>{t("viewDone")}</button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {tests.length > 0 && (
             <details className="card group">
               <summary className="cursor-pointer list-none p-4 font-semibold">
@@ -419,6 +446,9 @@ function UsersTab() {
                     <div>{who(u)}</div>
                     <div className="flex items-center gap-3">
                       <StageBadge stage={u.stage} />
+                      <button type="button" className="btn btn-secondary btn-sm" disabled={busy === u.id} onClick={() => void openAs(u)}>
+                        <Eye size={14} /> {t("viewAs")}
+                      </button>
                       <PlanAction u={u} busy={busy === u.id} grant={(x, tier) => void grant(x, tier)} />
                     </div>
                   </li>
