@@ -49,7 +49,7 @@ export function FlightAwareFill({
         <Radar size={15} /> {t("button")}
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-1 w-[min(92vw,380px)] rounded-xl border border-border bg-bg p-2 shadow-2xl">
+        <div className={`absolute top-full z-30 mt-1 w-[min(92vw,380px)] rounded-xl border border-border bg-bg p-2 shadow-2xl ${prominent ? "left-0" : "right-0"}`}>
           <div className="flex items-center justify-between px-2 pb-1">
             <p className="mono-label !text-[10px]">{t("title", { reg: registration ?? "" })}</p>
             <button type="button" className="btn btn-ghost !p-1" aria-label={t("close")} onClick={() => setOpen(false)}>
