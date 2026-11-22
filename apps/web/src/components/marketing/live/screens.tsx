@@ -327,9 +327,9 @@ export function PhoneLive({ className = "", variant = "home" }: { className?: st
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
               {[[f ? "28 jours" : "28 days", 2051, C.sky], [f ? "Prochain" : "Next duty", null, C.indigo]].map(([k, v, col], i) => (
-                <div key={i} className="rounded-2xl border p-2.5" style={{ borderColor: "#ffffff1a", background: "#ffffff0d" }}>
-                  <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>{k as string}</p>
-                  {v ? <b className="whitespace-nowrap text-[15px]" style={{ color: col as string }}><Count to={v as number} on={on} format={hm(locale)} /></b> : <b className="whitespace-nowrap text-[12px]">LFPO → LIRF</b>}
+                <div key={i} className="min-w-0 overflow-hidden rounded-2xl border p-2.5" style={{ borderColor: "#ffffff1a", background: "#ffffff0d" }}>
+                  <p className="truncate text-[9px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>{k as string}</p>
+                  {v ? <b className="whitespace-nowrap text-[15px]" style={{ color: col as string }}><Count to={v as number} on={on} format={hm(locale)} /></b> : <b className="block text-[12px] leading-tight">LFPO<br />→ LIRF</b>}
                 </div>
               ))}
             </div>
