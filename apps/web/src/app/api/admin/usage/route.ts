@@ -21,6 +21,8 @@ const FA_FREE_USD = 5;
 const FIXED = [
   { key: "supabase", usd: 25 },
   { key: "appleDeveloper", usd: 99 / 12 },
+  // Adzuna API plan, £12 a month (about $15)
+  { key: "adzuna", usd: 15.2 },
 ];
 /** Free allowances of the services billed by volume. */
 const QUOTA = { adzuna: { perMonth: 5000 }, resend: { perMonth: 3000, perDay: 100 }, adsblol: { perDay: 500 } };

@@ -2295,7 +2295,7 @@
           "anthropic": "estimated from tokens",
           "google": "estimated, free credit deducted",
           "flightaware": "estimated, $5 free / month",
-          "adzuna": "free",
+          "adzuna": "fixed plan, see below",
           "resend": "free up to the quota",
           "expo": "free",
           "adsblol": "free",
@@ -2329,7 +2329,8 @@
         "fixedTitle": "Fixed subscriptions",
         "fixed": {
           "supabase": "Supabase Pro (database)",
-          "appleDeveloper": "Apple Developer ($99 / year)"
+          "appleDeveloper": "Apple Developer ($99 / year)",
+          "adzuna": "Adzuna API (£12 / month)"
         },
         "disclaimer": "Estimates from public price lists (USD) and the calls counted by the server; each service's own invoice is what counts. Vercel, Stripe (fees on payments) and the Google maps shown in the browser are not counted here."
       }
