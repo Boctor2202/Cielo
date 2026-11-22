@@ -1,3 +1,5 @@
+import { meteredFetch } from "./server/usage";
+
 /**
  * Actual flight times from FlightAware AeroAPI (v4), looked up by aircraft registration and date, server-side
  * with FLIGHTAWARE_API_KEY (x-apikey header). Recent flights (≤ 10 days) come from /flights/{ident},
@@ -61,7 +63,7 @@ export async function flightsForRegistration(registration: string, date: string)
   const recent = ageDays < 9;
   const qs = new URLSearchParams({ ident_type: "registration", start: addDay(date, -1), end: addDay(date, 2), max_pages: "2" });
   const path = recent ? `/flights/${encodeURIComponent(ident)}` : `/history/flights/${encodeURIComponent(ident)}`;
-  const r = await fetch(`https://aeroapi.flightaware.com/aeroapi${path}?${qs}`, { headers: { "x-apikey": key, Accept: "application/json" }, cache: "no-store" });
+  const r = await meteredFetch("flightaware", recent ? "flights" : "historyFlights", `https://aeroapi.flightaware.com/aeroapi${path}?${qs}`, { headers: { "x-apikey": key, Accept: "application/json" }, cache: "no-store" });
   if (r.status === 404) return [];
   // the key's plan has no history (AeroAPI Personal): only the last ten days or so
   if (!recent && (r.status === 401 || r.status === 403)) throw new FlightAwareError("history_off", "no historical data on this AeroAPI plan", 403);
@@ -106,7 +108,7 @@ export async function trackForFlight(faFlightId: string, recent: boolean): Promi
   const key = process.env.FLIGHTAWARE_API_KEY;
   if (!key) throw new FlightAwareError("not_configured", "FLIGHTAWARE_API_KEY is not set", 503);
   const path = `${recent ? "" : "/history"}/flights/${encodeURIComponent(faFlightId)}/track`;
-  const r = await fetch(`https://aeroapi.flightaware.com/aeroapi${path}`, { headers: { "x-apikey": key, Accept: "application/json" }, cache: "no-store" });
+  const r = await meteredFetch("flightaware", recent ? "track" : "historyTrack", `https://aeroapi.flightaware.com/aeroapi${path}`, { headers: { "x-apikey": key, Accept: "application/json" }, cache: "no-store" });
   if (r.status === 404) throw new FlightAwareError("not_found", "no track", 404);
   if (!recent && (r.status === 401 || r.status === 403)) throw new FlightAwareError("history_off", "no historical data on this AeroAPI plan", 403);
   if (!r.ok) throw new FlightAwareError("upstream", `AeroAPI ${r.status}: ${(await r.text()).slice(0, 200)}`);

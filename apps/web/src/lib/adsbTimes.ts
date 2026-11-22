@@ -10,6 +10,7 @@ import { expandAirports, type AirportFile } from "@cielo/reference-data";
 import airportFile from "@cielo/reference-data/airports.json";
 import { AdsbError, aircraftByRegistration } from "./adsb";
 import type { FoundFlight } from "./flightaware";
+import { meteredFetch } from "./server/usage";
 
 const BASE = "https://api.adsb.lol";
 const DB_URL = "https://raw.githubusercontent.com/wiedehopf/tar1090-db/csv/aircraft.csv.gz";
@@ -65,7 +66,7 @@ export async function adsbFlights(reg: string, date: string, knownHex?: string):
   if (!hex) return [];
   const headers: Record<string, string> = { Accept: "application/json" };
   if (process.env.ADSBLOL_API_KEY) headers["x-api-key"] = process.env.ADSBLOL_API_KEY;
-  const r = await fetch(`${BASE}/1/trace/full/${hex}`, { headers, cache: "no-store" });
+  const r = await meteredFetch("adsblol", "trace", `${BASE}/1/trace/full/${hex}`, { headers, cache: "no-store" });
   if (r.status === 404) return [];
   if (r.status === 429) throw new AdsbError("quota", "adsb.lol quota reached", 429);
   if (!r.ok) throw new AdsbError("upstream", `adsb.lol ${r.status}`);

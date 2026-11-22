@@ -1,33 +1,35 @@
 import { PRICES_EUR } from "@cielo/core";
-import { handle, requireAdmin } from "@/lib/server/admin";
+import { adminIds, handle, requireAdmin } from "@/lib/server/admin";
+import { latestSubs, stageOf, type PilotRow, type SubRow } from "@/lib/server/pilotStage";
 import { thresholdStatus, type Revenue } from "@/lib/server/thresholds";
 
 export const dynamic = "force-dynamic";
 
 const daysAgo = (n: number) => new Date(Date.now() - n * 86400_000).toISOString();
 
-/** GET /api/admin/overview — sign-ups, subscribers, trials, estimated MRR, activity, open reports. */
+/** GET /api/admin/overview — sign-ups, subscribers, trials, estimated MRR, activity, open reports (admin accounts left out). */
 export function GET(req: Request) {
   return handle(async () => {
     const { db } = await requireAdmin(req);
     const yearStart = `${new Date().getUTCFullYear()}-01-01T00:00:00Z`;
+    const admins = adminIds();
+    const notAdmin = <T extends { not: (c: string, o: string, v: string) => T }>(q: T, col: string) => (admins.length ? q.not(col, "in", `(${admins.join(",")})`) : q);
     const [{ data: pilots }, { data: subs }, { data: stats }, { count: openReports }, { count: flights }, { data: revenue }] = await Promise.all([
-      db.from("pilots").select("id, created_at, subscription_tier, subscription_source, subscription_expires_at").is("deleted_at", null),
-      db.from("subscriptions").select("pilot_id, source, tier, status, current_period_end"),
-      db.from("admin_pilot_stats").select("pilot_id, flights, last_flight_change"),
+      notAdmin(db.from("pilots").select("id, created_at, trial_started_at, subscription_tier, subscription_source, subscription_expires_at").is("deleted_at", null), "id"),
+      notAdmin(db.from("subscriptions").select("pilot_id, source, tier, status, created_at, current_period_end"), "pilot_id"),
+      notAdmin(db.from("admin_pilot_stats").select("pilot_id, flights, last_flight_change"), "pilot_id"),
       db.from("feedback").select("id", { count: "exact", head: true }).in("status", ["new", "in_progress"]),
-      db.from("flights").select("id", { count: "exact", head: true }).is("deleted_at", null),
-      db.from("revenue_events").select("occurred_at, source, amount_eur_cents, proceeds_eur_cents, country").eq("environment", "production").gte("occurred_at", yearStart),
+      notAdmin(db.from("flights").select("id", { count: "exact", head: true }).is("deleted_at", null), "pilot_id"),
+      notAdmin(db.from("revenue_events").select("occurred_at, source, amount_eur_cents, proceeds_eur_cents, country").eq("environment", "production").gte("occurred_at", yearStart), "pilot_id"),
     ]);
     const now = Date.now();
-    const live = (exp?: string | null) => !exp || Date.parse(exp) > now;
-    const P = pilots ?? [];
-    const S = subs ?? [];
-    const paying = S.filter((s) => ["active", "past_due", "canceling", "billing_issue"].includes(s.status) && live(s.current_period_end));
-    const trials = S.filter((s) => s.status === "trialing" && live(s.current_period_end));
-    const paidIds = new Set([...paying, ...trials].map((s) => s.pilot_id));
-    // a plan granted from the admin (no store subscription behind it)
-    const comped = P.filter((p) => (p.subscription_tier === "basic" || p.subscription_tier === "premium") && !paidIds.has(p.id) && live(p.subscription_expires_at));
+    const P = (pilots ?? []) as PilotRow[];
+    const S = (subs ?? []) as SubRow[];
+    const latest = latestSubs(S);
+    const stages = P.map((p) => ({ p, s: latest.get(p.id), ...stageOf(p, latest.get(p.id), now) }));
+    const paying = stages.filter((x) => x.stage === "paying").map((x) => x.s!);
+    const trials = stages.filter((x) => x.stage === "trial");
+    const comped = stages.filter((x) => x.stage === "comped");
     const mrr = paying.reduce((s, x) => s + (x.tier === "premium" ? PRICES_EUR.premium : x.tier === "basic" ? PRICES_EUR.basic : 0), 0);
     // sign-ups per day, last 30 days
     const perDay: Record<string, number> = {};
@@ -44,6 +46,7 @@ export function GET(req: Request) {
       signupsPerDay: Object.entries(perDay).map(([date, n]) => ({ date, n })),
       paying: { total: paying.length, basic: paying.filter((s) => s.tier === "basic").length, max: paying.filter((s) => s.tier === "premium").length, stripe: paying.filter((s) => s.source === "stripe").length, apple: paying.filter((s) => s.source === "apple").length, google: paying.filter((s) => s.source === "google").length },
       trials: trials.length,
+      trialsEnded: stages.filter((x) => x.stage === "ended").length,
       comped: comped.length,
       canceled30: S.filter((s) => ["canceled", "expired"].includes(s.status) && s.current_period_end && s.current_period_end >= daysAgo(30)).length,
       mrr: Math.round(mrr * 100) / 100,

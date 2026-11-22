@@ -1,27 +1,66 @@
-import { handle, HttpError, requireAdmin } from "@/lib/server/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { adminIds, handle, HttpError, requireAdmin } from "@/lib/server/admin";
+import { latestSubs, stageOf, type PilotRow, type SubRow } from "@/lib/server/pilotStage";
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/admin/users?q= — pilots with plan, store subscription and activity (latest 300 or search). */
+/** Last sign-in of every account (auth), by id. */
+async function lastSignIns(db: SupabaseClient): Promise<Map<string, string>> {
+  const m = new Map<string, string>();
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await db.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error || !data) break;
+    for (const u of data.users) if (u.last_sign_in_at) m.set(u.id, u.last_sign_in_at);
+    if (data.users.length < 1000) break;
+  }
+  return m;
+}
+
+const latest = (...d: (string | null | undefined)[]) => d.filter((x): x is string => !!x).sort().at(-1) ?? null;
+
+/**
+ * GET /api/admin/users?q= — the subscribers (on a trial, paying, trial over, cancelled), newest first, and apart
+ * the pilots given a plan by hand. The admin accounts are left out.
+ */
 export function GET(req: Request) {
   return handle(async () => {
     const { db } = await requireAdmin(req);
-    const q = (new URL(req.url).searchParams.get("q") ?? "").trim();
-    let query = db.from("pilots").select("id, email, full_name, created_at, subscription_tier, subscription_source, subscription_expires_at, locale").is("deleted_at", null).order("created_at", { ascending: false }).limit(300);
-    if (q) query = query.or(`email.ilike.%${q.replace(/[%,()]/g, "")}%,full_name.ilike.%${q.replace(/[%,()]/g, "")}%`);
+    const q = (new URL(req.url).searchParams.get("q") ?? "").trim().replace(/[%,()]/g, "");
+    let query = db
+      .from("pilots")
+      .select("id, email, full_name, created_at, updated_at, trial_started_at, subscription_tier, subscription_source, subscription_expires_at, locale")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    const admins = adminIds();
+    if (admins.length) query = query.not("id", "in", `(${admins.join(",")})`);
+    if (q) query = query.or(`email.ilike.%${q}%,full_name.ilike.%${q}%`);
     const { data: pilots, error } = await query;
     if (error) throw error;
     const ids = (pilots ?? []).map((p) => p.id);
-    const [{ data: stats }, { data: subs }] = await Promise.all([
+    const [{ data: stats }, { data: subs }, signIns] = await Promise.all([
       db.from("admin_pilot_stats").select("pilot_id, flights, last_flight_change").in("pilot_id", ids),
-      db.from("subscriptions").select("pilot_id, source, tier, status, current_period_end, updated_at").in("pilot_id", ids).order("updated_at", { ascending: false }),
+      db.from("subscriptions").select("pilot_id, source, tier, status, created_at, current_period_end").in("pilot_id", ids),
+      lastSignIns(db),
     ]);
     const st = new Map((stats ?? []).map((s) => [s.pilot_id, s]));
-    const sub = new Map<string, (typeof subs extends (infer T)[] | null ? T : never)>();
-    for (const s of subs ?? []) if (!sub.has(s.pilot_id)) sub.set(s.pilot_id, s);
-    return Response.json({
-      users: (pilots ?? []).map((p) => ({ ...p, flights: st.get(p.id)?.flights ?? 0, lastActivity: st.get(p.id)?.last_flight_change ?? null, subscription: sub.get(p.id) ?? null })),
+    const sub = latestSubs(subs as SubRow[]);
+    const users = (pilots ?? []).map((p) => {
+      const s = sub.get(p.id);
+      return {
+        id: p.id,
+        email: p.email,
+        full_name: p.full_name,
+        created_at: p.created_at,
+        subscription_tier: p.subscription_tier,
+        subscription_expires_at: p.subscription_expires_at,
+        flights: st.get(p.id)?.flights ?? 0,
+        lastActivity: latest(signIns.get(p.id), st.get(p.id)?.last_flight_change, p.updated_at),
+        subscription: s ? { source: s.source, tier: s.tier, status: s.status } : null,
+        ...stageOf(p as PilotRow, s),
+      };
     });
+    return Response.json({ users, adminsHidden: admins.length });
   });
 }
 

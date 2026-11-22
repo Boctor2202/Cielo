@@ -1,13 +1,13 @@
 "use client";
 
 import { Check, Loader2, RefreshCw, Search, ShieldCheck, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Card, PageTitle, Readout, Segmented } from "@/components/app/ui";
 import { useCloud } from "@/lib/cloud";
 import { apiFetch } from "@/lib/report";
 
-type Tab = "overview" | "users" | "reports" | "platform";
+type Tab = "overview" | "users" | "apis" | "reports" | "platform";
 
 interface Overview {
   pilots: number;
@@ -16,6 +16,7 @@ interface Overview {
   signupsPerDay: { date: string; n: number }[];
   paying: { total: number; basic: number; max: number; stripe: number; apple: number; google: number };
   trials: number;
+  trialsEnded: number;
   comped: number;
   canceled30: number;
   mrr: number;
@@ -42,7 +43,11 @@ interface User {
   subscription_expires_at?: string | null;
   flights: number;
   lastActivity?: string | null;
-  subscription?: { source: string; tier: string; status: string; current_period_end?: string | null } | null;
+  subscription?: { source: string; tier: string; status: string } | null;
+  stage: Stage;
+  since: string;
+  trialEndsAt?: string;
+  renewsAt?: string | null;
 }
 interface Report {
   id: string;
@@ -93,6 +98,7 @@ export default function AdminPage() {
           options={[
             { value: "overview", label: t("tabs.overview") },
             { value: "users", label: t("tabs.users") },
+            { value: "apis", label: t("tabs.apis") },
             { value: "reports", label: t("tabs.reports") },
             { value: "platform", label: t("tabs.platform") },
           ]}
@@ -100,6 +106,7 @@ export default function AdminPage() {
       </div>
       {tab === "overview" && <OverviewTab />}
       {tab === "users" && <UsersTab />}
+      {tab === "apis" && <ApisTab />}
       {tab === "reports" && <ReportsTab />}
       {tab === "platform" && <PlatformTab />}
     </>
@@ -139,7 +146,7 @@ function OverviewTab() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Readout label={t("mrr")} value={eur(data.mrr)} sub={t("mrrSub", { basic: data.paying.basic, max: data.paying.max })} level="ok" />
         <Readout label={t("paying")} value={data.paying.total} sub={t("sources", { stripe: data.paying.stripe, apple: data.paying.apple, google: data.paying.google })} />
-        <Readout label={t("trials")} value={data.trials} sub={t("comped", { n: data.comped })} level="caution" />
+        <Readout label={t("trials")} value={data.trials} sub={t("comped", { n: data.comped, ended: data.trialsEnded })} level="caution" />
         <Readout label={t("pilots")} value={data.pilots} sub={t("signups", { d7: data.signups7, d30: data.signups30 })} />
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
@@ -198,15 +205,51 @@ function ThresholdsCard({ data, eur }: { data: Thresholds; eur: (n: number) => s
   );
 }
 
+type Stage = "trial" | "paying" | "ended" | "canceled" | "comped";
+
+function useDates() {
+  const locale = useLocale();
+  const t = useTranslations("app.admin.users");
+  const date = (s?: string | null) => (s ? new Date(s).toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" }) : "—");
+  const days = (s?: string | null) => (s ? Math.floor((Date.now() - Date.parse(s)) / 86400_000) : null);
+  /** "today", "3 d ago", "in 5 d" */
+  const ago = (s?: string | null) => {
+    const d = days(s);
+    if (d === null) return "—";
+    if (d === 0) return t("today");
+    return d > 0 ? t("daysAgo", { n: d }) : t("inDays", { n: -d });
+  };
+  return { date, ago, days };
+}
+
+function StageBadge({ stage }: { stage: Stage }) {
+  const t = useTranslations("app.admin.users.stage");
+  const tone = { paying: "bg-accent/15 text-accent", trial: "bg-chart-2/15 text-chart-2", ended: "bg-surface-2 text-muted", canceled: "bg-warning/15 text-warning", comped: "bg-caution/15 text-caution" }[stage];
+  return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${tone}`}>{t(stage)}</span>;
+}
+
+function PlanAction({ u, busy, grant }: { u: User; busy: boolean; grant: (u: User, tier: "basic" | "premium" | "free") => void }) {
+  const t = useTranslations("app.admin.users");
+  const tp = useTranslations("app.plans");
+  return (
+    <select className="input !w-auto !py-1 text-xs" value="" disabled={busy} onChange={(e) => e.target.value && grant(u, e.target.value as "basic" | "premium" | "free")} aria-label={t("action")}>
+      <option value="">{t("action")}</option>
+      <option value="premium">{t("grant", { plan: tp("premium") })}</option>
+      <option value="basic">{t("grant", { plan: tp("basic") })}</option>
+      <option value="free">{t("revoke")}</option>
+    </select>
+  );
+}
+
 function UsersTab() {
   const t = useTranslations("app.admin.users");
   const tp = useTranslations("app.plans");
-  const locale = useLocale();
+  const { date, ago } = useDates();
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
-  const { data, error, reload } = useApi<{ users: User[] }>(`/api/admin/users${query ? `?q=${encodeURIComponent(query)}` : ""}`);
+  const [filter, setFilter] = useState<"all" | Exclude<Stage, "comped">>("all");
+  const { data, error, reload } = useApi<{ users: User[]; adminsHidden: number }>(`/api/admin/users${query ? `?q=${encodeURIComponent(query)}` : ""}`);
   const [busy, setBusy] = useState<string | null>(null);
-  const date = (s?: string | null) => (s ? new Date(s).toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" }) : "—");
   const grant = async (u: User, tier: "basic" | "premium" | "free") => {
     if (tier !== "free" && !confirm(t("confirmGrant", { plan: tp(tier), who: u.email ?? u.id }))) return;
     if (tier === "free" && !confirm(t("confirmRevoke", { who: u.email ?? u.id }))) return;
@@ -215,10 +258,20 @@ function UsersTab() {
     setBusy(null);
     reload();
   };
+  const subscribers = (data?.users ?? []).filter((u) => u.stage !== "comped");
+  const comped = (data?.users ?? []).filter((u) => u.stage === "comped");
+  const count = (s: Stage) => subscribers.filter((u) => u.stage === s).length;
+  const shown = filter === "all" ? subscribers : subscribers.filter((u) => u.stage === filter);
+  const who = (u: User) => (
+    <>
+      <p className="font-medium">{u.full_name || "—"}</p>
+      <p className="text-xs text-muted">{u.email ?? u.id}</p>
+    </>
+  );
   return (
-    <Card pad={false}>
+    <div className="space-y-5">
       <form
-        className="flex gap-2 p-4"
+        className="flex gap-2"
         onSubmit={(e) => {
           e.preventDefault();
           setQuery(q.trim());
@@ -230,55 +283,257 @@ function UsersTab() {
         </div>
         <button className="btn btn-secondary" type="submit">{t("searchBtn")}</button>
       </form>
-      {error && <p className="px-4 pb-4 text-warning">{t("error")}</p>}
-      {!data && !error && <Loader2 className="m-4 animate-spin text-muted" />}
+      {error && <p className="text-warning">{t("error")}</p>}
+      {!data && !error && <Loader2 className="animate-spin text-muted" />}
       {data && (
+        <>
+          <Card pad={false}>
+            <div className="flex flex-wrap items-center justify-between gap-3 p-4">
+              <h2 className="font-semibold">{t("subscribers", { n: subscribers.length })}</h2>
+              <div className="flex flex-wrap gap-1.5">
+                {(["all", "trial", "paying", "ended", "canceled"] as const).map((f) => (
+                  <button key={f} type="button" onClick={() => setFilter(f)} className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${filter === f ? "bg-accent text-black" : "bg-surface-2 text-muted hover:text-text"}`}>
+                    {f === "all" ? t("all") : t(`stage.${f}`)} · {f === "all" ? subscribers.length : count(f)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[860px] text-sm">
+                <thead>
+                  <tr className="text-left text-muted">
+                    <th className="px-4 py-2 font-medium">{t("pilot")}</th>
+                    <th className="px-4 py-2 font-medium">{t("phase")}</th>
+                    <th className="px-4 py-2 font-medium">{t("since")}</th>
+                    <th className="px-4 py-2 font-medium">{t("next")}</th>
+                    <th className="px-4 py-2 font-medium">{t("lastActivity")}</th>
+                    <th className="px-4 py-2 text-right font-medium">{t("flights")}</th>
+                    <th className="px-4 py-2" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {shown.map((u) => (
+                    <tr key={u.id} className="border-t border-border/50">
+                      <td className="px-4 py-2.5">{who(u)}</td>
+                      <td className="px-4 py-2.5">
+                        <StageBadge stage={u.stage} />
+                        <p className="mt-1 text-[11px] text-muted">
+                          {u.subscription ? `${tp(u.subscription.tier as "basic" | "premium")} · ${t(`source.${u.subscription.source}`)}` : u.stage === "trial" ? t("noCard") : "—"}
+                        </p>
+                      </td>
+                      <td className="px-4 py-2.5 text-xs">
+                        <p>{date(u.since)}</p>
+                        <p className="text-muted">{ago(u.since)}</p>
+                      </td>
+                      <td className="px-4 py-2.5 text-xs">
+                        {u.stage === "trial" && u.trialEndsAt ? (
+                          <>
+                            <p>{t("trialEnds")}</p>
+                            <p className="text-muted">{date(u.trialEndsAt)} · {ago(u.trialEndsAt)}</p>
+                          </>
+                        ) : u.stage === "paying" && u.renewsAt ? (
+                          <>
+                            <p>{u.subscription?.status === "canceling" ? t("endsOn") : t("renews")}</p>
+                            <p className="text-muted">{date(u.renewsAt)}</p>
+                          </>
+                        ) : u.stage === "ended" && u.trialEndsAt ? (
+                          <p className="text-muted">{t("trialEnded", { date: date(u.trialEndsAt) })}</p>
+                        ) : u.stage === "canceled" ? (
+                          <p className="text-muted">{u.subscription ? t(`status.${u.subscription.status}`) : "—"}</p>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-xs">
+                        <p>{ago(u.lastActivity)}</p>
+                        <p className="text-muted">{date(u.lastActivity)}</p>
+                      </td>
+                      <td className="num px-4 py-2.5 text-right">{u.flights}</td>
+                      <td className="px-4 py-2.5"><PlanAction u={u} busy={busy === u.id} grant={(x, tier) => void grant(x, tier)} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {shown.length === 0 && <p className="p-4 text-sm text-muted">{t("none")}</p>}
+            </div>
+            {data.adminsHidden > 0 && <p className="px-4 py-3 text-[11px] text-muted">{t("adminsHidden", { n: data.adminsHidden })}</p>}
+          </Card>
+
+          <Card pad={false}>
+            <div className="p-4">
+              <h2 className="font-semibold">{t("compedTitle", { n: comped.length })}</h2>
+              <p className="mt-1 text-xs text-muted">{t("compNote")}</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead>
+                  <tr className="text-left text-muted">
+                    <th className="px-4 py-2 font-medium">{t("pilot")}</th>
+                    <th className="px-4 py-2 font-medium">{t("plan")}</th>
+                    <th className="px-4 py-2 font-medium">{t("signedUp")}</th>
+                    <th className="px-4 py-2 font-medium">{t("lastActivity")}</th>
+                    <th className="px-4 py-2 text-right font-medium">{t("flights")}</th>
+                    <th className="px-4 py-2" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {comped.map((u) => (
+                    <tr key={u.id} className="border-t border-border/50">
+                      <td className="px-4 py-2.5">{who(u)}</td>
+                      <td className="px-4 py-2.5 text-xs">
+                        <span className={`rounded-full px-2 py-0.5 font-semibold ${u.subscription_tier === "premium" ? "bg-accent/15 text-accent" : "bg-chart-2/15 text-chart-2"}`}>{tp(u.subscription_tier)}</span>
+                        <p className="mt-1 text-muted">{u.subscription_expires_at ? t("until", { date: date(u.subscription_expires_at) }) : t("noEnd")}</p>
+                      </td>
+                      <td className="px-4 py-2.5 text-xs">{date(u.created_at)}</td>
+                      <td className="px-4 py-2.5 text-xs">
+                        <p>{ago(u.lastActivity)}</p>
+                        <p className="text-muted">{date(u.lastActivity)}</p>
+                      </td>
+                      <td className="num px-4 py-2.5 text-right">{u.flights}</td>
+                      <td className="px-4 py-2.5"><PlanAction u={u} busy={busy === u.id} grant={(x, tier) => void grant(x, tier)} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {comped.length === 0 && <p className="p-4 text-sm text-muted">{t("noneComped")}</p>}
+            </div>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
+
+interface Usage {
+  ready: boolean;
+  reason?: string;
+  since: string | null;
+  services: { service: string; calls: number; callsToday: number; errors: number; input: number; output: number; costUsd: number; actual: boolean; projectedUsd: number; lastMonthUsd: number; lastMonthCalls: number; ops: { op: string; calls: number; errors: number; input: number; output: number; costUsd: number }[]; quota: { perDay?: number; perMonth?: number } | null }[];
+  perDay: { date: string; calls: number; costUsd: number }[];
+  fixed: { key: string; usd: number }[];
+  totals: { variableUsd: number; projectedUsd: number; lastMonthUsd: number; fixedUsd: number };
+}
+
+function ApisTab() {
+  const t = useTranslations("app.admin.apis");
+  const locale = useLocale();
+  const { data, error, reload } = useApi<Usage>("/api/admin/usage");
+  const [open, setOpen] = useState<string | null>(null);
+  const usd = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: n > 0 && n < 1 ? 3 : 2 }).format(n);
+  const num = (n: number) => Math.round(n).toLocaleString(locale);
+  const tok = (n: number) => (n >= 1e6 ? `${(n / 1e6).toLocaleString(locale, { maximumFractionDigits: 1 })} M` : n >= 1e3 ? `${(n / 1e3).toLocaleString(locale, { maximumFractionDigits: 0 })} k` : String(n));
+  if (error) return <p className="text-warning">{t("error")}</p>;
+  if (!data) return <Loader2 className="animate-spin text-muted" />;
+  if (!data.ready) return <Card><p className="text-sm text-muted">{t("notReady")}</p></Card>;
+  const max = Math.max(1, ...data.perDay.map((d) => d.calls));
+  const calls = data.services.reduce((s, x) => s + x.calls, 0);
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Readout label={t("month")} value={usd(data.totals.variableUsd)} sub={t("monthSub")} />
+        <Readout label={t("projected")} value={usd(data.totals.projectedUsd)} sub={t("projectedSub", { fixed: usd(data.totals.fixedUsd) })} level="caution" />
+        <Readout label={t("lastMonth")} value={usd(data.totals.lastMonthUsd)} sub={t("lastMonthSub")} level="neutral" />
+        <Readout label={t("calls")} value={num(calls)} sub={data.since ? t("countedSince", { date: new Date(data.since).toLocaleDateString(locale) }) : t("noData")} level="neutral" />
+      </div>
+      <Card title={t("chart")}>
+        <div className="flex h-32 items-end gap-1">
+          {data.perDay.map((d) => (
+            <div key={d.date} className="flex-1" title={`${d.date} · ${num(d.calls)} · ${usd(d.costUsd)}`}>
+              <div className="rounded-t bg-accent/80" style={{ height: `${Math.max(2, (d.calls / max) * 120)}px` }} />
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 flex justify-between text-[11px] text-muted">
+          <span>{data.perDay[0]?.date}</span>
+          <span>{data.perDay.at(-1)?.date}</span>
+        </div>
+      </Card>
+      <Card pad={false}>
+        <div className="flex items-center justify-between p-4">
+          <h2 className="font-semibold">{t("services")}</h2>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={reload}><RefreshCw size={14} /></button>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="text-left text-muted">
-                <th className="px-4 py-2 font-medium">{t("pilot")}</th>
-                <th className="px-4 py-2 font-medium">{t("plan")}</th>
-                <th className="px-4 py-2 font-medium">{t("store")}</th>
-                <th className="px-4 py-2 text-right font-medium">{t("flights")}</th>
-                <th className="px-4 py-2 font-medium">{t("signedUp")}</th>
-                <th className="px-4 py-2 font-medium">{t("lastActivity")}</th>
-                <th className="px-4 py-2" />
+                <th className="px-4 py-2 font-medium">{t("service")}</th>
+                <th className="px-4 py-2 text-right font-medium">{t("callsMonth")}</th>
+                <th className="px-4 py-2 text-right font-medium">{t("today")}</th>
+                <th className="px-4 py-2 text-right font-medium">{t("errors")}</th>
+                <th className="px-4 py-2 text-right font-medium">{t("cost")}</th>
+                <th className="px-4 py-2 text-right font-medium">{t("projection")}</th>
+                <th className="px-4 py-2 text-right font-medium">{t("prev")}</th>
               </tr>
             </thead>
             <tbody>
-              {data.users.map((u) => (
-                <tr key={u.id} className="border-t border-border/50">
-                  <td className="px-4 py-2.5">
-                    <p className="font-medium">{u.full_name || "—"}</p>
-                    <p className="text-xs text-muted">{u.email ?? u.id}</p>
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${u.subscription_tier === "premium" ? "bg-accent/15 text-accent" : u.subscription_tier === "basic" ? "bg-chart-2/15 text-chart-2" : "bg-surface-2 text-muted"}`}>{tp(u.subscription_tier)}</span>
-                    {u.subscription_tier !== "free" && !u.subscription && <span className="ml-1.5 text-[11px] text-muted">{t("comped")}</span>}
-                    {u.subscription_expires_at && <p className="mt-0.5 text-[11px] text-muted">{t("until", { date: date(u.subscription_expires_at) })}</p>}
-                  </td>
-                  <td className="px-4 py-2.5 text-xs">{u.subscription ? `${u.subscription.source} · ${u.subscription.status}` : "—"}</td>
-                  <td className="num px-4 py-2.5 text-right">{u.flights}</td>
-                  <td className="px-4 py-2.5 text-xs">{date(u.created_at)}</td>
-                  <td className="px-4 py-2.5 text-xs">{date(u.lastActivity)}</td>
-                  <td className="px-4 py-2.5">
-                    <select className="input !w-auto !py-1 text-xs" value="" disabled={busy === u.id} onChange={(e) => e.target.value && void grant(u, e.target.value as "basic" | "premium" | "free")} aria-label={t("action")}>
-                      <option value="">{t("action")}</option>
-                      <option value="premium">{t("grant", { plan: tp("premium") })}</option>
-                      <option value="basic">{t("grant", { plan: tp("basic") })}</option>
-                      <option value="free">{t("revoke")}</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
+              {data.services.map((s) => {
+                const quota = s.quota?.perDay ? s.callsToday / s.quota.perDay : s.quota?.perMonth ? s.calls / s.quota.perMonth : 0;
+                return (
+                  <Fragment key={s.service}>
+                    <tr className="cursor-pointer border-t border-border/50 hover:bg-surface-2/40" onClick={() => setOpen(open === s.service ? null : s.service)}>
+                      <td className="px-4 py-2.5">
+                        <p className="font-medium">{t(`name.${s.service}`)}</p>
+                        <p className="text-[11px] text-muted">
+                          {t(`what.${s.service}`)}
+                          {s.service === "anthropic" && s.input ? ` · ${t("tokens", { in: tok(s.input), out: tok(s.output) })}` : ""}
+                        </p>
+                        {s.quota && (
+                          <div className="mt-1.5 flex items-center gap-2">
+                            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-surface-2">
+                              <div className={`h-full rounded-full ${quota > 0.9 ? "bg-warning" : quota > 0.6 ? "bg-caution" : "bg-accent"}`} style={{ width: `${Math.min(100, quota * 100)}%` }} />
+                            </div>
+                            <span className="text-[11px] text-muted">{s.quota.perDay ? t("quotaDay", { n: num(s.callsToday), max: num(s.quota.perDay) }) : t("quotaMonth", { n: num(s.calls), max: num(s.quota.perMonth ?? 0) })}</span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="num px-4 py-2.5 text-right">{num(s.calls)}</td>
+                      <td className="num px-4 py-2.5 text-right">{num(s.callsToday)}</td>
+                      <td className={`num px-4 py-2.5 text-right ${s.errors ? "text-warning" : "text-muted"}`}>{num(s.errors)}</td>
+                      <td className="num px-4 py-2.5 text-right font-semibold">
+                        {usd(s.costUsd)}
+                        <p className="text-[10px] font-normal text-muted">{s.actual ? t("actual") : t(`basis.${s.service}`)}</p>
+                      </td>
+                      <td className="num px-4 py-2.5 text-right">{usd(s.projectedUsd)}</td>
+                      <td className="num px-4 py-2.5 text-right text-muted">{usd(s.lastMonthUsd)}</td>
+                    </tr>
+                    {open === s.service && s.ops.length > 0 && (
+                      <tr className="bg-surface-2/30">
+                        <td colSpan={7} className="px-4 py-2">
+                          <ul className="space-y-1 text-xs">
+                            {s.ops.map((o) => (
+                              <li key={o.op} className="flex justify-between gap-3">
+                                <span>{t.has(`op.${o.op}`) ? t(`op.${o.op}`) : o.op}</span>
+                                <span className="num text-muted">
+                                  {num(o.calls)} {t("callsShort")}
+                                  {o.errors ? ` · ${num(o.errors)} ${t("errorsShort")}` : ""}
+                                  {o.input ? ` · ${tok(o.input)} / ${tok(o.output)} tokens · ${usd(o.costUsd)}` : ""}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
-          {data.users.length === 0 && <p className="p-4 text-sm text-muted">{t("none")}</p>}
         </div>
-      )}
-      <p className="px-4 py-3 text-[11px] text-muted">{t("compNote")}</p>
-    </Card>
+      </Card>
+      <Card title={t("fixedTitle")}>
+        <ul className="space-y-2 text-sm">
+          {data.fixed.map((f) => (
+            <li key={f.key} className="flex justify-between gap-3">
+              <span>{t(`fixed.${f.key}`)}</span>
+              <span className="num">{t("perMonth", { amount: usd(f.usd) })}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-xs text-muted">{t("disclaimer")}</p>
+      </Card>
+    </div>
   );
 }
 

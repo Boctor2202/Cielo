@@ -14,7 +14,7 @@ export function adminDb(): SupabaseClient | null {
   return admin;
 }
 
-const adminIds = () => (process.env.ADMIN_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+export const adminIds = () => (process.env.ADMIN_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 
 /** The signed-in user behind the request's Bearer token (Supabase access token), or null. */
 export async function userFrom(req: Request) {

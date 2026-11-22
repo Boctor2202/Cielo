@@ -1,6 +1,7 @@
 import { SITE } from "@/config/site";
 import { adminDb } from "@/lib/server/admin";
 import { rateLimited } from "@/lib/places";
+import { meteredFetch } from "@/lib/server/usage";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
   let mailed = false;
   const key = process.env.RESEND_API_KEY;
   if (key) {
-    const r = await fetch("https://api.resend.com/emails", {
+    const r = await meteredFetch("resend", "contact", "https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({

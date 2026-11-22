@@ -1,5 +1,9 @@
 import { unstable_cache } from "next/cache";
 import { collectJobs, fetchAdzuna } from "@cielo/jobs";
+import { meter } from "@/lib/server/usage";
+
+/** Adzuna searches made per refresh (one per query of packages/jobs). */
+const ADZUNA_CALLS = 2;
 
 /**
  * Adzuna's offers, kept 12 hours in Vercel's data cache, which outlives deployments: each deployment rebuilds
@@ -9,6 +13,7 @@ import { collectJobs, fetchAdzuna } from "@cielo/jobs";
 const adzunaCached = unstable_cache(
   async (appId: string, appKey: string) => {
     const r = await fetchAdzuna(appId, appKey);
+    meter("adzuna", "search", { calls: ADZUNA_CALLS, errors: r.errors.length });
     if (!r.raws.length && r.errors.length) throw new Error(`adzuna: ${r.errors.slice(0, 3).join("; ")}`);
     return r;
   },
