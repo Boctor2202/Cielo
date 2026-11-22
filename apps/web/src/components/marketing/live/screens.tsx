@@ -344,9 +344,19 @@ export function PhoneLive({ className = "", variant = "home" }: { className?: st
             </div>
           </>
         ) : (
-          <div className="mt-3 overflow-hidden rounded-2xl">
-            <MapMini on={on} />
-          </div>
+          <>
+            <div className="mt-3 overflow-hidden rounded-2xl">
+              <MapMini on={on} />
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {[[f ? "vols" : "flights", 584], [f ? "pays" : "countries", 20]].map(([k, v]) => (
+                <div key={k as string} className="rounded-2xl border p-2.5" style={{ borderColor: "#ffffff1a", background: "#ffffff0d" }}>
+                  <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>{k as string}</p>
+                  <b className="text-[16px]"><Count to={v as number} on={on} /></b>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
