@@ -108,19 +108,19 @@ export function LogbookLive({ className = "" }: { className?: string }) {
   return (
     <div ref={ref} className={className}>
       <AppWindow title={f ? "Carnet de vol" : "Logbook"} bodyClass="p-0">
-        <div className="grid grid-cols-[48px_1fr_56px_56px_56px] gap-2 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: C.muted, background: C.surface }}>
+        <div className="grid grid-cols-[38px_1fr_40px_40px_44px] sm:grid-cols-[48px_1fr_56px_56px_56px] gap-2 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: C.muted, background: C.surface }}>
           <span>Date</span><span>{f ? "Route" : "Route"}</span><span className="text-right">{f ? "Nuit" : "Night"}</span><span className="text-right">IFR</span><span className="text-right">Total</span>
         </div>
         {rows.map(([d, a, b, t, n, ifr, fn], i) => (
-          <motion.div key={i} className="grid grid-cols-[48px_1fr_56px_56px_56px] items-center gap-2 border-b px-4 py-2.5 text-[12.5px]" style={{ borderColor: C.line }} initial={{ opacity: 0, x: -14 }} animate={on ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.4, delay: 0.2 + i * 0.18, ease }}>
+          <motion.div key={i} className="grid grid-cols-[38px_1fr_40px_40px_44px] items-center gap-2 border-b px-3 py-2.5 text-[11px] sm:grid-cols-[48px_1fr_56px_56px_56px] sm:px-4 sm:text-[12.5px]" style={{ borderColor: C.line }} initial={{ opacity: 0, x: -14 }} animate={on ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.4, delay: 0.2 + i * 0.18, ease }}>
             <span style={{ color: C.muted }}>{d}</span>
-            <span className="flex items-center gap-2"><b className="font-mono">{a} → {b}</b><span className="rounded px-1.5 text-[10px] font-bold" style={{ background: "#22c55e26", color: C.accent2 }}>{fn}</span></span>
+            <span className="flex min-w-0 items-center gap-1.5 sm:gap-2"><b className="whitespace-nowrap font-mono text-[11px] sm:text-[12.5px]">{a} → {b}</b><span className="hidden rounded px-1.5 text-[10px] font-bold sm:inline" style={{ background: "#22c55e26", color: C.accent2 }}>{fn}</span></span>
             <span className="text-right tabular-nums" style={{ color: n ? C.indigo : C.muted }}>{n ? hm(locale)(n) : "—"}</span>
             <span className="text-right tabular-nums" style={{ color: C.sky }}>{hm(locale)(ifr)}</span>
             <b className="text-right tabular-nums">{hm(locale)(t)}</b>
           </motion.div>
         ))}
-        <div className="grid grid-cols-[48px_1fr_56px_56px_56px] gap-2 px-4 py-3 text-[12.5px] font-bold" style={{ background: "#22c55e14" }}>
+        <div className="grid grid-cols-[38px_1fr_40px_40px_44px] sm:grid-cols-[48px_1fr_56px_56px_56px] gap-2 px-4 py-3 text-[12.5px] font-bold" style={{ background: "#22c55e14" }}>
           <span />
           <span>{f ? "Total de la page" : "Page total"}</span>
           <span className="text-right" style={{ color: C.indigo }}><Count to={107} on={on} format={hm(locale)} delay={0.3} /></span>
@@ -327,9 +327,9 @@ export function PhoneLive({ className = "", variant = "home" }: { className?: st
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
               {[[f ? "28 jours" : "28 days", 2051, C.sky], [f ? "Prochain" : "Next duty", null, C.indigo]].map(([k, v, col], i) => (
-                <div key={i} className="rounded-2xl border p-2.5" style={{ borderColor: "#ffffff1a", background: "#ffffff0d" }}>
-                  <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>{k as string}</p>
-                  {v ? <b className="whitespace-nowrap text-[15px]" style={{ color: col as string }}><Count to={v as number} on={on} format={hm(locale)} /></b> : <b className="whitespace-nowrap text-[12px]">LFPO → LIRF</b>}
+                <div key={i} className="min-w-0 overflow-hidden rounded-2xl border p-2.5" style={{ borderColor: "#ffffff1a", background: "#ffffff0d" }}>
+                  <p className="truncate text-[9px] font-bold uppercase tracking-wider" style={{ color: C.muted }}>{k as string}</p>
+                  {v ? <b className="whitespace-nowrap text-[15px]" style={{ color: col as string }}><Count to={v as number} on={on} format={hm(locale)} /></b> : <b className="block text-[12px] leading-tight">LFPO<br />→ LIRF</b>}
                 </div>
               ))}
             </div>
