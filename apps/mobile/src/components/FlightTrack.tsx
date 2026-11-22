@@ -151,10 +151,10 @@ function FlightContextView({ flightId, points }: { flightId: string; points: Tra
   return (
     <View style={{ gap: 8, borderTopWidth: 1, borderTopColor: c.scheme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(10,22,38,0.1)", paddingTop: 10 }}>
       <Txt variant="label">{t("ctx.airspaces")}</Txt>
-      {data.missing.includes("airspace") ? (
+      {data.missing.includes("airspace") || data.missing.includes("airspaceError") ? (
         <Txt variant="small">{t("ctx.airspaceSoon")}</Txt>
       ) : main.length + firs.length === 0 ? (
-        <Txt variant="small">{data.missing.includes("airspaceError") ? t("ctx.error") : t("ctx.none")}</Txt>
+        <Txt variant="small">{t("ctx.none")}</Txt>
       ) : (
         <>
           <Row style={{ flexWrap: "wrap" }} gap={6}>

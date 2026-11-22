@@ -2009,7 +2009,7 @@
       "context": {
         "loading": "Espaces aériens et vent…",
         "airspaces": "Espaces aériens traversés",
-        "airspaceSoon": "Les espaces aériens traversés s'afficheront ici dès que la source openAIP sera activée.",
+        "airspaceSoon": "Espaces aériens bientôt disponibles.",
         "none": "Aucun espace aérien contrôlé ou réglementé traversé.",
         "error": "Indisponible pour le moment.",
         "class": "classe {c}",

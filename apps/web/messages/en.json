@@ -2009,7 +2009,7 @@
       "context": {
         "loading": "Airspaces and wind…",
         "airspaces": "Airspaces crossed",
-        "airspaceSoon": "The airspaces crossed will show here once the openAIP source is switched on.",
+        "airspaceSoon": "Airspaces coming soon.",
         "none": "No controlled or regulated airspace crossed.",
         "error": "Unavailable right now.",
         "class": "class {c}",

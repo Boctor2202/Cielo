@@ -69,10 +69,10 @@ export function FlightContext({ flightId, points }: { flightId: string; points: 
     <div className="mt-5 space-y-4 border-t border-border pt-4">
       <div>
         <p className="mono-label">{t("airspaces")}</p>
-        {data.missing.includes("airspace") ? (
+        {data.missing.includes("airspace") || data.missing.includes("airspaceError") ? (
           <p className="mt-1.5 text-xs text-muted">{t("airspaceSoon")}</p>
         ) : main.length + firs.length === 0 ? (
-          <p className="mt-1.5 text-xs text-muted">{data.missing.includes("airspaceError") ? t("error") : t("none")}</p>
+          <p className="mt-1.5 text-xs text-muted">{t("none")}</p>
         ) : (
           <>
             <div className="mt-2 flex flex-wrap gap-1.5">
