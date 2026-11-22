@@ -2209,6 +2209,14 @@
           "adsblol": "Radar adsb.lol",
           "flightaware": "Horaires réels (FlightAware)",
           "anthropic": "Lecture par IA (Anthropic)"
+        },
+        "adsb": {
+          "title": "Bases d'avions ADS-B",
+          "help": "Vérifie quelle base ouverte connaît l'adresse Mode S d'une immatriculation (sans elle, la recherche ADS-B ne trouve pas l'avion).",
+          "check": "Vérifier",
+          "unknown": "inconnu",
+          "failed": "erreur",
+          "error": "Vérification impossible."
         }
       },
       "apis": {

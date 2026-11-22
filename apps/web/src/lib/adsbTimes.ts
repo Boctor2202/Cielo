@@ -56,26 +56,64 @@ async function hexdbHex(reg: string): Promise<string | undefined> {
   return isHex(h) ? h.toLowerCase() : undefined;
 }
 
+/** ADS-B Exchange's open aircraft database (one JSON object per line), loaded once per server instance. */
+const ADSBX_DB = "https://downloads.adsbexchange.com/downloads/basic-ac-db.json.gz";
+let adsbxDb: Promise<Map<string, string>> | null = null;
+function adsbxRegistrations(): Promise<Map<string, string>> {
+  adsbxDb ??= fetch(ADSBX_DB, { signal: AbortSignal.timeout(20000), cache: "no-store" })
+    .then(async (r) => {
+      if (!r.ok) throw new Error(`adsbx db ${r.status}`);
+      const text = gunzipSync(Buffer.from(await r.arrayBuffer())).toString("utf8");
+      const m = new Map<string, string>();
+      for (const line of text.split("\n")) {
+        const reg = /"reg":"([^"]+)"/.exec(line)?.[1];
+        const icao = /"icao":"([0-9a-fA-F]{6})"/.exec(line)?.[1];
+        if (reg && icao) m.set(reg.replace(/[^A-Z0-9]/gi, "").toUpperCase(), icao.toLowerCase());
+      }
+      return m;
+    })
+    .catch((e) => {
+      adsbxDb = null;
+      throw e;
+    });
+  return adsbxDb;
+}
+
+/** Other community networks, live: the aircraft is found by registration while it is flying. */
+async function liveHex(base: string, reg: string): Promise<string | undefined> {
+  const r = await fetch(`${base}/${encodeURIComponent(reg)}`, { signal: timeout(), cache: "no-store" });
+  if (!r.ok) return undefined;
+  const d = (await r.json()) as { ac?: { hex?: string }[]; aircraft?: { hex?: string }[] };
+  const h = (d.ac ?? d.aircraft ?? [])[0]?.hex;
+  return isHex(h) ? h.toLowerCase() : undefined;
+}
+
+export const HEX_SOURCES: { key: string; find: (reg: string) => Promise<string | undefined> }[] = [
+  { key: "adsb.lol (live)", find: async (reg) => (await aircraftByRegistration(reg).catch(() => []))[0]?.hex?.toLowerCase() },
+  { key: "tar1090-db", find: async (reg) => (await registrations()).get(reg.replace(/[^A-Z0-9]/gi, "").toUpperCase()) },
+  { key: "ADS-B Exchange db", find: async (reg) => (await adsbxRegistrations()).get(reg.replace(/[^A-Z0-9]/gi, "").toUpperCase()) },
+  { key: "adsbdb.com", find: adsbdbHex },
+  { key: "hexdb.io", find: hexdbHex },
+  { key: "airplanes.live (live)", find: (reg) => liveHex("https://api.airplanes.live/v2/reg", reg) },
+  { key: "adsb.fi (live)", find: (reg) => liveHex("https://opendata.adsb.fi/api/v2/registration", reg) },
+];
+
 // answers found by the slower sources, kept on this instance
 const learned = new Map<string, string>();
 
 /**
- * The aircraft's Mode S address: live on adsb.lol, then the tar1090 database, then adsbdb.com and hexdb.io
- * (newer registrations, often missing from the first two: recent business jets, re-registered aircraft).
+ * The aircraft's Mode S address, from the first open source that knows the registration: live on adsb.lol,
+ * the tar1090 and ADS-B Exchange databases, adsbdb.com, hexdb.io, then live on airplanes.live and adsb.fi
+ * (newer registrations are often missing from the first ones: recent business jets, re-registered aircraft).
  */
 export async function hexForRegistration(reg: string): Promise<string | undefined> {
   const key = reg.replace(/[^A-Z0-9]/gi, "").toUpperCase();
   if (learned.has(key)) return learned.get(key);
-  const live = await aircraftByRegistration(reg).catch(() => []);
-  if (live[0]?.hex) return live[0].hex.toLowerCase();
-  const fromDb = await registrations().then((m) => m.get(key)).catch(() => undefined);
-  if (fromDb) return fromDb;
-  const dashed = reg.toUpperCase();
-  for (const src of [adsbdbHex, hexdbHex]) {
-    const h = await src(dashed).catch(() => undefined);
-    if (h) {
-      learned.set(key, h);
-      return h;
+  for (const [i, src] of HEX_SOURCES.entries()) {
+    const h = await src.find(reg.toUpperCase()).catch(() => undefined);
+    if (isHex(h)) {
+      if (i > 1) learned.set(key, h.toLowerCase());
+      return h.toLowerCase();
     }
   }
   return undefined;

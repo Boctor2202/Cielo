@@ -2209,6 +2209,14 @@
           "adsblol": "adsb.lol radar",
           "flightaware": "Actual times (FlightAware)",
           "anthropic": "AI reading (Anthropic)"
+        },
+        "adsb": {
+          "title": "ADS-B aircraft databases",
+          "help": "Checks which open database knows a registration's Mode S address (without it, the ADS-B lookup cannot find the aircraft).",
+          "check": "Check",
+          "unknown": "unknown",
+          "failed": "error",
+          "error": "Could not check."
         }
       },
       "apis": {

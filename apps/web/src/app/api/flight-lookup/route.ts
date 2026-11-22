@@ -4,6 +4,8 @@ import { adminDb, userFrom } from "@/lib/server/admin";
 import { adsbFlights } from "@/lib/adsbTimes";
 
 export const dynamic = "force-dynamic";
+// the open aircraft databases are downloaded on first use by an instance
+export const maxDuration = 60;
 
 /** Answers already paid for, in memory on this instance (the database keeps them for good). */
 const cache = new Map<string, { at: number; ttl: number; flights: FoundFlight[] }>();

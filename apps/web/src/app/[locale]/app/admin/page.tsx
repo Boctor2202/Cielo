@@ -673,6 +673,7 @@ function PlatformTab() {
           ))}
         </ul>
       </Card>
+      <AdsbCheck />
       <Card title={t("services")}>
         <ul className="space-y-2.5 text-sm">
           {data.services.map((s) => (
@@ -685,5 +686,40 @@ function PlatformTab() {
         <p className="mt-4 text-xs text-muted">{t("servicesHelp")}</p>
       </Card>
     </div>
+  );
+}
+
+/** Which open aircraft database knows a registration (for an aircraft the ADS-B lookup cannot find). */
+function AdsbCheck() {
+  const t = useTranslations("app.admin.platform.adsb");
+  const [reg, setReg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<{ source: string; hex: string | null; error?: string; ms: number }[] | null>(null);
+  const run = async () => {
+    setBusy(true);
+    setRes(null);
+    const r = await apiFetch(`/api/admin/adsb-check?reg=${encodeURIComponent(reg.trim())}`).catch(() => null);
+    setRes(r?.ok ? ((await r.json()) as { sources: NonNullable<typeof res> }).sources : []);
+    setBusy(false);
+  };
+  return (
+    <Card title={t("title")} className="lg:col-span-2">
+      <p className="mb-3 text-xs text-muted">{t("help")}</p>
+      <form className="flex gap-2" onSubmit={(e) => (e.preventDefault(), void run())}>
+        <input className="input num !w-40 uppercase" placeholder="9H-AST" value={reg} onChange={(e) => setReg(e.target.value.toUpperCase())} />
+        <button type="submit" className="btn btn-secondary" disabled={busy || reg.trim().length < 3}>{busy ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />} {t("check")}</button>
+      </form>
+      {res && (
+        <ul className="mt-4 space-y-1.5 text-sm">
+          {res.length === 0 && <li className="text-warning">{t("error")}</li>}
+          {res.map((s) => (
+            <li key={s.source} className="flex justify-between gap-3">
+              <span>{s.source}</span>
+              <span className={`num text-xs ${s.hex ? "font-semibold text-success" : "text-muted"}`}>{s.hex ? s.hex.toUpperCase() : s.error ? `${t("failed")} (${s.error})` : t("unknown")} · {s.ms} ms</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }
