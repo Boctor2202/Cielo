@@ -501,6 +501,8 @@ function FlightForm() {
             onPick={(f) =>
               setForm((s) => ({
                 ...s,
+                // a flight of yesterday found from a search for today: the flight's own date
+                date: (f.out ?? f.off)?.slice(0, 10) || s.date,
                 depIcao: f.dep && /^[A-Z]{4}$/.test(f.dep) ? f.dep : s.depIcao,
                 arrIcao: f.arr && /^[A-Z]{4}$/.test(f.arr) ? f.arr : s.arrIcao,
                 out: f.out ? formatClock(f.out) : s.out,

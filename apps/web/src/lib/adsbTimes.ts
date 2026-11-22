@@ -138,7 +138,7 @@ function nearestAirport(lat: number, lon: number): string | undefined {
 }
 
 /** The aircraft's flights that took off on `date` (UTC), from its ADS-B trace. */
-export async function adsbFlights(reg: string, date: string, knownHex?: string): Promise<FoundFlight[]> {
+export async function adsbFlights(reg: string, date: string, knownHex?: string, withDayBefore = false): Promise<FoundFlight[]> {
   const hex = knownHex || (await hexForRegistration(reg));
   // not in any open aircraft database: its ADS-B trace cannot be found from the registration
   if (!hex) throw new AdsbError("not_found", "unknown aircraft", 404);
@@ -159,7 +159,11 @@ export async function adsbFlights(reg: string, date: string, knownHex?: string):
     newLeg = false;
   }
   return flightsFromTrace(pts)
-    .filter((f) => (f.out ?? f.off).slice(0, 10) === date)
+    .filter((f) => {
+      const d = (f.out ?? f.off).slice(0, 10);
+      return d === date || (withDayBefore && d === new Date(Date.parse(`${date}T12:00:00Z`) - 86_400_000).toISOString().slice(0, 10));
+    })
+    .sort((a, b) => (b.out ?? b.off).localeCompare(a.out ?? a.off))
     .map((f) => ({
       id: `adsb-${hex}-${f.off}`,
       registration: d.r ?? reg,

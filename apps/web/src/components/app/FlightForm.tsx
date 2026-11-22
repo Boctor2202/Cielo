@@ -213,6 +213,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
               <FlightAwareFill prominent hex={aircraft?.icaoHex} registration={v.registration} date={v.date} onPick={(f) =>
                     setV((s) => ({
                       ...s,
+                      date: f.date ?? s.date,
                       depIcao: f.dep ?? s.depIcao,
                       arrIcao: f.arr ?? s.arrIcao,
                       out: f.out ?? s.out,
@@ -271,6 +272,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                   onPick={(f) =>
                     setV((s) => ({
                       ...s,
+                      date: f.date ?? s.date,
                       depIcao: f.dep ?? s.depIcao,
                       arrIcao: f.arr ?? s.arrIcao,
                       out: f.out ?? s.out,

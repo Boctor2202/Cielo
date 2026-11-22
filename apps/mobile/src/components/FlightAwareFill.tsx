@@ -82,7 +82,7 @@ export function FlightAwareFill({ registration, date, onPick }: { registration?:
                 <Txt mono style={{ fontWeight: "800", fontSize: 16 }}>{`${f.dep ?? "?"} → ${f.arr ?? "?"}`}</Txt>
                 <Txt mono variant="small">{f.ident ?? ""}{f.diverted ? ` · ${t("fa.diverted")}` : ""}</Txt>
               </Row>
-              <Txt mono variant="small">{`OUT ${hhmm(f.out)} · OFF ${hhmm(f.off)} · ON ${hhmm(f.on)} · IN ${hhmm(f.in)} UTC`}</Txt>
+              <Txt mono variant="small">{`${(f.out ?? f.off)?.slice(0, 10) !== date ? `${(f.out ?? f.off)?.slice(0, 10)} · ` : ""}OUT ${hhmm(f.out)} · OFF ${hhmm(f.off)} · ON ${hhmm(f.on)} · IN ${hhmm(f.in)} UTC`}</Txt>
             </Pressable>
           ))
         : null}

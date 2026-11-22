@@ -24,7 +24,7 @@ export function FlightAwareFill({
   hex?: string;
   registration?: string;
   date: string;
-  onPick: (f: { dep?: string; arr?: string; out?: string; off?: string; on?: string; in?: string }) => void;
+  onPick: (f: { date?: string; dep?: string; arr?: string; out?: string; off?: string; on?: string; in?: string }) => void;
 }) {
   const t = useTranslations("app.form.flightaware");
   const [open, setOpen] = useState(false);
@@ -80,13 +80,14 @@ export function FlightAwareFill({
                 type="button"
                 className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-2"
                 onClick={() => {
-                  onPick({ dep: f.dep, arr: f.arr, out: hhmm(f.out), off: hhmm(f.off), on: hhmm(f.on), in: hhmm(f.in) });
+                  onPick({ date: (f.out ?? f.off)?.slice(0, 10), dep: f.dep, arr: f.arr, out: hhmm(f.out), off: hhmm(f.off), on: hhmm(f.on), in: hhmm(f.in) });
                   setOpen(false);
                 }}
               >
                 <span className="min-w-0">
                   <span className="num block font-semibold">
                     {f.dep ?? "?"} → {f.arr ?? "?"}
+                    {(f.out ?? f.off)?.slice(0, 10) !== date && <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-muted">{t("yesterday")}</span>}
                   </span>
                   <span className="block truncate text-xs text-muted">{[f.ident, f.aircraftType, f.diverted ? t("diverted") : undefined].filter(Boolean).join(" · ")}</span>
                 </span>

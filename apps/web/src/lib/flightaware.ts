@@ -55,7 +55,8 @@ export const faIdent = (registration: string) => registration.trim().toUpperCase
 const addDay = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 86400_000).toISOString().slice(0, 10);
 
 /** Flights of one aircraft on one UTC day (a day either side is searched so late/early flights are found). */
-export async function flightsForRegistration(registration: string, date: string): Promise<FoundFlight[]> {
+/** `withDayBefore`: the flights of the day before are kept too (a search made today for "today or yesterday"). */
+export async function flightsForRegistration(registration: string, date: string, withDayBefore = false): Promise<FoundFlight[]> {
   const key = process.env.FLIGHTAWARE_API_KEY;
   if (!key) throw new FlightAwareError("not_configured", "FLIGHTAWARE_API_KEY is not set", 503);
   const ident = faIdent(registration);
@@ -87,8 +88,12 @@ export async function flightsForRegistration(registration: string, date: string)
       diverted: f.diverted,
     }))
     // keep the flights that departed on the requested UTC day
-    .filter((f) => (f.out ?? f.off ?? "").slice(0, 10) === date)
-    .sort((a, b) => (a.out ?? a.off ?? "").localeCompare(b.out ?? b.off ?? ""));
+    .filter((f) => {
+      const d = (f.out ?? f.off ?? "").slice(0, 10);
+      return d === date || (withDayBefore && d === addDay(date, -1));
+    })
+    // newest first: the flight just flown comes at the top
+    .sort((a, b) => (b.out ?? b.off ?? "").localeCompare(a.out ?? a.off ?? ""));
 }
 
 interface FaPosition {

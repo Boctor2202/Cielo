@@ -740,7 +740,7 @@
       "flightaware": {
         "button": "Fill from ADS-B",
         "needReg": "Enter the registration and date first",
-        "title": "Flights of {reg} that day",
+        "title": "Flights of {reg}",
         "loading": "Looking up the actual times…",
         "none": "No flight found for this registration on this date (not received, transponder hidden or another date).",
         "error": "The lookup is unavailable right now.",
@@ -753,7 +753,8 @@
         "history": "This flight is too old to find its actual times automatically.",
         "window": "Automatic actual times are available for today's and yesterday's flights.",
         "attributionAdsb": "UTC times from ADS-B signals (adsb.lol, ODbL). Block times are missing when receivers do not see the aircraft on the ground: fill them in and check before saving.",
-        "unknownAircraft": "{reg} is not in any open ADS-B aircraft database, so its trace cannot be found from the registration. Enter the times by hand for this flight."
+        "unknownAircraft": "{reg} is not in any open ADS-B aircraft database, so its trace cannot be found from the registration. Enter the times by hand for this flight.",
+        "yesterday": "yesterday"
       },
       "extra": {
         "title": "Other entries",

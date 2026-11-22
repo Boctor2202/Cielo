@@ -29,14 +29,16 @@ export async function GET(req: Request) {
 
   // ADS-B first: free, for flights of today and yesterday (adsb.lol keeps about a day)
   const recent = Date.parse(today) - Date.parse(date) <= 86_400_000;
+  // a search for today also shows yesterday's flights (the form's date is today by default)
+  const withYesterday = date === today;
   if (recent) {
-    const adsbKey = `adsb|${reg}|${date}`;
+    const adsbKey = `adsb|${reg}|${date}${withYesterday ? "+" : ""}`;
     const seen = cache.get(adsbKey);
     if (seen && Date.now() - seen.at < seen.ttl && seen.flights.length) return Response.json({ flights: seen.flights, source: "adsb", cached: true }, { headers: { "Cache-Control": "no-store" } });
     if (!rateLimited(`adsb:${user.id}`, 60, 86_400_000)) {
       const hex = (u.searchParams.get("hex") ?? "").toLowerCase();
       let unknown = false;
-      const found = await adsbFlights(reg, date, /^[0-9a-f]{6}$/.test(hex) ? hex : undefined).catch((e: { code?: string }) => {
+      const found = await adsbFlights(reg, date, /^[0-9a-f]{6}$/.test(hex) ? hex : undefined, withYesterday).catch((e: { code?: string }) => {
         unknown = e?.code === "not_found";
         return [];
       });
@@ -51,7 +53,7 @@ export async function GET(req: Request) {
   if (!process.env.FLIGHTAWARE_API_KEY) return Response.json(recent ? { flights: [] } : { error: "adsb_window" }, { status: recent ? 200 : 404 });
 
   const ident = reg.replace(/[^A-Z0-9]/g, "");
-  const key = `${ident}|${date}`;
+  const key = `${ident}|${date}${withYesterday ? "+" : ""}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < hit.ttl) return Response.json({ flights: hit.flights, cached: true }, { headers: { "Cache-Control": "no-store" } });
   // stored answers first: a query paid once is never paid again
@@ -65,7 +67,7 @@ export async function GET(req: Request) {
   }
   if (rateLimited(`fa:${user.id}`, 40, 86_400_000)) return Response.json({ error: "rate_limited" }, { status: 429 });
   try {
-    const flights = await flightsForRegistration(reg, date);
+    const flights = await flightsForRegistration(reg, date, withYesterday);
     const fetchedAt = new Date().toISOString();
     if (db) await db.from("fa_lookups").upsert({ key, registration: ident, day: date, flights, fetched_at: fetchedAt });
     cache.set(key, { at: Date.now(), ttl: 10 * 60_000, flights });

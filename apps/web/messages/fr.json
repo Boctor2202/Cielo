@@ -740,7 +740,7 @@
       "flightaware": {
         "button": "Remplir depuis l'ADS-B",
         "needReg": "Saisissez d'abord l'immatriculation et la date",
-        "title": "Vols de {reg} ce jour-là",
+        "title": "Vols de {reg}",
         "loading": "Recherche des heures réelles…",
         "none": "Aucun vol trouvé pour cette immatriculation à cette date (avion non capté, transpondeur masqué ou date différente).",
         "error": "La recherche est indisponible pour le moment.",
@@ -753,7 +753,8 @@
         "history": "Ce vol est trop ancien pour retrouver ses heures réelles automatiquement.",
         "window": "Les heures réelles automatiques sont disponibles pour les vols d'aujourd'hui et d'hier.",
         "attributionAdsb": "Heures UTC tirées des signaux ADS-B (adsb.lol, ODbL). Les heures de cales manquent quand les récepteurs ne voient pas l'avion au sol : complète-les et vérifie avant d'enregistrer.",
-        "unknownAircraft": "{reg} n'apparaît dans aucune base d'avions ADS-B ouverte : sa trace ne peut pas être retrouvée par l'immatriculation. Saisissez les heures à la main pour ce vol."
+        "unknownAircraft": "{reg} n'apparaît dans aucune base d'avions ADS-B ouverte : sa trace ne peut pas être retrouvée par l'immatriculation. Saisissez les heures à la main pour ce vol.",
+        "yesterday": "hier"
       },
       "extra": {
         "title": "Autres informations",
