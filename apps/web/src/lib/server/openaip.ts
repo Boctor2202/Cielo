@@ -51,6 +51,30 @@ function toAirspace(a: OaAirspace): Airspace | null {
   };
 }
 
+/**
+ * GET on the openAIP API: the key in the x-openaip-api-key header, as documented; when that is refused, once
+ * more with the key in the apiKey query parameter (the other accepted form).
+ */
+async function openaipGet(path: string, key: string): Promise<Response> {
+  const headers = { Accept: "application/json", "User-Agent": "Geardown/1.0 (+https://geardown.app)" };
+  const r = await meteredFetch("openaip", "airspaces", `${BASE}${path}`, { headers: { ...headers, "x-openaip-api-key": key }, cache: "no-store" });
+  if (r.status !== 401 && r.status !== 403) return r;
+  return meteredFetch("openaip", "airspaces", `${BASE}${path}${path.includes("?") ? "&" : "?"}apiKey=${encodeURIComponent(key)}`, { headers, cache: "no-store" });
+}
+
+/** Admin diagnosis: openAIP's raw answer for one small box (status and the start of the body). */
+export async function openaipProbe(): Promise<{ status: number; body: string } | { error: string }> {
+  const key = process.env.OPENAIP_API_KEY?.trim();
+  if (!key) return { error: "OPENAIP_API_KEY is not set" };
+  if (key !== process.env.OPENAIP_API_KEY) return { error: "the key has spaces or a line break around it" };
+  try {
+    const r = await openaipGet("/airspaces?bbox=2,48,3,49&limit=2", key);
+    return { status: r.status, body: (await r.text()).slice(0, 600) };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "error" };
+  }
+}
+
 // one answer per 1° tile, kept a week on this instance (airspace changes every AIRAC cycle, 28 days)
 const tiles = new Map<string, { at: number; items: Airspace[] }>();
 const WEEK = 7 * 86_400_000;
@@ -62,8 +86,8 @@ async function tile(lon: number, lat: number, key: string): Promise<Airspace[]> 
   const items: Airspace[] = [];
   for (let page = 1; page <= 5; page++) {
     const qs = new URLSearchParams({ bbox: `${lon},${lat},${lon + 1},${lat + 1}`, limit: "1000", page: String(page) });
-    const r = await meteredFetch("openaip", "airspaces", `${BASE}/airspaces?${qs}`, { headers: { "x-openaip-api-key": key, Accept: "application/json" }, cache: "no-store" });
-    if (!r.ok) throw new Error(`openaip ${r.status}`);
+    const r = await openaipGet(`/airspaces?${qs}`, key);
+    if (!r.ok) throw new Error(`openaip ${r.status}: ${(await r.text().catch(() => "")).slice(0, 200)}`);
     const d = (await r.json()) as { items?: OaAirspace[]; totalPages?: number };
     for (const a of d.items ?? []) {
       const x = toAirspace(a);

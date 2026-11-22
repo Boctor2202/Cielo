@@ -695,16 +695,16 @@ function AdsbCheck() {
   const [reg, setReg] = useState("");
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<{ source: string; hex: string | null; error?: string; ms: number }[] | null>(null);
-  const [extra, setExtra] = useState<{ adsb: unknown; fa: unknown } | null>(null);
+  const [extra, setExtra] = useState<{ adsb: unknown; fa: unknown; openaip: unknown } | null>(null);
   const [withFa, setWithFa] = useState(false);
   const run = async () => {
     setBusy(true);
     setRes(null);
     setExtra(null);
     const r = await apiFetch(`/api/admin/adsb-check?reg=${encodeURIComponent(reg.trim())}${withFa ? "&fa=1" : ""}`).catch(() => null);
-    const d = r?.ok ? ((await r.json()) as { sources: NonNullable<typeof res>; adsb: unknown; fa: unknown }) : null;
+    const d = r?.ok ? ((await r.json()) as { sources: NonNullable<typeof res>; adsb: unknown; fa: unknown; openaip: unknown }) : null;
     setRes(d?.sources ?? []);
-    if (d) setExtra({ adsb: d.adsb, fa: d.fa });
+    if (d) setExtra({ adsb: d.adsb, fa: d.fa, openaip: d.openaip });
     setBusy(false);
   };
   return (
@@ -728,8 +728,8 @@ function AdsbCheck() {
           ))}
         </ul>
       )}
-      {extra && (extra.adsb !== null || extra.fa !== null) && (
-        <pre className="mt-4 max-h-80 overflow-auto rounded-lg bg-surface-2/60 p-3 text-[11px] leading-relaxed">{JSON.stringify({ adsbTodayYesterday: extra.adsb, flightaware: extra.fa }, null, 2)}</pre>
+      {extra && (
+        <pre className="mt-4 max-h-80 overflow-auto rounded-lg bg-surface-2/60 p-3 text-[11px] leading-relaxed">{JSON.stringify({ openaip: extra.openaip, adsbTodayYesterday: extra.adsb, flightaware: extra.fa }, null, 2)}</pre>
       )}
     </Card>
   );

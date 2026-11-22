@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         if (list === null) missing.push("airspace");
         return list ? airspacesCrossed(points, list) : [];
       })
-      .catch(() => (missing.push("airspaceError"), [])),
+      .catch((e: Error) => (console.error("[flight-context] airspaces", e.message), missing.push("airspaceError"), [])),
     (async () => {
       const c = cruiseSample(points);
       if (!c) return null;
