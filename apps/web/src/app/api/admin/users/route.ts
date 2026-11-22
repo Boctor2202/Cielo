@@ -73,7 +73,17 @@ export function GET(req: Request) {
 export function POST(req: Request) {
   return handle(async () => {
     const { db } = await requireAdmin(req);
-    const b = (await req.json().catch(() => null)) as { pilotId?: string; tier?: string; until?: string | null; test?: boolean } | null;
+    const b = (await req.json().catch(() => null)) as { pilotId?: string; tier?: string; until?: string | null; test?: boolean; signIn?: boolean; locale?: string } | null;
+    // a one-time sign-in link to a TEST account, to see its screens (never offered for a real pilot's account)
+    if (b?.pilotId && b.signIn) {
+      const { data: p } = await db.from("pilots").select("email, test_account").eq("id", b.pilotId).maybeSingle();
+      if (!p?.test_account || !p.email) throw new HttpError(403, "not_test_account");
+      const origin = new URL(req.url).origin;
+      const lang = b.locale === "en" ? "en" : "fr";
+      const { data, error } = await db.auth.admin.generateLink({ type: "magiclink", email: p.email, options: { redirectTo: `${origin}/${lang}/app` } });
+      if (error || !data.properties?.action_link) throw new HttpError(502, "link_failed");
+      return Response.json({ link: data.properties.action_link });
+    }
     if (b?.pilotId && typeof b.test === "boolean") {
       const { error } = await db.from("pilots").update({ test_account: b.test }).eq("id", b.pilotId);
       if (error) throw new HttpError(503, "migration_0032");
