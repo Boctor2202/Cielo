@@ -199,13 +199,12 @@ function StepList({ active }: { active: number }) {
         return (
           <li key={s.key} className="border-t border-border">
             <button type="button" onClick={() => go(i)} className="group flex w-full items-baseline gap-4 py-5 text-left" aria-current={on ? "step" : undefined}>
-              <span className={`w-7 shrink-0 text-[13px] font-medium tabular-nums transition-colors duration-300 ${on ? "text-accent" : "text-muted"}`}>{String(i + 1).padStart(2, "0")}</span>
               <span className={`text-balance font-sans font-bold leading-[1.15] tracking-[-0.02em] transition-all duration-300 ${on ? "text-[1.9rem] text-text" : "text-xl text-text/40 group-hover:text-text/70"}`}>{t(`${s.key}.title`)}</span>
             </button>
             <AnimatePresence initial={false}>
               {on && (
                 <motion.div key="body" initial={reduce ? false : { height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={reduce ? undefined : { height: 0, opacity: 0 }} transition={{ duration: 0.35, ease }} className="overflow-hidden">
-                  <div className="pb-6 pl-11">
+                  <div className="pb-6">
                     <p className="max-w-md text-pretty leading-relaxed text-muted">{t(`${s.key}.text`)}</p>
                     <Tags k={s.key} />
                     <div className="mt-5 h-0.5 overflow-hidden rounded-full bg-border" aria-hidden>
@@ -262,21 +261,18 @@ export function FeatureScroll() {
       {/* phones and tablets: each step with its screen */}
       <div className="mx-auto max-w-2xl px-4 pb-20 pt-10 sm:px-6 lg:hidden">
         {STEPS.map((s, i) => (
-          <MobileStep key={s.key} k={s.key} i={i} Screen={s.Screen} />
+          <MobileStep key={s.key} k={s.key} Screen={s.Screen} />
         ))}
       </div>
     </section>
   );
 }
 
-function MobileStep({ k, i, Screen }: { k: string; i: number; Screen: Step["Screen"] }) {
+function MobileStep({ k, Screen }: { k: string; Screen: Step["Screen"] }) {
   const t = useTranslations("home2.steps");
   return (
     <div className="border-t border-border py-10">
-      <div className="flex items-baseline gap-3">
-        <span className="text-[13px] font-medium tabular-nums text-accent">{String(i + 1).padStart(2, "0")}</span>
-        <h3 className="text-balance font-sans text-2xl font-bold leading-tight tracking-[-0.02em]">{t(`${k}.title`)}</h3>
-      </div>
+      <h3 className="text-balance font-sans text-2xl font-bold leading-tight tracking-[-0.02em]">{t(`${k}.title`)}</h3>
       <p className="mt-3 text-pretty leading-relaxed text-muted">{t(`${k}.text`)}</p>
       <Tags k={k} />
       <Screen className="mt-6 w-full" />

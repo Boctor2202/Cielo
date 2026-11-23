@@ -267,7 +267,7 @@ export function SignatureLive({ className = "" }: { className?: string }) {
           <motion.span className="absolute right-3 top-3 rounded-full px-3 py-1 text-[12px] font-extrabold" style={{ background: C.accent, color: "#04140a" }} initial={{ scale: 0 }} animate={on ? { scale: 1 } : {}} transition={{ type: "spring", stiffness: 380, damping: 14, delay: 2.7 }}>
             ✓ {f ? "3 vols signés" : "3 flights signed"}
           </motion.span>
-          <p className="px-3 pb-2 text-[10.5px] text-[#5b6878]">Thomas Mercier · {f ? "Commandant" : "Captain"} · FRA.FCL.PA.012345</p>
+          <p className="px-3 pb-2 text-[11px] text-[#5b6878]">Thomas Mercier · {f ? "Commandant" : "Captain"} · FRA.FCL.PA.012345</p>
         </div>
       </AppWindow>
     </div>

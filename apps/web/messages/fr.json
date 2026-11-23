@@ -3063,7 +3063,7 @@
         "d": "Saisissez en vol, sans réseau. Tout se synchronise entre l'iPhone et le site."
       },
       "exports": {
-        "t": "Exports aux formats officiels",
+        "t": "Exports aux formats EASA, FAA, CASA",
         "d": "PDF au format EASA, FAA, CASA, UK CAA, Transport Canada, et CSV ou Excel."
       },
       "cv": {

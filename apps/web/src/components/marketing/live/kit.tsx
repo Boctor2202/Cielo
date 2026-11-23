@@ -55,7 +55,7 @@ export function AppWindow({ title, children, className = "", bodyClass = "p-4" }
 
 /** A small label in capitals, as in the app. */
 export const Label = ({ children }: { children: ReactNode }) => (
-  <p className="text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: C.muted }}>{children}</p>
+  <p className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: C.muted }}>{children}</p>
 );
 
 /** A round green check that pops in. */

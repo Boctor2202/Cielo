@@ -3063,7 +3063,7 @@
         "d": "Log in flight, without a network. Everything syncs between the iPhone and the website."
       },
       "exports": {
-        "t": "Exports in official formats",
+        "t": "Exports in EASA, FAA, CASA layouts",
         "d": "PDF in EASA, FAA, CASA, UK CAA and Transport Canada formats, plus CSV or Excel."
       },
       "cv": {

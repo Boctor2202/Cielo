@@ -42,7 +42,7 @@ export function Hero() {
           </PhoneFrame>
           {/* Instrument readouts: what Geardown computes for you */}
           <div className="glass absolute -left-3 top-[58%] hidden rounded-xl border border-border px-4 py-3 shadow-xl sm:block" aria-hidden>
-            <p className="mono-label !text-[10px]">{t("readoutNight")}</p>
+            <p className="mono-label !text-[11px]">{t("readoutNight")}</p>
             <p className="num mt-1 text-2xl font-semibold">0:47</p>
             <p className="num text-[11px] text-muted">{t("readoutRoute")}</p>
           </div>
@@ -148,7 +148,7 @@ export function StoreBadges({ className = "" }: { className?: string }) {
           <path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.1zM13.9 5c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.1 1.1.1 2.3-.6 3-1.5z" />
         </svg>
         <span className="flex flex-col leading-tight">
-          <span className="text-[10px] opacity-80">{SITE.stores.appStoreUrl === "#" ? t("comingSoon") : "Download on the"}</span>
+          <span className="text-[11px] opacity-80">{SITE.stores.appStoreUrl === "#" ? t("comingSoon") : "Download on the"}</span>
           <span className="text-[15px] font-semibold">App Store</span>
         </span>
       </StoreLink>
@@ -160,7 +160,7 @@ export function StoreBadges({ className = "" }: { className?: string }) {
           <path d="m20.6 13.3-4.4 2.4L12.4 12l3.8-3.7 4.4 2.4c.9.6.9 2 0 2.6z" fill="#FBBF24" />
         </svg>
         <span className="flex flex-col leading-tight">
-          <span className="text-[10px] opacity-80">{SITE.stores.playStoreUrl === "#" ? t("comingSoon") : "Get it on"}</span>
+          <span className="text-[11px] opacity-80">{SITE.stores.playStoreUrl === "#" ? t("comingSoon") : "Get it on"}</span>
           <span className="text-[15px] font-semibold">Google Play</span>
         </span>
       </StoreLink>
@@ -198,11 +198,14 @@ export function Features({ detailed = false }: { detailed?: boolean }) {
   const messages = useMessages() as { features: { items: Record<string, { points: string[] }> } };
   return (
     <section id="features" className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
-        <p className="mt-4 text-lg text-muted">{t("subtitle")}</p>
-      </div>
-      <div className="mt-16 flex flex-col gap-20 lg:gap-28">
+      {/* the features page already opens on this title (its page header) */}
+      {!detailed && (
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
+          <p className="mt-4 text-lg text-muted">{t("subtitle")}</p>
+        </div>
+      )}
+      <div className={`flex flex-col gap-20 lg:gap-28 ${detailed ? "" : "mt-16"}`}>
         {FEATURE_KEYS.map((k, i) => {
           const Icon = ICONS[k];
           const points = messages.features.items[k]?.points ?? [];
@@ -212,8 +215,7 @@ export function Features({ detailed = false }: { detailed?: boolean }) {
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-accent/12 text-accent">
                   <Icon size={20} />
                 </span>
-                <p className="label-caps mt-4 num">{String(i + 1).padStart(2, "0")}</p>
-                <h3 className="mt-1 text-2xl font-bold tracking-tight sm:text-[1.75rem]">{t(`items.${k}.title`)}</h3>
+                <h3 className="mt-4 text-2xl font-bold tracking-tight sm:text-[1.75rem]">{t(`items.${k}.title`)}</h3>
                 <p className="mt-3 text-[17px] leading-relaxed text-muted">{t(`items.${k}.text`)}</p>
                 <ul className={`mt-5 grid gap-2 ${detailed ? "" : "sm:grid-cols-1"}`}>
                   {points.map((p) => (
