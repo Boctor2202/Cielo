@@ -572,7 +572,10 @@ export function rowsToFlights(
     const fstdTypeIsTime = /^\d{1,2}\s*[:hH]\s*\d{2}$|^\d+([.,]\d+)?$/.test(rawFstd.trim());
     const fstdTime = durOf(r, "fstdTime") ?? (fstdTypeIsTime ? dur(rawFstd.trim()) : undefined);
     const fstdType = fstdTypeIsTime || /^(true|yes|oui|y|sim|fstd|ffs)$/i.test(rawFstd) ? undefined : rawFstd || undefined;
-    const isFstd = !!rawFstd || (!!fstdTime && !get(r, "registration"));
+    // a training device written as an aircraft, without any simulator flag: "SIMAL2501" registration, ALSIM /
+    // FNPT / FFS type (the session would otherwise count as flight time)
+    const simDevice = /^(sim|fnpt|ffs|ftd|fstd)/i.test(get(r, "registration")) || /\b(alsim|fnpt|ffs|ftd|fstd|simulat\w*)\b/i.test(get(r, "type"));
+    const isFstd = !!rawFstd || (!!fstdTime && !get(r, "registration")) || simDevice;
     const dep = get(r, "dep").toUpperCase();
     const arr = get(r, "arr").toUpperCase();
     if (!isFstd && (!dep || !arr)) errors.push("route");
@@ -645,7 +648,7 @@ export function rowsToFlights(
           autoLandings: false,
           pilotFlying: opts.pilotFlying ?? (num(get(r, "landingsDay")) ?? 0) + (num(get(r, "landingsNight")) ?? 0) > 0,
           isFstd,
-          fstdType,
+          fstdType: fstdType ?? (simDevice ? get(r, "type") || get(r, "registration") || undefined : undefined),
           // a session flagged as simulator with only a total (mccPILOTLOG "sim"): the total is the session time
           fstdMin: fstdTime ?? (isFstd ? explicit.total : undefined),
           remarks: get(r, "remarks") || undefined,
