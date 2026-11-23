@@ -1,3 +1,4 @@
+import { DemoClip } from "./DemoClip";
 import { useLocale, useMessages, useTranslations } from "next-intl";
 import { ArrowRight, BadgeCheck, Briefcase, CalendarClock, Check, CloudOff, FileDown, FileUser, Lock, Map, PenLine, ScanSearch, ShieldCheck, Upload } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -5,6 +6,9 @@ import { SITE } from "@/config/site";
 import { BrowserFrame, LaptopFrame, PhoneFrame, Shot } from "./Shot";
 import { FeatureTabs } from "./FeatureTabs";
 import { Reveal } from "./Reveal";
+
+/** features shown by a clip filmed on the real app rather than a still */
+const CLIPS: Partial<Record<(typeof FEATURE_KEYS)[number], "import" | "audit" | "sign">> = { import: "import", audit: "audit", signature: "sign" };
 
 export const FEATURE_KEYS = ["logbook", "import", "audit", "licenses", "ftl", "stats", "signature", "offline", "jobs", "cv"] as const;
 const ICONS = { logbook: FileDown, import: Upload, audit: ScanSearch, licenses: BadgeCheck, ftl: CalendarClock, stats: Map, signature: PenLine, offline: CloudOff, jobs: Briefcase, cv: FileUser };
@@ -220,9 +224,15 @@ export function Features({ detailed = false }: { detailed?: boolean }) {
                   ))}
                 </ul>
               </div>
-              <BrowserFrame>
-                <Shot name={k} alt={t(`items.${k}.title`)} className="w-full" />
-              </BrowserFrame>
+              {CLIPS[k] ? (
+                <div className="overflow-hidden rounded-2xl border border-border shadow-[0_40px_90px_-30px_rgba(2,6,23,.55)]">
+                  <DemoClip name={CLIPS[k]!} label={t(`items.${k}.title`)} />
+                </div>
+              ) : (
+                <BrowserFrame>
+                  <Shot name={k} alt={t(`items.${k}.title`)} className="w-full" />
+                </BrowserFrame>
+              )}
             </article>
           );
         })}

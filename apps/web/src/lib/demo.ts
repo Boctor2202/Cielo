@@ -33,6 +33,58 @@ export async function loadDemo(airports: AirportIndex, locale: "fr" | "en") {
     defaultFunction: "SIC",
     defaultIfr: "ask",
     subscriptionTier: "premium",
+    // a complete profile, as a pilot who filled everything in (all fictional)
+    rank: locale === "fr" ? "Officier pilote de ligne" : "First Officer",
+    employer: "Skyline Airways",
+    nationality: locale === "fr" ? "Française" : "French",
+    birthDate: "1991-04-12",
+    phone: "+33 6 00 00 00 00",
+    authority: "EASA",
+    ftlRegime: "oro",
+    currentTypes: ["A320"],
+    bio:
+      locale === "fr"
+        ? "Officier pilote de ligne sur A320 basé à Orly. Ancien instructeur en aéroclub, je prépare ma qualification de commandant de bord."
+        : "A320 first officer based at Paris-Orly. Former aero club instructor, working towards my command upgrade.",
+    cv: {
+      fullName: "Thomas Mercier",
+      headline: locale === "fr" ? "Officier pilote de ligne – Airbus A320" : "First Officer – Airbus A320",
+      email: "thomas.mercier@example.com",
+      phone: "+33 6 00 00 00 00",
+      location: locale === "fr" ? "Paris, France" : "Paris, France",
+      nationality: locale === "fr" ? "Française" : "French",
+      dateOfBirth: "1991-04-12",
+      summary:
+        locale === "fr"
+          ? "Officier pilote de ligne qualifié A320, 1 800 heures dont 1 600 en multipilote. Rigoureux sur la préparation et la gestion d'équipage, je vise un poste de commandant de bord sur moyen-courrier."
+          : "Type-rated A320 first officer with 1,800 hours, 1,600 of them multi-pilot. Careful about preparation and crew resource management, aiming for a short-haul command.",
+      experience: [
+        {
+          role: locale === "fr" ? "Officier pilote de ligne" : "First Officer",
+          employer: "Skyline Airways",
+          location: "Paris-Orly",
+          start: "2022-03",
+          aircraft: ["A320"],
+          bullets:
+            locale === "fr"
+              ? ["Lignes européennes et Afrique du Nord en équipage à deux.", "Formateur CRM pour les nouveaux copilotes."]
+              : ["European and North African routes in a two-pilot crew.", "CRM trainer for newly joined first officers."],
+        },
+        {
+          role: locale === "fr" ? "Instructeur" : "Flight instructor",
+          employer: locale === "fr" ? "Aéroclub de Toussus" : "Toussus aero club",
+          location: "Toussus-le-Noble",
+          start: "2019-06",
+          end: "2022-02",
+          aircraft: ["DR40"],
+          bullets: locale === "fr" ? ["Formation PPL et vols de navigation."] : ["PPL training and cross-country flights."],
+        },
+      ],
+      education: [{ title: locale === "fr" ? "Formation ATPL intégrée" : "Integrated ATPL course", school: "Example Flight Academy", start: "2017-09", end: "2019-05" }],
+      languages: [{ name: locale === "fr" ? "Français" : "French", level: locale === "fr" ? "Langue maternelle" : "Native" }, { name: locale === "fr" ? "Anglais" : "English", icaoLevel: 5 }],
+      skills: ["CRM", "EFB", "UPRT", "MCC"],
+      rightToWork: locale === "fr" ? "Passeport européen" : "EU passport",
+    },
   });
 
   const a320 = REFERENCE_TYPES.find((t) => t.icao === "A320")!;
