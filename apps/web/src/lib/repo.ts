@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import { misreadOperators,
   markPilotFields,
   operatorIndex,
   canonicalFlightContent, ownSignature, type SignedInfo, deriveFlightTimes, extraFlightFields, flightRevision, newId, stamp, SYNC_TABLES, type Aircraft, type AircraftType, type Flight,
@@ -532,6 +532,17 @@ export const flightKey = (f: Pick<Flight, "date" | "depIcao" | "arrIcao" | "outU
   `${f.depIcao}|${f.arrIcao}|${(f.outUtc ?? f.offUtc)?.slice(0, 16) ?? `${f.date}|${f.totalMin}`}`;
 
 const OPERATORS_BACKFILL = "backfill:operators:v1";
+const OPERATORS_REPAIR = "repair:operators:v2";
+
+/** Once per device: removes the operators an earlier version read from a registration typed as the flight number. */
+async function repairOperators(directory: Parameters<typeof operatorIndex>[2]): Promise<void> {
+  if (await localStore.getMeta(OPERATORS_REPAIR)) return;
+  const flights = (await db().t("flights").toArray()).filter((f) => !f.deletedAt);
+  if (!flights.length) return;
+  const ids = misreadOperators(flights, directory ?? undefined);
+  if (ids.length) await setOperator(ids, undefined);
+  await localStore.setMeta(OPERATORS_REPAIR, new Date().toISOString());
+}
 
 /**
  * Once per device: flights entered or imported before operators were recorded get the operator the logbook
@@ -539,6 +550,7 @@ const OPERATORS_BACKFILL = "backfill:operators:v1";
  * stay valid (the operator is not part of a signed entry).
  */
 export async function backfillOperators(directory: Parameters<typeof operatorIndex>[2]): Promise<number> {
+  await repairOperators(directory);
   if (await localStore.getMeta(OPERATORS_BACKFILL)) return 0;
   const flights = (await db().t("flights").toArray()).filter((f) => !f.deletedAt);
   // nothing here yet (a new device before its first sync): try again next time

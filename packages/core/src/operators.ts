@@ -171,15 +171,54 @@ let curated: AirlineDirectory | undefined;
 const defaultDirectory = () => (curated ??= airlineDirectory());
 
 /** The airline designator a flight number or call sign starts with: ICAO (AFR123, NJE7HA) or IATA (AF123). */
-export function callsignPrefix(flightNumber?: string | null): { icao?: string; iata?: string } {
+export function callsignPrefix(flightNumber?: string | null, registration?: string | null): { icao?: string; iata?: string } {
   const s = (flightNumber ?? "").toUpperCase().replace(/[\s-]/g, "");
-  const icao = /^([A-Z]{3})\d/.exec(s)?.[1] ?? /^([A-Z]{3})[A-Z0-9]{1,4}$/.exec(s)?.[1];
+  // the registration used as the call sign (private and training flights) names no airline
+  if (registration && s === registration.toUpperCase().replace(/[^A-Z0-9]/g, "")) return {};
+  // a call sign always has a digit (AFR123, NJE7HA, EZY45KP): letters only (FHAMJ, DEABC) is a registration
+  const icao = /^([A-Z]{3})\d/.exec(s)?.[1] ?? /^([A-Z]{3})(?=[A-Z0-9]*\d)[A-Z0-9]{1,4}$/.exec(s)?.[1];
   if (icao) return { icao };
   const iata = /^([A-Z0-9]{2})\d{1,4}[A-Z]?$/.exec(s)?.[1];
   return iata && /[A-Z]/.test(iata) ? { iata } : {};
 }
 
 const norm = (s?: string | null) => (s ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+/**
+ * Flights whose operator was recognised by mistake before call signs had to hold a digit: a registration typed
+ * as the flight number (FHAMJ) was read as an airline designator (FHA…), and the name was saved on the flight
+ * (and taught to the other flights of that registration). Only those exact names are returned, for clearing:
+ * an operator the pilot typed, or one that matches the flight number today, is left alone.
+ */
+export function misreadOperators(
+  flights: Pick<Flight, "id" | "operator" | "flightNumber" | "registration" | "deletedAt">[],
+  directory: AirlineDirectory = defaultDirectory(),
+): string[] {
+  const oldIcao = (fn?: string | null) => {
+    const s = (fn ?? "").toUpperCase().replace(/[\s-]/g, "");
+    return /^([A-Z]{3})\d/.exec(s)?.[1] ?? /^([A-Z]{3})[A-Z0-9]{1,4}$/.exec(s)?.[1];
+  };
+  const wrong = new Set<string>();
+  const badByReg = new Map<string, string>();
+  const alive = flights.filter((f) => !f.deletedAt && f.operator?.trim());
+  for (const f of alive) {
+    const was = oldIcao(f.flightNumber);
+    if (!was || callsignPrefix(f.flightNumber, f.registration).icao === was) continue;
+    const name = directory.byIcao(was)?.name;
+    if (name && name === f.operator!.trim()) {
+      wrong.add(f.id);
+      if (f.registration) badByReg.set(norm(f.registration), name);
+    }
+  }
+  // the other flights of that registration that learned the same name from it
+  for (const f of alive) {
+    if (wrong.has(f.id) || !f.registration) continue;
+    const name = badByReg.get(norm(f.registration));
+    const p = callsignPrefix(f.flightNumber, f.registration);
+    if (name && f.operator!.trim() === name && !p.icao && !p.iata) wrong.add(f.id);
+  }
+  return [...wrong];
+}
 
 /** The most frequent value of a list (undefined when empty). */
 function mostFrequent(values: string[]): string | undefined {
@@ -209,7 +248,7 @@ export function operatorIndex(
   for (const f of alive) {
     const op = f.operator?.trim();
     if (!op) continue;
-    const p = callsignPrefix(f.flightNumber);
+    const p = callsignPrefix(f.flightNumber, f.registration);
     const key = p.icao ?? p.iata;
     if (key) prefixSeen.set(key, [...(prefixSeen.get(key) ?? []), op]);
     if (f.registration) regSeen.set(norm(f.registration), [...(regSeen.get(norm(f.registration)) ?? []), op]);
@@ -221,7 +260,7 @@ export function operatorIndex(
     if (typed) return typed;
     const reg = norm(f.registration);
     if (reg && byReg.has(reg)) return byReg.get(reg);
-    const p = callsignPrefix(f.flightNumber);
+    const p = callsignPrefix(f.flightNumber, f.registration);
     const key = p.icao ?? p.iata;
     if (key && learnedPrefix.has(key)) return learnedPrefix.get(key);
     if (reg && learnedReg.has(reg)) return learnedReg.get(reg);

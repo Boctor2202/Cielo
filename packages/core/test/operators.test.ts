@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { callsignPrefix, logbookGains, operatorIndex, type Flight } from "../src";
+import { callsignPrefix, logbookGains, misreadOperators, operatorIndex, type Flight } from "../src";
 
 const f = (o: Partial<Flight>): Flight => ({ id: o.id ?? Math.random().toString(36), date: "2026-11-01", depIcao: "LFPB", arrIcao: "EGSC", totalMin: 60, nightMin: 0, landingsDay: 1, landingsNight: 0, deletedAt: null, ...o }) as Flight;
 
@@ -79,5 +79,34 @@ describe("world airline directory", () => {
   it("recognises a flight number of any airline", () => {
     expect(operatorIndex([], [], dir).of({ flightNumber: "QTR15" })).toBe("Qatar Airways");
     expect(operatorIndex([], [], dir).of({ flightNumber: "SVA123" })).toBeTruthy();
+  });
+});
+
+describe("registrations are not call signs", () => {
+  it("does not read an airline from a registration typed as the flight number", () => {
+    expect(callsignPrefix("FHAMJ")).toEqual({});
+    expect(callsignPrefix("DEABC")).toEqual({});
+    expect(callsignPrefix("F-HAMJ", "F-HAMJ")).toEqual({});
+    expect(callsignPrefix("NJE7HA")).toEqual({ icao: "NJE" });
+    expect(callsignPrefix("AFR123")).toEqual({ icao: "AFR" });
+    expect(callsignPrefix("EZY45KP")).toEqual({ icao: "EZY" });
+    expect(callsignPrefix("AF1234")).toEqual({ iata: "AF" });
+  });
+  it("leaves a training flight without operator", () => {
+    const idx = operatorIndex([{ flightNumber: "FHAMJ", registration: "F-HAMJ" }]);
+    expect(idx.of({ flightNumber: "FHAMJ", registration: "F-HAMJ" })).toBeUndefined();
+  });
+});
+
+describe("operators read from a registration are repaired", () => {
+  it("clears only the names read from a registration", () => {
+    const flights = [
+      { id: "a", flightNumber: "FHAMJ", registration: "F-HAMJ", operator: "Air X" },
+      { id: "b", flightNumber: "", registration: "F-HAMJ", operator: "Air X" },
+      { id: "c", flightNumber: "AFR12", registration: "F-GKXA", operator: "Air France" },
+      { id: "d", flightNumber: "FHAMJ", registration: "F-HAMJ", operator: "Aéroclub" },
+    ];
+    const dir = { all: [], byIcao: (c: string) => (c === "FHA" ? { icao: "FHA", name: "Air X", active: true } : c === "AFR" ? { icao: "AFR", name: "Air France", active: true } : undefined), byIata: () => undefined };
+    expect(misreadOperators(flights as never, dir as never).sort()).toEqual(["a", "b"]);
   });
 });

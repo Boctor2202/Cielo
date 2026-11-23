@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
-import { flightRevision, operatorIndex, stamp, type Flight, type FlightRevision, type SyncedRecord } from "@cielo/core";
+import { flightRevision, misreadOperators, operatorIndex, stamp, type Flight, type FlightRevision, type SyncedRecord } from "@cielo/core";
 import { airlines } from "../airlines";
 import { useApp } from "../state";
 
 const KEY = "backfill:operators:v1";
+const REPAIR = "repair:operators:v2";
 
 /**
  * Once per device: flights entered or imported before operators were recorded get the operator the logbook
@@ -16,6 +17,19 @@ export function OperatorBackfill() {
     if (!pilot || !access.canWrite) return;
     const id = setTimeout(async () => {
       try {
+        // first, once: the operators an earlier version read from a registration typed as the flight number
+        if (!(await store.getMeta(REPAIR))) {
+          const all = (await store.all("flights")).filter((f) => !f.deletedAt);
+          if (all.length) {
+            const ids = new Set(misreadOperators(all, airlines()));
+            const fixed = all.filter((f) => ids.has(f.id)).map((f) => stamp({ ...f, operator: undefined }) as Flight);
+            if (fixed.length) {
+              await store.bulkPut("flights", fixed);
+              await reload();
+            }
+            await store.setMeta(REPAIR, new Date().toISOString());
+          }
+        }
         if (await store.getMeta(KEY)) return;
         const flights = (await store.all("flights")).filter((f) => !f.deletedAt);
         // nothing here yet (before the first sync): try again next time
