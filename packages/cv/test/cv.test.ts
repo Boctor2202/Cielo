@@ -136,3 +136,55 @@ describe("offer keywords", () => {
   });
 });
 
+
+describe("one page", () => {
+  it("fits a loaded CV on one page and keeps the full detail in the text version", async () => {
+    const many: Record<string, TypeInfo> = {
+      ...TYPES,
+      A320: { icao: "A320", manufacturer: "Airbus", model: "A320", category: "airplane", engineType: "jet", multiPilot: true },
+      E55P: { icao: "E55P", manufacturer: "Embraer", model: "Phenom 300", category: "airplane", engineType: "jet", multiPilot: false },
+      PC12: { icao: "PC12", manufacturer: "Pilatus", model: "PC-12", category: "airplane", engineType: "turboprop", multiPilot: false },
+      C172: { icao: "C172", manufacturer: "Cessna", model: "172 Skyhawk", category: "airplane", engineType: "piston", multiPilot: false },
+    };
+    const fl = [
+      ...flights,
+      base({ date: "2022-05-01", aircraftTypeIcao: "A320", totalMin: 3000 * 60, multiPilotMin: 3000 * 60, copilotMin: 3000 * 60, nightMin: 900 * 60, ifrMin: 3000 * 60, landingsDay: 1200 }),
+      base({ date: "2020-05-01", aircraftTypeIcao: "E55P", totalMin: 600 * 60, singlePilotMeMin: 600 * 60, picMin: 600 * 60, function: "PIC", ifrMin: 500 * 60 }),
+      base({ date: "2019-05-01", aircraftTypeIcao: "PC12", totalMin: 400 * 60, singlePilotSeMin: 400 * 60, picMin: 400 * 60, function: "PIC", instructorMin: 100 * 60 }),
+      base({ date: "2018-05-01", aircraftTypeIcao: "C172", totalMin: 200 * 60, singlePilotSeMin: 200 * 60, dualMin: 100 * 60, picMin: 100 * 60, function: "PIC" }),
+    ];
+    const bullets = ["Line operations across Europe, North Africa and the Middle East in a two-pilot crew.", "Company safety reports and crew resource management trainer for new hires.", "Steep approach and short runway qualified (London City, Lugano, Samedan).", "Planned and flew long-range missions with tight slot and handling constraints."];
+    const heavy: CvData = {
+      ...cv,
+      hours: flightExperience(fl, opening, (i) => many[i], "2026-11-14"),
+      licences: [...cv.licences, { kind: "rating", code: "TR A320", validUntil: "2026-01-31" }, { kind: "rating", code: "MCC" }, { kind: "rating", code: "FI(A)", validUntil: "2027-09-30" }, { kind: "rating", code: "SEP(land)", validUntil: "2027-05-31" }, { kind: "rating", code: "MEP(land)", validUntil: "2027-05-31" }],
+      profile: {
+        ...cv.profile,
+        nationality: "French",
+        linkedin: "linkedin.com/in/example",
+        summary: `${cv.profile.summary} ${cv.profile.summary}`,
+        experience: [
+          { role: "First Officer", employer: "Example Business Jets", start: "2023-03", aircraft: ["C68A"], bullets },
+          { role: "First Officer", employer: "Example Airline", start: "2020-06", end: "2023-02", aircraft: ["A320"], bullets },
+          { role: "Captain", employer: "Example Air Charter", start: "2019-01", end: "2020-05", aircraft: ["E55P", "PC12"], bullets },
+          { role: "Flight Instructor", employer: "Example Aero Club", start: "2017-01", end: "2018-12", aircraft: ["C172"], bullets },
+          { role: "Ramp agent", employer: "Example Handling", start: "2015-01", end: "2016-12", bullets },
+        ],
+        education: [
+          { title: "ATPL integrated course", school: "Example Flight Academy", start: "2016-09", end: "2018-06", details: "Graduated first of class, MCC and JOC included." },
+          { title: "Master in aeronautical engineering", school: "Example University", start: "2012-09", end: "2016-06", details: "Thesis on approach procedures." },
+          { title: "Baccalauréat S", school: "Example High School", end: "2012-06" },
+        ],
+        languages: [{ name: "French", level: "Native" }, { name: "Spanish", level: "B2" }, { name: "German", level: "A2" }],
+        skills: ["CRM", "EFB", "Upset recovery (UPRT)", "Safety management (SMS)", "Long-range navigation", "Steep approach", "Customer service", "Leadership"],
+      },
+    };
+    const d = buildCvDocument(heavy);
+    const bytes = await buildCvPdf(d, { lang: "en" });
+    writeFileSync("test/out/cv-heavy.pdf", bytes);
+    expect((await PDFDocument.load(bytes)).getPageCount()).toBe(1);
+    // the text version (and the JSON Resume) keep everything
+    expect(cvToText(d)).toContain("Ramp agent");
+    expect(cvToText(d)).toContain("Landings");
+  });
+});

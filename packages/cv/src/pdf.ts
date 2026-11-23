@@ -63,7 +63,114 @@ export interface CvPdfOptions {
   photo?: Uint8Array;
 }
 
+/** hour categories kept on the page (the full breakdown stays in the text and JSON Resume versions) */
+const HOURS_KEPT = ["total", "pic", "picus", "copilot", "multiPilot", "multiEngine", "turbine", "jet", "helicopter", "night", "ifr", "instructor", "last12m"];
+const HOURS_SHORT = ["total", "pic", "copilot", "multiPilot", "turbine", "helicopter", "night", "ifr"];
+
+/**
+ * Density levels, tried in order until the CV fits on one page: each one drops a little more detail (the full
+ * breakdown stays in the text and JSON Resume versions) and tightens the spacing.
+ */
+interface Density {
+  /** vertical gaps between sections and entries */
+  gap: number;
+  /** header band and key figures, tighter */
+  tight: boolean;
+  /** licences on one line each (code and validity), on this many columns; 0 keeps the full entries */
+  licCols: number;
+  types: number;
+  typeMeta: boolean;
+  hoursShort: boolean;
+  jobs: number;
+  bullets: number;
+  eduMeta: boolean;
+  edu: number;
+  /** languages and skills in one row of pills */
+  merge: boolean;
+  targetLine: boolean;
+  /** the summary's length, 0 for all of it */
+  summary: number;
+}
+const DENSITY: Density[] = [
+  { gap: 1, tight: false, licCols: 0, types: 4, typeMeta: true, hoursShort: false, jobs: 4, bullets: 2, edu: 3, eduMeta: true, merge: false, targetLine: true, summary: 0 },
+  { gap: 0.92, tight: false, licCols: 2, types: 4, typeMeta: true, hoursShort: false, jobs: 4, bullets: 2, edu: 3, eduMeta: false, merge: false, targetLine: true, summary: 0 },
+  { gap: 0.88, tight: false, licCols: 3, types: 3, typeMeta: true, hoursShort: false, jobs: 4, bullets: 1, edu: 3, eduMeta: false, merge: true, targetLine: true, summary: 0 },
+  { gap: 0.85, tight: true, licCols: 3, types: 3, typeMeta: true, hoursShort: true, jobs: 4, bullets: 1, edu: 3, eduMeta: false, merge: true, targetLine: true, summary: 0 },
+  { gap: 0.82, tight: true, licCols: 3, types: 3, typeMeta: false, hoursShort: true, jobs: 3, bullets: 1, edu: 2, eduMeta: false, merge: true, targetLine: false, summary: 420 },
+  { gap: 0.75, tight: true, licCols: 3, types: 3, typeMeta: false, hoursShort: true, jobs: 3, bullets: 0, edu: 2, eduMeta: false, merge: true, targetLine: false, summary: 320 },
+  { gap: 0.68, tight: true, licCols: 3, types: 3, typeMeta: false, hoursShort: true, jobs: 3, bullets: 0, edu: 2, eduMeta: false, merge: true, targetLine: false, summary: 220 },
+];
+
+function fit(doc: CvDocument, d: Density): CvDocument {
+  const sections = doc.sections.map((s): Section => {
+    const lines = s.lines;
+    switch (s.id) {
+      case "summary":
+        // "matching the offer" (and, when space runs out, the target position) stay in the keywords; a long
+        // summary keeps its first sentences
+        return {
+          ...s,
+          lines: lines
+            .filter((l) => !(l.kind === "pair" && (l.key === "match" || !d.targetLine)))
+            .map((l) => (l.kind === "text" && d.summary ? { ...l, text: sentences(l.text, d.summary) } : l)),
+        };
+      case "hours": {
+        const kept = d.hoursShort ? HOURS_SHORT : HOURS_KEPT;
+        return { ...s, lines: lines.filter((l) => l.kind !== "pair" || !l.key || kept.includes(l.key)) };
+      }
+      case "types":
+        return { ...s, lines: lines.slice(0, d.types).map((l) => (l.kind === "item" && !d.typeMeta ? { ...l, meta: undefined } : l)) };
+      case "licences":
+        return { ...s, lines: d.licCols ? lines.map((l) => (l.kind === "item" ? { ...l, meta: validity(l.meta) } : l)) : lines };
+      case "experience":
+        return { ...s, lines: lines.slice(0, d.jobs).map((l) => (l.kind === "item" ? { ...l, bullets: l.bullets?.slice(0, d.bullets) } : l)) };
+      case "education":
+        return { ...s, lines: lines.slice(0, d.edu).map((l) => (l.kind === "item" && !d.eduMeta ? { ...l, meta: undefined } : l)) };
+      case "skills":
+        return d.merge && doc.sections.some((x) => x.id === "languages") ? { ...s, lines: [] } : s;
+      case "languages": {
+        const skills = doc.sections.find((x) => x.id === "skills");
+        if (!d.merge || !skills) return s;
+        const few = skills.lines.map((l) => (l.kind === "text" ? { ...l, text: l.text.split(" · ").slice(0, 6).join(" · ") } : l));
+        return { ...s, heading: `${s.heading} · ${skills.heading}`, lines: [...lines, ...few] };
+      }
+      default:
+        return s;
+    }
+  });
+  return { ...doc, sections: sections.filter((s) => s.id === "contact" || s.lines.length) };
+}
+
+/** the validity date, always last in a licence's details (authority and number left out) */
+function validity(meta?: string): string | undefined {
+  const last = meta?.split(" · ").at(-1);
+  return last && /\d{4}/.test(last) ? last : undefined;
+}
+
+/** the first sentences of a text, within max characters (at least the first one) */
+function sentences(s: string, max: number): string {
+  const parts = s.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) ?? [s];
+  let out = "";
+  for (const p of parts) {
+    if (out && (out + p).length > max) break;
+    out += p;
+  }
+  return out.trim();
+}
+
+/** A one-page A4 CV: the first density level whose content fits on one page (the last one otherwise). */
 export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Promise<Uint8Array> {
+  let out: { bytes: Uint8Array; pages: number } | undefined;
+  for (const d of DENSITY) {
+    out = await render(fit(doc, d), opts, d);
+    if (out.pages <= 1) break;
+  }
+  return out!.bytes;
+}
+
+async function render(doc: CvDocument, opts: CvPdfOptions, d: Density): Promise<{ bytes: Uint8Array; pages: number }> {
+  const g = d.gap;
+  const pad = d.tight ? 10 : 0;
   const pdf = await PDFDocument.create();
   const th = CV_THEMES[opts.theme ?? "navy"];
   const DARK = hex(th.dark);
@@ -169,10 +276,10 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
     }
     if (cur) contactLines.push(cur);
   }
-  const bandH = Math.max(photo ? D + 44 : 0, 46 + nameSize + headLines.length * 15 + (contactLines.length ? 14 + contactLines.length * 13 : 0) + 18);
+  const bandH = Math.max(photo ? D + 44 - 2 * pad : 0, 46 - 2 * pad + nameSize + headLines.length * 15 + (contactLines.length ? 14 + contactLines.length * 13 : 0) + 18);
   page.drawRectangle({ x: 0, y: H - bandH, width: W, height: bandH, color: DARK });
   page.drawRectangle({ x: 0, y: H - bandH - 3, width: W, height: 3, color: ACCENT });
-  y = 40 + nameSize * 0.8;
+  y = 40 - pad + nameSize * 0.8;
   text(doc.name, M, y, nameSize, bold, WHITE);
   y += 8;
   for (const l of headLines) {
@@ -212,17 +319,17 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
 
   /* ---------- Key figures ---------- */
   if (doc.figures.length) {
-    y += 16;
-    const h = 54;
+    y += 16 * g;
+    const h = 54 - (d.tight ? 6 : 0);
     rrect(M, y, CW, h, 8, TINT);
     const cw = CW / doc.figures.length;
     doc.figures.forEach((f, i) => {
       const x = M + i * cw;
       if (i) page.drawLine({ start: { x, y: Y(y + 12) }, end: { x, y: Y(y + h - 12) }, thickness: 0.6, color: RULE });
       const vw = width(f.value, bold, 17);
-      text(f.value, x + (cw - vw) / 2, y + 26, 17, bold, DARK);
+      text(f.value, x + (cw - vw) / 2, y + h / 2 - 1, 17, bold, DARK);
       const lw = width(f.label.toUpperCase(), semi, 7);
-      text(f.label.toUpperCase(), x + (cw - lw) / 2, y + 41, 7, semi, ACCENT);
+      text(f.label.toUpperCase(), x + (cw - lw) / 2, y + h / 2 + 14, 7, semi, ACCENT);
     });
     y += h;
   }
@@ -231,7 +338,7 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
   const heading = (s: Section) => {
     // keep the heading with the start of its section
     need(s.id === "experience" || s.id === "education" || s.id === "types" ? 96 : 64);
-    y += 24;
+    y += 24 * g;
     page.drawRectangle({ x: M, y: Y(y) - 1, width: 3, height: 10, color: ACCENT });
     text(s.heading.toUpperCase(), M + 9, y, 9.5, bold, DARK);
     const hw = width(s.heading.toUpperCase(), bold, 9.5);
@@ -283,8 +390,9 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
       const gap = 26;
       const cw = (CW - gap) / 2;
       for (let i = 0; i < pairs.length; i += 2) {
-        need(17);
-        y += 17;
+        const rh = d.tight ? 15 : 17;
+        need(rh);
+        y += rh;
         [pairs[i], pairs[i + 1]].forEach((p, j) => {
           if (!p) return;
           const x = M + j * (cw + gap);
@@ -314,7 +422,10 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
       continue;
     }
     if (s.id === "languages") {
-      pills(pairs.map((p) => ({ a: p.label, b: p.value === "—" ? undefined : p.value })));
+      pills([
+        ...pairs.map((p) => ({ a: p.label, b: p.value === "—" ? undefined : p.value })),
+        ...texts.flatMap((t) => t.text.split(" · ")).filter(Boolean).map((a) => ({ a })),
+      ]);
       continue;
     }
     if (s.id === "skills") {
@@ -324,7 +435,7 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
     if (s.id === "types") {
       for (const [n, it] of items.entries()) {
         need(38);
-        y += n ? 22 : 17;
+        y += n ? (d.tight ? 19 : 22) : 17;
         text(it.title, M, y, 9.8, semi, INK);
         if (it.value) {
           const vw = width(it.value, bold, 9.8);
@@ -350,7 +461,7 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
       const max = W - M - x;
       for (const it of items) {
         need(40);
-        const top = y + 8;
+        const top = y + 8 * g;
         y = top;
         const whenLines = it.when ? wrap(it.when, semi, 8.2, gutter) : [];
         whenLines.forEach((l, i) => text(l, M, top + 11 + i * 11, 8.2, semi, ACCENT));
@@ -365,10 +476,34 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
             text(l, x + 11, y, 9.2, reg, INK);
           });
         }
-        const bottom = Math.max(y, top + 11 + whenLines.length * 11) + 4;
+        const bottom = Math.max(y, top + 11 + whenLines.length * 11) + 4 * g;
         page.drawLine({ start: { x: lineX, y: Y(top) }, end: { x: lineX, y: Y(bottom) }, thickness: 0.8, color: RULE });
         page.drawCircle({ x: lineX, y: Y(top + 7.5), size: 3.2, color: WHITE, borderColor: ACCENT, borderWidth: 1.6 });
         y = bottom;
+      }
+      continue;
+    }
+    // compact: one line per licence (code and validity), on two or three columns
+    if (d.licCols && items.length && items.every((it) => it.short)) {
+      const cols = d.licCols;
+      const gap = 14;
+      const cw = (CW - gap * (cols - 1)) / cols;
+      y += 4;
+      for (let i = 0; i < items.length; i += cols) {
+        const row = items.slice(i, i + cols);
+        const two = row.some((it) => it.meta && width(it.short!, semi, 9.2) + 6 + width(it.meta, reg, 8) > cw - 10);
+        const h = two ? 26 : 16;
+        need(h);
+        row.forEach((it, j) => {
+          const x = M + j * (cw + gap);
+          page.drawRectangle({ x, y: Y(y + h - 2), width: 2, height: h - 5, color: ACCENT });
+          text(it.short!, x + 9, y + 11, 9.2, semi, INK);
+          if (it.meta) {
+            if (two) text(it.meta, x + 9, y + 22, 8, reg, MUTED);
+            else text(it.meta, x + 9 + width(it.short!, semi, 9.2) + 6, y + 11, 8, reg, MUTED);
+          }
+        });
+        y += h;
       }
       continue;
     }
@@ -419,7 +554,7 @@ export async function buildCvPdf(doc: CvDocument, opts: CvPdfOptions = {}): Prom
   }
   pdf.catalog.set(PDFName.of("MarkInfo"), pdf.context.obj({ Marked: true }));
   pdf.catalog.set(PDFName.of("Lang"), PDFString.of(LANG_TAG[opts.lang ?? "en"]));
-  return pdf.save();
+  return { bytes: await pdf.save(), pages: pages.length };
 }
 
 async function embedPhoto(pdf: PDFDocument, bytes: Uint8Array) {
