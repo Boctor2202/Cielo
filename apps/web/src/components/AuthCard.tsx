@@ -88,6 +88,8 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
     if (!sb) return;
     busy();
     const { error } = await sb.auth.signInWithPassword({ email, password });
+    // the language of the e-mails sent later (password, address change): the one the pilot uses now
+    if (!error) void sb.auth.updateUser({ data: { locale } }).catch(() => null);
     if (!error) return enter();
     if (/not confirmed/i.test(error.message)) {
       await sb.auth.resend({ type: "signup", email });
@@ -106,7 +108,7 @@ export function AuthCard({ mode }: { mode: "login" | "signup" }) {
     if (password.length < 8) return (setError(t("errPassword")), setState("error"));
     if (password !== password2) return (setError(t("errMismatch")), setState("error"));
     busy();
-    const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } });
+    const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo, data: { locale } } });
     if (error) return fail(error);
     if (data.session) return enter();
     setStep("verify");

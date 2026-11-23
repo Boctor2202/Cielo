@@ -123,10 +123,6 @@ export function HomeHero() {
       <HeroFilm />
       <div className="relative mx-auto grid min-h-[calc(100svh-4rem)] max-w-6xl items-center gap-12 px-4 pb-24 pt-10 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:pb-28">
         <div>
-          <motion.p className="mono-label inline-flex items-center gap-2 rounded-full border border-[#22c55e]/40 bg-[#22c55e]/10 px-3 py-1.5 !text-[#86efac]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-            <span className="blink h-1.5 w-1.5 rounded-full bg-[#22c55e]" aria-hidden />
-            {th("eyebrow")}
-          </motion.p>
           <Headline text={th("title")} />
           <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.6, ease }}>
             <p className="mt-5 max-w-lg text-pretty text-[17px] leading-relaxed text-white/85">{th("subtitle")}</p>
@@ -234,7 +230,6 @@ export function FeatureScroll() {
   return (
     <section id="fonctionnalites" className="relative">
       <div className="mx-auto max-w-6xl px-4 pt-24 sm:px-6">
-        <p className="mono-label">{t("label")}</p>
         <h2 className="mt-3 max-w-2xl text-balance font-display text-4xl font-semibold tracking-[-0.01em] sm:text-5xl">{t("title")}</h2>
         <p className="mt-4 max-w-2xl text-lg text-muted">{t("subtitle")}</p>
       </div>
@@ -348,7 +343,6 @@ export function MobileApp() {
     <section ref={ref} className="overflow-hidden">
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-24 sm:px-6 lg:grid-cols-2">
         <div>
-          <p className="mono-label">{t("label")}</p>
           <h2 className="mt-3 text-balance font-display text-4xl font-semibold tracking-[-0.01em] sm:text-5xl">{t("title")}</h2>
           <p className="mt-4 max-w-lg text-lg leading-relaxed text-muted">{t("text")}</p>
           <ul className="mt-6 space-y-2 text-[15px]">

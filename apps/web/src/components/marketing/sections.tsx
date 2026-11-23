@@ -16,10 +16,6 @@ export function Hero() {
       <div className="chart-grid pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_top,black_25%,transparent_70%)]" />
       <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1fr_1.12fr] lg:pb-28 lg:pt-20">
         <div>
-          <p className="mono-label inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/8 px-3 py-1.5">
-            <span className="blink h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
-            {t("eyebrow")}
-          </p>
           <h1 className="mt-6 text-balance text-[2.6rem] font-bold leading-[1.04] tracking-[-0.035em] sm:text-6xl lg:text-[4.1rem]">{t("title")}</h1>
           <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-muted">{t("subtitle")}</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -66,7 +62,6 @@ export function Why() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-24">
       <Reveal className="reveal max-w-2xl">
-        <p className="mono-label">{t("label")}</p>
         <h2 className="mt-3 text-balance text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
       </Reveal>
       <Reveal className="mt-10 grid gap-4 md:grid-cols-3">
@@ -93,7 +88,6 @@ export function Showcase() {
     <section id="features" className="border-y border-border bg-surface/40">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
         <Reveal className="reveal mb-12 max-w-2xl">
-          <p className="mono-label">{ts("label")}</p>
           <h2 className="mt-3 text-balance text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
           <p className="mt-4 text-lg text-muted">{t("subtitle")}</p>
           <p className="sr-only">{ts("hint")}</p>
@@ -110,7 +104,6 @@ export function HowItWorks() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-24">
       <Reveal className="reveal max-w-2xl">
-        <p className="mono-label">{t("label")}</p>
         <h2 className="mt-3 text-balance text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
       </Reveal>
       <Reveal as="ul" className="relative mt-12 grid gap-8 md:grid-cols-3 md:gap-6">

@@ -20,6 +20,7 @@ import { useAccess } from "@/lib/access";
 import { AircraftPhoto } from "./AircraftPhoto";
 import { AirportInput } from "./AirportInput";
 import { FlightAwareFill } from "./FlightAwareFill";
+import { TypeSearch } from "./TypeSearch";
 import { ReportPaste } from "./ReportPaste";
 import { Card, ClockInput, DurationInput, Field, Meter, Segmented, Toggle, useToast } from "./ui";
 import { SignatureModal, SignatureStatus, SignWithSavedButton } from "./Signature";
@@ -332,20 +333,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                   </datalist>
                 </Field>
                 <Field label={ta("type")} hint={type ? `${type.manufacturer} ${type.model} · ${type.classOrTypeRating ?? ""}` : undefined}>
-                  <input
-                    className="input num uppercase"
-                    list="geardown-types"
-                    value={aircraft ? (type?.icao ?? "") : (v.aircraftTypeIcao ?? "")}
-                    disabled={!!aircraft}
-                    onChange={(e) => set("aircraftTypeIcao", e.target.value.toUpperCase())}
-                  />
-                  <datalist id="geardown-types">
-                    {types?.map((ty) => (
-                      <option key={ty.id} value={ty.icao}>
-                        {ty.manufacturer} {ty.model}
-                      </option>
-                    ))}
-                  </datalist>
+                  <TypeSearch value={aircraft ? (type?.icao ?? "") : (v.aircraftTypeIcao ?? "")} disabled={!!aircraft} types={types} onChange={(x) => set("aircraftTypeIcao", x)} />
                 </Field>
                 <Field label={t("operator")} hint={!v.operator && recognisedOperator ? t("operatorRecognised") : undefined}>
                   <OperatorInput value={v.operator ?? ""} onChange={(x) => set("operator", x || undefined)} known={operators.all} placeholder={recognisedOperator ?? t("operatorPh")} />

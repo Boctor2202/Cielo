@@ -2046,7 +2046,8 @@
       "trial": "Free trial, no card: {days, plural, one {# day} other {# days}} left. After that, without a subscription, your logbook becomes read-only; nothing is deleted.",
       "pill": "Trial · {days} d",
       "pillDemo": "Demo · {days} d",
-      "pillLabel": "Free trial ends in {days} days. See the plans."
+      "pillLabel": "Free trial ends in {days} days. See the plans.",
+      "pillShort": "{days} d"
     },
     "photo": {
       "alt": "Photo of aircraft {reg}",

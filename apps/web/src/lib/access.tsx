@@ -48,7 +48,8 @@ export function Requires({ feature, write, children }: { feature?: MaxFeature; w
 
 /** Thin bar at the top of the app: demo days left, or read-only. */
 /** Days left of the free trial (or of the demo), at the top of every page: a click opens the plans. */
-export function TrialPill() {
+/** `compact`: only the days left (the narrow sidebar); the full label stays in the tooltip. */
+export function TrialPill({ compact = false }: { compact?: boolean }) {
   const t = useTranslations("app.access");
   const a = useAccess();
   if (!(a.trial || a.demo) || !a.daysLeft) return null;
@@ -56,7 +57,7 @@ export function TrialPill() {
   const tone = n <= 3 ? "border-[var(--warning)] text-[var(--warning)]" : n <= 7 ? "border-[var(--caution)] text-[var(--caution)]" : "border-accent/60 text-accent";
   return (
     <Link href={a.trial ? "/app/parametres" : "/inscription"} title={t("pillLabel", { days: n })} aria-label={t("pillLabel", { days: n })} className={`num inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11.5px] font-semibold ${tone}`}>
-      <Hourglass size={12} aria-hidden /> {t(a.trial ? "pill" : "pillDemo", { days: n })}
+      <Hourglass size={12} aria-hidden /> {compact ? t("pillShort", { days: n }) : t(a.trial ? "pill" : "pillDemo", { days: n })}
     </Link>
   );
 }

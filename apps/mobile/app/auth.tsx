@@ -12,7 +12,7 @@ type Step = "form" | "verify" | "forgot" | "reset";
 
 /** Sign in with e-mail and password, create an account confirmed by a 6-digit code, or reset the password by code. */
 export default function AuthScreen() {
-  const { t, session } = useApp();
+  const { t, session, locale } = useApp();
   const c = useTheme();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [step, setStep] = useState<Step>("form");
@@ -76,6 +76,7 @@ export default function AuthScreen() {
   const signIn = () =>
     go(async () => {
       const { error: e } = await sb().auth.signInWithPassword({ email: email.trim(), password });
+      if (!e) void sb().auth.updateUser({ data: { locale } }).catch(() => null);
       if (!e) return;
       if (/not confirmed/i.test(e.message)) {
         await sb().auth.resend({ type: "signup", email: email.trim() });
@@ -88,7 +89,7 @@ export default function AuthScreen() {
   const signUp = () =>
     go(async () => {
       if (password.length < 8) return setError(t("auth.errPassword"));
-      const { data, error: e } = await sb().auth.signUp({ email: email.trim(), password });
+      const { data, error: e } = await sb().auth.signUp({ email: email.trim(), password, options: { data: { locale } } });
       if (e) return fail(e);
       if (!data.session) {
         setStep("verify");

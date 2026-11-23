@@ -132,7 +132,7 @@ function Shell({ children }: { children: ReactNode }) {
             <Link href="/" aria-label="Geardown">
               <Logo />
             </Link>
-            <TrialPill />
+            <TrialPill compact />
           </div>
           <div className="px-3">
             <Link href="/app/carnet/nouveau" className="btn btn-primary w-full">

@@ -1,7 +1,8 @@
 "use client";
 
 import { Loader2, Radar, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import type { FoundFlight } from "@/lib/flightaware";
 import { apiFetch } from "@/lib/report";
@@ -48,13 +49,50 @@ export function FlightAwareFill({
     }
   };
 
+  // the results float above the page (a card's rounded, clipped edges would cut them), under the button
+  const btn = useRef<HTMLButtonElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  useLayoutEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const r = btn.current?.getBoundingClientRect();
+      if (!r) return;
+      const width = Math.min(380, window.innerWidth - 16);
+      const left = Math.max(8, Math.min(prominent ? r.left : r.right - width, window.innerWidth - width - 8));
+      setPos({ top: r.bottom + 4, left, width });
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, prominent]);
+  // closes with Escape or a click anywhere else
+  useEffect(() => {
+    if (!open) return;
+    const key = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const down = (e: PointerEvent) => {
+      const n = e.target as Node;
+      if (!pop.current?.contains(n) && !btn.current?.contains(n)) setOpen(false);
+    };
+    document.addEventListener("keydown", key);
+    document.addEventListener("pointerdown", down);
+    return () => {
+      document.removeEventListener("keydown", key);
+      document.removeEventListener("pointerdown", down);
+    };
+  }, [open]);
+
   return (
     <div className="relative">
-      <button type="button" className={prominent ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm text-accent"} disabled={!ready} title={ready ? undefined : t("needReg")} onClick={search}>
+      <button ref={btn} type="button" className={prominent ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm text-accent"} disabled={!ready} title={ready ? undefined : t("needReg")} onClick={search}>
         <Radar size={15} /> {t("button")}
       </button>
-      {open && (
-        <div className={`absolute top-full z-30 mt-1 w-[min(92vw,380px)] rounded-xl border border-border bg-bg p-2 shadow-2xl ${prominent ? "left-0" : "right-0"}`}>
+      {open && pos && createPortal(
+        <div ref={pop} style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }} className="z-[60] max-h-[60vh] overflow-y-auto rounded-xl border border-border bg-bg p-2 shadow-2xl">
           <div className="flex items-center justify-between px-2 pb-1">
             <p className="mono-label !text-[10px]">{t("title", { reg: registration ?? "" })}</p>
             <button type="button" className="btn btn-ghost !p-1" aria-label={t("close")} onClick={() => setOpen(false)}>
@@ -107,7 +145,8 @@ export function FlightAwareFill({
               </button>
             ))}
           {state === "idle" && flights.length > 0 && <p className="px-2 pt-1 text-[10px] text-muted">{t(flights[0]?.source === "adsb" ? "attributionAdsb" : "attribution")}</p>}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

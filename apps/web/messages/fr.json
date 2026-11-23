@@ -2046,7 +2046,8 @@
       "trial": "Essai gratuit, sans carte : {days, plural, one {encore # jour} other {encore # jours}}. Ensuite, sans abonnement, votre carnet passe en lecture seule ; rien n'est supprimé.",
       "pill": "Essai · {days} j",
       "pillDemo": "Démo · {days} j",
-      "pillLabel": "L'essai gratuit se termine dans {days} jours. Voir les abonnements."
+      "pillLabel": "L'essai gratuit se termine dans {days} jours. Voir les abonnements.",
+      "pillShort": "{days} j"
     },
     "photo": {
       "alt": "Photo de l'appareil {reg}",
