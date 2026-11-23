@@ -61,14 +61,14 @@ export const faIdent = (registration: string) => registration.trim().toUpperCase
 const addDay = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 86400_000).toISOString().slice(0, 10);
 
 /** Flights of one aircraft on one UTC day (a day either side is searched so late/early flights are found). */
-/** `withDayBefore`: the flights of the two days before are kept too (a search made today for a recent flight). */
+/** `withDayBefore`: the flights of the nine days before are kept too (AeroAPI's recent flights reach back about ten days) (a search made today for a recent flight). */
 export async function flightsForRegistration(registration: string, date: string, withDayBefore = false): Promise<FoundFlight[]> {
   const key = process.env.FLIGHTAWARE_API_KEY;
   if (!key) throw new FlightAwareError("not_configured", "FLIGHTAWARE_API_KEY is not set", 503);
   const ident = faIdent(registration);
   const ageDays = (Date.now() - Date.parse(`${date}T00:00:00Z`)) / 86400_000;
   const recent = ageDays < 9;
-  const qs = new URLSearchParams({ ident_type: "registration", start: addDay(date, withDayBefore ? -3 : -1), end: addDay(date, 2), max_pages: "2" });
+  const qs = new URLSearchParams({ ident_type: "registration", start: addDay(date, withDayBefore ? -9 : -1), end: addDay(date, 2), max_pages: withDayBefore ? "4" : "2" });
   const path = recent ? `/flights/${encodeURIComponent(ident)}` : `/history/flights/${encodeURIComponent(ident)}`;
   const r = await meteredFetch("flightaware", recent ? "flights" : "historyFlights", `https://aeroapi.flightaware.com/aeroapi${path}?${qs}`, { headers: { "x-apikey": key, Accept: "application/json" }, cache: "no-store" });
   if (r.status === 404) return [];
@@ -97,7 +97,7 @@ export async function flightsForRegistration(registration: string, date: string,
     // keep the flights that departed on the requested UTC day
     .filter((f) => {
       const d = (f.out ?? f.off ?? "").slice(0, 10);
-      return d === date || (withDayBefore && d >= addDay(date, -2) && d < date);
+      return d === date || (withDayBefore && d >= addDay(date, -9) && d < date);
     })
     // newest first: the flight just flown comes at the top
     .sort((a, b) => (b.out ?? b.off ?? "").localeCompare(a.out ?? a.off ?? ""));

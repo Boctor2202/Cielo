@@ -798,7 +798,7 @@
       "operatorPh": "Airline or operator",
       "operatorRecognised": "Recognised automatically: type to change it",
       "adsbTitle": "A flight from the last few days?",
-      "adsbHint": "Enter the registration: Geardown finds the airports and actual times of its flights over the last 3 days.",
+      "adsbHint": "Enter the registration: Geardown finds the airports and actual times of its flights over the last 10 days.",
       "registration": "Registration"
     },
     "signature": {

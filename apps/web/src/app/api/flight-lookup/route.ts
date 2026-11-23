@@ -29,10 +29,10 @@ export async function GET(req: Request) {
 
   // ADS-B first: free, for flights of today and yesterday (adsb.lol keeps about a day)
   const recent = Date.parse(today) - Date.parse(date) <= 86_400_000;
-  // a search for today also shows the flights of the two days before (the form's date is today by default)
+  // a search for today also shows the flights of the nine days before (the form's date is today by default)
   const withYesterday = date === today;
   if (recent) {
-    const adsbKey = `adsb|${reg}|${date}${withYesterday ? "+2" : ""}`;
+    const adsbKey = `adsb|${reg}|${date}${withYesterday ? "+9" : ""}`;
     const seen = cache.get(adsbKey);
     if (seen && Date.now() - seen.at < seen.ttl && seen.flights.length) return Response.json({ flights: seen.flights, source: "adsb", cached: true }, { headers: { "Cache-Control": "no-store" } });
     if (!rateLimited(`adsb:${user.id}`, 60, 86_400_000)) {
@@ -53,7 +53,7 @@ export async function GET(req: Request) {
   if (!process.env.FLIGHTAWARE_API_KEY) return Response.json(recent ? { flights: [] } : { error: "adsb_window" }, { status: recent ? 200 : 404 });
 
   const ident = reg.replace(/[^A-Z0-9]/g, "");
-  const key = `${ident}|${date}${withYesterday ? "+2" : ""}`;
+  const key = `${ident}|${date}${withYesterday ? "+9" : ""}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < hit.ttl) return Response.json({ flights: hit.flights, cached: true }, { headers: { "Cache-Control": "no-store" } });
   // stored answers first: a query paid once is never paid again

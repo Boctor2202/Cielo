@@ -161,7 +161,7 @@ export async function adsbFlights(reg: string, date: string, knownHex?: string, 
   return flightsFromTrace(pts)
     .filter((f) => {
       const d = (f.out ?? f.off).slice(0, 10);
-      return d === date || (withDayBefore && d < date && d >= new Date(Date.parse(`${date}T12:00:00Z`) - 2 * 86_400_000).toISOString().slice(0, 10));
+      return d === date || (withDayBefore && d < date && d >= new Date(Date.parse(`${date}T12:00:00Z`) - 9 * 86_400_000).toISOString().slice(0, 10));
     })
     .sort((a, b) => (b.out ?? b.off).localeCompare(a.out ?? a.off))
     .map((f) => ({
