@@ -4,7 +4,7 @@ import { CalendarDays, Camera, FileSpreadsheet, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  analyseTable, applyImportChoices, checkMapping, editImportedRow, findDuplicate, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
+  analyseTable, applyImportChoices, checkMapping, editImportedRow, IMPORT_FIELDS, matchImported, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
   type DateOrder, type DuplicateMatch, type ImportChoices, type ImportField, type ImportRowEdit, type ImportedRow, type LogbookLeg, type StoredMapping,
 } from "@cielo/core";
 import { apiFetch } from "@/lib/report";
@@ -265,16 +265,21 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     const pairs: { rowIndex: number; flight: Flight }[] = [];
     const dups: number[] = [];
     const dupOf: Record<number, DuplicateMatch> = {};
+    const built: Flight[] = [];
     for (const r of ok) {
       const f = await buildFlight(r.input!, airports, { source: "import", explicit: r.explicit });
       if (!f.operator && !f.isFstd) f.operator = ops.of(f);
-      // already in the logbook, or earlier in this file (exactly or very likely): left out unless the pilot keeps it
-      const m = findDuplicate(f, [...existing, ...pairs.map((p) => p.flight)]);
+      built.push(f);
+    }
+    // already in the logbook (one logbook flight per row): left out unless the pilot keeps it
+    const matches = matchImported(built, existing);
+    ok.forEach((r, i) => {
+      const m = matches[i];
       if (m && !("keepDuplicate" in r && r.keepDuplicate)) {
         dups.push(r.rowIndex);
         dupOf[r.rowIndex] = m;
-      } else pairs.push({ rowIndex: r.rowIndex, flight: f });
-    }
+      } else pairs.push({ rowIndex: r.rowIndex, flight: built[i]! });
+    });
     return { built: pairs.map((p) => p.flight), check: checkImport(parsed, pairs, dups, pdfRows ? 1 : 2, dupOf) };
   }
 

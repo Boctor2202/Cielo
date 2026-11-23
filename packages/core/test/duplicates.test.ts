@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findDuplicate } from "../src";
+import { findDuplicate, matchImported } from "../src";
 
 const f = (id: string, date: string, dep: string, arr: string, out: string | null, total: number, isFstd = false) =>
   ({ id, date, depIcao: dep, arrIcao: arr, outUtc: out ? `${date}T${out}:00.000Z` : null, offUtc: null, totalMin: total, isFstd, fstdMin: isFstd ? total : 0, deletedAt: null }) as never;
@@ -20,5 +20,17 @@ describe("flights already in the logbook", () => {
   });
   it("simulator sessions on the same day with the same time", () => {
     expect(findDuplicate(f("n", "2021-08-18", "FSTD", "FSTD", null, 75, true), logbook)).toMatchObject({ kind: "exact" });
+  });
+});
+
+describe("an import matched with the logbook", () => {
+  it("keeps two look-alike circuits of the same file and matches the logbook one to one", () => {
+    const rows = [f("r1", "2020-11-12", "LFPN", "LFPN", "12:03", 30), f("r2", "2020-11-12", "LFPN", "LFPN", "12:03", 30), f("r3", "2020-11-12", "LFPN", "LFPN", "12:08", 25)];
+    // nothing in the logbook: every row of the file is a flight
+    expect(matchImported(rows, [])).toEqual([null, null, null]);
+    // the logbook has one of them: one row matched, the other two imported
+    const m = matchImported(rows, [f("a", "2020-11-12", "LFPN", "LFPN", "12:03", 30)]);
+    expect(m.filter(Boolean)).toHaveLength(1);
+    expect(m[0]).toMatchObject({ kind: "exact", flight: { id: "a" } });
   });
 });

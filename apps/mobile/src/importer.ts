@@ -79,6 +79,7 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
   // the operator of each imported flight, as the logbook recognises it (call sign, aircraft, what it learned)
   const ops = operatorIndex(existing, await store.all("aircraft"), airlines());
   const pairs: PreparedImport["pairs"] = [];
+  let pool = existing.filter((e) => !e.deletedAt);
   const dups: number[] = [];
   const duplicateOf: Record<number, DuplicateMatch> = {};
   let skipped = 0;
@@ -167,8 +168,10 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
       locked: false,
     };
     if (!f.operator && !f.isFstd) f.operator = ops.of(f);
-    // already in the logbook, or earlier in this file (exactly or very likely): left out unless the pilot keeps it
-    const m = findDuplicate(f, [...existing, ...pairs.map((p) => p.flight)]);
+    // already in the logbook (one logbook flight per row, the rows of the file never compared with each other):
+    // left out unless the pilot keeps it
+    const m = findDuplicate(f, pool);
+    if (m) pool = pool.filter((e) => e.id !== m.flight.id);
     if (m && !("keepDuplicate" in r && (r as { keepDuplicate?: boolean }).keepDuplicate)) {
       dups.push(r.rowIndex);
       duplicateOf[r.rowIndex] = m;

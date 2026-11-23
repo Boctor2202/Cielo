@@ -42,3 +42,18 @@ export function findDuplicate(f: F, logbook: F[]): DuplicateMatch | null {
   }
   return probable;
 }
+
+/**
+ * The rows of an import already in the logbook, matched one to one: a logbook flight stands for one row only, so
+ * two circuits sessions the same morning (times often rounded or missing in old logbooks) both stay when the
+ * logbook has one of them. The rows of one file are never compared with each other: each row is an entry the
+ * pilot logged, even when two look alike.
+ */
+export function matchImported<T extends F>(rows: T[], logbook: F[]): (DuplicateMatch | null)[] {
+  let pool = logbook.filter((e) => !e.deletedAt);
+  return rows.map((f) => {
+    const m = findDuplicate(f, pool);
+    if (m) pool = pool.filter((e) => e.id !== m.flight.id);
+    return m;
+  });
+}

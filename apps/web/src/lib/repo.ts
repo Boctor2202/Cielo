@@ -85,7 +85,7 @@ export async function adoptPilotId(newPilotId: string, email?: string): Promise<
 
 /**
  * After a sign-in merged this browser's flights into an account that already had them (the same file imported
- * on both sides), the copies are removed: same date, same off-block minute, same duration. The oldest record wins;
+ * on both sides), the copies are removed: every field the same (date, airports, times, duration, aircraft, landings, function, remarks). The oldest record wins;
  * flights without block times are left alone, since two of them can legitimately look alike.
  */
 export async function dedupeFlights(): Promise<number> {
@@ -93,7 +93,9 @@ export async function dedupeFlights(): Promise<number> {
   const seen = new Map<string, Flight>();
   const extra: Flight[] = [];
   for (const f of all.sort((a, b) => a.createdAt.localeCompare(b.createdAt))) {
-    const k = `${f.date}|${(f.outUtc ?? f.offUtc)!.slice(0, 16)}|${f.isFstd ? f.fstdMin : f.totalMin}|${f.isFstd ? 1 : 0}`;
+    // every field a copy shares: two different flights of the same day can have the same times and duration
+    // (circuits, rounded or missing times in an old logbook)
+    const k = [f.date, f.depIcao, f.arrIcao, f.outUtc, f.offUtc, f.onUtc, f.inUtc, f.isFstd ? f.fstdMin : f.totalMin, f.isFstd ? 1 : 0, f.registration, f.landingsDay, f.landingsNight, f.function, f.remarks].join("|");
     if (seen.has(k)) extra.push(f);
     else seen.set(k, f);
   }
