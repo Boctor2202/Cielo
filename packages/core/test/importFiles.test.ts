@@ -256,3 +256,19 @@ describe("the check before importing", () => {
     expect(x.map((r) => r.input!.xcMin)).toEqual([0, 57]);
   });
 });
+
+describe("training devices written as aircraft", () => {
+  it("takes a SIM registration or an ALSIM / FNPT type as a simulator session, not flight time", () => {
+    const table = [
+      ["flight_date", "departure_airport", "arrival_airport", "aircraft_registration", "aircraft_model", "total_flight_time", "landings_day", "is_simulator"],
+      ["2019-06-04", "ZZZZ", "ZZZZ", "SIMAL2501", "AL250, ALSIM", "1:00", "0", ""],
+      ["2019-12-08", "ZZZZ", "ZZZZ", "SIMFNTPIIX", "737-700, BBJ, C-40", "4:00", "0", ""],
+      ["2020-08-11", "LFPN", "LFLC", "F-GRBZ", "TB20, SOCATA TRINIDAD", "2:13", "3", ""],
+    ];
+    const a = analyseTable(table);
+    const rows = rowsToFlights(a.rows, a.mapping, { dateOrder: a.dateOrder });
+    expect(rows[0]!.input).toMatchObject({ isFstd: true, fstdMin: 60, fstdType: "AL250, ALSIM" });
+    expect(rows[1]!.input).toMatchObject({ isFstd: true, fstdMin: 240 });
+    expect(rows[2]!.input).toMatchObject({ isFstd: false });
+  });
+});
