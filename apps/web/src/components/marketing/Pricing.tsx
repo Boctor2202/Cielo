@@ -89,7 +89,7 @@ export function Pricing({ showCompare = true, asPageTitle = false }: { showCompa
               {yearly || !monthly ? (
                 <>
                   <div className="mt-6 flex items-baseline gap-1">
-                    <span className="num text-4xl font-semibold tracking-tight">{money(SITE.pricing[p].yearly)}</span>
+                    <span className="font-display text-4xl font-bold tabular-nums tracking-[-0.02em]">{money(SITE.pricing[p].yearly)}</span>
                     <span className="text-muted">{t("perYear")}</span>
                   </div>
                   <p className="mt-1 text-sm text-muted">{t("billedOncePerYear")}</p>
@@ -103,7 +103,7 @@ export function Pricing({ showCompare = true, asPageTitle = false }: { showCompa
               ) : (
                 <>
                   <div className="mt-6 flex items-baseline gap-1">
-                    <span className="num text-4xl font-semibold tracking-tight">{money(monthly)}</span>
+                    <span className="font-display text-4xl font-bold tabular-nums tracking-[-0.02em]">{money(monthly)}</span>
                     <span className="text-muted">{t("perMonth")}</span>
                   </div>
                   <p className="mt-1 text-sm text-muted">{t("billedMonthly")}</p>

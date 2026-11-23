@@ -13,7 +13,6 @@ export function Hero() {
   const t = useTranslations("hero");
   return (
     <section className="horizon relative overflow-hidden">
-      <div className="chart-grid pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_top,black_25%,transparent_70%)]" />
       <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1fr_1.12fr] lg:pb-28 lg:pt-20">
         <div>
           <h1 className="mt-6 text-balance text-[2.6rem] font-bold leading-[1.04] tracking-[-0.035em] sm:text-6xl lg:text-[4.1rem]">{t("title")}</h1>
@@ -206,10 +205,11 @@ export function Features({ detailed = false }: { detailed?: boolean }) {
           return (
             <article key={k} className={`grid items-center gap-8 lg:grid-cols-2 lg:gap-14 ${i % 2 ? "lg:[&>*:first-child]:order-2" : ""}`}>
               <div>
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-accent/12 text-accent">
-                  <Icon size={20} />
-                </span>
-                <h3 className="mt-4 text-2xl font-bold tracking-tight sm:text-[1.75rem]">{t(`items.${k}.title`)}</h3>
+                {/* the icon sits in the heading's line, without a tile of its own */}
+                <h3 className="flex items-center gap-3 text-2xl font-bold tracking-tight sm:text-[1.75rem]">
+                  <Icon size={24} className="shrink-0 text-accent" aria-hidden />
+                  {t(`items.${k}.title`)}
+                </h3>
                 <p className="mt-3 text-[17px] leading-relaxed text-muted">{t(`items.${k}.text`)}</p>
                 <ul className={`mt-5 grid gap-2 ${detailed ? "" : "sm:grid-cols-1"}`}>
                   {points.map((p) => (
@@ -257,7 +257,6 @@ export function CtaBand() {
   return (
     <section className="px-4 pb-20 sm:px-6">
       <div className="hud-frame relative mx-auto max-w-6xl overflow-hidden rounded-2xl bg-brand px-6 py-14 text-center text-white sm:px-12">
-        <div className="chart-grid pointer-events-none absolute inset-0 opacity-60 [--grid:rgba(34,211,238,0.08)]" />
         <h2 className="relative text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h2>
         <p className="relative mx-auto mt-3 max-w-xl text-white/75">{t("text")}</p>
         <Link href="/inscription" className="btn relative mt-8 min-h-12 !bg-[#22C55E] !px-6 text-base !text-[#0A1626] hover:!bg-[#86EFAC]">
@@ -272,7 +271,6 @@ export function CtaBand() {
 export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="relative overflow-hidden border-b border-border">
-      <div className="chart-grid pointer-events-none absolute inset-0 [mask-image:linear-gradient(to_bottom,black,transparent)]" />
       <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{title}</h1>
         {subtitle && <p className="mt-4 max-w-2xl text-lg text-muted">{subtitle}</p>}

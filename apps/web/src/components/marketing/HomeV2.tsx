@@ -130,7 +130,7 @@ export function HomeHero() {
               ))}
             </ul>
             <div className="mt-7 flex gap-3 [&>a]:flex-1 sm:[&>a]:flex-none">
-              <Link href="/inscription" className="btn min-h-12 !bg-[#22c55e] !px-6 text-base !text-[#0a1626] shadow-[0_10px_40px_-10px_#22c55e] hover:!bg-[#86efac]">
+              <Link href="/inscription" className="btn min-h-12 !bg-[#22c55e] !px-6 text-base !text-[#0a1626] hover:!bg-[#86efac]">
                 {th("ctaTrial")} <ArrowRight size={18} aria-hidden />
               </Link>
               <Link href={{ pathname: "/connexion", query: { demo: "1" } }} className="btn min-h-12 border border-white/25 bg-[#02040b]/30 !px-6 text-base text-white backdrop-blur-md hover:border-white/60 hover:bg-white/10">
