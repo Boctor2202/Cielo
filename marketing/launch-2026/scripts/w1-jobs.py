@@ -17,7 +17,7 @@ jobs.append(dict(w=1080,h=1350,out="out/li-2411-why-geardown.png",html=page(1080
 # B. Carousel 25 Nov, 6 slides 1080x1350
 mist=[
  ("Night time counted from sunset","Night runs from the end of evening civil twilight to the beginning of morning civil twilight, when the sun is 6° below the horizon. Sunset is too early.","night"),
- ("PICUS logged as PIC","Pilot in command under supervision has its own column. It is not PIC time, even where it counts towards some licence requirements.","picus"),
+ ("PICUS without a countersignature","Under EASA, PICUS time goes in the pilot-in-command column only when the commander certifies it. Without the signature, it can be challenged.","picus"),
  ("Simulator time mixed with flight time","Sessions in a simulator (FSTD) go in their own section. They never add to your total flight time.","sim"),
  ("Totals not carried to the next page","Every page carries its totals forward. Miss one carry-over and every total after it is wrong.","totals"),
  ("Entries never signed","Training and check flights need the instructor's or examiner's signature. An unsigned entry can be questioned at your next check.","sign"),
