@@ -64,7 +64,8 @@ export function checkImport(rows: ImportedRow[], built: { rowIndex: number; flig
     const diff: number[] = [];
     for (const r of rows) {
       const f = byRow.get(r.rowIndex);
-      if (!f) continue;
+      // a simulator session's times are session time (its own line below), not flight time
+      if (!f || f.isFstd) continue;
       const g = (f[FLIGHT_KEY[field]] as number) || 0;
       geardown += g;
       const v = r.explicit[field as keyof ImportedRow["explicit"]];
@@ -106,7 +107,7 @@ export function checkImport(rows: ImportedRow[], built: { rowIndex: number; flig
   for (const r of rows) {
     const f = byRow.get(r.rowIndex);
     const written = r.explicit.total;
-    if (!f || written === undefined || !f.outUtc || !f.inUtc) continue;
+    if (!f || f.isFstd || written === undefined || !f.outUtc || !f.inUtc) continue;
     const block = Math.round((Date.parse(f.inUtc) - Date.parse(f.outUtc)) / 60_000);
     if (Math.abs(block - written) > 5) timesToCheck.push(fileRow(r.rowIndex));
   }

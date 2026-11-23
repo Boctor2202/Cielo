@@ -37,3 +37,14 @@ describe("times that disagree with the written total", () => {
     expect(c.timesToCheck).toEqual([1]);
   });
 });
+
+describe("simulator sessions", () => {
+  it("their written total is session time: not compared with flight time, not flagged", () => {
+    const rows = [row(0, { total: 60, pic: 60 }, 0), row(1, { total: 90, pic: 90 }, 1)];
+    const built = [{ rowIndex: 0, flight: fl(0, { isFstd: true, fstdMin: 60, landingsDay: 0 }) }, { rowIndex: 1, flight: fl(90, { picMin: 90 }) }];
+    const c = checkImport(rows, built, []);
+    expect(c.lines.find((l) => l.field === "total")).toEqual({ field: "total", file: 90, geardown: 90, rows: [] });
+    expect(c.lines.find((l) => l.field === "fstd")!.geardown).toBe(60);
+    expect(c.flags).toEqual({});
+  });
+});
