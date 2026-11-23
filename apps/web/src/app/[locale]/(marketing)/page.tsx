@@ -2,7 +2,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { JsonLd } from "@/components/JsonLd";
 import { faqLd, organizationLd, pageMeta, SITE_URL, softwareLd } from "@/lib/seo";
 import { CtaBand, Faq, HowItWorks, OfferBox, OwnershipBlock, ProofBand } from "@/components/marketing/sections";
-import { FeatureScroll, HomeHero, MobileApp, MoreFeatures } from "@/components/marketing/HomeV2";
+import { AppDemo, FeatureScroll, HomeHero, MobileApp, MoreFeatures } from "@/components/marketing/HomeV2";
 import { Pricing } from "@/components/marketing/Pricing";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -28,6 +28,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       />
       <HomeHero />
       <ProofBand />
+      <AppDemo />
       <FeatureScroll />
       <MoreFeatures />
       <MobileApp />

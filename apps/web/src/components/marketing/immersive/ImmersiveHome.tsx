@@ -215,7 +215,7 @@ export function ImmersiveHome() {
               {th("ctaDemo")}
             </Link>
           </div>
-          <StoreBadges className="mt-7 max-sm:hidden [&_a]:!border-white/15 [&_a]:!bg-white [&_a]:!text-[#0a1626]" />
+          <StoreBadges className="mt-7 max-sm:hidden [&_.store-soon]:!text-white/70" />
           <p className="mt-10 flex items-center gap-2 text-sm text-white/70" aria-hidden>
             <ChevronDown size={16} className="animate-bounce motion-reduce:animate-none" /> {t("scroll")}
           </p>

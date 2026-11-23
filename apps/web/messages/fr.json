@@ -3100,6 +3100,11 @@
       "dashboard": "L'app Geardown sur iPhone : vue d'ensemble",
       "logbook": "L'app Geardown sur iPhone : carnet de vol",
       "radar": "L'app Geardown sur iPhone : radar"
+    },
+    "demo": {
+      "title": "Une immatriculation, tout le vol.",
+      "text": "Tapez l'immatriculation : Geardown retrouve le vol dans les données ADS-B, remplit les aéroports et les heures bloc, et l'ajoute à vos totaux.",
+      "video": "Démo : un vol rempli depuis les données ADS-B et enregistré dans le carnet"
     }
   }
 }

@@ -122,16 +122,20 @@ export function HowItWorks() {
   );
 }
 
-/** A store badge: a link once the app is published there, otherwise a plain "coming soon" label (no dead "#"). */
+/** A store badge: a link once the app is published there, otherwise a plain label (no dead "#"). */
 function StoreLink({ href, className, label, children }: { href: string; className: string; label: string; children: React.ReactNode }) {
-  if (!href || href === "#") return <span className={`${className} cursor-default opacity-70`} aria-label={label}>{children}</span>;
+  if (!href || href === "#") return <span className={`${className} cursor-default`} aria-label={label}>{children}</span>;
   return <a href={href} className={className} aria-label={label}>{children}</a>;
 }
 
+/**
+ * The official App Store and Google Play badges (black versions, unmodified, at least 40 px high as Apple asks),
+ * in the page's language. Before the apps are published, a "coming soon" line sits beside them, never on them.
+ */
 export function StoreBadges({ className = "" }: { className?: string }) {
   const t = useTranslations("hero");
-  // Replace with the official Apple / Google badges (see their marketing guidelines) once the apps are live.
-  const badge = "flex h-12 items-center gap-2.5 rounded-xl border border-border bg-text px-4 text-bg transition-opacity hover:opacity-90";
+  const locale = useLocale();
+  const lang = locale === "fr" ? "fr" : "en";
   // the iPhone beta is open: one clear button instead of two « coming soon » badges
   if (SITE.betaUrl) {
     return (
@@ -141,29 +145,19 @@ export function StoreBadges({ className = "" }: { className?: string }) {
       </div>
     );
   }
+  const soon = SITE.stores.appStoreUrl === "#" || SITE.stores.playStoreUrl === "#";
+  const badge = "block h-12 transition-opacity hover:opacity-90";
   return (
-    <div className={`flex flex-wrap gap-3 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-3 ${className}`}>
       <StoreLink href={SITE.stores.appStoreUrl} className={badge} label={t("appStore")}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-          <path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.1zM13.9 5c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.1 1.1.1 2.3-.6 3-1.5z" />
-        </svg>
-        <span className="flex flex-col leading-tight">
-          <span className="text-[11px] opacity-80">{SITE.stores.appStoreUrl === "#" ? t("comingSoon") : "Download on the"}</span>
-          <span className="text-[15px] font-semibold">App Store</span>
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/badges/app-store-${lang}.svg`} alt="" className="h-full w-auto" />
       </StoreLink>
       <StoreLink href={SITE.stores.playStoreUrl} className={badge} label={t("playStore")}>
-        <svg width="18" height="20" viewBox="0 0 22 24" aria-hidden>
-          <path d="M1 1.2 12.4 12 1 22.8c-.3-.2-.5-.6-.5-1.1V2.3c0-.5.2-.9.5-1.1z" fill="#22C55E" />
-          <path d="m16.2 8.3-3.8 3.7L1 1.2l.2-.1c.4-.2.9-.2 1.4.1z" fill="#4ADE80" />
-          <path d="m16.2 15.7-13.6 7.8c-.5.3-1 .3-1.4.1L1 22.8 12.4 12z" fill="#F87171" />
-          <path d="m20.6 13.3-4.4 2.4L12.4 12l3.8-3.7 4.4 2.4c.9.6.9 2 0 2.6z" fill="#FBBF24" />
-        </svg>
-        <span className="flex flex-col leading-tight">
-          <span className="text-[11px] opacity-80">{SITE.stores.playStoreUrl === "#" ? t("comingSoon") : "Get it on"}</span>
-          <span className="text-[15px] font-semibold">Google Play</span>
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/badges/google-play-${lang}.svg`} alt="" className="h-full w-auto" />
       </StoreLink>
+      {soon && <span className="store-soon text-xs font-semibold uppercase tracking-wider text-muted">{t("comingSoon")}</span>}
     </div>
   );
 }
@@ -269,7 +263,7 @@ export function CtaBand() {
         <Link href="/inscription" className="btn relative mt-8 min-h-12 !bg-[#22C55E] !px-6 text-base !text-[#0A1626] hover:!bg-[#86EFAC]">
           {t("button")} <ArrowRight size={18} aria-hidden />
         </Link>
-        <StoreBadges className="relative mt-8 justify-center [&_a]:!border-white/20 [&_a]:!bg-white [&_a]:!text-[#0A1626]" />
+        <StoreBadges className="relative mt-8 justify-center [&_.store-soon]:!text-white/70" />
       </div>
     </section>
   );

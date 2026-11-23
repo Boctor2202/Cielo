@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState, type ComponentType } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { FILM_CREDITS } from "@/lib/aircraft-visuals";
 import { StoreBadges } from "./sections";
@@ -92,7 +92,7 @@ function HeroScreens() {
       onPointerLeave={() => (x.set(0), y.set(0))}
     >
       <motion.div className="mx-auto w-[300px]" style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.4, ease }}>
-        <PhoneShot src="/immersive/phones/dashboard.webp" alt="dashboard" />
+        <PhoneCycle />
       </motion.div>
     </motion.div>
   );
@@ -138,11 +138,11 @@ export function HomeHero() {
               </Link>
             </div>
             <p className="mt-4 text-sm text-white/65">{th("note")}</p>
-            <StoreBadges className="mt-6 hidden sm:flex [&_a]:!border-white/15 [&_a]:!bg-white [&_a]:!text-[#0a1626] [&_span]:!text-white/70" />
+            <StoreBadges className="mt-6 hidden sm:flex [&_.store-soon]:!text-white/70" />
           </motion.div>
           {/* on a phone the product shows in the first screen: the app rises from the bottom */}
-          <motion.div className="mx-auto mt-8 h-[300px] w-[250px] overflow-hidden sm:h-[380px] sm:w-[300px] lg:hidden" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5, ease }}>
-            <PhoneShot src="/immersive/phones/dashboard.webp" alt="dashboard" />
+          <motion.div className="mx-auto mt-8 h-[316px] w-[250px] overflow-hidden pt-4 sm:h-[396px] sm:w-[300px] lg:hidden" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5, ease }}>
+            <PhoneCycle />
           </motion.div>
         </div>
         <HeroScreens />
@@ -283,6 +283,87 @@ function MobileStep({ k, Screen }: { k: string; Screen: Step["Screen"] }) {
 }
 
 /** A real screenshot of the iPhone app in a phone frame (names and company details removed). */
+const PHONE_SCREENS = [
+  { src: "/immersive/phones/dashboard.webp", alt: "dashboard" },
+  { src: "/immersive/phones/logbook.webp", alt: "logbook" },
+  { src: "/immersive/phones/radar.webp", alt: "radar" },
+] as const;
+
+/** The phone alive: the app's real screens one after the other, the phone floating a little. */
+function PhoneCycle() {
+  const t = useTranslations("home2.phones");
+  const reduce = !!useReducedMotion();
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (reduce) return;
+    const id = setInterval(() => setI((k) => (k + 1) % PHONE_SCREENS.length), 3600);
+    return () => clearInterval(id);
+  }, [reduce]);
+  return (
+    <motion.div animate={reduce ? undefined : { y: [0, -10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}>
+      <div className="relative overflow-hidden rounded-[36px] border-[7px] border-[#0b0b0e] bg-[#0b0b0e] shadow-[0_40px_80px_-25px_rgba(0,0,0,.7)]">
+        {/* the first screen holds the frame's size; the others slide over it */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={PHONE_SCREENS[0].src} alt="" width={736} height={1600} className="invisible block h-auto w-full" aria-hidden />
+        <AnimatePresence initial={false}>
+          <motion.img
+            key={i}
+            src={PHONE_SCREENS[i].src}
+            alt={t(PHONE_SCREENS[i].alt)}
+            width={736}
+            height={1600}
+            decoding="async"
+            className="absolute inset-0 block h-full w-full rounded-[29px] object-cover"
+            initial={{ opacity: 0, y: 28, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.98 }}
+            transition={{ duration: 0.7, ease }}
+          />
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+/** The real app filling a flight from ADS-B, filmed in the page's language; the still frame with reduced motion. */
+export function AppDemo() {
+  const t = useTranslations("home2.demo");
+  const locale = useLocale();
+  const lang = locale === "fr" ? "fr" : "en";
+  const reduce = !!useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const near = useInView(ref, { once: true, margin: "300px 0px" });
+  return (
+    <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+      <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.6fr)] lg:gap-14">
+        <div>
+          <h2 className="text-balance font-display text-3xl tracking-[-0.02em] sm:text-4xl">{t("title")}</h2>
+          <p className="mt-4 max-w-md text-lg leading-relaxed text-muted">{t("text")}</p>
+        </div>
+        <div ref={ref} className="overflow-hidden rounded-2xl border border-border bg-[#0b1626] shadow-[0_40px_90px_-30px_rgba(2,6,23,.55)]">
+          <video
+            className="block aspect-[1140/900] h-auto w-full"
+            poster={`/immersive/demo/adsb-${lang}-poster.webp`}
+            autoPlay={!reduce}
+            muted
+            loop
+            playsInline
+            preload="none"
+            aria-label={t("video")}
+          >
+            {near && !reduce && (
+              <>
+                <source src={`/immersive/demo/adsb-${lang}-1280.mp4`} type="video/mp4" media="(min-width: 768px)" />
+                <source src={`/immersive/demo/adsb-${lang}-720.mp4`} type="video/mp4" />
+              </>
+            )}
+          </video>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function PhoneShot({ src, alt }: { src: string; alt: "dashboard" | "logbook" | "radar" }) {
   const t = useTranslations("home2.phones");
   return (

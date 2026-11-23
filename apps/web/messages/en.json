@@ -3100,6 +3100,11 @@
       "dashboard": "The Geardown iPhone app: overview",
       "logbook": "The Geardown iPhone app: logbook",
       "radar": "The Geardown iPhone app: radar"
+    },
+    "demo": {
+      "title": "One registration, the whole flight.",
+      "text": "Type the registration: Geardown finds the flight in the ADS-B data, fills in the airports and the block times, and adds it to your totals.",
+      "video": "Demo: a flight filled from ADS-B data and saved to the logbook"
     }
   }
 }
