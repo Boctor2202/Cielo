@@ -1,0 +1,179 @@
+<title>Geardown Launch Calendar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a flight-plan sheet — a phase strip counting down to launch, then one leg (week) after another, posts as timed entries. */
+:root{
+  --bg:#f4f7fa; --panel:#ffffff; --ink:#0d1b2e; --muted:#5b6b80; --line:#dde4ec;
+  --accent:#15803d; --accent-soft:#e3f4e9; --li:#0a66c2; --li-soft:#e6f0fa; --ig:#c13584; --ig-soft:#fbe9f3; --launch:#b45309; --launch-soft:#fdf0dc;
+  --display:"Fraunces",Georgia,serif; --sans:"Manrope",system-ui,-apple-system,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08111f; --panel:#0f1d33; --ink:#e8eef5; --muted:#93a6bc; --line:#1f3150;
+  --accent:#4ade80; --accent-soft:#12321f; --li:#5aa9f0; --li-soft:#10284a; --ig:#f06bb4; --ig-soft:#3a1630; --launch:#fbbf24; --launch-soft:#3a2a0a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08111f; --panel:#0f1d33; --ink:#e8eef5; --muted:#93a6bc; --line:#1f3150;
+  --accent:#4ade80; --accent-soft:#12321f; --li:#5aa9f0; --li-soft:#10284a; --ig:#f06bb4; --ig-soft:#3a1630; --launch:#fbbf24; --launch-soft:#3a2a0a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding-block:40px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,4.5vw,3rem);line-height:1.05}
+h2{font-size:1.5rem;margin-bottom:14px}
+h3{font-size:1.3rem}
+.eyebrow{font:700 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.lede{color:var(--muted);max-width:62ch;margin:12px 0 0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:28px 0 0}
+.facts div{background:var(--panel);padding:14px 16px;min-width:0}
+.facts span{display:block;font-size:12px;color:var(--muted)}
+.facts b{font-size:15px}
+.strip{margin:28px 0 8px;display:grid;grid-template-columns:3fr 1fr;gap:6px}
+.strip div{border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700}
+.strip .pre{background:var(--accent-soft);color:var(--accent)}
+.strip .go{background:var(--launch-soft);color:var(--launch)}
+.strip small{display:block;font:500 11px var(--mono);opacity:.85;margin-top:2px}
+section.block{margin-top:44px}
+.grow{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+.grow li{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}
+.grow b{display:block;margin-bottom:4px}
+.grow span{color:var(--muted);font-size:14px}
+.links{margin-top:12px;font:500 12.5px var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0;margin-top:40px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.filters button{font:700 13px var(--sans);border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:7px 14px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filters .count{margin-left:auto;font:500 12px var(--mono);color:var(--muted)}
+.week{margin-top:36px}
+.wk-head{display:flex;gap:16px;align-items:flex-start;margin-bottom:14px}
+.wk-num{font:700 13px var(--mono);background:var(--ink);color:var(--bg);border-radius:8px;padding:6px 9px;flex-shrink:0;margin-top:3px}
+.wk-dates{font:500 12px var(--mono);color:var(--muted);margin:0 0 2px}
+.wk-desc{color:var(--muted);margin:6px 0 0;max-width:70ch}
+.posts{display:grid;gap:10px}
+.post{display:grid;grid-template-columns:92px minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.post.launch{border-color:var(--launch)}
+.when{padding:14px 12px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;font-variant-numeric:tabular-nums}
+.when .day{font:700 11px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.when .date{font-weight:800;font-size:15px}
+.when .time{font:700 13px var(--mono);color:var(--accent)}
+.body{padding:14px 16px;min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.net,.fmt,.tag{font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 8px}
+.net.li{background:var(--li-soft);color:var(--li)} .net.ig{background:var(--ig-soft);color:var(--ig)}
+.fmt{background:var(--bg);color:var(--muted)}
+.tag{background:var(--launch-soft);color:var(--launch)}
+.body h4{font-size:16px;margin:8px 0 6px}
+.cap{white-space:pre-wrap;font-size:14px;background:var(--bg);border-radius:10px;padding:10px 12px;overflow-wrap:anywhere}
+.vis{font-size:13.5px;color:var(--muted);margin:10px 0 0}
+.vis b{color:var(--ink);font-weight:700;margin-right:6px}
+.actions{display:flex;gap:12px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.copy{font:700 12.5px var(--sans);border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:5px 10px;cursor:pointer}
+.copy:focus-visible,.filters button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.done{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer}
+.post.is-done{opacity:.55}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+.rules div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.rules ul{margin:6px 0 0;padding-left:18px;color:var(--muted);font-size:14px}
+.planb{border-left:3px solid var(--launch);background:var(--launch-soft);border-radius:0 12px 12px 0;padding:12px 16px;margin-top:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font:700 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+@media (max-width:560px){.post{grid-template-columns:1fr}.when{flex-direction:row;gap:10px;align-items:baseline;border-right:0;border-bottom:1px solid var(--line)}.strip{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Plan de communication · LinkedIn &amp; Instagram</p>
+  <h1>Pré-lancement et lancement de Geardown</h1>
+  <p class="lede">Quatre semaines, du lundi 23 novembre au dimanche 20 décembre 2026. Trois semaines de pré-lancement qui renvoient vers l'essai gratuit du site, puis le lancement le mardi 15 décembre. Textes des posts en anglais, prêts à copier.</p>
+
+  <div class="facts">
+    <div><span>Lancement</span><b>Mardi 15 déc. 2026</b></div>
+    <div><span>Destination de chaque post</span><b>Essai gratuit sur geardown.app</b></div>
+    <div><span>Publications prévues</span><b>{{N_LI}} LinkedIn · {{N_IG}} Instagram</b></div>
+    <div><span>Heures</span><b>Heure de Paris (UTC+1)</b></div>
+  </div>
+
+  <div class="strip" aria-label="Phases">
+    <div class="pre">Pré-lancement · S1 à S3<small>23 nov. → 13 déc. · J−22 à J−2</small></div>
+    <div class="go">Lancement · S4<small>14 → 20 déc. · J0 = 15 déc.</small></div>
+  </div>
+
+  <section class="block">
+    <h2>Gagner des abonnés</h2>
+    <ul class="grow">{{GROWTH}}</ul>
+    <p class="links">Instagram (lien en bio) : {{U_IG}}<br>LinkedIn : {{U_LI}}</p>
+  </section>
+
+  <nav class="filters" aria-label="Filtrer">
+    <button type="button" data-f="all" aria-pressed="true">Tout</button>
+    <button type="button" data-f="LI" aria-pressed="false">LinkedIn</button>
+    <button type="button" data-f="IG" aria-pressed="false">Instagram</button>
+    <span class="count" id="count"></span>
+  </nav>
+
+  {{WEEKS}}
+
+  <section class="block">
+    <h2>Plan B si l'app n'est pas validée par Apple</h2>
+    <div class="planb">Si l'App Store n'a pas validé l'app le 14 décembre au soir, le post du 15 annonce l'ouverture sur le web (« Geardown is live on the web, the iPhone app follows in the coming days ») et un second post annonce l'app le jour de sa validation. On n'annonce jamais une app qui n'est pas téléchargeable.</div>
+  </section>
+
+  <section class="block">
+    <h2>Règles pour chaque publication</h2>
+    <div class="rules">
+      <div><b>Données et visuels</b><ul><li>Uniquement le compte de démo Thomas Mercier</li><li>Aucun nom, aucune compagnie ni immatriculation réelle visible</li><li>Cartes d'utilisateurs republiées seulement avec leur accord écrit</li></ul></div>
+      <div><b>Ce qu'on ne dit pas</b><ul><li>Pas de faux avis ni de faux témoignages</li><li>Jamais « officiel » ni « approuvé par une autorité »</li><li>Aucun chiffre d'utilisateurs qui ne soit pas réel et vérifié</li></ul></div>
+      <div><b>Avant de publier</b><ul><li>Vérifier les prix et la durée de l'essai sur le site</li><li>Tester le lien du post</li><li>Répondre aux commentaires dans l'heure qui suit</li></ul></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Suivi chaque lundi</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Indicateur</th><th>Où le lire</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th></tr></thead>
+      <tbody>
+        <tr><td>Abonnés Instagram</td><td>Instagram › Statistiques</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Abonnés de la page LinkedIn</td><td>LinkedIn › Analytics</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Enregistrements et partages</td><td>Statistiques de chaque post</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Clics vers le site</td><td>Lien en bio / posts LinkedIn</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Essais démarrés</td><td>Admin › Vue d'ensemble</td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  var posts=[].slice.call(document.querySelectorAll('.post'));
+  var count=document.getElementById('count');
+  function apply(f){
+    var n=0;
+    posts.forEach(function(p){var show=f==='all'||p.dataset.net===f;p.hidden=!show;if(show)n++;});
+    document.querySelectorAll('.week').forEach(function(w){w.hidden=!w.querySelector('.post:not([hidden])');});
+    count.textContent=n+' publications';
+  }
+  document.querySelectorAll('.filters button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.filters button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+      apply(b.dataset.f);
+    });
+  });
+  apply('all');
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var el=document.getElementById(btn.dataset.target);
+      var done=function(){btn.textContent='Copié';setTimeout(function(){btn.textContent='Copier le texte';},1500);};
+      var fallback=function(){var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r);btn.textContent='Texte sélectionné';};
+      try{navigator.clipboard.writeText(el.textContent).then(done,fallback);}catch(e){fallback();}
+    });
+  });
+  posts.forEach(function(p){
+    var cb=p.querySelector('.done input');
+    try{if(localStorage.getItem(cb.id)==='1'){cb.checked=true;p.classList.add('is-done');}}catch(e){}
+    cb.addEventListener('change',function(){p.classList.toggle('is-done',cb.checked);try{localStorage.setItem(cb.id,cb.checked?'1':'0');}catch(e){}});
+  });
+})();
+</script>

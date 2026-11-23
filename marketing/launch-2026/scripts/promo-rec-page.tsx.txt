@@ -1,0 +1,24 @@
+"use client";
+// Local-only recording stage for social videos (not committed).
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { FtlLive, ImportLive, LogbookLive, MapLive } from "@/components/marketing/live/screens";
+
+const MAP = { import: ImportLive, ftl: FtlLive, map: MapLive, logbook: LogbookLive } as const;
+
+function Stage() {
+  const k = (useSearchParams().get("k") ?? "import") as keyof typeof MAP;
+  const S = MAP[k];
+  return (
+    <div style={{ width: 540, height: 960, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 22px", background: "radial-gradient(90% 60% at 50% 45%,#163a2a 0%,#0b1626 55%,#060d18 100%)" }}>
+      <div style={{ width: "100%" }}><S className="w-full" /></div>
+    </div>
+  );
+}
+export default function Page() {
+  return (
+    <div style={{ zoom: 2 }}>
+      <Suspense><Stage /></Suspense>
+    </div>
+  );
+}

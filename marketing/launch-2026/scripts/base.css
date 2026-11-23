@@ -1,0 +1,12 @@
+@font-face{font-family:F;src:url(file:///home/user/cielo/node_modules/.pnpm/@fontsource-variable+fraunces@5.3.0/node_modules/@fontsource-variable/fraunces/files/fraunces-latin-wght-normal.woff2);font-weight:100 900}
+@font-face{font-family:M;src:url(file:///home/user/cielo/node_modules/.pnpm/@fontsource-variable+manrope@5.3.0/node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2);font-weight:200 800}
+@font-face{font-family:J;src:url(file:///home/user/cielo/node_modules/.pnpm/@fontsource-variable+jetbrains-mono@5.3.0/node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2);font-weight:100 800}
+*{margin:0;box-sizing:border-box}
+html,body{background:transparent}
+.c{position:relative;overflow:hidden;color:#e8eef5;font-family:M}
+.word{display:flex;align-items:center;font:700 34px M;letter-spacing:.32em;color:#fff}
+.word .o{display:inline-block;width:40px;height:40px;border-radius:50%;border:3px solid #fff;position:relative;margin:0 .32em 0 .05em}
+.word .o i{position:absolute;width:11px;height:11px;border-radius:50%;background:#22c55e}
+.word .o i:nth-child(1){left:11.5px;top:5px}.word .o i:nth-child(2){left:5px;top:17px}.word .o i:nth-child(3){left:18px;top:17px}
+.mono{font-family:J}
+.green{color:#4ade80}

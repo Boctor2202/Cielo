@@ -1,0 +1,605 @@
+<title>Geardown Launch Calendar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a flight-plan sheet — a phase strip counting down to launch, then one leg (week) after another, posts as timed entries. */
+:root{
+  --bg:#f4f7fa; --panel:#ffffff; --ink:#0d1b2e; --muted:#5b6b80; --line:#dde4ec;
+  --accent:#15803d; --accent-soft:#e3f4e9; --li:#0a66c2; --li-soft:#e6f0fa; --ig:#c13584; --ig-soft:#fbe9f3; --launch:#b45309; --launch-soft:#fdf0dc;
+  --display:"Fraunces",Georgia,serif; --sans:"Manrope",system-ui,-apple-system,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08111f; --panel:#0f1d33; --ink:#e8eef5; --muted:#93a6bc; --line:#1f3150;
+  --accent:#4ade80; --accent-soft:#12321f; --li:#5aa9f0; --li-soft:#10284a; --ig:#f06bb4; --ig-soft:#3a1630; --launch:#fbbf24; --launch-soft:#3a2a0a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08111f; --panel:#0f1d33; --ink:#e8eef5; --muted:#93a6bc; --line:#1f3150;
+  --accent:#4ade80; --accent-soft:#12321f; --li:#5aa9f0; --li-soft:#10284a; --ig:#f06bb4; --ig-soft:#3a1630; --launch:#fbbf24; --launch-soft:#3a2a0a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding-block:40px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,4.5vw,3rem);line-height:1.05}
+h2{font-size:1.5rem;margin-bottom:14px}
+h3{font-size:1.3rem}
+.eyebrow{font:700 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.lede{color:var(--muted);max-width:62ch;margin:12px 0 0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:28px 0 0}
+.facts div{background:var(--panel);padding:14px 16px;min-width:0}
+.facts span{display:block;font-size:12px;color:var(--muted)}
+.facts b{font-size:15px}
+.strip{margin:28px 0 8px;display:grid;grid-template-columns:3fr 1fr;gap:6px}
+.strip div{border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700}
+.strip .pre{background:var(--accent-soft);color:var(--accent)}
+.strip .go{background:var(--launch-soft);color:var(--launch)}
+.strip small{display:block;font:500 11px var(--mono);opacity:.85;margin-top:2px}
+section.block{margin-top:44px}
+.grow{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+.grow li{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}
+.grow b{display:block;margin-bottom:4px}
+.grow span{color:var(--muted);font-size:14px}
+.links{margin-top:12px;font:500 12.5px var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0;margin-top:40px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.filters button{font:700 13px var(--sans);border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:7px 14px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filters .count{margin-left:auto;font:500 12px var(--mono);color:var(--muted)}
+.week{margin-top:36px}
+.wk-head{display:flex;gap:16px;align-items:flex-start;margin-bottom:14px}
+.wk-num{font:700 13px var(--mono);background:var(--ink);color:var(--bg);border-radius:8px;padding:6px 9px;flex-shrink:0;margin-top:3px}
+.wk-dates{font:500 12px var(--mono);color:var(--muted);margin:0 0 2px}
+.wk-desc{color:var(--muted);margin:6px 0 0;max-width:70ch}
+.posts{display:grid;gap:10px}
+.post{display:grid;grid-template-columns:92px minmax(0,1fr);background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.post.launch{border-color:var(--launch)}
+.when{padding:14px 12px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;font-variant-numeric:tabular-nums}
+.when .day{font:700 11px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.when .date{font-weight:800;font-size:15px}
+.when .time{font:700 13px var(--mono);color:var(--accent)}
+.body{padding:14px 16px;min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.net,.fmt,.tag{font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 8px}
+.net.li{background:var(--li-soft);color:var(--li)} .net.ig{background:var(--ig-soft);color:var(--ig)}
+.fmt{background:var(--bg);color:var(--muted)}
+.tag{background:var(--launch-soft);color:var(--launch)}
+.body h4{font-size:16px;margin:8px 0 6px}
+.cap{white-space:pre-wrap;font-size:14px;background:var(--bg);border-radius:10px;padding:10px 12px;overflow-wrap:anywhere}
+.vis{font-size:13.5px;color:var(--muted);margin:10px 0 0}
+.vis b{color:var(--ink);font-weight:700;margin-right:6px}
+.actions{display:flex;gap:12px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.copy{font:700 12.5px var(--sans);border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:5px 10px;cursor:pointer}
+.copy:focus-visible,.filters button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.done{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;cursor:pointer}
+.post.is-done{opacity:.55}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+.rules div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.rules ul{margin:6px 0 0;padding-left:18px;color:var(--muted);font-size:14px}
+.planb{border-left:3px solid var(--launch);background:var(--launch-soft);border-radius:0 12px 12px 0;padding:12px 16px;margin-top:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font:700 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+@media (max-width:560px){.post{grid-template-columns:1fr}.when{flex-direction:row;gap:10px;align-items:baseline;border-right:0;border-bottom:1px solid var(--line)}.strip{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Plan de communication · LinkedIn &amp; Instagram</p>
+  <h1>Pré-lancement et lancement de Geardown</h1>
+  <p class="lede">Quatre semaines, du lundi 23 novembre au dimanche 20 décembre 2026. Trois semaines de pré-lancement qui renvoient vers l'essai gratuit du site, puis le lancement le mardi 15 décembre. Textes des posts en anglais, prêts à copier.</p>
+
+  <div class="facts">
+    <div><span>Lancement</span><b>Mardi 15 déc. 2026</b></div>
+    <div><span>Destination de chaque post</span><b>Essai gratuit sur geardown.app</b></div>
+    <div><span>Publications prévues</span><b>9 LinkedIn · 17 Instagram</b></div>
+    <div><span>Heures</span><b>Heure de Paris (UTC+1)</b></div>
+  </div>
+
+  <div class="strip" aria-label="Phases">
+    <div class="pre">Pré-lancement · S1 à S3<small>23 nov. → 13 déc. · J−22 à J−2</small></div>
+    <div class="go">Lancement · S4<small>14 → 20 déc. · J0 = 15 déc.</small></div>
+  </div>
+
+  <section class="block">
+    <h2>Gagner des abonnés</h2>
+    <ul class="grow"><li><b>Régularité</b><span>3 publications Instagram (plus une ou deux stories) et 2 LinkedIn par semaine, toujours aux mêmes heures (08:30 sur LinkedIn ; 12:30 ou 19:00 sur Instagram, heure de Paris). Les algorithmes récompensent la régularité plus que le volume.</span></li>
+<li><b>Reels d&#x27;abord sur Instagram</b><span>C&#x27;est le format qui montre le compte à des non-abonnés. Accroche lisible dans la première seconde, 8 à 15 secondes, sous-titres incrustés (la plupart des gens regardent sans le son).</span></li>
+<li><b>Carrousels utiles à enregistrer</b><span>Les contenus pratiques (règles de nuit, FTL, erreurs de carnet) sont enregistrés et partagés : c&#x27;est ce signal qui élargit la diffusion. Terminer par « Save this ».</span></li>
+<li><b>Compte à rebours Instagram</b><span>Le sticker compte à rebours rappelle automatiquement le lancement à chaque personne qui l&#x27;active. Le publier en semaine 1 et le relancer en semaine 3.</span></li>
+<li><b>15 minutes d&#x27;échanges par jour</b><span>Commenter des posts de pilotes, d&#x27;écoles et de comptes aviation (sans lien, avec un vrai avis) et répondre à chaque commentaire dans l&#x27;heure. C&#x27;est le levier le plus sûr pour gagner des abonnés au début.</span></li>
+<li><b>#MyFlightmap</b><span>Inviter les pilotes à partager leur carte (le partage est déjà dans l&#x27;app) et en republier quelques-unes avec leur accord : chaque partage montre Geardown à leur réseau.</span></li>
+<li><b>Partages volontaires sur LinkedIn</b><span>Demander à des pilotes de ton entourage de repartager le post de lancement s&#x27;ils le souhaitent. La page Geardown publie : ton nom et ta compagnie n&#x27;apparaissent pas.</span></li>
+<li><b>Collaborations</b><span>Proposer une publication commune (fonction « Collab » d&#x27;Instagram) à des créateurs aviation ou à des écoles de pilotage, en indiquant clairement tout partenariat rémunéré (#ad).</span></li>
+<li><b>Lien et mesure</b><span>Le lien en bio et dans les posts LinkedIn porte un code de suivi par réseau (adresses ci-dessous). Les essais démarrés se lisent ensuite dans Admin › Vue d&#x27;ensemble.</span></li></ul>
+    <p class="links">Instagram (lien en bio) : geardown.app/?utm_source=instagram&utm_medium=social&utm_campaign=launch<br>LinkedIn : geardown.app/?utm_source=linkedin&utm_medium=social&utm_campaign=launch</p>
+  </section>
+
+  <nav class="filters" aria-label="Filtrer">
+    <button type="button" data-f="all" aria-pressed="true">Tout</button>
+    <button type="button" data-f="LI" aria-pressed="false">LinkedIn</button>
+    <button type="button" data-f="IG" aria-pressed="false">Instagram</button>
+    <span class="count" id="count"></span>
+  </nav>
+
+  <section class="week" id="semaine-1">
+  <header class="wk-head"><span class="wk-num">S1</span><div><p class="wk-dates">23 – 29 nov.</p><h3>Pré-lancement · Le problème</h3><p class="wk-desc">Teasers et coulisses : montrer ce que les pilotes vivent avec leur carnet, sans encore tout dévoiler. Objectif : premiers abonnés, compte à rebours lancé.</p></div></header>
+  <div class="posts"><article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Lun</span><span class="date">23 nov.</span><span class="time">19:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Reel 10 s</span></div>
+    <h4>Le carnet tenu à la main</h4>
+    <div class="cap" id="p-23-nov-19-00-ig" lang="en">Still adding up your logbook columns by hand? ✍️
+
+Page totals. Night time. PIC, IFR, landings carried forward. Every pilot knows the Sunday evening with a calculator.
+
+Something is coming for that. 15.12 ✈️
+Follow to see it first.
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Plan serré d&#x27;un carnet papier et d&#x27;une calculatrice, puis coupe nette sur l&#x27;écran Vue d&#x27;ensemble de l&#x27;app (totaux qui s&#x27;animent). Texte à l&#x27;écran : « Still doing this? » → « 15.12 ».</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-23-nov-19-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-23-nov-19-00-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post li" data-net="LI">
+  <div class="when"><span class="day">Mar</span><span class="date">24 nov.</span><span class="time">08:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net li">LinkedIn</span><span class="fmt">Texte + image</span></div>
+    <h4>Pourquoi Geardown</h4>
+    <div class="cap" id="p-24-nov-08-30-li" lang="en">Most pilots keep their logbook in three places: a paper book, a spreadsheet and an app that never quite matches either.
+
+Geardown was built by a working pilot who got tired of reconciling them. One logbook, right column by column: night time from civil twilight along the route, PIC, PICUS and SIC, page totals that follow, and your flight time limitations worked out from the same data.
+
+We open on 15 December. Until then, we will share what is inside, one feature at a time.
+
+How do you keep yours today?
+
+#aviation #pilots #flightcrew</div>
+    <p class="vis"><b>Visuel</b> Image sobre : le hero du site (jet au crépuscule au-dessus des nuages) avec le logo Geardown et « 15.12 ».</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-24-nov-08-30-li">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-24-nov-08-30-li"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Mer</span><span class="date">25 nov.</span><span class="time">12:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Carrousel 6 vues</span></div>
+    <h4>5 erreurs de carnet</h4>
+    <div class="cap" id="p-25-nov-12-30-ig" lang="en">5 logbook mistakes that come back at your next check 👇
+
+1. Night time counted from sunset instead of civil twilight
+2. PICUS logged as PIC
+3. Simulator time mixed with flight time
+4. Totals not carried to the next page
+5. Entries never signed
+
+Save this for your next logbook review 📌
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Carrousel aux couleurs de l&#x27;app (fond nuit, accent vert). Une erreur par vue, avec la bonne règle en une ligne. Dernière vue : « Geardown gets these right for you · 15.12 ».</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-25-nov-12-30-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-25-nov-12-30-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post li" data-net="LI">
+  <div class="when"><span class="day">Jeu</span><span class="date">26 nov.</span><span class="time">08:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net li">LinkedIn</span><span class="fmt">Sondage</span></div>
+    <h4>Comment tenez-vous votre carnet ?</h4>
+    <div class="cap" id="p-26-nov-08-30-li" >Quick poll for pilots: how do you keep your logbook today?
+
+• Paper
+• Spreadsheet
+• A logbook app
+• A bit of everything
+
+(We are building Geardown around the answers.)
+
+#aviation #pilots #flightcrew</div>
+    <p class="vis"><b>Visuel</b> Sondage natif LinkedIn, sans visuel. Répondre à chaque commentaire dans l&#x27;heure.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-26-nov-08-30-li">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-26-nov-08-30-li"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Ven</span><span class="date">27 nov.</span><span class="time">19:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Reel 8 s</span></div>
+    <h4>From gear up to gear down</h4>
+    <div class="cap" id="p-27-nov-19-00-ig" lang="en">From gear up to gear down. 🛬
+Your complete logbook, coming 15.12.
+
+Turn on notifications so you don&#x27;t miss it 🔔
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Le film du hero (décollage au crépuscule) en boucle, titre « Geardown » puis « 15.12 ». Musique calme, sans voix.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-27-nov-19-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-27-nov-19-00-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Dim</span><span class="date">29 nov.</span><span class="time">18:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Story</span></div>
+    <h4>Compte à rebours</h4>
+    <div class="cap" id="p-29-nov-18-00-ig" >Sticker « Compte à rebours » : « Geardown · 15 décembre ». Texte : « Tap to get a reminder ».</div>
+    <p class="vis"><b>Visuel</b> Story fond nuit avec le logo. Le sticker compte à rebours rappelle automatiquement le lancement à tous ceux qui l&#x27;activent : c&#x27;est le principal levier d&#x27;abonnés de la semaine.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-29-nov-18-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-29-nov-18-00-ig"> Publié</label></div>
+  </div>
+</article></div>
+</section>
+<section class="week" id="semaine-2">
+  <header class="wk-head"><span class="wk-num">S2</span><div><p class="wk-dates">30 nov. – 6 déc.</p><h3>Pré-lancement · Les fonctions phares</h3><p class="wk-desc">Une fonction par post, montrée en vrai dans l&#x27;app (compte de démo Thomas Mercier). Objectif : enregistrements, partages, premiers essais.</p></div></header>
+  <div class="posts"><article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Lun</span><span class="date">30 nov.</span><span class="time">19:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Reel 15 s</span></div>
+    <h4>Import depuis une photo</h4>
+    <div class="cap" id="p-30-nov-19-00-ig" lang="en">Years of paper logbook. One photo per page. 📸
+
+Geardown reads every line, checks it, and shows you the totals before anything is imported. Excel, CSV, LogTen, Safelog and CrewLounge work too.
+
+15.12 · try it free for 30 days, no card.
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Enregistrement d&#x27;écran : photo d&#x27;une page de carnet (fictive, compte démo) → lignes reconnues → écran « Vérifiez vos totaux ». Aucune donnée réelle de pilote.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-30-nov-19-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-30-nov-19-00-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post li" data-net="LI">
+  <div class="when"><span class="day">Mar</span><span class="date">1 déc.</span><span class="time">08:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net li">LinkedIn</span><span class="fmt">Carrousel PDF</span></div>
+    <h4>Importer son ancien carnet</h4>
+    <div class="cap" id="p-1-d-c-08-30-li" lang="en">Switching logbooks usually means a weekend of retyping. It shouldn&#x27;t.
+
+Geardown imports:
+→ Excel and CSV exports
+→ LogTen, Safelog, CrewLounge
+→ a roster PDF
+→ a photo of your paper logbook
+
+Every line is read and checked, and you confirm the totals before anything is saved. Your old logbook stays yours, and you can export everything again at any time.
+
+Opening 15 December.
+
+#aviation #pilots #flightcrew</div>
+    <p class="vis"><b>Visuel</b> Document PDF de 6 pages (format carrousel LinkedIn) : un format par page avec une capture, dernière page avec le lien.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-1-d-c-08-30-li">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-1-d-c-08-30-li"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Mer</span><span class="date">2 déc.</span><span class="time">12:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Carrousel 5 vues</span></div>
+    <h4>Flightmap</h4>
+    <div class="cap" id="p-2-d-c-12-30-ig" lang="en">Every route you&#x27;ve flown, on one map. 🗺️
+
+Airports, nautical miles, countries visited, filtered by year or aircraft type, and shareable in one tap.
+
+What would yours look like? From 15.12, share it with #MyFlightmap and we&#x27;ll repost our favourites.
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Cartes Flightmap du compte démo Thomas Mercier (thème sombre et clair), puis la carte de partage au format story. Dernière vue : « #MyFlightmap ».</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-2-d-c-12-30-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-2-d-c-12-30-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post li" data-net="LI">
+  <div class="when"><span class="day">Jeu</span><span class="date">3 déc.</span><span class="time">08:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net li">LinkedIn</span><span class="fmt">Texte + capture</span></div>
+    <h4>Les FTL sans calcul</h4>
+    <div class="cap" id="p-3-d-c-08-30-li" lang="en">Flight and duty time over 7 days, 28 days, the calendar year and 12 months, worked out from your logbook and your roster. ORO.FTL or Subpart Q.
+
+You see how close you are to each limit before you accept the extra duty, not after.
+
+Which limit do you check most often?
+
+#aviation #pilots #flightcrew</div>
+    <p class="vis"><b>Visuel</b> Capture de l&#x27;écran FTL (barres de limites) du compte démo, avec un léger cadre d&#x27;ordinateur.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-3-d-c-08-30-li">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-3-d-c-08-30-li"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Ven</span><span class="date">4 déc.</span><span class="time">19:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Reel 12 s</span></div>
+    <h4>Remplir un vol en 3 secondes</h4>
+    <div class="cap" id="p-4-d-c-19-00-ig" lang="en">Type the registration. That&#x27;s it. ⏱️
+
+Geardown finds the aircraft&#x27;s flights of the last few days and fills in the airports and the actual block times.
+
+15.12 ✈️
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Enregistrement d&#x27;écran : saisie d&#x27;une immatriculation fictive (F-HGDN) → liste des vols → formulaire rempli. Gros plan sur le doigt / le clic.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-4-d-c-19-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-4-d-c-19-00-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Dim</span><span class="date">6 déc.</span><span class="time">18:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Story</span></div>
+    <h4>Quiz nuit</h4>
+    <div class="cap" id="p-6-d-c-18-00-ig" >Sticker quiz : « For your logbook, night starts at… » A) Sunset B) End of civil twilight ✅ C) 30 min after sunset.</div>
+    <p class="vis"><b>Visuel</b> Story fond nuit. Le lendemain, story de réponse avec un lien vers le site (sticker lien, adresse avec UTM).</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-6-d-c-18-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-6-d-c-18-00-ig"> Publié</label></div>
+  </div>
+</article></div>
+</section>
+<section class="week" id="semaine-3">
+  <header class="wk-head"><span class="wk-num">S3</span><div><p class="wk-dates">7 – 13 déc.</p><h3>Pré-lancement · Les premiers utilisateurs</h3><p class="wk-desc">Appel direct à essayer : 30 jours gratuits sans carte, prix fondateur pour les 500 premiers abonnés. Objectif : essais démarrés.</p></div></header>
+  <div class="posts"><article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Lun</span><span class="date">7 déc.</span><span class="time">19:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Reel 10 s</span></div>
+    <h4>Essayez avant tout le monde</h4>
+    <div class="cap" id="p-7-d-c-19-00-ig" lang="en">You don&#x27;t have to wait for the 15th. 👀
+
+The web version is already open: 30 days free, no card, everything included. The iPhone app follows on 15 December.
+
+Link in bio.
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Reel rythmé : 4 écrans de l&#x27;app qui défilent (Vue d&#x27;ensemble, Flightmap, FTL, Signature), texte « 30 days free · no card ».</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-7-d-c-19-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-7-d-c-19-00-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post li" data-net="LI">
+  <div class="when"><span class="day">Mar</span><span class="date">8 déc.</span><span class="time">08:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net li">LinkedIn</span><span class="fmt">Texte</span></div>
+    <h4>Prix fondateur</h4>
+    <div class="cap" id="p-8-d-c-08-30-li" lang="en">A promise to our first subscribers: the first 500 keep their price for as long as they stay subscribed.
+
+Basic: €3.99 a month. Max (rosters, FTL, radar, tracks, CV and job matching): €8.99 a month. Yearly plans include two months free.
+
+Start with 30 days free, no card: geardown.app/?utm_source=linkedin&amp;utm_medium=social&amp;utm_campaign=launch
+
+#aviation #pilots #flightcrew</div>
+    <p class="vis"><b>Visuel</b> Pas de visuel ou une carte simple des deux offres aux couleurs de la marque. Vérifier les prix affichés sur le site le jour même.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-8-d-c-08-30-li">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-8-d-c-08-30-li"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Mer</span><span class="date">9 déc.</span><span class="time">12:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Carrousel 5 vues</span></div>
+    <h4>Signer ses vols</h4>
+    <div class="cap" id="p-9-d-c-12-30-ig" lang="en">Sign your flights with your finger ✍️
+
+Save your signature once, sign a flight, a selection or the whole logbook, or ask a captain or instructor to sign. A flight changed later shows as no longer signed.
+
+Save for later 📌
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Captures du compte démo : signature au doigt, demande de signature à un collègue, vol signé dans la liste, annexe des signatures dans l&#x27;export PDF.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-9-d-c-12-30-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-9-d-c-12-30-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post li" data-net="LI">
+  <div class="when"><span class="day">Jeu</span><span class="date">10 déc.</span><span class="time">08:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net li">LinkedIn</span><span class="fmt">Texte + capture</span></div>
+    <h4>Votre carnet vous appartient</h4>
+    <div class="cap" id="p-10-d-c-08-30-li" lang="en">Your logbook is a legal record of your career. It should never be locked inside an app.
+
+With Geardown you can export everything at any time, in EASA, FAA or CASA layouts, as PDF, CSV or Excel, even if you stop subscribing.
+
+What matters most to you when choosing a logbook?
+
+#aviation #pilots #flightcrew</div>
+    <p class="vis"><b>Visuel</b> Capture de l&#x27;écran Export (choix des formats) du compte démo.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-10-d-c-08-30-li">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-10-d-c-08-30-li"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Ven</span><span class="date">11 déc.</span><span class="time">19:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Reel 10 s</span></div>
+    <h4>Plus jamais de médical expiré</h4>
+    <div class="cap" id="p-11-d-c-19-00-ig" lang="en">Medical, licence, type rating, recency. 📅
+Geardown reminds you before anything lapses and checks your recent experience with every flight.
+
+4 days to go.
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Écran Licences &amp; médical du compte démo, avec la notification de rappel qui apparaît. Texte « 4 days ».</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-11-d-c-19-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-11-d-c-19-00-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Sam</span><span class="date">12 déc.</span><span class="time">11:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Story</span></div>
+    <h4>Rappel J-3</h4>
+    <div class="cap" id="p-12-d-c-11-00-ig" >Story : « 3 days » + sticker lien vers le site (UTM Instagram) + republication du compte à rebours.</div>
+    <p class="vis"><b>Visuel</b> Reprendre le sticker compte à rebours de la semaine 1 pour relancer les rappels.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-12-d-c-11-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-12-d-c-11-00-ig"> Publié</label></div>
+  </div>
+</article></div>
+</section>
+<section class="week" id="semaine-4">
+  <header class="wk-head"><span class="wk-num">S4</span><div><p class="wk-dates">14 – 20 déc.</p><h3>Lancement · 15 décembre</h3><p class="wk-desc">Annonce le jour J sur les deux réseaux, puis démo, prise en main et invitation à partager sa Flightmap.</p></div></header>
+  <div class="posts"><article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Lun</span><span class="date">14 déc.</span><span class="time">19:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Story</span></div>
+    <h4>Demain</h4>
+    <div class="cap" id="p-14-d-c-19-00-ig" >Story : « Tomorrow. » sur le film du hero, sticker compte à rebours.</div>
+    <p class="vis"><b>Visuel</b> Courte, sans texte de plus.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-14-d-c-19-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-14-d-c-19-00-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post li launch" data-net="LI">
+  <div class="when"><span class="day">Mar</span><span class="date">15 déc.</span><span class="time">08:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net li">LinkedIn</span><span class="fmt">Texte + vidéo</span><span class="tag">Jour J</span></div>
+    <h4>Lancement</h4>
+    <div class="cap" id="p-15-d-c-08-30-li" lang="en">Geardown is live. ✈️
+
+The pilot logbook that gets it right column by column, now on iPhone and on the web:
+→ import your old logbook, even from photos
+→ night time, PIC, PICUS and SIC worked out for you
+→ flight time limitations from your logbook and roster
+→ signatures, licence reminders, exports in EASA, FAA and CASA layouts
+→ your career on one map
+
+30 days free, no card: geardown.app/?utm_source=linkedin&amp;utm_medium=social&amp;utm_campaign=launch
+
+Thank you to everyone who followed along these past weeks.
+
+#aviation #pilots #flightcrew</div>
+    <p class="vis"><b>Visuel</b> Vidéo de 20 à 30 s : film du hero puis enchaînement des écrans. Si Apple n&#x27;a pas encore validé l&#x27;app, publier la version de secours (voir le plan B).</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-15-d-c-08-30-li">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-15-d-c-08-30-li"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig launch" data-net="IG">
+  <div class="when"><span class="day">Mar</span><span class="date">15 déc.</span><span class="time">12:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Reel 20 s</span><span class="tag">Jour J</span></div>
+    <h4>Lancement</h4>
+    <div class="cap" id="p-15-d-c-12-30-ig" lang="en">It&#x27;s here. 🛫
+
+Geardown, your complete logbook, is live on iPhone and on the web. 30 days free, no card.
+
+Link in bio · share your Flightmap with #MyFlightmap
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Même montage que LinkedIn, au format vertical, musique plus présente.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-15-d-c-12-30-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-15-d-c-12-30-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig launch" data-net="IG">
+  <div class="when"><span class="day">Mar</span><span class="date">15 déc.</span><span class="time">19:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Stories ×4</span><span class="tag">Jour J</span></div>
+    <h4>Soirée de lancement</h4>
+    <div class="cap" id="p-15-d-c-19-00-ig" >1. « It&#x27;s live » + lien. 2. Démo de l&#x27;import par photo. 3. « Share your Flightmap » (exemple Thomas Mercier). 4. Sondage « What should we build next? ».</div>
+    <p class="vis"><b>Visuel</b> Republier chaque story où Geardown est mentionné (avec l&#x27;accord des personnes).</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-15-d-c-19-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-15-d-c-19-00-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post li" data-net="LI">
+  <div class="when"><span class="day">Mer</span><span class="date">16 déc.</span><span class="time">08:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net li">LinkedIn</span><span class="fmt">Carrousel PDF</span></div>
+    <h4>Ce qu&#x27;il y a dans Geardown</h4>
+    <div class="cap" id="p-16-d-c-08-30-li" lang="en">Everything inside Geardown, in 8 pages. Swipe →
+
+Which one would you use first?
+
+#aviation #pilots #flightcrew</div>
+    <p class="vis"><b>Visuel</b> PDF de 8 pages : une fonction par page (import, carnet, Flightmap, FTL, licences, signatures, CV et offres, exports).</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-16-d-c-08-30-li">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-16-d-c-08-30-li"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Jeu</span><span class="date">17 déc.</span><span class="time">12:30</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Carrousel 6 vues</span></div>
+    <h4>Vos 10 premières minutes</h4>
+    <div class="cap" id="p-17-d-c-12-30-ig" lang="en">Your first 10 minutes on Geardown ⏱️
+
+1. Create your account (30 days free, no card)
+2. Import your old logbook
+3. Check your totals
+4. Add your licences and medical
+5. Log your next flight from its registration
+6. Share your Flightmap
+
+Save this 📌
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Une étape par vue, chacune avec la capture correspondante du compte démo.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-17-d-c-12-30-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-17-d-c-12-30-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post ig" data-net="IG">
+  <div class="when"><span class="day">Ven</span><span class="date">18 déc.</span><span class="time">19:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net ig">Instagram</span><span class="fmt">Reel 10 s</span></div>
+    <h4>#MyFlightmap</h4>
+    <div class="cap" id="p-18-d-c-19-00-ig" lang="en">Your routes, your map. 🗺️
+Share yours with #MyFlightmap: we&#x27;ll feature some of them next week.
+
+#pilotlife #avgeek #pilotlogbook #aviation #pilotsofinstagram #airlinepilot #corporatepilot #flighttraining</div>
+    <p class="vis"><b>Visuel</b> Montage des cartes partagées avec l&#x27;accord écrit de leurs auteurs. Sinon, la carte du compte démo. Jamais de carte d&#x27;un pilote réel sans son accord.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-18-d-c-19-00-ig">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-18-d-c-19-00-ig"> Publié</label></div>
+  </div>
+</article>
+<article class="post li" data-net="LI">
+  <div class="when"><span class="day">Sam</span><span class="date">19 déc.</span><span class="time">10:00</span></div>
+  <div class="body">
+    <div class="meta"><span class="net li">LinkedIn</span><span class="fmt">Texte</span></div>
+    <h4>Merci et la suite</h4>
+    <div class="cap" id="p-19-d-c-10-00-li" lang="en">Thank you to every pilot who tried Geardown this week and sent us feedback.
+
+What would you like us to build next? Every comment is read.
+
+Happy holidays, and safe flights.
+
+#aviation #pilots #flightcrew</div>
+    <p class="vis"><b>Visuel</b> Image du hero version jour (avion au-dessus des nuages). Ne citer aucun chiffre d&#x27;inscrits qui ne soit pas réel et vérifié.</p>
+    <div class="actions"><button type="button" class="copy" data-target="p-19-d-c-10-00-li">Copier le texte</button><label class="done"><input type="checkbox" id="d-p-19-d-c-10-00-li"> Publié</label></div>
+  </div>
+</article></div>
+</section>
+
+  <section class="block">
+    <h2>Plan B si l'app n'est pas validée par Apple</h2>
+    <div class="planb">Si l'App Store n'a pas validé l'app le 14 décembre au soir, le post du 15 annonce l'ouverture sur le web (« Geardown is live on the web, the iPhone app follows in the coming days ») et un second post annonce l'app le jour de sa validation. On n'annonce jamais une app qui n'est pas téléchargeable.</div>
+  </section>
+
+  <section class="block">
+    <h2>Règles pour chaque publication</h2>
+    <div class="rules">
+      <div><b>Données et visuels</b><ul><li>Uniquement le compte de démo Thomas Mercier</li><li>Aucun nom, aucune compagnie ni immatriculation réelle visible</li><li>Cartes d'utilisateurs republiées seulement avec leur accord écrit</li></ul></div>
+      <div><b>Ce qu'on ne dit pas</b><ul><li>Pas de faux avis ni de faux témoignages</li><li>Jamais « officiel » ni « approuvé par une autorité »</li><li>Aucun chiffre d'utilisateurs qui ne soit pas réel et vérifié</li></ul></div>
+      <div><b>Avant de publier</b><ul><li>Vérifier les prix et la durée de l'essai sur le site</li><li>Tester le lien du post</li><li>Répondre aux commentaires dans l'heure qui suit</li></ul></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Suivi chaque lundi</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Indicateur</th><th>Où le lire</th><th>S1</th><th>S2</th><th>S3</th><th>S4</th></tr></thead>
+      <tbody>
+        <tr><td>Abonnés Instagram</td><td>Instagram › Statistiques</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Abonnés de la page LinkedIn</td><td>LinkedIn › Analytics</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Enregistrements et partages</td><td>Statistiques de chaque post</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Clics vers le site</td><td>Lien en bio / posts LinkedIn</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>Essais démarrés</td><td>Admin › Vue d'ensemble</td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  var posts=[].slice.call(document.querySelectorAll('.post'));
+  var count=document.getElementById('count');
+  function apply(f){
+    var n=0;
+    posts.forEach(function(p){var show=f==='all'||p.dataset.net===f;p.hidden=!show;if(show)n++;});
+    document.querySelectorAll('.week').forEach(function(w){w.hidden=!w.querySelector('.post:not([hidden])');});
+    count.textContent=n+' publications';
+  }
+  document.querySelectorAll('.filters button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.filters button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+      apply(b.dataset.f);
+    });
+  });
+  apply('all');
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var el=document.getElementById(btn.dataset.target);
+      var done=function(){btn.textContent='Copié';setTimeout(function(){btn.textContent='Copier le texte';},1500);};
+      var fallback=function(){var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r);btn.textContent='Texte sélectionné';};
+      try{navigator.clipboard.writeText(el.textContent).then(done,fallback);}catch(e){fallback();}
+    });
+  });
+  posts.forEach(function(p){
+    var cb=p.querySelector('.done input');
+    try{if(localStorage.getItem(cb.id)==='1'){cb.checked=true;p.classList.add('is-done');}}catch(e){}
+    cb.addEventListener('change',function(){p.classList.toggle('is-done',cb.checked);try{localStorage.setItem(cb.id,cb.checked?'1':'0');}catch(e){}});
+  });
+})();
+</script>
