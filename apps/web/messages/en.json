@@ -17,8 +17,8 @@
   },
   "hero": {
     "eyebrow": "From gear up to gear down · EASA · FAA · CASA",
-    "title": "Your complete, accurate, up-to-date logbook on your phone, without retyping anything.",
-    "subtitle": "Log a flight in seconds and Geardown works out the rest: night time, FTL limits, licences and medical. Your CV follows your logbook and job offers are ranked against your experience.",
+    "title": "Your logbook, without retyping.",
+    "subtitle": "Log a flight in seconds. Geardown works out night time, FTL limits, licences and medical, and keeps your CV up to date.",
     "ctaTrial": "Try %TRIAL% days",
     "ctaDemo": "See the demo",
     "note": "%TRIAL%-day trial with no card · No commitment · Your logbook is yours",
@@ -32,8 +32,6 @@
     "features": [
       "Night time computed",
       "FTL ORO and Subpart Q",
-      "Licences and medical",
-      "CV and job matches",
       "EASA · FAA · CASA export"
     ],
     "betaJoin": "Join the iPhone beta",
@@ -3085,7 +3083,8 @@
       "badges": {
         "t": "Badges and milestones",
         "d": "Your firsts and hour milestones, to celebrate and share."
-      }
+      },
+      "lead": "The details that save you an evening before a check or an interview."
     },
     "mobile": {
       "label": "On iPhone",

@@ -1,13 +1,13 @@
 "use client";
 
 import { AnimatePresence, motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
-import { ArrowRight, BookOpenCheck, CalendarDays, CloudOff, FileDown, FileUser, Hotel, Radar, ScanSearch } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { FILM_CREDITS } from "@/lib/aircraft-visuals";
 import { StoreBadges } from "./sections";
-import { DashboardLive, FtlLive, ImportLive, JobsLive, LicencesLive, LogbookLive, MapLive, SignatureLive } from "./live/screens";
+import { FtlLive, ImportLive, JobsLive, LicencesLive, LogbookLive, MapLive, SignatureLive } from "./live/screens";
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 
@@ -48,8 +48,9 @@ function HeroFilm() {
         />
       ))}
       {/* the text side stays readable, the film breathes on the right */}
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,4,11,.88)_0%,rgba(2,4,11,.62)_42%,rgba(2,4,11,.15)_75%,rgba(2,4,11,.35)_100%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[var(--bg)] to-transparent" />
+      <div className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(2,4,11,.88)_0%,rgba(2,4,11,.62)_42%,rgba(2,4,11,.15)_75%,rgba(2,4,11,.35)_100%)] lg:block" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,4,11,.9)_0%,rgba(2,4,11,.8)_55%,rgba(2,4,11,.55)_100%)] lg:hidden" />
+      <div className="absolute inset-x-0 bottom-0 hidden h-40 bg-gradient-to-t from-[var(--bg)] to-transparent lg:block" />
     </div>
   );
 }
@@ -57,7 +58,7 @@ function HeroFilm() {
 function Headline({ text }: { text: string }) {
   const words = text.split(" ");
   return (
-    <h1 className="mt-5 text-balance font-display text-[2.4rem] font-semibold leading-[1.04] tracking-[-0.02em] text-white sm:text-[3rem] lg:text-[3.15rem]" aria-label={text}>
+    <h1 className="mt-2 text-balance font-display text-[2.5rem] font-bold leading-[1.02] tracking-[-0.02em] text-white sm:text-[3.4rem] lg:text-[3.9rem]" aria-label={text}>
       {words
         .map((w, i) => (
           <span key={i} className="inline-block overflow-hidden pb-[0.1em] align-bottom" aria-hidden>
@@ -90,11 +91,8 @@ function HeroScreens() {
       }}
       onPointerLeave={() => (x.set(0), y.set(0))}
     >
-      <motion.div style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.4, ease }}>
-        <DashboardLive className="w-full" />
-        <motion.div className="absolute -bottom-24 -right-8 w-[190px]" initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.8, ease }} style={{ translateZ: 60 }}>
-          <PhoneShot src="/immersive/phones/dashboard.webp" alt="dashboard" />
-        </motion.div>
+      <motion.div className="mx-auto w-[300px]" style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.4, ease }}>
+        <PhoneShot src="/immersive/phones/dashboard.webp" alt="dashboard" />
       </motion.div>
     </motion.div>
   );
@@ -103,9 +101,9 @@ function HeroScreens() {
 function FilmCredits() {
   const t = useTranslations("immersive.credits");
   return (
-    <details className="group absolute bottom-4 right-4 z-20 text-[11px] text-white/70">
+    <details className="group absolute left-4 top-3 z-20 text-[11px] text-white/70 lg:bottom-4 lg:left-auto lg:right-4 lg:top-auto">
       <summary className="cursor-pointer list-none rounded-full border border-white/10 bg-[#02040b]/50 px-3 py-1.5 backdrop-blur-md hover:text-white [&::-webkit-details-marker]:hidden">{t("title")}</summary>
-      <ul className="absolute bottom-9 right-0 w-[min(88vw,360px)] space-y-1.5 rounded-xl border border-white/10 bg-[#02040b]/85 p-3 backdrop-blur-xl">
+      <ul className="absolute left-0 top-9 w-[min(88vw,360px)] lg:bottom-9 lg:left-auto lg:right-0 lg:top-auto space-y-1.5 rounded-xl border border-white/10 bg-[#02040b]/85 p-3 backdrop-blur-xl">
         {FILM_CREDITS.map((c) => (
           <li key={c.subject}>
             <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline decoration-white/30 hover:text-white">{c.subject}</a> · {c.author} · {c.license}
@@ -119,19 +117,19 @@ function FilmCredits() {
 export function HomeHero() {
   const th = useTranslations("hero");
   return (
-    <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden">
+    <section className="relative isolate overflow-hidden lg:min-h-[calc(100svh-4rem)]">
       <HeroFilm />
-      <div className="relative mx-auto grid min-h-[calc(100svh-4rem)] max-w-6xl items-center gap-12 px-4 pb-24 pt-10 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:pb-28">
+      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pt-14 sm:px-6 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[1.35fr_1fr] lg:pb-28 lg:pt-10">
         <div>
           <Headline text={th("title")} />
           <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.6, ease }}>
             <p className="mt-5 max-w-lg text-pretty text-[17px] leading-relaxed text-white/85">{th("subtitle")}</p>
-            <ul className="mt-5 flex max-w-xl flex-wrap gap-2">
+            <ul className="mt-5 hidden max-w-xl flex-wrap gap-2 sm:flex">
               {(th.raw("features") as string[]).map((f) => (
                 <li key={f} className="rounded-full border border-white/15 bg-[#02040b]/40 px-3 py-1 text-[13px] text-white/85 backdrop-blur-md">{f}</li>
               ))}
             </ul>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-7 flex gap-3 [&>a]:flex-1 sm:[&>a]:flex-none">
               <Link href="/inscription" className="btn min-h-12 !bg-[#22c55e] !px-6 text-base !text-[#0a1626] shadow-[0_10px_40px_-10px_#22c55e] hover:!bg-[#86efac]">
                 {th("ctaTrial")} <ArrowRight size={18} aria-hidden />
               </Link>
@@ -140,7 +138,11 @@ export function HomeHero() {
               </Link>
             </div>
             <p className="mt-4 text-sm text-white/65">{th("note")}</p>
-            <StoreBadges className="mt-6 [&_a]:!border-white/15 [&_a]:!bg-white [&_a]:!text-[#0a1626] [&_span]:!text-white/70" />
+            <StoreBadges className="mt-6 hidden sm:flex [&_a]:!border-white/15 [&_a]:!bg-white [&_a]:!text-[#0a1626] [&_span]:!text-white/70" />
+          </motion.div>
+          {/* on a phone the product shows in the first screen: the app rises from the bottom */}
+          <motion.div className="mx-auto mt-8 h-[300px] w-[250px] overflow-hidden sm:h-[380px] sm:w-[300px] lg:hidden" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5, ease }}>
+            <PhoneShot src="/immersive/phones/dashboard.webp" alt="dashboard" />
           </motion.div>
         </div>
         <HeroScreens />
@@ -293,33 +295,24 @@ function PhoneShot({ src, alt }: { src: string; alt: "dashboard" | "logbook" | "
 
 /* ---------- And everything else ---------- */
 
-const MORE = [
-  { key: "audit", icon: ScanSearch },
-  { key: "offline", icon: CloudOff },
-  { key: "exports", icon: FileDown },
-  { key: "cv", icon: FileUser },
-  { key: "roster", icon: CalendarDays },
-  { key: "layovers", icon: Hotel },
-  { key: "radar", icon: Radar },
-  { key: "badges", icon: BookOpenCheck },
-] as const;
+const MORE = ["audit", "roster", "offline", "layovers", "exports", "radar", "cv", "badges"] as const;
 
+/** Everything else, as a list between hairlines: the name, then what it does. */
 export function MoreFeatures() {
   const t = useTranslations("home2.more");
   return (
     <section className="border-t border-border bg-surface/40">
       <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
-        <h2 className="max-w-2xl text-balance font-display text-4xl font-semibold tracking-[-0.01em]">{t("title")}</h2>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {MORE.map(({ key, icon: Icon }, i) => (
-            <motion.div key={key} className="card group relative overflow-hidden p-5 transition-shadow duration-200 hover:shadow-xl" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.4, delay: (i % 4) * 0.06, ease }}>
-              <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" aria-hidden />
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent/12 text-accent transition-transform duration-200 group-hover:-translate-y-0.5"><Icon size={20} aria-hidden /></span>
-              <h3 className="mt-4 font-semibold">{t(`${key}.t`)}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted">{t(`${key}.d`)}</p>
-            </motion.div>
+        <h2 className="max-w-2xl text-balance font-display text-3xl tracking-[-0.02em] sm:text-4xl">{t("title")}</h2>
+        <p className="mt-3 max-w-xl text-lg text-muted">{t("lead")}</p>
+        <dl className="mt-10 grid gap-x-16 border-b border-border sm:grid-cols-2 sm:border-b-0">
+          {MORE.map((key, i) => (
+            <div key={key} className={`grid gap-1 border-t border-border py-5 sm:grid-cols-[minmax(0,13rem)_1fr] sm:gap-5 ${i >= MORE.length - 2 ? "sm:border-b" : ""}`}>
+              <dt className="font-bold">{t(`${key}.t`)}</dt>
+              <dd className="text-[15.5px] leading-relaxed text-muted">{t(`${key}.d`)}</dd>
+            </div>
           ))}
-        </div>
+        </dl>
       </div>
     </section>
   );

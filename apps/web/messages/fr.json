@@ -17,8 +17,8 @@
   },
   "hero": {
     "eyebrow": "From gear up to gear down · EASA · FAA · CASA",
-    "title": "Votre carnet de vol complet, juste et à jour sur votre téléphone, sans rien ressaisir.",
-    "subtitle": "Un vol saisi en quelques secondes, et Geardown calcule le reste : temps de nuit, limites FTL, licences et médical. Votre CV suit votre carnet et les offres sont classées selon votre expérience.",
+    "title": "Votre carnet, sans rien ressaisir.",
+    "subtitle": "Un vol saisi en quelques secondes. Geardown calcule le temps de nuit, les limites FTL, les licences et le médical, et tient votre CV à jour.",
     "ctaTrial": "Essayer %TRIAL% jours",
     "ctaDemo": "Voir la démo",
     "note": "%TRIAL% jours d'essai sans carte bancaire · Sans engagement · Votre carnet vous appartient",
@@ -32,8 +32,6 @@
     "features": [
       "Nuit calculée",
       "FTL ORO et Subpart Q",
-      "Licences et médical",
-      "CV et offres d'emploi",
       "Export EASA · FAA · CASA"
     ],
     "betaJoin": "Rejoindre la bêta iPhone",
@@ -3085,7 +3083,8 @@
       "badges": {
         "t": "Badges et paliers",
         "d": "Vos premières fois et vos paliers d'heures, à célébrer et à partager."
-      }
+      },
+      "lead": "Les détails qui vous font gagner une soirée avant un contrôle ou un entretien."
     },
     "mobile": {
       "label": "Sur iPhone",
