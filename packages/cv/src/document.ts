@@ -7,7 +7,7 @@ import { LANG_TAG, type CvData, type CvLicence, type CvLocale, type FlightExperi
  */
 
 export type Line =
-  | { kind: "pair"; label: string; value: string; strong?: boolean }
+  | { kind: "pair"; label: string; value: string; strong?: boolean; /** the hour category, for the one-page PDF */ key?: string }
   | {
       kind: "item";
       title: string;
@@ -18,6 +18,8 @@ export type Line =
       value?: string;
       ratio?: number;
       bullets?: string[];
+      /** the short name (licence code), for the compact one-page layout */
+      short?: string;
     }
   | { kind: "text"; text: string };
 
@@ -152,14 +154,14 @@ export function orderTypes(types: TypeHours[], target?: string[], asOf?: string)
 }
 
 function hourLines(h: FlightExperience, t: (typeof L)["en"], locale: CvLocale): Line[] {
-  const rows: [string, number, boolean?][] = [
-    [t.total, h.totalMin, true], [t.pic, h.picMin, true], [t.picus, h.picusMin], [t.copilot, h.copilotMin], [t.multiPilot, h.multiPilotMin, true],
-    [t.multiEngine, h.multiEngineMin], [t.turbine, h.turbineMin, true], [t.jet, h.jetMin], [t.turboprop, h.turbopropMin], [t.piston, h.pistonMin],
-    [t.helicopter, h.helicopterMin], [t.seSingle, h.singlePilotSeMin], [t.meSingle, h.singlePilotMeMin], [t.night, h.nightMin], [t.ifr, h.ifrMin],
-    [t.imc, h.actualImcMin], [t.instructor, h.instructorMin], [t.fstd, h.fstdMin], [t.last12m, h.last12mMin], [t.last90d, h.last90dMin],
+  const rows: [string, string, number, boolean?][] = [
+    ["total", t.total, h.totalMin, true], ["pic", t.pic, h.picMin, true], ["picus", t.picus, h.picusMin], ["copilot", t.copilot, h.copilotMin], ["multiPilot", t.multiPilot, h.multiPilotMin, true],
+    ["multiEngine", t.multiEngine, h.multiEngineMin], ["turbine", t.turbine, h.turbineMin, true], ["jet", t.jet, h.jetMin], ["turboprop", t.turboprop, h.turbopropMin], ["piston", t.piston, h.pistonMin],
+    ["helicopter", t.helicopter, h.helicopterMin], ["seSingle", t.seSingle, h.singlePilotSeMin], ["meSingle", t.meSingle, h.singlePilotMeMin], ["night", t.night, h.nightMin], ["ifr", t.ifr, h.ifrMin],
+    ["imc", t.imc, h.actualImcMin], ["instructor", t.instructor, h.instructorMin], ["fstd", t.fstd, h.fstdMin], ["last12m", t.last12m, h.last12mMin], ["last90d", t.last90d, h.last90dMin],
   ];
-  const lines: Line[] = rows.filter(([, v], i) => i === 0 || v > 0).map(([label, v, strong]) => ({ kind: "pair" as const, label, value: fmtH(v, locale), strong }));
-  if (h.landings) lines.push({ kind: "pair", label: t.landings, value: new Intl.NumberFormat(LANG_TAG[locale]).format(h.landings) });
+  const lines: Line[] = rows.filter(([, , v], i) => i === 0 || v > 0).map(([key, label, v, strong]) => ({ kind: "pair" as const, key, label, value: fmtH(v, locale), strong }));
+  if (h.landings) lines.push({ kind: "pair", key: "landings", label: t.landings, value: new Intl.NumberFormat(LANG_TAG[locale]).format(h.landings) });
   lines.push({ kind: "text", text: `${t.asOf} ${day(h.asOf, locale)}${h.lastFlight ? ` · ${t.lastFlight} ${day(h.lastFlight, locale)}` : ""}. ${t.source}` });
   return lines;
 }
@@ -167,7 +169,7 @@ function hourLines(h: FlightExperience, t: (typeof L)["en"], locale: CvLocale): 
 function licenceLine(l: CvLicence, t: (typeof L)["en"], locale: CvLocale): Line {
   const name = l.kind === "licence" || /rating$/.test(l.kind) ? expandLicence(l.code) : l.code;
   const meta = [l.authority, l.number, l.validUntil ? `${t.validUntil} ${day(l.validUntil, locale)}` : l.kind === "medical" ? "" : t.noExpiry].filter(Boolean).join(" · ");
-  return { kind: "item", title: name, meta };
+  return { kind: "item", title: name, meta, short: l.code };
 }
 
 export function buildCvDocument(cv: CvData): CvDocument {
@@ -190,7 +192,7 @@ export function buildCvDocument(cv: CvData): CvDocument {
   if (p.target?.title) summary.push({ kind: "pair", label: t.targetRole, value: [p.target.title, p.target.company].filter(Boolean).join(" — ") });
   // the offer's keywords the logbook and licences back up, written in the CV so screening tools find them
   const matched = targetKeywordsMet(cv);
-  if (matched.length) summary.push({ kind: "pair", label: t.matchOffer, value: matched.join(" · ") });
+  if (matched.length) summary.push({ kind: "pair", key: "match", label: t.matchOffer, value: matched.join(" · ") });
   if (p.summary?.trim()) summary.push({ kind: "text", text: p.summary.trim() });
   if (summary.length) sections.push({ id: "summary", heading: t.summary, lines: summary });
 
