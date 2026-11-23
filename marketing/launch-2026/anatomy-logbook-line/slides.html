@@ -1,0 +1,115 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,300..800&family=JetBrains+Mono:wght@400;600&display=block" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#fff;font-family:Archivo,Helvetica,sans-serif;color:#111}
+.slide{width:1080px;height:1350px;position:relative;background:#fff;overflow:hidden}
+svg{display:block}
+text{font-family:Archivo,Helvetica,sans-serif;fill:#111}
+.ttl{font-size:46px;font-weight:300;letter-spacing:.14em;font-stretch:112%}
+.sub{font-size:19px;letter-spacing:.12em;fill:#444}
+.cap{font-size:15px;letter-spacing:.14em;font-weight:600}
+.lbl{font-size:15px;letter-spacing:.12em;fill:#555}
+.big{font-size:30px;font-weight:700;letter-spacing:.06em;font-stretch:110%}
+.note{font-size:25px;fill:#222}
+.mono{font-family:'JetBrains Mono',monospace}
+.dt{font-size:16px;font-family:'JetBrains Mono',monospace;fill:#111;paint-order:stroke;stroke:#fff;stroke-width:5px}
+.ex{font-size:21px;font-family:'JetBrains Mono',monospace;fill:#777}
+.o{fill:none;stroke:#111;stroke-width:2}
+.thin{fill:none;stroke:#111;stroke-width:.9}
+.ext{fill:none;stroke:#111;stroke-width:.7}
+.slot{fill:#fff;stroke:#111;stroke-width:1.2;stroke-dasharray:6 4}
+.hug{fill:#efefef;stroke:#111;stroke-width:1.2}
+.cl{fill:none;stroke:#888;stroke-width:.8;stroke-dasharray:18 4 3 4}
+.nb{fill:#fff;stroke:#111;stroke-width:1.3}
+</style></head><body>
+<div id="out"></div>
+<script>
+const NS='http://www.w3.org/2000/svg';
+let sv;
+const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||sv).appendChild(e);return e};
+const tx=(x,y,s,c,a)=>{const t=mk('text',Object.assign({x,y,class:c||'dt'},a||{}));t.textContent=s;return t};
+function arrowDefs(){const d=mk('defs',{});const m=mk('marker',{id:'ar',viewBox:'0 0 10 10',refX:10,refY:5,markerWidth:9,markerHeight:9,orient:'auto-start-reverse',markerUnits:'userSpaceOnUse'},d);mk('path',{d:'M0,1.5 L10,5 L0,8.5 z',fill:'#111'},m);
+ const h=mk('pattern',{id:'hatch',width:8,height:8,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'},d);mk('line',{x1:0,y1:0,x2:0,y2:8,stroke:'#999','stroke-width':1},h)}
+function dimH(x1,x2,y,e1,e2,l){[[x1,e1],[x2,e2]].forEach(([x,e])=>{const s=Math.sign(y-e)||1;mk('line',{x1:x,y1:e+s*4,x2:x,y2:y+s*7,class:'ext'})});mk('line',{x1:x1,y1:y,x2:x2,y2:y,class:'ext','marker-start':'url(#ar)','marker-end':'url(#ar)'});tx((x1+x2)/2,y-7,l,'dt',{'text-anchor':'middle'})}
+function dimV(y1,y2,x,e1,e2,l){[[y1,e1],[y2,e2]].forEach(([y,e])=>{const s=Math.sign(x-e)||1;mk('line',{x1:e+s*4,y1:y,x2:x+s*7,y2:y,class:'ext'})});mk('line',{x1:x,y1:y1,x2:x,y2:y2,class:'ext','marker-start':'url(#ar)','marker-end':'url(#ar)'});const t=tx(x-9,(y1+y2)/2,l,'dt',{'text-anchor':'middle',transform:`rotate(-90 ${x-9} ${(y1+y2)/2})`})}
+function nb(x,y,n){mk('rect',{x:x-13,y:y-13,width:26,height:26,class:'nb'});tx(x,y+6,String(n),'dt',{'text-anchor':'middle',style:'font-size:15px;stroke-width:0'})}
+function callout(px,py,ex,ey,label,dir){const s=dir||(ex>=px?1:-1);mk('circle',{cx:px,cy:py,r:3,fill:'#111'});mk('polyline',{points:`${px},${py} ${ex},${ey} ${ex+s*16},${ey}`,class:'thin'});tx(ex+s*22,ey+6,label,'cap',{'text-anchor':s>0?'start':'end'})}
+function cell(x,y,w,h,code,label,ex,cls){mk('rect',{x,y,width:w,height:h,class:cls||'slot'});tx(x+w/2,y+h/2-4,label,'lbl',{'text-anchor':'middle'});if(ex)tx(x+w/2,y+h/2+22,ex,'ex',{'text-anchor':'middle'});if(code)nb(x+w/2,y-26,code)}
+function frame(n,title,scope){
+ // sheet border, title block, footer
+ mk('rect',{x:40,y:40,width:1000,height:1270,rx:18,class:'o'});
+ mk('line',{x1:40,y1:200,x2:1040,y2:200,class:'thin'});mk('line',{x1:760,y1:40,x2:760,y2:200,class:'thin'});mk('line',{x1:760,y1:120,x2:1040,y2:120,class:'thin'});mk('line',{x1:900,y1:120,x2:900,y2:200,class:'thin'});
+ tx(72,112,title,'ttl');tx(74,160,scope,'sub');
+ tx(780,72,'DWG NO.','lbl');tx(780,104,'GD-LOG-001','big',{style:'font-size:24px'});
+ tx(920,152,'SHEET','lbl');tx(920,184,`${n} / 7`,'big',{style:'font-size:24px'});
+ tx(780,152,'REF','lbl');tx(780,184,'FCL.050','big',{style:'font-size:24px'});
+ mk('line',{x1:40,y1:1250,x2:1040,y2:1250,class:'thin'});
+ tx(72,1288,'EASA PILOT LOGBOOK · AMC1 FCL.050 · DO NOT SCALE','lbl');tx(1008,1288,'GEARDOWN.APP','lbl',{'text-anchor':'end'});
+}
+function notes(x,y,list,w){tx(x,y,'NOTES:','cap');let yy=y+40;list.forEach(([n,s])=>{if(n)nb(x+13,yy-7,n);const words=s.split(' ');let line='',lines=[];for(const wd of words){if((line+' '+wd).length*12.3>(w||880)){lines.push(line);line=wd}else line=line?line+' '+wd:wd}lines.push(line);lines.forEach((l,i)=>tx(x+(n?44:0),yy+i*36,l,'note'));yy+=lines.length*36+22});return yy}
+function slide(fn){const d=document.createElement('div');d.className='slide';document.getElementById('out').appendChild(d);sv=document.createElementNS(NS,'svg');sv.setAttribute('width',1080);sv.setAttribute('height',1350);sv.setAttribute('viewBox','0 0 1080 1350');d.appendChild(sv);arrowDefs();fn()}
+
+/* 1 · cover: the whole line, in two courses */
+slide(()=>{frame(1,'ANATOMY OF A','ONE LINE OF YOUR LOGBOOK, DRAWN TO THE RULE');
+ tx(72,300,'LOGBOOK LINE','ttl',{style:'font-size:92px;font-weight:700;letter-spacing:.04em;font-stretch:118%'});
+ tx(74,350,'13 COLUMNS · EVERY ONE HAS A RULE · SWIPE →','sub');
+ const A=[[1,'DATE',88],[2,'DEP',120],[3,'ARR',120],[4,'AIRCRAFT',150],[5,'SP SE · ME',150],[6,'MP',90],[7,'TOTAL',100]];
+ const B=[[8,'PIC NAME',150],[9,'LDG D · N',130],[10,'NIGHT · IFR',150],[11,'FUNCTION',170],[12,'FSTD',110],[13,'REMARKS',130]];
+ let x=80,y=470;A.forEach(([n,l,w])=>{cell(x,y,w,110,n,l);x+=w});dimH(80,x,y+150,y+110,y+110,'COURSE A · FLIGHT');
+ x=80;y=760;B.forEach(([n,l,w])=>{cell(x,y,w,110,n,l);x+=w});dimH(80,x,y+150,y+110,y+110,'COURSE B · CREW, CONDITIONS, ROLE');
+ mk('line',{x1:60,y1:1000,x2:1020,y2:1000,class:'cl'});
+ notes(72,1060,[[0,'Each sheet takes a few columns apart: what goes in, in which unit, and the rule behind it.'],[0,'Simplified from the EASA logbook layout. Your national authority may ask for more.']]);
+});
+/* 2 · columns 1-4 */
+slide(()=>{frame(2,'COLUMNS 1 – 4','WHEN, WHERE FROM, WHERE TO, ON WHAT');
+ const y=330;cell(80,y,140,150,1,'DATE','23/11/26');cell(220,y,210,75,2,'DEP · PLACE','LFPG');cell(220,y+75,210,75,null,'TIME · UTC','08:12','hug');
+ cell(430,y,210,75,3,'ARR · PLACE','LSGG');cell(430,y+75,210,75,null,'TIME · UTC','09:20','hug');cell(640,y,360,75,4,'MAKE · MODEL · VARIANT','A320');cell(640,y+75,360,75,null,'REGISTRATION','F-HGDN');
+ dimH(220,640,y+200,y+150,y+150,'ICAO LOCATION INDICATORS');
+ callout(260,y+132,290,y+250,'OFF-BLOCK = FIRST MOVE',1);callout(600,y+132,640,y+310,'ON-BLOCK = AT REST',1);
+ notes(72,800,[[1,'Date of departure, in UTC: a flight leaving Paris at 00:30 local time in summer is still the day before.'],[2,'Departure time is off-block: the moment the aircraft first moves to take off. Always UTC.'],[3,'Arrival time is on-block: the moment it comes to rest at the end of the flight.'],[4,'Make, model and variant, then the registration. The type decides columns 5 and 6.']]);
+});
+/* 3 · columns 5-7 */
+slide(()=>{frame(3,'COLUMNS 5 – 7','HOW LONG, AND UNDER WHICH CREW CONCEPT');
+ const y=330;cell(80,y,170,90,5,'SP · SE','—','hug');cell(250,y,170,90,null,'SP · ME','—','hug');cell(420,y,220,90,6,'MULTI-PILOT','1:08');cell(640,y,220,90,7,'TOTAL TIME','1:08');
+ mk('rect',{x:80,y:y+90,width:340,height:22,fill:'url(#hatch)',stroke:'#111','stroke-width':1});tx(250,y+150,'ONE OF THREE · NEVER TWO','lbl',{'text-anchor':'middle'});
+ dimH(420,860,y+210,y+90,y+90,'T7 = T5se + T5me + T6');
+ // block timeline
+ const ty=640;mk('line',{x1:100,y1:ty,x2:980,y2:ty,class:'o'});[['OFF-BLOCK',140],['TAKE-OFF',300],['LANDING',760],['ON-BLOCK',940]].forEach(([l,x])=>{mk('line',{x1:x,y1:ty-14,x2:x,y2:ty+14,class:'o'});tx(x,ty-26,l,'lbl',{'text-anchor':'middle'})});
+ dimH(140,940,ty+60,ty+14,ty+14,'TOTAL TIME OF FLIGHT · BLOCK · 1:08');dimH(300,760,ty+110,ty+14,ty+14,'AIR TIME · 0:47 · NOT A LOGBOOK COLUMN');
+ notes(72,880,[[5,'Single-pilot time goes under SE or ME, from the aircraft. A multi-pilot aircraft flown in crew goes in column 6.'],[6,'One flight, one of the three. The same minutes are never counted twice.'],[7,'Total time of flight runs from first movement to rest at the end: block time, not air time.']]);
+});
+/* 4 · columns 8-9 */
+slide(()=>{frame(4,'COLUMNS 8 – 9','WHO WAS IN COMMAND, AND WHO LANDED');
+ const y=340;cell(80,y,460,150,8,'NAME(S) PIC','SELF  ·  or the captain');cell(540,y,230,150,9,'LANDINGS · DAY','1');cell(770,y,230,150,null,'LANDINGS · NIGHT','0','hug');
+ dimH(540,1000,y+200,y+150,y+150,'AS PILOT FLYING ONLY');callout(310,y+150,360,y+290,'"SELF" WHEN YOU ARE PIC',1);
+ notes(72,800,[[8,'The name of the pilot in command. Write SELF when it is you.'],[9,'Landings you made as pilot flying, split day and night.'],[0,'Recency to carry passengers: 3 take-offs and landings in the last 90 days, one of them at night to fly them at night without an instrument rating (FCL.060).']]);
+});
+/* 5 · columns 10-11 */
+slide(()=>{frame(5,'COLUMNS 10 – 11','CONDITIONS FLOWN, AND YOUR ROLE');
+ const y=330;cell(80,y,200,100,10,'NIGHT','0:00');cell(280,y,200,100,null,'IFR','1:08','hug');
+ cell(520,y,120,100,11,'PIC','—');cell(640,y,120,100,null,'CO-PILOT','1:08','hug');cell(760,y,120,100,null,'DUAL','—');cell(880,y,120,100,null,'INSTR.','—');
+ dimH(80,480,y+160,y+100,y+100,'EACH ≤ T7 · CAN OVERLAP');dimH(520,1000,y+160,y+100,y+100,'THE FUNCTION YOU HELD');
+ // night band
+ const ty=640;mk('rect',{x:100,y:ty-30,width:880,height:60,fill:'#fff',stroke:'#111','stroke-width':1.2});mk('rect',{x:620,y:ty-30,width:360,height:60,fill:'url(#hatch)',stroke:'#111','stroke-width':1.2});
+ tx(360,ty+7,'DAY','lbl',{'text-anchor':'middle'});tx(800,ty+7,'NIGHT','lbl',{'text-anchor':'middle'});dimH(620,980,ty+80,ty+30,ty+30,'FROM END OF EVENING CIVIL TWILIGHT');
+ notes(72,850,[[10,'Night runs from the end of evening civil twilight to the beginning of morning civil twilight. Night and IFR are parts of column 7 and can overlap.'],[11,'Log the time under the function you held: pilot in command, co-pilot, dual (under instruction) or flight instructor.']]);
+});
+/* 6 · columns 12-13 */
+slide(()=>{frame(6,'COLUMNS 12 – 13','SIMULATOR SESSIONS, AND EVERYTHING ELSE');
+ const y=330;cell(80,y,150,110,12,'FSTD · DATE','02/12/24');cell(230,y,200,110,null,'TYPE','E50P FFS','hug');cell(430,y,170,110,null,'SESSION','4:00');cell(640,y,360,110,13,'REMARKS & ENDORSEMENTS','');
+ mk('rect',{x:80,y:y+150,width:520,height:22,fill:'url(#hatch)',stroke:'#111','stroke-width':1});tx(340,y+210,'NEVER ADDED TO COLUMN 7','lbl',{'text-anchor':'middle'});
+ callout(820,y+70,800,y+260,'FLIGHT NO. · CHECKS · SIGNATURES',-1);
+ notes(72,800,[[12,'A simulator session has its own line: date, device type and the time of the session. It is never flight time.'],[13,'Remarks and endorsements: flight number, checks, instruction given, and the signatures that go with them.'],[0,'A logbook that mixes simulator time into total time will not add up at your next check.']]);
+});
+/* 7 · the payoff */
+slide(()=>{frame(7,'ALL 13 COLUMNS','FROM ONE REGISTRATION');
+ tx(72,330,'TYPE THE','ttl',{style:'font-size:70px;font-weight:700;letter-spacing:.03em;font-stretch:118%'});tx(72,410,'REGISTRATION.','ttl',{style:'font-size:70px;font-weight:700;letter-spacing:.03em;font-stretch:118%'});
+ const items=[['2 · 3','Airports and block times from ADS-B'],['5 · 6','Single- or multi-pilot from the aircraft'],['7','Block time worked out'],['10','Night from civil twilight'],['12','Simulator sessions kept apart']];
+ let y=520;items.forEach(([c,s])=>{mk('rect',{x:80,y:y-30,width:120,height:44,class:'hug'});tx(140,y,c,'dt',{'text-anchor':'middle',style:'font-size:18px;stroke-width:0'});tx(230,y,s,'note',{style:'font-size:26px'});y+=78});
+ mk('line',{x1:60,y1:960,x2:1020,y2:960,class:'cl'});
+ tx(72,1040,'GEARDOWN','ttl',{style:'font-size:54px;font-weight:700;letter-spacing:.2em'});
+ tx(74,1090,'The pilot logbook that fills itself. Free for 30 days, no card.','note',{style:'font-size:24px'});
+ tx(74,1160,'geardown.app','big',{style:'font-size:30px'});
+});
+</script></body></html>
