@@ -36,6 +36,8 @@ export function Footer() {
           <Link href="/tarifs">{n("pricing")}</Link>
           <Link href="/compagnies">{n("airlines")}</Link>
           <Link href="/blog">{n("blog")}</Link>
+          <Link href="/outils/heures-de-nuit">{t("nightTool")}</Link>
+          <Link href="/outils/fdp-maximum">{t("fdpTool")}</Link>
         </FooterCol>
         <FooterCol title={t("company")}>
           <Link href="/contact">{t("contact")}</Link>

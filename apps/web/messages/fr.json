@@ -271,7 +271,9 @@
     "contact": "Contact",
     "rights": "Tous droits réservés.",
     "disclaimer": "Geardown est un outil d'aide. Le pilote reste responsable de l'exactitude de son carnet et du respect de la réglementation applicable.",
-    "yourData": "Vos données"
+    "yourData": "Vos données",
+    "nightTool": "Calculateur d'heures de nuit",
+    "fdpTool": "Calculateur de FDP maximal"
   },
   "airlines": {
     "title": "Geardown pour les compagnies et écoles",

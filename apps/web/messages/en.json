@@ -271,7 +271,9 @@
     "contact": "Contact",
     "rights": "All rights reserved.",
     "disclaimer": "Geardown is an aid. The pilot remains responsible for the accuracy of their logbook and compliance with applicable regulations.",
-    "yourData": "Your data"
+    "yourData": "Your data",
+    "nightTool": "Night time calculator",
+    "fdpTool": "Max FDP calculator"
   },
   "airlines": {
     "title": "Geardown for airlines and flight schools",

@@ -85,6 +85,22 @@ export function softwareLd(locale: string, description: string) {
   };
 }
 
+/** A free calculator page, as a web application anyone can use. */
+export function toolLd(locale: string, href: Parameters<typeof absolute>[0], name: string, description: string) {
+  return {
+    "@type": "WebApplication",
+    name,
+    description,
+    url: absolute(href, locale),
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Web",
+    isAccessibleForFree: true,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
+    publisher: { "@id": `${SITE_URL}/#organization` },
+    inLanguage: locale,
+  };
+}
+
 export function faqLd(items: { q: string; a: string }[]) {
   return {
     "@type": "FAQPage",
