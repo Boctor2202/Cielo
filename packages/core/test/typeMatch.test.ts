@@ -30,6 +30,9 @@ describe("aircraft type written as a name", () => {
     ["Cessna", undefined],
   ];
   it.each(cases)("%s", (text, icao) => expect(typeFromText(text, AIRCRAFT_TYPES)).toBe(icao));
+  it("the same type listed twice (synced copy and built-in list) is not an ambiguity", () => {
+    expect(typeFromText("172, P172, R172, Skyhawk", [...AIRCRAFT_TYPES, ...AIRCRAFT_TYPES])).toBe("C172");
+  });
 });
 
 describe("a logbook imported with type names", () => {

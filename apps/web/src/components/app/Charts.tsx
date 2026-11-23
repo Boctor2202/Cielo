@@ -4,6 +4,12 @@ import { Roll } from "@/components/ui/Roll";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 /** Single-series bar chart (minutes on the y axis, shown as hours). No legend: the card title names the series. */
+/** One line per bar: the first part of a long name ("172, P172, R172, Skyhawk" -> "172"), cut at 11 characters. */
+const shortLabel = (s: string) => {
+  const first = String(s).split(",")[0]!.trim();
+  return first.length > 11 ? `${first.slice(0, 10)}…` : first;
+};
+
 export function HoursBars({ data, format, height = 220, horizontal = false }: { data: { label: string; minutes: number }[]; format: (m: number) => string; height?: number; horizontal?: boolean }) {
   const rows = data.map((d) => ({ ...d, hours: d.minutes / 60 }));
   const tip = (
@@ -28,7 +34,7 @@ export function HoursBars({ data, format, height = 220, horizontal = false }: { 
         <BarChart data={rows} layout="vertical" margin={{ left: 4, right: 16, top: 4, bottom: 4 }} barCategoryGap={6}>
           <CartesianGrid horizontal={false} stroke="var(--border)" strokeDasharray="0" />
           <XAxis type="number" {...axis} tickFormatter={(v: number) => `${Math.round(v)} h`} />
-          <YAxis type="category" dataKey="label" {...axis} width={64} />
+          <YAxis type="category" dataKey="label" {...axis} width={84} interval={0} tickFormatter={shortLabel} />
           {tip}
           <defs>
             <linearGradient id="hb-h" x1="0" y1="0" x2="1" y2="0">

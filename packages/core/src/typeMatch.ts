@@ -74,7 +74,7 @@ export function typeFromText(text: string | null | undefined, types: TypeRef[], 
     if (!best || score > best.score) {
       best = { icao: t.icao, score, strong };
       tied = [t.icao];
-    } else if (score === best.score) tied.push(t.icao);
+    } else if (score === best.score && !tied.includes(t.icao)) tied.push(t.icao);
   }
   if (!best) return undefined;
   if (tied.length === 1) return best.icao;
