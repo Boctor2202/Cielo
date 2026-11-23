@@ -20,7 +20,7 @@ import { apiFetch, installErrorReporter } from "@/lib/report";
 import { ReportDialog } from "./ReportDialog";
 import { GainsToast } from "./GainsToast";
 import { loadAirlineDirectory } from "@/lib/airlines";
-import { backfillOperators } from "@/lib/repo";
+import { backfillOperators, repairTypes } from "@/lib/repo";
 import type { MaxFeature } from "@cielo/core";
 import { Logo } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
@@ -108,7 +108,11 @@ function Shell({ children }: { children: ReactNode }) {
   // once per device: old flights get their recognised operator (after the first sync has brought them)
   useEffect(() => {
     if (!pilot || !access.canWrite) return;
-    const id = setTimeout(() => void loadAirlineDirectory().then((d) => backfillOperators(d)).catch(() => undefined), 8000);
+    const id = setTimeout(() => {
+      void loadAirlineDirectory().then((d) => backfillOperators(d)).catch(() => undefined);
+      // flights imported with a type name instead of its designator ("172, P172, Skyhawk")
+      void repairTypes().catch(() => undefined);
+    }, 8000);
     return () => clearTimeout(id);
   }, [pilot?.id, access.canWrite]); // eslint-disable-line react-hooks/exhaustive-deps
   const online = useOnline();

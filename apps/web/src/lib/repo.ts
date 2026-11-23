@@ -1,6 +1,6 @@
 "use client";
 
-import { misreadOperators,
+import { misreadOperators, retypeLogbook, typeFromText,
   markPilotFields,
   operatorIndex,
   canonicalFlightContent, ownSignature, type SignedInfo, deriveFlightTimes, extraFlightFields, flightRevision, newId, stamp, SYNC_TABLES, type Aircraft, type AircraftType, type Flight,
@@ -173,7 +173,7 @@ async function resolveAircraft(input: FlightFormInput, types: AircraftType[]) {
     const reg = input.registration.trim().toUpperCase();
     aircraft = (await db().t("aircraft").toArray()).find((a) => !a.deletedAt && a.registration === reg);
     if (!aircraft && !input.isFstd) {
-      const type = findType(types, input.aircraftTypeIcao);
+      const type = typeOf(types, input.aircraftTypeIcao);
       aircraft = await saveAircraft({
         registration: reg,
         aircraftTypeId: type?.id ?? `ref-${input.aircraftTypeIcao ?? "UNKN"}`,
@@ -181,8 +181,32 @@ async function resolveAircraft(input: FlightFormInput, types: AircraftType[]) {
       });
     }
   }
-  const type = findType(types, aircraft?.aircraftTypeId) ?? findType(types, input.aircraftTypeIcao);
+  const type = findType(types, aircraft?.aircraftTypeId) ?? typeOf(types, input.aircraftTypeIcao);
   return { aircraft, type };
+}
+
+/** A type by designator, or by the name a logbook file wrote ("172, P172, R172, Skyhawk", "EMB 500"). */
+function typeOf(types: AircraftType[], text?: string | null): AircraftType | undefined {
+  return findType(types, text) ?? findType(types, typeFromText(text, types));
+}
+
+/**
+ * At each launch: flights and aircraft imported with a type name instead of its designator get the designator
+ * (statistics by type, CV). Signed flights are left as signed.
+ */
+export async function repairTypes(): Promise<number> {
+  const types = await allTypes();
+  const r = retypeLogbook(await db().t("flights").toArray(), await db().t("aircraft").toArray(), types);
+  const t = now();
+  for (const x of r.flights) {
+    const f = await db().t("flights").get(x.id);
+    if (f) await putFlight({ ...f, aircraftTypeIcao: x.icao, aircraftModel: x.model, updatedAt: t });
+  }
+  for (const x of r.aircraft) {
+    const a = await db().t("aircraft").get(x.id);
+    if (a) await db().t("aircraft").put({ ...a, aircraftTypeId: x.typeId, updatedAt: t });
+  }
+  return r.flights.length + r.aircraft.length;
 }
 
 /* ---------- Flights ---------- */

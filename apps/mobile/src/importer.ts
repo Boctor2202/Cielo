@@ -8,6 +8,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import {
   findDuplicate,
+  typeFromText,
   type DuplicateMatch,
   deriveFlightTimes,
   operatorIndex,
@@ -89,7 +90,9 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
       continue;
     }
     const input = { ...r.input, depIcao: toIcao(r.input.depIcao), arrIcao: toIcao(r.input.arrIcao) };
-    const type = input.aircraftTypeIcao ? types.find((t) => t.icao.toUpperCase() === input.aircraftTypeIcao!.toUpperCase()) : undefined;
+    // a designator, or the name a logbook file wrote ("172, P172, R172, Skyhawk", "EMB 500")
+    const typeIcao = input.aircraftTypeIcao ? types.find((t) => t.icao.toUpperCase() === input.aircraftTypeIcao!.toUpperCase())?.icao ?? typeFromText(input.aircraftTypeIcao, types) : undefined;
+    const type = typeIcao ? types.find((t) => t.icao === typeIcao) : undefined;
     const d = deriveFlightTimes(input, { airports: lookupAirport, aircraftType: type });
     const ex = r.explicit;
     // no clock times, or times that disagree with the total written: the logbook's total is kept

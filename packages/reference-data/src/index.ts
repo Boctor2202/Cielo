@@ -29,6 +29,7 @@ const TYPES: Row[] = [
   ["M20P", "Mooney", "M20", "airplane", "piston", 1, false, "SEP(land)"],
   ["TB10", "Socata", "TB10 Tobago", "airplane", "piston", 1, false, "SEP(land)"],
   ["TB20", "Socata", "TB20 Trinidad", "airplane", "piston", 1, false, "SEP(land)"],
+  ["TB30", "Socata", "TB30 Epsilon", "airplane", "piston", 1, false, "SEP(land)"],
   ["CAP2", "Mudry", "CAP 10", "airplane", "piston", 1, false, "SEP(land)"],
   ["EXTR", "Extra", "EA-300", "airplane", "piston", 1, false, "SEP(land)"],
   ["AAT3", "Aquila", "A210", "airplane", "piston", 1, false, "SEP(land)"],
@@ -38,6 +39,7 @@ const TYPES: Row[] = [
   ["PA18", "Piper", "PA-18 Super Cub", "airplane", "piston", 1, false, "SEP(land)"],
   // Multi-engine piston
   ["DA42", "Diamond", "DA42 Twin Star", "airplane", "piston", 2, false, "MEP(land)"],
+  ["C340", "Cessna", "340", "airplane", "piston", 2, false, "MEP(land)"],
   ["DA62", "Diamond", "DA62", "airplane", "piston", 2, false, "MEP(land)"],
   ["PA34", "Piper", "PA-34 Seneca", "airplane", "piston", 2, false, "MEP(land)"],
   ["PA44", "Piper", "PA-44 Seminole", "airplane", "piston", 2, false, "MEP(land)"],

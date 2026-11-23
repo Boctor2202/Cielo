@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
-import { flightRevision, misreadOperators, operatorIndex, stamp, type Flight, type FlightRevision, type SyncedRecord } from "@cielo/core";
+import { flightRevision, misreadOperators, operatorIndex, retypeLogbook, stamp, type Flight, type FlightRevision, type SyncedRecord } from "@cielo/core";
 import { airlines } from "../airlines";
 import { useApp } from "../state";
 
@@ -17,6 +17,22 @@ export function OperatorBackfill() {
     if (!pilot || !access.canWrite) return;
     const id = setTimeout(async () => {
       try {
+        // at each launch: flights and aircraft imported with a type name instead of its designator
+        {
+          const types = (await store.all("aircraft_types")).filter((t) => !t.deletedAt);
+          const flights = await store.all("flights");
+          const aircraft = await store.all("aircraft");
+          const r = retypeLogbook(flights, aircraft, types);
+          if (r.flights.length || r.aircraft.length) {
+            const byF = new Map(flights.map((f) => [f.id, f]));
+            const byA = new Map(aircraft.map((a) => [a.id, a]));
+            const fs = r.flights.map((x) => stamp({ ...byF.get(x.id)!, aircraftTypeIcao: x.icao, aircraftModel: x.model }) as Flight);
+            const as = r.aircraft.map((x) => stamp({ ...byA.get(x.id)!, aircraftTypeId: x.typeId }));
+            if (fs.length) await store.bulkPut("flights", fs);
+            if (as.length) await store.bulkPut("aircraft", as as never);
+            await reload();
+          }
+        }
         // first, once: the operators an earlier version read from a registration typed as the flight number
         if (!(await store.getMeta(REPAIR))) {
           const all = (await store.all("flights")).filter((f) => !f.deletedAt);
