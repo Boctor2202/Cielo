@@ -191,7 +191,7 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
       duplicateOf[r.rowIndex] = m;
       const prev = byId.get(m.flight.id);
       // only an Air France EP4/EP5: its SAB code says who took off and landed
-      const next = opts.fillLandings && prev ? landingsFill(f, prev, now) : null;
+      const next = opts.fillLandings && prev ? landingsFill(f, prev, now, !!input.autoLandings) : null;
       if (prev && next) fills.push({ prev, next });
       continue;
     }

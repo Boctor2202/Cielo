@@ -1,4 +1,5 @@
 import type { RosterEvent, RosterEventKind } from "./types";
+import { airFranceType } from "./airFranceEp5";
 
 export interface ParsedIcalEvent {
   uid?: string;
@@ -164,6 +165,8 @@ export function icalToRosterEvent(
     depIcao,
     arrIcao,
     flightNumber: fn ? `${fn[1]}${fn[2]}` : undefined,
+    // Air France's crew calendar ends the title with the aircraft code ("AF1747 (AGP-CDG) 223": an A220-300)
+    ...(fn?.[1] === "AF" && airFranceType(title.trim().match(/\b(\d{3}|77W)$/)?.[1]) ? { aircraftTypeIcao: airFranceType(title.trim().match(/\b(\d{3}|77W)$/)?.[1]) } : {}),
     externalUid: e.uid,
   };
 }

@@ -51,3 +51,21 @@ describe("HUD recency", () => {
     expect([row!.input!.hudTakeoffs, row!.input!.hudLandings]).toEqual([undefined, 1]);
   });
 });
+
+describe("Air France aircraft codes and flights confirmed from the roster", () => {
+  it("reads the A220-300 from the EP5 and from the crew calendar", async () => {
+    const { airFranceType, icalToRosterEvent, parseIcal } = await import("../src");
+    expect(airFranceType("U-23")).toBe("BCS3");
+    expect(airFranceType("223")).toBe("BCS3");
+    expect(airFranceType("999")).toBeUndefined();
+    const [ev] = parseIcal("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:x\nSUMMARY:AF1747 (AGP-CDG) 223\nDTSTART:20261120T1200Z\nDTEND:20261120T1440Z\nEND:VEVENT\nEND:VCALENDAR");
+    expect(icalToRosterEvent(ev!, "p", (c) => ({ AGP: "LEMG", CDG: "LFPG" })[c]).aircraftTypeIcao).toBe("BCS3");
+  });
+  it("replaces a roster flight by the statement's flight, same id", async () => {
+    const { findDuplicate } = await import("../src");
+    const planned = { id: "r", date: "2026-11-20", depIcao: "LEMG", arrIcao: "LFPG", outUtc: "2026-11-20T12:00:00.000Z", totalMin: 160, source: "roster", isFstd: false, takeoffsDay: 1, takeoffsNight: 0, landingsDay: 1, landingsNight: 0, pilotFlying: true, createdAt: "c", rosterEventId: "e", signatureId: null, locked: false } as never;
+    const actual = { id: "n", date: "2026-11-20", depIcao: "LEMG", arrIcao: "LFPG", outUtc: "2026-11-20T12:40:00.000Z", totalMin: 151, isFstd: false, registration: "F-HZUA", aircraftTypeIcao: "BCS3", takeoffsDay: 0, takeoffsNight: 0, landingsDay: 0, landingsNight: 0, pilotFlying: false, hudTakeoffs: 0, hudLandings: 0 } as never;
+    expect(findDuplicate(actual, [planned])?.flight.id).toBe("r");
+    expect(landingsFill(actual, planned, "now", true)).toMatchObject({ id: "r", createdAt: "c", rosterEventId: "e", registration: "F-HZUA", aircraftTypeIcao: "BCS3", totalMin: 151, pilotFlying: false, landingsDay: 0 });
+  });
+});
