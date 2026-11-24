@@ -283,7 +283,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
         dupOf[r.rowIndex] = m;
         const logged = byId.get(m.flight.id);
         // only an Air France EP4/EP5: its SAB code says who took off and landed
-        const fill = pdfRows && app === "Air France · EP4 / EP5" && logged ? landingsFill(built[i]!, logged) : null;
+        const fill = pdfRows && app === "Air France · EP4 / EP5" && logged ? landingsFill(built[i]!, logged, undefined, !!r.input?.autoLandings) : null;
         if (fill) fills.push(fill);
       } else pairs.push({ rowIndex: r.rowIndex, flight: built[i]! });
     });

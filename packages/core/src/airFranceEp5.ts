@@ -43,6 +43,18 @@ export function sabLandings(sab: string | undefined): { takeoffs: number; landin
   return { takeoffs, landings, hud: "HGK".includes(c) };
 }
 
+/**
+ * Air France's aircraft codes, as the EP4/EP5 ("U-23") and the crew calendar ("AF1747 (AGP-CDG) 223") print
+ * them, as ICAO designators. Only the codes known for sure; any other is left out (the registration tells).
+ */
+const AF_TYPES: Record<string, string> = {
+  "223": "BCS3", "318": "A318", "319": "A319", "320": "A320", "321": "A321", "332": "A332", "359": "A359", "772": "B772", "77W": "B77W", "789": "B789",
+};
+export function airFranceType(code: string | undefined): string | undefined {
+  const c = code?.trim().toUpperCase().replace(/^U-(\d{2})$/, "2$1");
+  return c ? AF_TYPES[c] : undefined;
+}
+
 export interface Ep5 {
   pilot?: string;
   role?: string;
@@ -211,6 +223,7 @@ export const ep5Legs = (ep5: Ep5): LogbookLeg[] =>
     const sab = sabLandings(l.sab);
     return {
       date: l.date, dep: l.dep, arr: l.arr, out: l.out, in: l.in, totalMin: l.totalMin, nightMin: l.nightMin, registration: l.registration,
+      aircraftType: airFranceType(l.typeCode),
       flightNumber: l.line && /^\d{1,4}[A-Z]?$/.test(l.line) ? `AF${l.line}` : undefined,
       ...(sab ? { takeoffs: sab.takeoffs, landings: sab.landings, hudTakeoffs: sab.hud ? sab.takeoffs : 0, hudLandings: sab.hud ? sab.landings : 0 } : {}),
     };

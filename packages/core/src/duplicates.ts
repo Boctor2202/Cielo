@@ -7,7 +7,7 @@ export interface DuplicateMatch {
   flight: Pick<Flight, "id" | "date" | "depIcao" | "arrIcao" | "outUtc" | "offUtc" | "totalMin">;
 }
 
-type F = Pick<Flight, "id" | "date" | "depIcao" | "arrIcao" | "outUtc" | "offUtc" | "totalMin" | "isFstd" | "fstdMin" | "deletedAt">;
+type F = Pick<Flight, "id" | "date" | "depIcao" | "arrIcao" | "outUtc" | "offUtc" | "totalMin" | "isFstd" | "fstdMin" | "deletedAt"> & { source?: Flight["source"] };
 
 const start = (f: F) => f.outUtc ?? f.offUtc ?? null;
 const minutes = (iso: string) => Math.round(Date.parse(iso) / 60_000);
@@ -28,6 +28,8 @@ export function findDuplicate(f: F, logbook: F[]): DuplicateMatch | null {
       continue;
     }
     if (e.depIcao !== f.depIcao || e.arrIcao !== f.arrIcao) continue;
+    // a flight confirmed from the roster carries the planned times: the same day and airports is the same leg
+    if (e.source === "roster" && e.date === f.date && !probable) probable = { kind: "probable", flight: e };
     const es = start(e);
     if (s && es) {
       const d = Math.abs(minutes(s) - minutes(es));
@@ -59,26 +61,37 @@ export function matchImported<T extends F>(rows: T[], logbook: F[]): (DuplicateM
 }
 
 /**
- * A document read again that holds what the logbook lacks: the takeoffs and landings of a flight already logged
- * without any (an Air France EP4/EP5 imported before its SAB code was read). The logged flight gets them, with
- * "pilot flying" and the HUD note; a signed or locked flight is left as it is. Null when there is nothing to add.
+ * A flight already logged, met again in an Air France EP4/EP5 whose SAB code says who took off and landed and
+ * with the HUD or not (`fromSab`). The statement is the airline's record: the logged flight takes its takeoffs,
+ * landings, pilot flying / monitoring and HUD counts when they differ (a flight confirmed from the roster with
+ * one takeoff and one landing as pilot flying, a leg the pilot actually monitored). Without a SAB code, only
+ * what the logged flight lacks is filled. A signed or locked flight is left as it is. Null when nothing changes.
  */
-export function landingsFill(imported: Flight, logged: Flight, now = new Date().toISOString()): Flight | null {
+export function landingsFill(imported: Flight, logged: Flight, now = new Date().toISOString(), fromSab = false): Flight | null {
   if (logged.deletedAt || logged.signatureId || logged.locked || logged.isFstd) return null;
+  // a flight confirmed from the roster holds the planned times and no aircraft: the statement's flight replaces it
+  if (fromSab && logged.source === "roster") {
+    return { ...imported, id: logged.id, createdAt: logged.createdAt, rosterEventId: logged.rosterEventId, source: logged.source, flightNumber: imported.flightNumber ?? logged.flightNumber, operator: imported.operator ?? logged.operator, remarks: logged.remarks ?? imported.remarks, signatureId: null, locked: false, updatedAt: now };
+  }
+  // the aircraft the logged flight lacks
+  const aircraft = !logged.registration && imported.registration ? { registration: imported.registration, aircraftTypeIcao: logged.aircraftTypeIcao ?? imported.aircraftTypeIcao, aircraftId: logged.aircraftId ?? imported.aircraftId } : null;
   const n = (f: Flight) => (f.takeoffsDay ?? 0) + (f.takeoffsNight ?? 0) + (f.landingsDay ?? 0) + (f.landingsNight ?? 0);
   const h = (f: Flight) => (f.hudTakeoffs ?? 0) + (f.hudLandings ?? 0);
-  const landings = n(logged) === 0 && n(imported) > 0;
-  // the HUD counts, on a flight logged before they were read (its takeoffs and landings already there)
-  const hud = h(logged) === 0 && h(imported) > 0;
-  if (!landings && !hud) return null;
+  const same = (a: Flight, b: Flight) =>
+    a.takeoffsDay === b.takeoffsDay && a.takeoffsNight === b.takeoffsNight && a.landingsDay === b.landingsDay && a.landingsNight === b.landingsNight && !!a.pilotFlying === !!b.pilotFlying;
+  const landings = fromSab ? !same(logged, imported) : n(logged) === 0 && n(imported) > 0;
+  const hud = fromSab ? (logged.hudTakeoffs ?? 0) !== (imported.hudTakeoffs ?? 0) || (logged.hudLandings ?? 0) !== (imported.hudLandings ?? 0) : h(logged) === 0 && h(imported) > 0;
+  const note = h(imported) > 0 && /(^|\s·\s)HUD$/.test(logged.remarks ?? "");
+  if (!landings && !hud && !note && !aircraft) return null;
   return {
     ...logged,
+    ...(aircraft ?? {}),
     ...(landings
-      ? { takeoffsDay: imported.takeoffsDay, takeoffsNight: imported.takeoffsNight, landingsDay: imported.landingsDay, landingsNight: imported.landingsNight, pilotFlying: true }
+      ? { takeoffsDay: imported.takeoffsDay, takeoffsNight: imported.takeoffsNight, landingsDay: imported.landingsDay, landingsNight: imported.landingsNight, pilotFlying: fromSab ? !!imported.pilotFlying : true }
       : {}),
-    ...(hud ? { hudTakeoffs: imported.hudTakeoffs, hudLandings: imported.hudLandings } : {}),
+    ...(hud ? { hudTakeoffs: imported.hudTakeoffs || undefined, hudLandings: imported.hudLandings || undefined } : {}),
     // the "HUD" note an earlier version wrote in the remarks: now a count of its own
-    remarks: hud && logged.remarks ? logged.remarks.replace(/(^|\s·\s)HUD$/, "").trim() || undefined : logged.remarks,
+    remarks: note ? logged.remarks!.replace(/(^|\s·\s)HUD$/, "").trim() || undefined : logged.remarks,
     updatedAt: now,
   };
 }
