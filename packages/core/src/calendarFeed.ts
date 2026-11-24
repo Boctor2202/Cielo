@@ -1,4 +1,5 @@
 import { icalToRosterEvent, parseIcal } from "./ical";
+import { flightForDuty, rosterDistance } from "./rosterMerge";
 import { stamp } from "./store";
 import type { Flight, RosterEvent } from "./types";
 
@@ -43,6 +44,10 @@ export interface FeedMerge {
   removed: number;
   /** events of the feed left out as personal entries */
   skipped: number;
+  /** duties already in the app from another import, taken over by the feed instead of doubled */
+  merged: number;
+  /** duties linked to a flight already in the logbook */
+  linked: number;
 }
 
 const content = (e: Partial<RosterEvent>) =>
@@ -53,9 +58,16 @@ export function mergeCalendarFeed(
   ctx: { pilotId: string; rosterId: string; existing: RosterEvent[]; flights?: Flight[]; iataToIcao: (iata: string) => string | undefined; keepAll?: boolean; now?: string },
 ): FeedMerge {
   const now = ctx.now ?? new Date().toISOString();
-  const res: FeedMerge = { put: [], added: 0, updated: 0, removed: 0, skipped: 0 };
-  const mine = ctx.existing.filter((e) => e.rosterId === ctx.rosterId && !e.deletedAt);
+  const res: FeedMerge = { put: [], added: 0, updated: 0, removed: 0, skipped: 0, merged: 0, linked: 0 };
+  const alive = ctx.existing.filter((e) => !e.deletedAt);
+  const mine = alive.filter((e) => e.rosterId === ctx.rosterId);
+  // the same duties already in the app from another import (a printed roster, an earlier file): the feed takes
+  // them over instead of adding them a second time
+  const others = alive.filter((e) => e.rosterId !== ctx.rosterId && (!e.pilotId || e.pilotId === ctx.pilotId));
+  const usedOther = new Set<string>();
   const byUid = new Map(mine.filter((e) => e.externalUid).map((e) => [e.externalUid!, e]));
+  const taken = new Set(alive.map((e) => e.flightId).filter((x): x is string => !!x));
+  const flights = ctx.flights ?? [];
   const seen = new Set<string>();
   for (const ev of parseIcal(ics)) {
     const inc = icalToRosterEvent(ev, ctx.pilotId, ctx.iataToIcao);
@@ -66,11 +78,39 @@ export function mergeCalendarFeed(
     }
     const uid = inc.externalUid ?? `${inc.startUtc}|${inc.title}`;
     seen.add(uid);
+    let twin: RosterEvent | undefined;
+    let best = Infinity;
+    for (const o of others) {
+      if (usedOther.has(o.id)) continue;
+      const d = rosterDistance(inc, o);
+      if (d !== null && d < best) {
+        twin = o;
+        best = d;
+      }
+    }
+    if (twin) usedOther.add(twin.id);
     const prev = byUid.get(uid);
-    const next = { ...prev, ...inc, externalUid: uid, rosterId: ctx.rosterId, flightId: prev?.flightId ?? null, deletedAt: null } as RosterEvent;
-    if (prev) {
-      if (content(prev) !== content(next)) {
-        res.put.push(stamp({ ...next, id: prev.id, createdAt: prev.createdAt }, now));
+    const base = prev ?? twin;
+    const next = { ...base, ...inc, externalUid: uid, rosterId: ctx.rosterId, flightId: prev?.flightId ?? twin?.flightId ?? null, deletedAt: null } as RosterEvent;
+    if (twin && prev) {
+      // already in the feed: the copy from the other import goes
+      res.put.push({ ...twin, flightId: null, deletedAt: now, updatedAt: now });
+      res.merged++;
+    } else if (twin) res.merged++;
+    // a duty already flown and logged is linked to its flight, so it is not offered again as a flight to log
+    let linked = false;
+    if (!next.flightId && (next.kind === "FLIGHT" || next.kind === "DEADHEAD")) {
+      const f = flightForDuty(next, flights, taken);
+      if (f) {
+        next.flightId = f.id;
+        taken.add(f.id);
+        res.linked++;
+        linked = true;
+      }
+    }
+    if (base) {
+      if (linked || base !== prev || content(base) !== content(next)) {
+        res.put.push(stamp({ ...next, id: base.id, createdAt: base.createdAt }, now));
         res.updated++;
       }
     } else {

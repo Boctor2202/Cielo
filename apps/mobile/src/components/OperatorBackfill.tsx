@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import { flightRevision, misreadOperators, operatorIndex, retypeLogbook, stamp, type Flight, type FlightRevision, type SyncedRecord } from "@cielo/core";
 import { airlines } from "../airlines";
 import { syncFeedsIfStale } from "../calendarFeeds";
@@ -14,6 +14,15 @@ const REPAIR = "repair:operators:v2";
  */
 export function OperatorBackfill() {
   const { store, pilot, access, reload, session } = useApp();
+  // the subscribed calendars, read again when older than an hour: each time the app comes back to the
+  // screen, and every hour while it stays open
+  useEffect(() => {
+    if (!pilot || !access.canWrite) return;
+    const run = () => void syncFeedsIfStale(store, pilot, session?.access_token).then((n) => (n ? reload() : undefined)).catch(() => undefined);
+    const sub = AppState.addEventListener("change", (s) => s === "active" && run());
+    const every = setInterval(run, 3_600_000);
+    return () => (sub.remove(), clearInterval(every));
+  }, [pilot?.id, access.canWrite, session?.access_token]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!pilot || !access.canWrite) return;
     const id = setTimeout(async () => {
