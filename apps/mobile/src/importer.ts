@@ -82,7 +82,7 @@ export async function savePrepared(store: SqliteStore, p: PreparedImport): Promi
 }
 
 /** Builds the flights of reviewed rows as they would be saved, without storing them. */
-export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, types: AircraftType[], existing: Flight[], parsed: ImportedRow[], source: Flight["source"]): Promise<PreparedImport> {
+export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, types: AircraftType[], existing: Flight[], parsed: ImportedRow[], source: Flight["source"], opts: { fillLandings?: boolean } = {}): Promise<PreparedImport> {
   const now = new Date().toISOString();
   // the operator of each imported flight, as the logbook recognises it (call sign, aircraft, what it learned)
   const ops = operatorIndex(existing, await store.all("aircraft"), airlines());
@@ -188,7 +188,8 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
       dups.push(r.rowIndex);
       duplicateOf[r.rowIndex] = m;
       const prev = byId.get(m.flight.id);
-      const next = prev && landingsFill(f, prev, now);
+      // only an Air France EP4/EP5: its SAB code says who took off and landed
+      const next = opts.fillLandings && prev ? landingsFill(f, prev, now) : null;
       if (prev && next) fills.push({ prev, next });
       continue;
     }

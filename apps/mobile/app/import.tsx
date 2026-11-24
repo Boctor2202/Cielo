@@ -202,7 +202,7 @@ export default function ImportScreen() {
     if (!rows) return;
     let stale = false;
     const h = setTimeout(() => {
-      void prepareImportedRows(store, pilot, app.aircraftTypes, flights, ok, "import").then((prepared) => {
+      void prepareImportedRows(store, pilot, app.aircraftTypes, flights, ok, "import", { fillLandings: source === "Air France · EP4 / EP5" }).then((prepared) => {
         if (!stale) setReview({ prepared, check: checkImport(rows, prepared.pairs, prepared.duplicates, table ? 2 : 1, prepared.duplicateOf) });
       });
     }, 250);
