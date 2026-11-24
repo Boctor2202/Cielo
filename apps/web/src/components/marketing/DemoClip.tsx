@@ -4,11 +4,13 @@ import { useRef } from "react";
 import { useInView, useReducedMotion } from "motion/react";
 import { useLocale } from "next-intl";
 
+export type ClipName = "adsb" | "import" | "audit" | "sign" | "licences" | "cv" | "ftl";
+
 /**
  * A clip filmed on the real app (demo account, fictional data), in the page's language: loaded only near the
  * viewport, the still frame with reduced motion.
  */
-export function DemoClip({ name, label, className = "" }: { name: "adsb" | "import" | "audit" | "sign"; label: string; className?: string }) {
+export function DemoClip({ name, label, className = "" }: { name: ClipName; label: string; className?: string }) {
   const lang = useLocale() === "fr" ? "fr" : "en";
   const reduce = !!useReducedMotion();
   const ref = useRef<HTMLVideoElement>(null);
@@ -32,5 +34,14 @@ export function DemoClip({ name, label, className = "" }: { name: "adsb" | "impo
         </>
       )}
     </video>
+  );
+}
+
+/** A clip in a rounded frame, as a feature step's screen. */
+export function ClipFrame({ name, label, className = "" }: { name: ClipName; label: string; className?: string }) {
+  return (
+    <div className={`overflow-hidden rounded-2xl border border-border shadow-[0_40px_90px_-30px_rgba(2,6,23,.55)] ${className}`}>
+      <DemoClip name={name} label={label} />
+    </div>
   );
 }

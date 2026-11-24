@@ -7,7 +7,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { FILM_CREDITS } from "@/lib/aircraft-visuals";
 import { StoreBadges } from "./sections";
-import { FtlLive, ImportLive, JobsLive, LicencesLive, LogbookLive, MapLive, SignatureLive } from "./live/screens";
+import { JobsLive, LogbookLive, MapLive } from "./live/screens";
+import { ClipFrame, type ClipName } from "./DemoClip";
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
 
@@ -155,13 +156,21 @@ export function HomeHero() {
 /* ---------- The main features: the screen stays, the steps scroll past ---------- */
 
 type Step = { key: string; Screen: ComponentType<{ className?: string }> };
+/** a step shown by a clip filmed on the real app */
+function clip(name: ClipName): Step["Screen"] {
+  function Clip({ className }: { className?: string }) {
+    const t = useTranslations("home2.steps");
+    return <ClipFrame name={name} label={t(`${name === "sign" ? "signature" : name}.title`)} className={className} />;
+  }
+  return Clip;
+}
 const STEPS: Step[] = [
-  { key: "import", Screen: ImportLive },
+  { key: "import", Screen: clip("import") },
   { key: "logbook", Screen: LogbookLive },
   { key: "map", Screen: MapLive },
-  { key: "ftl", Screen: FtlLive },
-  { key: "licences", Screen: LicencesLive },
-  { key: "signature", Screen: SignatureLive },
+  { key: "ftl", Screen: clip("ftl") },
+  { key: "licences", Screen: clip("licences") },
+  { key: "signature", Screen: clip("sign") },
   { key: "jobs", Screen: JobsLive },
 ];
 
