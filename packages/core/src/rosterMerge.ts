@@ -32,7 +32,7 @@ const content = (e: Partial<RosterEvent>) =>
   JSON.stringify([e.kind, e.title ?? null, e.reportUtc ?? null, e.startUtc, e.endUtc, e.flightNumber ?? null, e.depIcao ?? null, e.arrIcao ?? null, e.aircraftReg ?? null, e.aircraftTypeIcao ?? null, !!e.tentative]);
 
 /** How far two duties are from being the same one (lower is closer), or null when they cannot be. */
-function distance(a: Pick<RosterEvent, "kind" | "startUtc" | "depIcao" | "arrIcao">, b: Pick<RosterEvent, "kind" | "startUtc" | "depIcao" | "arrIcao">): number | null {
+export function rosterDistance(a: Pick<RosterEvent, "kind" | "startUtc" | "depIcao" | "arrIcao">, b: Pick<RosterEvent, "kind" | "startUtc" | "depIcao" | "arrIcao">): number | null {
   const dt = Math.abs(t(a.startUtc) - t(b.startUtc));
   if (isFlight(a.kind) !== isFlight(b.kind)) return null;
   if (isFlight(a.kind)) {
@@ -45,7 +45,7 @@ function distance(a: Pick<RosterEvent, "kind" | "startUtc" | "depIcao" | "arrIca
 }
 
 /** The flight of the logbook a duty was flown as: same airports, off-block within 3 h of the duty's start. */
-function flightFor(e: Pick<RosterEvent, "startUtc" | "depIcao" | "arrIcao">, flights: Flight[], taken: Set<string>): Flight | undefined {
+export function flightForDuty(e: Pick<RosterEvent, "startUtc" | "depIcao" | "arrIcao">, flights: Flight[], taken: Set<string>): Flight | undefined {
   let best: Flight | undefined;
   let bestDt = Infinity;
   for (const f of flights) {
@@ -79,7 +79,7 @@ export function mergeRosterImport(existing: RosterEvent[], incoming: IncomingEve
     let best = Infinity;
     for (const e of inWindow) {
       if (matched.has(e.id)) continue;
-      const d = distance(inc, e);
+      const d = rosterDistance(inc, e);
       if (d !== null && d < best) {
         prev = e;
         best = d;
@@ -90,7 +90,7 @@ export function mergeRosterImport(existing: RosterEvent[], incoming: IncomingEve
       const next = { ...prev, ...inc, id: prev.id, createdAt: prev.createdAt, flightId: prev.flightId ?? null, deletedAt: null } as RosterEvent;
       let changed = content(prev) !== content(next);
       if (!next.flightId && isFlight(next.kind)) {
-        const f = flightFor(next, flights, taken);
+        const f = flightForDuty(next, flights, taken);
         if (f) {
           next.flightId = f.id;
           taken.add(f.id);
@@ -106,7 +106,7 @@ export function mergeRosterImport(existing: RosterEvent[], incoming: IncomingEve
     }
     const e = stamp({ ...inc, flightId: inc.flightId ?? null } as RosterEvent, now);
     if (isFlight(e.kind)) {
-      const f = flightFor(e, flights, taken);
+      const f = flightForDuty(e, flights, taken);
       if (f) {
         e.flightId = f.id;
         taken.add(f.id);

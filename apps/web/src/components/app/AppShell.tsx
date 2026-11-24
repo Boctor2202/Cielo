@@ -118,6 +118,15 @@ function Shell({ children }: { children: ReactNode }) {
     }, 8000);
     return () => clearTimeout(id);
   }, [pilot?.id, access.canWrite]); // eslint-disable-line react-hooks/exhaustive-deps
+  // and again when the tab comes back to the front, and every hour while it stays open
+  useEffect(() => {
+    if (!pilot || !access.canWrite) return;
+    const run = () => void syncFeedsIfStale().catch(() => undefined);
+    const onShow = () => document.visibilityState === "visible" && run();
+    document.addEventListener("visibilitychange", onShow);
+    const every = setInterval(run, 3_600_000);
+    return () => (document.removeEventListener("visibilitychange", onShow), clearInterval(every));
+  }, [pilot?.id, access.canWrite]); // eslint-disable-line react-hooks/exhaustive-deps
   const online = useOnline();
   // the mobile sheet: one group of sections (Activity, Career) or everything else ("more")
   const [sheet, setSheet] = useState<NavGroup | "more" | null>(null);
