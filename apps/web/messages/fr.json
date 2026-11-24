@@ -1192,6 +1192,9 @@
         "merged": "Roster mis à jour : {added} nouveaux, {updated} modifiés, {removed} supprimés, {linked} reliés à des vols déjà loggés"
       },
       "addEvent": "Ajouter un événement",
+      "sync": "Synchroniser",
+      "syncNone": "Aucun roster rattaché : abonnez-vous au lien de votre calendrier dans Importer.",
+      "syncFailed": "La synchronisation a échoué : réessayez dans un instant.",
       "today": "Aujourd'hui",
       "month": "Mois",
       "list": "Liste",
