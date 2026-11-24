@@ -64,11 +64,10 @@ export function mergeCalendarFeed(
   // the same duties already in the app from another import (a printed roster, an earlier file): the feed takes
   // them over instead of adding them a second time
   const others = alive.filter((e) => e.rosterId !== ctx.rosterId && (!e.pilotId || e.pilotId === ctx.pilotId));
-  const usedOther = new Set<string>();
   const byUid = new Map(mine.filter((e) => e.externalUid).map((e) => [e.externalUid!, e]));
   const taken = new Set(alive.map((e) => e.flightId).filter((x): x is string => !!x));
   const flights = ctx.flights ?? [];
-  const seen = new Set<string>();
+  const incoming: { inc: ReturnType<typeof icalToRosterEvent>; uid: string }[] = [];
   for (const ev of parseIcal(ics)) {
     const inc = icalToRosterEvent(ev, ctx.pilotId, ctx.iataToIcao);
     // a mixed calendar: an event that does not read as a duty (no route, no duty word) is a personal entry
@@ -76,24 +75,47 @@ export function mergeCalendarFeed(
       res.skipped++;
       continue;
     }
-    const uid = inc.externalUid ?? `${inc.startUtc}|${inc.title}`;
-    seen.add(uid);
-    let twin: RosterEvent | undefined;
-    let best = Infinity;
-    for (const o of others) {
-      if (usedOther.has(o.id)) continue;
+    incoming.push({ inc, uid: inc.externalUid ?? `${inc.startUtc}|${inc.title}` });
+  }
+  // the feed's own events, by UID first; some crew portals (Leon) give an event a new UID at each reading, so an
+  // event of the feed that no UID matches is the same duty as before when it has the same route around the same time
+  const used = new Set<string>();
+  const prevOf = new Map<string, RosterEvent>();
+  for (const { uid } of incoming) {
+    const p = byUid.get(uid);
+    if (p && !used.has(p.id)) {
+      prevOf.set(uid, p);
+      used.add(p.id);
+    }
+  }
+  const closest = (inc: (typeof incoming)[number]["inc"], pool: RosterEvent[]) => {
+    let best: RosterEvent | undefined;
+    let bestD = Infinity;
+    for (const o of pool) {
+      if (used.has(o.id)) continue;
       const d = rosterDistance(inc, o);
-      if (d !== null && d < best) {
-        twin = o;
-        best = d;
+      // on a tie, the copy already linked to the logbook
+      if (d !== null && (d < bestD || (d === bestD && o.flightId && !best?.flightId))) {
+        best = o;
+        bestD = d;
       }
     }
-    if (twin) usedOther.add(twin.id);
-    const prev = byUid.get(uid);
+    if (best) used.add(best.id);
+    return best;
+  };
+  for (const { inc, uid } of incoming) {
+    if (!prevOf.has(uid)) {
+      const p = closest(inc, mine);
+      if (p) prevOf.set(uid, p);
+    }
+  }
+  for (const { inc, uid } of incoming) {
+    const prev = prevOf.get(uid);
+    // the same duty already in the app from another import: taken over (or, when the feed has it, removed)
+    const twin = closest(inc, others);
     const base = prev ?? twin;
     const next = { ...base, ...inc, externalUid: uid, rosterId: ctx.rosterId, flightId: prev?.flightId ?? twin?.flightId ?? null, deletedAt: null } as RosterEvent;
     if (twin && prev) {
-      // already in the feed: the copy from the other import goes
       res.put.push({ ...twin, flightId: null, deletedAt: now, updatedAt: now });
       res.merged++;
     } else if (twin) res.merged++;
@@ -109,7 +131,7 @@ export function mergeCalendarFeed(
       }
     }
     if (base) {
-      if (linked || base !== prev || content(base) !== content(next)) {
+      if (linked || base !== prev || content(base) !== content(next) || (base.flightId ?? null) !== (next.flightId ?? null)) {
         res.put.push(stamp({ ...next, id: base.id, createdAt: base.createdAt }, now));
         res.updated++;
       }
@@ -120,7 +142,7 @@ export function mergeCalendarFeed(
   }
   // gone from the feed: removed, unless the duty was flown
   for (const e of mine) {
-    if (!e.externalUid || seen.has(e.externalUid) || e.flightId) continue;
+    if (used.has(e.id) || e.flightId) continue;
     res.put.push({ ...e, deletedAt: now, updatedAt: now });
     res.removed++;
   }

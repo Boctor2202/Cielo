@@ -51,3 +51,13 @@ describe("calendar link over other imports and the logbook", () => {
     expect(m.put[0]!.deletedAt).toBeTruthy();
   });
 });
+
+describe("a feed whose UIDs change at each reading (Leon)", () => {
+  it("recognises its duties by route and time, without doubling or removing them", () => {
+    const first = mergeCalendarFeed(cal([ev("flights1-100", "Flight CDG-GVA", "20261120T0800Z", "20261120T0910Z")]), { ...ctx, flights: [{ id: "f1", date: "2026-11-20", depIcao: "LFPG", arrIcao: "LSGG", outUtc: "2026-11-20T08:00:00.000Z" } as never] });
+    expect(first.put[0]!.flightId).toBe("f1");
+    const again = mergeCalendarFeed(cal([ev("flights1-200", "Flight CDG-GVA", "20261120T0800Z", "20261120T0910Z")]), { ...ctx, existing: first.put as never[] });
+    expect(again).toMatchObject({ added: 0, removed: 0 });
+    expect(again.put).toHaveLength(0);
+  });
+});
