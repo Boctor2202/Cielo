@@ -63,6 +63,8 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
   const { toast, toastNode } = useToast();
 
   const [v, setV] = useState<FlightFormInput>(() => (flight ? flightToInput(flight) : { ...blank(pilot), ...prefill }));
+  // the HUD counts sit with the takeoffs and landings, for a pilot who flies with a head-up display
+  const hudPilot = !!v.hudTakeoffs || !!v.hudLandings || (allFlights ?? []).some((f) => !f.deletedAt && ((f.hudTakeoffs ?? 0) + (f.hudLandings ?? 0) > 0));
   const [nightManual, setNightManual] = useState(flight?.nightCalc === "manual");
   const [ifrManual, setIfrManual] = useState(!!flight && flight.ifrMin > 0 && flight.ifrMin !== flight.totalMin);
   const [error, setError] = useState("");
@@ -421,6 +423,15 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
                 ))}
               </div>
             )}
+            {hudPilot && (
+              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                {(["hudTakeoffs", "hudLandings"] as const).map((k) => (
+                  <Field key={k} label={t(k)}>
+                    <input type="number" min={0} max={99} className="input num" value={v[k] ?? 0} onChange={(e) => set(k, Math.max(0, Number(e.target.value) || 0) || undefined)} />
+                  </Field>
+                ))}
+              </div>
+            )}
           </Card>
         )}
 
@@ -576,11 +587,12 @@ function ApproachList({ value, onChange }: { value: Approach[]; onChange: (a: Ap
 function ExtraEntries({ v, set, pilot }: { v: FlightFormInput; set: <K extends keyof FlightFormInput>(k: K, val: FlightFormInput[K]) => void; pilot?: Pilot }) {
   const t = useTranslations("app.form.extra");
   const wanted = extraFieldsFor(pilot ? frameworkOf(pilot) : undefined, pilot?.authority);
-  const filled = EXTRA_FLIGHT_FIELDS.some((k) => { const x = v[k]; return Array.isArray(x) ? x.length > 0 : !!x; });
+  const filled = EXTRA_FLIGHT_FIELDS.filter((k) => k !== "hudTakeoffs" && k !== "hudLandings").some((k) => { const x = v[k]; return Array.isArray(x) ? x.length > 0 : !!x; });
   const [open, setOpen] = useState(wanted.length > 0 || filled);
   // the stops as typed (spaces kept while typing), the parsed list goes to the flight
   const [viaText, setViaText] = useState((v.via ?? []).join(" "));
-  const order = [...wanted, ...EXTRA_FLIGHT_FIELDS.filter((k) => !wanted.includes(k))];
+  // the HUD counts are with the takeoffs and landings, not here
+  const order = [...wanted, ...EXTRA_FLIGHT_FIELDS.filter((k) => !wanted.includes(k))].filter((k) => k !== "hudTakeoffs" && k !== "hudLandings");
   const field = (k: (typeof EXTRA_FLIGHT_FIELDS)[number]) => {
     switch (k) {
       case "simInstrumentMin":

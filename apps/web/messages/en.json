@@ -709,6 +709,8 @@
       "toNight": "Night takeoffs",
       "ldgDay": "Day landings",
       "ldgNight": "Night landings",
+      "hudTakeoffs": "of which HUD take-offs",
+      "hudLandings": "of which HUD landings",
       "approachesTitle": "Approaches",
       "approachType": "Type",
       "runway": "Runway",
