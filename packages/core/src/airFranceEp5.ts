@@ -24,6 +24,8 @@ export interface Ep5Leg {
   registration: string;
   typeCode: string;
   nature: string;
+  /** the line number (EP4), e.g. 1168 */
+  line?: string;
 }
 
 export interface Ep5 {
@@ -53,8 +55,19 @@ function lines(items: PdfTextItem[]): PdfTextItem[][] {
 
 export function isAirFranceEp5(pages: PdfTextItem[][]): boolean {
   const text = plain(pages.flat().map((i) => i.s).join(" "));
-  return /CARNET DE VOL/.test(text) && /EP\s?5/.test(text);
+  return (/CARNET DE VOL/.test(text) && /EP\s?5/.test(text)) || isEp4(text);
 }
+
+/**
+ * The EP4 ("FEUILLE HORAIRE D'ACTIVITE"), the same month as the EP5 laid out for pay: each leg has its actual
+ * and scheduled times, then its actual flight time; day and night are not split per leg (the night figure on
+ * a duty's last line is the whole duty's), so the logbook works night out itself.
+ */
+const isEp4 = (text: string) => /FEUILLE HORAIRE/.test(text) && /EP\s?4/.test(text);
+const DH = "(\\d{1,2})\\s*[|I¦l]?\\s*(\\d{1,2}\\.\\d{2})";
+const DH_ = "\\d{1,2}\\s*[|I¦l]?\\s*\\d{1,2}\\.\\d{2}";
+// nature, line number, type, registration, SAB code, departure, actual, scheduled, arrival, actual, scheduled, flight time
+const LEG4 = new RegExp(`^(\\d(?:\\s?\\d)?)\\s+(\\S+)\\s+(\\S+)\\s+([A-Z0-9]{4,5})\\s+([A-Z]{3})\\s+([A-Z]{3})\\s+${DH}\\s+${DH_}\\s+([A-Z]{3})\\s+${DH}\\s+${DH_}\\s+(\\d{1,2}\\.\\d{2})`);
 
 const LEG = /^(\d+)\s+(\S+)\s+([A-Z0-9]{4,5})\s+([A-Z]{3})\s+([A-Z]{3})\s+(\d{1,2})\s*[|I¦l]?\s*(\d{1,2}\.\d{2})\s+([A-Z]{3})\s+(\d{1,2})\s*[|I¦l]?\s*(\d{1,2}\.\d{2})\s+(\d{1,2}\.\d{2})/;
 
@@ -64,8 +77,10 @@ export function parseAirFranceEp5(pages: PdfTextItem[][]): Ep5 | null {
   const seen = new Set<string>();
   for (const page of pages) {
     const text = plain(page.map((i) => i.s).join(" "));
-    if (!/CARNET DE VOL/.test(text)) continue;
-    const mm = new RegExp(`(${MOIS.join("|")})\\s+(\\d{4})`).exec(text);
+    const ep4 = isEp4(text);
+    if (!/CARNET DE VOL/.test(text) && !ep4) continue;
+    // the statement's month, not the day it was printed ("EDITE LE 29 OCTOBRE 2026")
+    const mm = [...text.matchAll(new RegExp(`(\\d{1,2}\\s+)?(${MOIS.join("|")})\\s+(\\d{4})`, "g"))].map((x) => [x[0], x[2], x[3]] as const).find((x) => !/^\d/.test(x[0]));
     if (!mm) continue;
     const month = MOIS.indexOf(mm[1]!) + 1;
     const year = Number(mm[2]);
@@ -80,7 +95,14 @@ export function parseAirFranceEp5(pages: PdfTextItem[][]): Ep5 | null {
     }
     for (const r of rows) {
       const joined = r.map((i) => i.s.trim()).join(" ").replace(/\s+/g, " ");
-      const m = LEG.exec(joined);
+      let line: string | undefined;
+      let m = LEG.exec(joined);
+      if (ep4) {
+        const q = LEG4.exec(joined);
+        // the same groups as an EP5 line
+        line = q?.[2];
+        m = q ? ([q[0], q[1], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10], q[11], q[12]] as unknown as RegExpExecArray) : null;
+      }
       if (!m) continue;
       const [, nature, typeCode, reg, , dep, d1, h1, arr, d2, h2, total] = m;
       const day1 = Number(d1);
@@ -95,7 +117,7 @@ export function parseAirFranceEp5(pages: PdfTextItem[][]): Ep5 | null {
       const after = r.filter((i) => totalItem && i.x > totalItem.x + 1 && /^\d{1,2}\.\d{2}$/.test(i.s.trim()));
       let dayMin: number | undefined;
       let nightMin: number | undefined;
-      for (const it of after) {
+      for (const it of ep4 ? [] : after) {
         const v = dec(it.s.trim());
         if (xJour !== undefined && xNuit !== undefined) {
           if (Math.abs(it.x - xNuit) < Math.abs(it.x - xJour) && it.x < xNuit + (xNuit - xJour)) nightMin = v;
@@ -121,6 +143,7 @@ export function parseAirFranceEp5(pages: PdfTextItem[][]): Ep5 | null {
         registration: reg!.length === 4 ? `F-${reg}` : reg!,
         typeCode: typeCode!,
         nature: nature!,
+        line,
       });
     }
   }
@@ -161,7 +184,7 @@ export interface LogbookLeg {
   fstdMin?: number;
 }
 
-export const ep5Legs = (ep5: Ep5): LogbookLeg[] => ep5.legs.map((l) => ({ date: l.date, dep: l.dep, arr: l.arr, out: l.out, in: l.in, totalMin: l.totalMin, nightMin: l.nightMin, registration: l.registration }));
+export const ep5Legs = (ep5: Ep5): LogbookLeg[] => ep5.legs.map((l) => ({ date: l.date, dep: l.dep, arr: l.arr, out: l.out, in: l.in, totalMin: l.totalMin, nightMin: l.nightMin, registration: l.registration, flightNumber: l.line && /^\d{1,4}[A-Z]?$/.test(l.line) ? `AF${l.line}` : undefined }));
 
 const FUNCTIONS = ["PIC", "PICUS", "SIC", "DUAL", "FI", "FE"];
 
