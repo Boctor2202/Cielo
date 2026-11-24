@@ -37,8 +37,13 @@ export function rosterDistance(a: Pick<RosterEvent, "kind" | "startUtc" | "depIc
   if (isFlight(a.kind) !== isFlight(b.kind)) return null;
   if (isFlight(a.kind)) {
     // the same leg, its times moved by up to 6 h (a delay, a new slot)
-    if ((a.depIcao ?? "") !== (b.depIcao ?? "") || (a.arrIcao ?? "") !== (b.arrIcao ?? "")) return null;
-    return dt <= 6 * H ? dt : null;
+    if ((a.depIcao ?? "") === (b.depIcao ?? "") && (a.arrIcao ?? "") === (b.arrIcao ?? "")) return dt <= 6 * H ? dt : null;
+    // a leg read with one airport missing (a printed roster cut at midnight): the same leg when the other airport
+    // and the time agree
+    const half = (x?: string | null, y?: string | null) => !x || !y || x === y;
+    const one = (a.depIcao && a.depIcao === b.depIcao) || (a.arrIcao && a.arrIcao === b.arrIcao);
+    if (one && half(a.depIcao, b.depIcao) && half(a.arrIcao, b.arrIcao)) return dt <= H ? dt + H : null;
+    return null;
   }
   if (a.kind !== b.kind) return null;
   return day(a.startUtc) === day(b.startUtc) || dt <= 12 * H ? dt : null;
