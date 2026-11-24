@@ -441,6 +441,8 @@ export function flightToInput(f: Flight): FlightFormInput {
     remarks: f.remarks,
     simInstrumentMin: f.simInstrumentMin,
     holdings: f.holdings,
+    hudTakeoffs: f.hudTakeoffs,
+    hudLandings: f.hudLandings,
     groundTrainingMin: f.groundTrainingMin,
     soloMin: f.soloMin,
     safetyPilotName: f.safetyPilotName,

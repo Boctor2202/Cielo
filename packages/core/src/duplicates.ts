@@ -66,16 +66,19 @@ export function matchImported<T extends F>(rows: T[], logbook: F[]): (DuplicateM
 export function landingsFill(imported: Flight, logged: Flight, now = new Date().toISOString()): Flight | null {
   if (logged.deletedAt || logged.signatureId || logged.locked || logged.isFstd) return null;
   const n = (f: Flight) => (f.takeoffsDay ?? 0) + (f.takeoffsNight ?? 0) + (f.landingsDay ?? 0) + (f.landingsNight ?? 0);
-  if (n(logged) > 0 || n(imported) === 0) return null;
-  const hud = /\bHUD\b/.test(imported.remarks ?? "") && !/\bHUD\b/.test(logged.remarks ?? "");
+  const h = (f: Flight) => (f.hudTakeoffs ?? 0) + (f.hudLandings ?? 0);
+  const landings = n(logged) === 0 && n(imported) > 0;
+  // the HUD counts, on a flight logged before they were read (its takeoffs and landings already there)
+  const hud = h(logged) === 0 && h(imported) > 0;
+  if (!landings && !hud) return null;
   return {
     ...logged,
-    takeoffsDay: imported.takeoffsDay,
-    takeoffsNight: imported.takeoffsNight,
-    landingsDay: imported.landingsDay,
-    landingsNight: imported.landingsNight,
-    pilotFlying: true,
-    remarks: hud ? [logged.remarks, "HUD"].filter(Boolean).join(" · ") : logged.remarks,
+    ...(landings
+      ? { takeoffsDay: imported.takeoffsDay, takeoffsNight: imported.takeoffsNight, landingsDay: imported.landingsDay, landingsNight: imported.landingsNight, pilotFlying: true }
+      : {}),
+    ...(hud ? { hudTakeoffs: imported.hudTakeoffs, hudLandings: imported.hudLandings } : {}),
+    // the "HUD" note an earlier version wrote in the remarks: now a count of its own
+    remarks: hud && logged.remarks ? logged.remarks.replace(/(^|\s·\s)HUD$/, "").trim() || undefined : logged.remarks,
     updatedAt: now,
   };
 }
