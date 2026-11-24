@@ -7,6 +7,7 @@ import { ROSTER_KINDS, analyseTable, mergeRosterImport, printedDutiesToEvents, t
 import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { DropZone } from "@/components/app/DropZone";
+import { CalendarFeeds } from "@/components/app/CalendarFeeds";
 import { useAirports } from "@/lib/airports";
 import { useFlights, useFormatDate, usePilot, useTable } from "@/lib/hooks";
 import { put, saveLayover, saveRosterEvent, softDelete } from "@/lib/repo";
@@ -262,6 +263,9 @@ export default function RosterPage() {
         <p className="mb-4 text-sm text-muted">{t("importHelp")}</p>
         <DropZone accept=".ics,.csv,.txt,.pdf" onFile={(f) => void onFile(f)} label={ti("drop")} />
         {reading ? <p className="mt-3 text-sm text-muted">{t("pdf.reading")}</p> : null}
+        <div className="mt-6 border-t border-border pt-5">
+          <CalendarFeeds onSynced={(msg) => toast(msg)} />
+        </div>
       </Modal>
 
       <EventEditor draft={edit} onClose={() => setEdit(null)} />

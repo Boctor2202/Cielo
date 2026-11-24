@@ -7,6 +7,7 @@ import { type I18nKey } from "../../src/i18n";
 import { useApp } from "../../src/state";
 import { RosterPdfError, pickAndImportRoster } from "../../src/rosterImport";
 import { Requires } from "../../src/components/Access";
+import { CalendarFeedsCard } from "../../src/components/CalendarFeedsCard";
 import { space, useTheme } from "../../src/theme";
 
 export default function Roster() {
@@ -96,6 +97,7 @@ function RosterScreen() {
             />
             <Button kind="secondary" small title={t("roster.import")} loading={importing} onPress={() => void importRoster()} />
             <Txt variant="small" style={{ textAlign: "center" }}>{t("roster.importHint")}</Txt>
+            <CalendarFeedsCard />
           </View>
         }
         ListEmptyComponent={when === "next" ? <EmptyState title={t("roster.empty")} hint={t("roster.emptyHintMobile")} /> : <EmptyState title={t("roster.pastEmpty")} />}

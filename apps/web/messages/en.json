@@ -1216,7 +1216,34 @@
       "deleteEvent": "Delete event",
       "option": "Option",
       "optionHint": "Option: planned but not confirmed yet. It is left out of your duty-time limits and layovers until it is confirmed (a new print of the roster, or the button below).",
-      "confirmOption": "Mark as confirmed"
+      "confirmOption": "Mark as confirmed",
+      "feed": {
+        "title": "Subscribe to a calendar",
+        "help": "Paste the link of a calendar that holds your roster: Geardown reads it now, then again every hour, in the app and on the website. Personal entries (no route, no duty word) are left out.",
+        "placeholder": "webcal://… or https://….ics",
+        "subscribe": "Subscribe",
+        "syncing": "Reading the calendar…",
+        "syncNow": "Sync now",
+        "remove": "Unsubscribe",
+        "removeConfirm": "Stop syncing this calendar? Its duties not yet flown leave the roster.",
+        "last": "Synced {when}",
+        "never": "Not synced yet",
+        "done": "{added} added · {updated} updated · {removed} removed",
+        "how": "Where to find the link",
+        "howApple": "Apple Calendar: on iCloud.com, share the calendar as a public calendar and copy its webcal link.",
+        "howGoogle": "Google Calendar: Settings › the calendar › “Secret address in iCal format”.",
+        "howOutlook": "Outlook: Settings › Calendar › Shared calendars › Publish a calendar › ICS link.",
+        "howPortal": "Crew portal or roster app: its “subscribe” or iCal / webcal link.",
+        "err": {
+          "bad_url": "This is not a calendar link (webcal:// or https://).",
+          "signin": "Sign in to sync a calendar.",
+          "not_found": "The calendar was not found or is private: check the link.",
+          "not_calendar": "This link does not point to a calendar (iCal).",
+          "too_big": "This calendar is too large.",
+          "rate_limited": "Too many syncs, try again in a while.",
+          "upstream": "The calendar could not be read right now."
+        }
+      }
     },
     "layover": {
       "title": "Layover {icao}",
