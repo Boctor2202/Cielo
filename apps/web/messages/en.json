@@ -588,6 +588,10 @@
         "until": "until {date}",
         "pax": "Passengers (3 in 90 days)",
         "hud": "HUD (3 in 90 days)",
+        "hudTo90": "HUD take-offs, 90 days",
+        "hudLdg90": "HUD landings, 90 days",
+        "hudValid": "HUD recency valid until",
+        "hudTotal": "HUD total",
         "night": "Night",
         "ftl28": "flight time, 28 days",
         "ftl": {

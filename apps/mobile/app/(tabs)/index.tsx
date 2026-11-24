@@ -33,6 +33,8 @@ import {
   type WidgetId,
   type WidgetPlacement,
   isDemoAccount,
+  hudSummary,
+  isHudPilot,
 } from "@cielo/core";
 import { Button, Card, Dot, Row, Screen, Txt, statusColor } from "../../src/components/ui";
 import { Track } from "../../src/components/Bars";
@@ -64,6 +66,7 @@ const LOOK: Record<WidgetId, { icon: React.ComponentProps<typeof Ionicons>["name
   nextLayover: { icon: "bed-outline", tone: "#FB923C" },
   nextBadge: { icon: "medal-outline", tone: "#A78BFA" },
   jobs: { icon: "briefcase-outline", tone: "#FACC15" },
+  hud: { icon: "eye-outline", tone: "#22D3EE" },
 };
 
 /** A card's title row: the widget's icon in its colour, the title, an optional chip, and a chevron. */
@@ -98,7 +101,9 @@ export default function Dashboard() {
     void store.getMeta("sync.accountOwner").then((v) => setHadAccount(!!v)).catch(() => undefined);
   }, [session, store]);
   // the pilot's widgets (synced with the website); while customising, a draft
-  const saved = useMemo(() => dashboardWidgets(pilot), [pilot]);
+  // an Air France pilot (HUD flights or flights with Air France): the HUD counter is offered
+  const hudPilot = useMemo(() => isHudPilot(flights), [flights]);
+  const saved = useMemo(() => dashboardWidgets(pilot, { hud: hudPilot }), [pilot, hudPilot]);
   const [draft, setDraft] = useState<WidgetPlacement[] | null>(null);
   const widgets = draft ?? saved;
   // roster flights that ended and are not logged yet
@@ -111,6 +116,7 @@ export default function Dashboard() {
 
   const periods = useMemo(() => dashboardPeriods(flights, balances, today), [flights, balances, today]);
   const recency = useMemo(() => computeRecency(flights, today), [flights, today]);
+  const hud = useMemo(() => hudSummary(flights, today), [flights, today]);
   // per type or class rating, with the pilot's rules (EASA / FAA)
   const currency = useCurrency();
   const { settings: ftlSettings } = useFtlSettings();
@@ -237,6 +243,24 @@ export default function Dashboard() {
           )}
         </Card>
     ),
+    hud: (
+      <Card onPress={() => router.navigate("/currency")}>
+        <Head id="hud" title={t("dash.hud")} chip={recency.hud?.valid ? t("cur.allGood") : t("dash.hudNotCurrent")} go />
+        <Txt style={{ fontSize: 26, fontWeight: "800" }} mono>T/O {hud.takeoffs} · LDG {hud.landings}</Txt>
+        {([["hudTo90", hud.takeoffs90], ["hudLdg90", hud.landings90]] as const).map(([k, n]) => (
+          <View key={k} style={{ gap: 4 }}>
+            <Row style={{ justifyContent: "space-between" }}>
+              <Txt>{t(`dash.${k}` as I18nKey)}</Txt>
+              <Txt mono color={n >= 3 ? c.success : c.warning}>{n} / 3</Txt>
+            </Row>
+            <Track ratio={Math.min(1, n / 3)} color={n >= 3 ? c.success : c.warning} />
+          </View>
+        ))}
+        <Txt variant="small" mono color={recency.hud?.valid ? c.muted : c.warning}>
+          {recency.hud?.valid && recency.hud.validUntil ? t("dash.validUntil", { date: formatDate(recency.hud.validUntil, locale) }) : t("dash.hudNotCurrent")}
+        </Txt>
+      </Card>
+    ),
     expiries: (
       <Card onPress={() => router.navigate("/documents")}>
           <Head id="expiries" title={t("dash.expiries")} chip={expiries[0]?.s.daysLeft !== undefined ? (expiries[0]!.s.daysLeft! < 0 ? t("dash.expired") : t("dash.daysLeft", { n: expiries[0]!.s.daysLeft! })) : undefined} go />
@@ -341,6 +365,7 @@ export default function Dashboard() {
     nextLayover: layover ? { value: layover.airportIcao, sub: layover.arrivalUtc ? formatDate(layover.arrivalUtc.slice(0, 10), locale) : layover.hotelName, go: () => router.navigate("/layovers") } : { value: "—", sub: t("dash.noLayover"), go: () => router.navigate("/layovers") },
     nextBadge: badge ? { value: t(`badges.d.${badge.id}` as I18nKey), sub: `${badge.value} / ${badge.target}`, color: "#A78BFA", go: () => router.navigate("/stats") } : undefined,
     jobs: { value: t("dash.jobsValue"), sub: t("dash.jobsSub"), color: c.accent, go: () => router.navigate("/jobs") },
+    hud: { value: `T/O ${hud.takeoffs} · LDG ${hud.landings}`, sub: recency.hud?.valid && recency.hud.validUntil ? t("dash.validUntil", { date: formatDate(recency.hud.validUntil, locale) }) : t("dash.hudNotCurrent"), color: recency.hud?.valid ? c.success : c.warning, go: () => router.navigate("/currency") },
   };
   const tile = (id: WidgetId) => {
     // the next layover: its city's landmark (Google photo) across the top
@@ -403,7 +428,7 @@ export default function Dashboard() {
   }
   const editing = draft !== null;
   const save = async () => {
-    if (draft) await savePilot({ dashboard: dashboardValue(draft) });
+    if (draft) await savePilot({ dashboard: dashboardValue(draft, pilot) });
     setDraft(null);
   };
   const edit = (i: number, w: WidgetPlacement) => (
@@ -490,11 +515,11 @@ export default function Dashboard() {
               ),
             )}
 
-        {editing && hiddenWidgets(widgets).length ? (
+        {editing && hiddenWidgets(widgets).filter((w) => w.id !== "hud" || hudPilot).length ? (
           <Card>
             <Txt variant="h2">{t("dash.addWidget")}</Txt>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {hiddenWidgets(widgets).map((w) => (
+              {hiddenWidgets(widgets).filter((w) => w.id !== "hud" || hudPilot).map((w) => (
                 <Pressable key={w.id} onPress={() => setDraft([...widgets, { id: w.id, size: w.sizes[0]! }])} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: "rgba(148,163,184,0.4)" }}>
                   <Ionicons name="add" size={14} color={c.accent} />
                   <Txt variant="small" style={{ fontWeight: "600" }}>{widgetLabel(w.id, locale)}</Txt>
