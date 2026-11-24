@@ -38,6 +38,7 @@ export function Footer() {
           <Link href="/blog">{n("blog")}</Link>
           <Link href="/outils/heures-de-nuit">{t("nightTool")}</Link>
           <Link href="/outils/fdp-maximum">{t("fdpTool")}</Link>
+          <Link href="/outils/experience-recente">{t("recencyTool")}</Link>
         </FooterCol>
         <FooterCol title={t("company")}>
           <Link href="/contact">{t("contact")}</Link>

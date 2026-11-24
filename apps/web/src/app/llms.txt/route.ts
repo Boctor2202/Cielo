@@ -43,6 +43,7 @@ export function GET() {
     "## Free tools (no account)",
     `- [Night time calculator](${absolute("/outils/heures-de-nuit", "en")}): night time of a flight from the airports and block times, civil twilight along the route`,
     `- [Maximum FDP calculator](${absolute("/outils/fdp-maximum", "en")}): EASA ORO.FTL.205 and Subpart Q maximum flight duty period, with the full table`,
+    `- [Recency calculator](${absolute("/outils/experience-recente", "en")}): until when you may carry passengers, from your recent takeoffs and landings (EASA FCL.060(b))`,
     "",
     "## Articles",
     ...POSTS.map((x) => `- [${x.en.title}](${absolute({ pathname: "/blog/[slug]", params: { slug: x.slug } }, "en")}): ${x.en.excerpt}`),

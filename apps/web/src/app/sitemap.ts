@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { href: "/outils", priority: 0.7, freq: "monthly" },
     { href: "/outils/heures-de-nuit", priority: 0.8, freq: "monthly" },
     { href: "/outils/fdp-maximum", priority: 0.8, freq: "monthly" },
+    { href: "/outils/experience-recente", priority: 0.8, freq: "monthly" },
     { href: "/contact", priority: 0.4, freq: "yearly" },
     { href: "/vos-donnees", priority: 0.5, freq: "yearly" },
     { href: "/legal/mentions-legales", priority: 0.2, freq: "yearly" },

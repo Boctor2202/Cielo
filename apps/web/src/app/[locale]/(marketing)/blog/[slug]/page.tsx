@@ -63,11 +63,36 @@ export default async function PostPage({ params }: { params: Promise<{ locale: "
             <h2 key={i} className="pt-4 text-2xl font-bold tracking-tight">
               {para.slice(3)}
             </h2>
+          ) : para.startsWith("- ") ? (
+            <p key={i} className="border-l-2 border-border pl-4 text-[15px] text-muted">
+              <Linked text={para.slice(2)} />
+            </p>
           ) : (
-            <p key={i}>{para}</p>
+            <p key={i}>
+              <Linked text={para} />
+            </p>
           ),
         )}
       </div>
     </article>
+  );
+}
+
+/** A paragraph with its sources: "[label](https://…)" becomes a link to the official text. */
+function Linked({ text }: { text: string }) {
+  const parts = text.split(/(\[[^\]]+\]\(https:\/\/[^)\s]+\))/g);
+  return (
+    <>
+      {parts.map((p, i) => {
+        const m = /^\[([^\]]+)\]\((https:\/\/[^)\s]+)\)$/.exec(p);
+        return m ? (
+          <a key={i} href={m[2]} target="_blank" rel="noopener" className="font-medium text-accent underline underline-offset-2">
+            {m[1]}
+          </a>
+        ) : (
+          <span key={i}>{p}</span>
+        );
+      })}
+    </>
   );
 }

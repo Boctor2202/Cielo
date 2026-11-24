@@ -13,6 +13,7 @@ export const routing = defineRouting({
     "/outils": { fr: "/outils", en: "/tools" },
     "/outils/heures-de-nuit": { fr: "/outils/heures-de-nuit", en: "/tools/night-time-calculator" },
     "/outils/fdp-maximum": { fr: "/outils/fdp-maximum", en: "/tools/max-fdp-calculator" },
+    "/outils/experience-recente": { fr: "/outils/experience-recente", en: "/tools/recency-calculator" },
     "/blog/[slug]": "/blog/[slug]",
     "/contact": "/contact",
     "/connexion": { fr: "/connexion", en: "/login" },
