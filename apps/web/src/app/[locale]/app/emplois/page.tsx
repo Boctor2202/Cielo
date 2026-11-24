@@ -8,6 +8,10 @@ import { buildProfile, defaultWorkRegions, detectAircraft, matchJob, REGIONS, au
 
 import { Badge, Card, Empty, PageTitle, Segmented, Toggle, type Level } from "@/components/app/ui";
 import { useFlights, useFormatDate, usePilot, useTable, useTypes } from "@/lib/hooks";
+import { DEMO_META, localStore } from "@/lib/db";
+
+/** operators not shown to the demo pilot */
+const DEMO_HIDDEN = /aston\s*jet/i;
 
 type Sort = "match" | "experience" | "salary" | "recent";
 interface Feed {
@@ -60,9 +64,9 @@ export default function JobsPage() {
   };
 
   useEffect(() => {
-    fetch("/api/jobs")
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then(setFeed)
+    Promise.all([fetch("/api/jobs").then((r) => (r.ok ? r.json() : Promise.reject())), localStore.getMeta(DEMO_META)])
+      // the demo pilot's matches leave out the operators of the people behind Geardown
+      .then(([f, demo]: [Feed, string | undefined]) => setFeed(demo === "1" ? { ...f, jobs: f.jobs.filter((j) => !DEMO_HIDDEN.test(j.company)) } : f))
       .catch(() => setError(true));
   }, []);
 

@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { FILM_CREDITS } from "@/lib/aircraft-visuals";
 import { StoreBadges } from "./sections";
-import { JobsLive, LogbookLive, MapLive } from "./live/screens";
+import { LogbookLive, MapLive } from "./live/screens";
 import { ClipFrame, type ClipName } from "./DemoClip";
 
 const ease = [0.2, 0.8, 0.2, 1] as const;
@@ -171,7 +171,7 @@ const STEPS: Step[] = [
   { key: "ftl", Screen: clip("ftl") },
   { key: "licences", Screen: clip("licences") },
   { key: "signature", Screen: clip("sign") },
-  { key: "jobs", Screen: JobsLive },
+  { key: "jobs", Screen: clip("jobs") },
 ];
 
 /** Invisible markers, one per step: the one crossing the middle of the screen sets the step shown. */

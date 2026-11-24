@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { useInView, useReducedMotion } from "motion/react";
 import { useLocale } from "next-intl";
 
-export type ClipName = "adsb" | "import" | "audit" | "sign" | "licences" | "cv" | "ftl";
+export type ClipName = "adsb" | "import" | "audit" | "sign" | "licences" | "cv" | "ftl" | "jobs";
 
 /**
  * A clip filmed on the real app (demo account, fictional data), in the page's language: loaded only near the

@@ -8,7 +8,7 @@ import { FeatureTabs } from "./FeatureTabs";
 import { Reveal } from "./Reveal";
 
 /** features shown by a clip filmed on the real app rather than a still */
-const CLIPS: Partial<Record<(typeof FEATURE_KEYS)[number], ClipName>> = { import: "import", audit: "audit", signature: "sign", licenses: "licences", ftl: "ftl", cv: "cv" };
+const CLIPS: Partial<Record<(typeof FEATURE_KEYS)[number], ClipName>> = { import: "import", audit: "audit", signature: "sign", licenses: "licences", ftl: "ftl", cv: "cv", jobs: "jobs" };
 
 export const FEATURE_KEYS = ["logbook", "import", "audit", "licenses", "ftl", "stats", "signature", "offline", "jobs", "cv"] as const;
 const ICONS = { logbook: FileDown, import: Upload, audit: ScanSearch, licenses: BadgeCheck, ftl: CalendarClock, stats: Map, signature: PenLine, offline: CloudOff, jobs: Briefcase, cv: FileUser };
