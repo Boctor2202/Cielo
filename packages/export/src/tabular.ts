@@ -10,7 +10,7 @@ export const TABULAR_HEADERS = [
   "Date", "Flight number", "From", "To", "Off-block (UTC)", "Takeoff (UTC)", "Landing (UTC)", "On-block (UTC)",
   "Aircraft type", "Aircraft model", "Registration", "SE", "ME", "Multi-pilot", "Total", "Function", "PIC name",
   "PIC", "PICUS", "Co-pilot", "Dual", "Instructor", "Examiner", "Night", "IFR", "Actual IMC", "Cross-country",
-  "Takeoffs day", "Takeoffs night", "Landings day", "Landings night", "Pilot flying", "Approaches",
+  "Takeoffs day", "Takeoffs night", "Landings day", "Landings night", "Pilot flying", "HUD takeoffs", "HUD landings", "Approaches",
   "FSTD", "FSTD type", "FSTD time", "Remarks", "Signed", "Signed by", "Signer role", "Signer licence", "Signed at (UTC)",
   "Signature valid",
 ] as const;
@@ -27,6 +27,7 @@ export function flightsToRows(flights: Flight[], opts: TabularOptions = {}): (st
       d(f.singlePilotMeMin), d(f.multiPilotMin), d(f.totalMin), f.function, f.picName ?? "", d(f.picMin), d(f.picusMin),
       d(f.copilotMin), d(f.dualMin), d(f.instructorMin), d(f.examinerMin), d(f.nightMin), d(f.ifrMin), d(f.actualImcMin),
       d(f.xcMin), f.takeoffsDay, f.takeoffsNight, f.landingsDay, f.landingsNight, f.pilotFlying ? "Y" : "",
+      f.hudTakeoffs || "", f.hudLandings || "",
       (f.approaches ?? []).map((a) => `${a.count}x ${a.type}${a.runway ? " " + a.runway : ""}`).join("; "),
       f.isFstd ? "Y" : "", f.fstdType ?? "", d(f.fstdMin), f.remarks ?? "", f.signatureId ? "Y" : "",
       ...signatureCells(f.signatureId ? opts.signatures?.[f.id] : undefined),
