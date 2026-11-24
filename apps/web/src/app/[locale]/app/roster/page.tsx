@@ -45,6 +45,8 @@ export default function RosterPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [edit, setEdit] = useState<Partial<RosterEvent> | null>(null);
   const [selected, setSelected] = useState<RosterEvent | null>(null);
+  // a day with more duties than its cell shows: all of them in a list
+  const [dayOpen, setDayOpen] = useState<string | null>(null);
   const today = isoDate(new Date());
 
   const sorted = useMemo(() => [...(events ?? [])].sort((a, b) => a.startUtc.localeCompare(b.startUtc)), [events]);
@@ -204,7 +206,11 @@ export default function RosterPage() {
                   <p className={`num mb-1 text-xs ${day === today ? "inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent font-bold text-accent-contrast" : "text-muted"}`}>{+day.slice(8)}</p>
                   <div className="space-y-0.5">
                     {evs.slice(0, 3).map((e) => <EventChip key={e.id} e={e} />)}
-                    {evs.length > 3 && <p className="text-[10px] text-muted">+{evs.length - 3}</p>}
+                    {evs.length > 3 && (
+                      <button type="button" onClick={() => setDayOpen(day)} className="w-full rounded px-1 text-left text-[10.5px] font-semibold text-accent hover:bg-surface-2">
+                        +{evs.length - 3}
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -231,6 +237,19 @@ export default function RosterPage() {
           )}
         </Card>
       )}
+
+      <Modal open={!!dayOpen} onClose={() => setDayOpen(null)} title={dayOpen ? fd(`${dayOpen}T12:00:00Z`, { dateStyle: "full" }) : ""}>
+        <ul className="space-y-1.5">
+          {(dayOpen ? byDay.get(dayOpen) ?? [] : []).map((e) => (
+            <li key={e.id}>
+              <button type="button" onClick={() => (setDayOpen(null), setSelected(e))} className={`num flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm font-semibold ${KIND_STYLE[e.kind]} ${e.tentative ? "border-dashed opacity-70" : ""}`}>
+                <span className="flex-1 truncate">{e.kind === "FLIGHT" || e.kind === "DEADHEAD" ? `${e.depIcao ?? ""} → ${e.arrIcao ?? ""}` : t(`kinds.${e.kind}`)}{e.flightId && " ✓"}</span>
+                <span className="text-xs font-normal">{e.startUtc.slice(11, 16)}–{e.endUtc.slice(11, 16)} UTC</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Modal>
 
       <Modal open={!!selected} onClose={() => setSelected(null)} title={selected ? `${t(`kinds.${selected.kind}`)}${selected.tentative ? ` · ${t("option")}` : ""}` : ""}>
         {selected && (
