@@ -268,6 +268,7 @@ export default function ImportScreen() {
           onConfirm={() => void save()}
           onCancel={() => setRows(null)}
           busy={busy === "save"}
+          fills={review?.prepared.fills.length ?? 0}
           source={source ? (source === "learned" ? t("uimp.learned") : source === "report" ? t("uimp.report") : t("uimp.ai", { source })) : null}
         />
       </Screen>

@@ -30,6 +30,9 @@ export interface FlightFormInput {
   takeoffsNight?: number;
   landingsDay?: number;
   landingsNight?: number;
+  /** With autoLandings: how many takeoffs and landings (0 or 1), instead of one each for the pilot flying. */
+  takeoffs?: number;
+  landings?: number;
   /** When true, day/night landings are derived from the computed landing time. */
   autoLandings?: boolean;
   pilotFlying: boolean;
@@ -159,12 +162,12 @@ export function deriveFlightTimes(input: FlightFormInput, ctx: DeriveContext): D
   let landingsNight = input.landingsNight ?? 0;
   if (input.autoLandings && !input.isFstd) {
     takeoffsDay = takeoffsNight = landingsDay = landingsNight = 0;
-    if (input.pilotFlying) {
-      if (takeoffAtNight) takeoffsNight = 1;
-      else takeoffsDay = 1;
-      if (landingAtNight) landingsNight = 1;
-      else landingsDay = 1;
-    }
+    const to = input.takeoffs ?? (input.pilotFlying ? 1 : 0);
+    const ldg = input.landings ?? (input.pilotFlying ? 1 : 0);
+    if (takeoffAtNight) takeoffsNight = to;
+    else takeoffsDay = to;
+    if (landingAtNight) landingsNight = ldg;
+    else landingsDay = ldg;
   }
 
   return {

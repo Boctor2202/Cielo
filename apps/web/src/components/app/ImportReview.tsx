@@ -30,6 +30,7 @@ export function ImportReview({
   onConfirm,
   onCancel,
   busy,
+  fills = 0,
 }: {
   rows: Row[];
   check: ImportCheck | null;
@@ -41,6 +42,8 @@ export function ImportReview({
   onConfirm: () => void;
   onCancel: () => void;
   busy: boolean;
+  /** flights already logged that get their takeoffs and landings from this document */
+  fills?: number;
 }) {
   const t = useTranslations("app.import.review");
   const [open, setOpen] = useState<number | null>(null);
@@ -147,7 +150,7 @@ export function ImportReview({
 
       <div className="mt-5 flex flex-wrap justify-end gap-2">
         <button type="button" className="btn btn-ghost" onClick={onCancel}>{t("cancel")}</button>
-        <button type="button" className="btn btn-primary" disabled={busy || !check || check.kept === 0} onClick={onConfirm}>{t("confirm", { count: check?.kept ?? 0 })}</button>
+        <button type="button" className="btn btn-primary" disabled={busy || !check || (check.kept === 0 && !fills)} onClick={onConfirm}>{check && check.kept === 0 && fills ? t("confirmFills", { count: fills }) : t("confirm", { count: check?.kept ?? 0 })}</button>
       </div>
     </Card>
   );

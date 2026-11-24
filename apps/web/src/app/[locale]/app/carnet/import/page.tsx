@@ -4,7 +4,7 @@ import { CalendarDays, Camera, FileSpreadsheet, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  analyseTable, applyImportChoices, checkMapping, editImportedRow, IMPORT_FIELDS, matchImported, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
+  analyseTable, applyImportChoices, landingsFill, checkMapping, editImportedRow, IMPORT_FIELDS, matchImported, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
   type DateOrder, type DuplicateMatch, type ImportChoices, type ImportField, type ImportRowEdit, type ImportedRow, type LogbookLeg, type StoredMapping,
 } from "@cielo/core";
 import { apiFetch } from "@/lib/report";
@@ -244,7 +244,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
   }
 
   // the flights as they would be saved, compared with what was read: worked out again after every change
-  const [review, setReview] = useState<{ built: Flight[]; check: ImportCheck } | null>(null);
+  const [review, setReview] = useState<{ built: Flight[]; fills: Flight[]; check: ImportCheck } | null>(null);
   const reading = !!pdfRows || !!(rows && mapping);
   useEffect(() => {
     if (!reading || !airports) return;
@@ -256,7 +256,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ok, airports, reading]);
-  async function prepare(): Promise<{ built: Flight[]; check: ImportCheck } | null> {
+  async function prepare(): Promise<{ built: Flight[]; fills: Flight[]; check: ImportCheck } | null> {
     if (!airports) return null;
     // flights already in the logbook (or twice in the file) are skipped: importing the same file again adds nothing
     const existing = (await db().t("flights").toArray()).filter((f) => !f.deletedAt);
@@ -273,14 +273,20 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     }
     // already in the logbook (one logbook flight per row): left out unless the pilot keeps it
     const matches = matchImported(built, existing);
+    const byId = new Map(existing.map((f) => [f.id, f]));
+    // a flight already logged without its takeoffs and landings gets them from the document read again
+    const fills: Flight[] = [];
     ok.forEach((r, i) => {
       const m = matches[i];
       if (m && !("keepDuplicate" in r && r.keepDuplicate)) {
         dups.push(r.rowIndex);
         dupOf[r.rowIndex] = m;
+        const logged = byId.get(m.flight.id);
+        const fill = logged && landingsFill(built[i]!, logged);
+        if (fill) fills.push(fill);
       } else pairs.push({ rowIndex: r.rowIndex, flight: built[i]! });
     });
-    return { built: pairs.map((p) => p.flight), check: checkImport(parsed, pairs, dups, pdfRows ? 1 : 2, dupOf) };
+    return { built: pairs.map((p) => p.flight), fills, check: checkImport(parsed, pairs, dups, pdfRows ? 1 : 2, dupOf) };
   }
 
   // step 2: the pilot checked the totals: save, and keep the batch so it can be undone as a whole
@@ -289,6 +295,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     setBusy(true);
     const built = review.built;
     await db().t("flights").bulkPut(built);
+    if (review.fills.length) await db().t("flights").bulkPut(review.fills);
     await logImported(built);
     await rememberBatch(built.map((f) => f.id));
     announceGains(built.map((f) => f.id));
@@ -324,6 +331,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
       onConfirm={run}
       onCancel={cancel}
       busy={busy || !airports}
+      fills={review?.fills.length ?? 0}
     />
   );
 

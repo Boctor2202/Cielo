@@ -40,6 +40,7 @@ export function ImportReview({
   onCancel,
   busy,
   source,
+  fills = 0,
 }: {
   rows: ImportRow[];
   check: ImportCheck | null;
@@ -52,6 +53,8 @@ export function ImportReview({
   onCancel: () => void;
   busy: boolean;
   source?: string | null;
+  /** flights already logged that get their takeoffs and landings from this document */
+  fills?: number;
 }) {
   const { t } = useApp();
   const c = useTheme();
@@ -148,7 +151,7 @@ export function ImportReview({
         );
       })}
 
-      <Button title={t("irv.confirm", { n: check?.kept ?? 0 })} disabled={busy || !check || check.kept === 0} onPress={onConfirm} />
+      <Button title={check && check.kept === 0 && fills ? t("irv.confirmFills", { n: fills }) : t("irv.confirm", { n: check?.kept ?? 0 })} disabled={busy || !check || (check.kept === 0 && !fills)} onPress={onConfirm} />
       <Button kind="secondary" title={t("irv.cancel")} onPress={onCancel} />
     </>
   );

@@ -57,3 +57,25 @@ export function matchImported<T extends F>(rows: T[], logbook: F[]): (DuplicateM
     return m;
   });
 }
+
+/**
+ * A document read again that holds what the logbook lacks: the takeoffs and landings of a flight already logged
+ * without any (an Air France EP4/EP5 imported before its SAB code was read). The logged flight gets them, with
+ * "pilot flying" and the HUD note; a signed or locked flight is left as it is. Null when there is nothing to add.
+ */
+export function landingsFill(imported: Flight, logged: Flight, now = new Date().toISOString()): Flight | null {
+  if (logged.deletedAt || logged.signatureId || logged.locked || logged.isFstd) return null;
+  const n = (f: Flight) => (f.takeoffsDay ?? 0) + (f.takeoffsNight ?? 0) + (f.landingsDay ?? 0) + (f.landingsNight ?? 0);
+  if (n(logged) > 0 || n(imported) === 0) return null;
+  const hud = /\bHUD\b/.test(imported.remarks ?? "") && !/\bHUD\b/.test(logged.remarks ?? "");
+  return {
+    ...logged,
+    takeoffsDay: imported.takeoffsDay,
+    takeoffsNight: imported.takeoffsNight,
+    landingsDay: imported.landingsDay,
+    landingsNight: imported.landingsNight,
+    pilotFlying: true,
+    remarks: hud ? [logged.remarks, "HUD"].filter(Boolean).join(" · ") : logged.remarks,
+    updatedAt: now,
+  };
+}

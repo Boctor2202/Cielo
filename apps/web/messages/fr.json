@@ -950,6 +950,7 @@
         "cancel": "Annuler l'import",
         "fix": "Corriger les colonnes",
         "confirm": "Valider et importer ({count, plural, one {# vol} other {# vols}})",
+        "confirmFills": "Ajouter les décollages et atterrissages à {count, plural, one {# vol déjà enregistré} other {# vols déjà enregistrés}}",
         "timesTitle": "Heures à vérifier",
         "timesText": "Lignes {rows} : les heures de départ et d'arrivée ne correspondent pas au temps total écrit. Geardown garde le temps total écrit ; vérifiez les heures (une heure mal lue ou mal écrite) avant ou après l'import.",
         "airportsTitle": "Aéroports à vérifier",
