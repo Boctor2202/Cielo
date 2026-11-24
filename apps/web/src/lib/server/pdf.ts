@@ -6,11 +6,20 @@ export async function pdfText(bytes: Uint8Array, maxPages = 20): Promise<PdfText
   const pdf = await getDocumentProxy(bytes);
   const pages: PdfTextItem[][] = [];
   for (let p = 1; p <= Math.min(pdf.numPages, maxPages); p++) {
-    const tc = await (await pdf.getPage(p)).getTextContent();
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    // positions as the page is shown: a landscape page stored rotated (an airline's monthly statement) is turned
+    // upright, so its lines read left to right (unrotated pages keep their coordinates)
+    const vp = page.getViewport({ scale: 1 });
+    const [a, b, c, d, e, f] = vp.transform as number[];
     pages.push(
       (tc.items as { str?: string; transform?: number[] }[])
         .filter((i) => i.str?.trim() && i.transform)
-        .map((i) => ({ x: i.transform![4]!, y: i.transform![5]!, s: i.str! })),
+        .map((i) => {
+          const tx = i.transform![4]!;
+          const ty = i.transform![5]!;
+          return { x: a! * tx + c! * ty + e!, y: vp.height - (b! * tx + d! * ty + f!), s: i.str! };
+        }),
     );
   }
   return pages;
