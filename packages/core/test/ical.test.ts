@@ -45,3 +45,56 @@ describe("roster calendars (iCal)", () => {
     expect(ev[3]).toMatchObject({ depIcao: "LFPG", arrIcao: "KJFK" });
   });
 });
+
+describe("whole-day rotation events", () => {
+  const ics = (dt: string, desc: string) => `BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:rot-1
+SUMMARY:MCR351R3U - 1ON
+DESCRIPTION:${desc}
+${dt}
+END:VEVENT
+END:VCALENDAR`;
+  const iata = (c: string) => ({ CDG: "LFPG", GVA: "LSGG", ORY: "LFPO" } as Record<string, string>)[c];
+
+  it("does not read the legs of an all-day rotation as a positioning", () => {
+    const [ev] = parseIcal(ics("DTSTART;VALUE=DATE:20261125\nDTEND;VALUE=DATE:20261126", "MEP ORY-CDG\\nAF1542 CDG-GVA\\nAF1543 GVA-CDG\\nHOTEL"));
+    expect(ev!.allDay).toBe(true);
+    const r = icalToRosterEvent(ev!, "p", iata);
+    expect(r.kind).toBe("OTHER");
+    expect(r.depIcao).toBeUndefined();
+  });
+
+  it("still reads a day off from an all-day event's notes", () => {
+    const [ev] = parseIcal(ics("DTSTART;VALUE=DATE:20261129\nDTEND;VALUE=DATE:20261130", "Repos"));
+    expect(icalToRosterEvent(ev!, "p", iata).kind).toBe("OFF");
+  });
+
+  it("keeps reading a timed positioning from its notes", () => {
+    const [ev] = parseIcal(ics("DTSTART:20261125T061500Z\nDTEND:20261125T072500Z", "MEP CDG-GVA"));
+    expect(icalToRosterEvent(ev!, "p", iata).kind).toBe("DEADHEAD");
+  });
+});
+
+describe("rotation titles and duties at base", () => {
+  const one = (summary: string, dt: string, desc = "") =>
+    parseIcal(`BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:x\nSUMMARY:${summary}\nDESCRIPTION:${desc}\n${dt}\nEND:VEVENT\nEND:VCALENDAR`)[0]!;
+  const iata = (c: string) => ({ CDG: "LFPG", IST: "LTFM", MXP: "LIMC", ATL: "KATL" } as Record<string, string>)[c];
+
+  it("does not read the layover stations of a multi-day rotation as a flight", () => {
+    const r = icalToRosterEvent(one("MCR353N8D - 3ON - IST MXP ", "DTSTART;VALUE=DATE:20261118\nDTEND;VALUE=DATE:20261121"), "p", iata);
+    expect(r.kind).toBe("OTHER");
+    expect(r.depIcao).toBeUndefined();
+  });
+
+  it("does not make a flight of a duty at base whose notes name the base twice", () => {
+    const r = icalToRosterEvent(one("CONV ATL [SST]", "DTSTART:20261123T070000Z\nDTEND:20261123T110000Z", "CDG 0700 CDG 1100"), "p", iata);
+    expect(r.kind).not.toBe("FLIGHT");
+    expect(r.depIcao).toBeUndefined();
+  });
+
+  it("still reads a flight from its title", () => {
+    const r = icalToRosterEvent(one("AF1390 (CDG-IST) 223", "DTSTART:20261118T112500Z\nDTEND:20261118T145500Z"), "p", iata);
+    expect([r.kind, r.depIcao, r.arrIcao, r.flightNumber]).toEqual(["FLIGHT", "LFPG", "LTFM", "AF1390"]);
+  });
+});

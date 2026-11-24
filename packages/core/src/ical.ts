@@ -7,6 +7,8 @@ export interface ParsedIcalEvent {
   location?: string;
   startUtc: string;
   endUtc: string;
+  /** a date-only event (DTSTART;VALUE=DATE): a whole day, or several, in the calendar */
+  allDay?: boolean;
 }
 
 /** Unfolds and parses VEVENTs. Handles UTC (Z), floating and TZID times (TZID treated via Intl). */
@@ -28,6 +30,7 @@ export function parseIcal(text: string): ParsedIcalEvent[] {
             location: cur.LOCATION ? unescape(cur.LOCATION.value) : undefined,
             startUtc: start,
             endUtc: end,
+            ...(/^\d{8}$/.test(cur.DTSTART.value) ? { allDay: true } : {}),
           });
         }
       }
@@ -133,11 +136,22 @@ export function icalToRosterEvent(
     }
     return null;
   };
-  const route = pair(title) ?? pair(text);
+  // a whole-day event is a rotation or a day code ("MCR351R3U - 1ON"): its notes list the legs of the
+  // rotation, a positioning leg among them, and those legs come as events of their own. Only its title
+  // tells what it is; from the notes, only a day that is not flying (off, leave, standby…) is read.
+  const wholeDay = !!e.allDay || Date.parse(e.endUtc) - Date.parse(e.startUtc) >= 20 * 3600_000;
+  // nor does it fly a route: "MCR353N8D - 3ON - IST MXP" names the layover stations of a 3-day rotation.
+  // A route read in the notes that comes back where it started ("CDG … CDG") is a duty at base, not a flight.
+  const fromNotes = wholeDay ? null : pair(text);
+  const fromTitle = wholeDay ? null : pair(title);
+  const route = fromTitle ?? (fromNotes && fromNotes[0] !== fromNotes[1] ? fromNotes : null);
   if (route) [depIcao, arrIcao] = route;
   let kind = kindOf(title);
   // a title with a route and no other word is a flight; otherwise the notes may tell what the day is
-  if (kind === "OTHER" && !(depIcao && arrIcao && pair(title))) kind = kindOf(text);
+  if (kind === "OTHER" && !fromTitle) {
+    const fromText = kindOf(text);
+    if (!wholeDay || fromText === "OFF" || fromText === "LEAVE" || fromText === "STANDBY") kind = fromText;
+  }
   if (kind === "OTHER" && depIcao && arrIcao) kind = "FLIGHT";
   const fn = kind === "FLIGHT" || kind === "DEADHEAD" ? e.summary.toUpperCase().match(FLIGHT_NO) : null;
 

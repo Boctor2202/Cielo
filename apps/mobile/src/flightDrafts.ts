@@ -61,6 +61,9 @@ export function pendingDrafts(events: RosterEvent[], flights: Flight[], dismisse
         !dismissed.has(e.id) &&
         !!e.depIcao &&
         !!e.arrIcao &&
+        e.depIcao !== e.arrIcao &&
+        // a duty of 20 hours or more is a rotation or a day in the calendar, never one flight
+        Date.parse(e.endUtc) - Date.parse(e.startUtc) < 20 * 3600_000 &&
         e.endUtc <= nowIso &&
         e.startUtc >= from &&
         !logged.has(routeKey(e.startUtc.slice(0, 10), e.depIcao, e.arrIcao)),
