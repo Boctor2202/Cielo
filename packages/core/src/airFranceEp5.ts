@@ -26,6 +26,21 @@ export interface Ep5Leg {
   nature: string;
   /** the line number (EP4), e.g. 1168 */
   line?: string;
+  /** the "situation à bord" (SAB) code, e.g. "JHD": its middle letter says who took off and landed */
+  sab?: string;
+}
+
+/**
+ * The middle letter of the SAB code: H takeoff and landing with the HUD, B takeoff and landing without it,
+ * T takeoff only, L landing only, G takeoff only with the HUD, K landing only with the HUD. Any other letter:
+ * the pilot did neither (pilot monitoring, relief, positioning).
+ */
+export function sabLandings(sab: string | undefined): { takeoffs: number; landings: number; hud: boolean } | null {
+  const c = sab && /^[A-Z]{3}$/.test(sab) ? sab[1] : undefined;
+  if (!c) return null;
+  const takeoffs = "HBTG".includes(c) ? 1 : 0;
+  const landings = "HBLK".includes(c) ? 1 : 0;
+  return { takeoffs, landings, hud: "HGK".includes(c) };
 }
 
 export interface Ep5 {
@@ -104,7 +119,7 @@ export function parseAirFranceEp5(pages: PdfTextItem[][]): Ep5 | null {
         m = q ? ([q[0], q[1], q[3], q[4], q[5], q[6], q[7], q[8], q[9], q[10], q[11], q[12]] as unknown as RegExpExecArray) : null;
       }
       if (!m) continue;
-      const [, nature, typeCode, reg, , dep, d1, h1, arr, d2, h2, total] = m;
+      const [, nature, typeCode, reg, sab, dep, d1, h1, arr, d2, h2, total] = m;
       const day1 = Number(d1);
       const day2 = Number(d2);
       const date = `${year}-${String(month).padStart(2, "0")}-${String(day1).padStart(2, "0")}`;
@@ -144,6 +159,7 @@ export function parseAirFranceEp5(pages: PdfTextItem[][]): Ep5 | null {
         typeCode: typeCode!,
         nature: nature!,
         line,
+        sab,
       });
     }
   }
@@ -172,6 +188,9 @@ export interface LogbookLeg {
   xcMin?: number;
   landingsDay?: number;
   landingsNight?: number;
+  /** takeoffs and landings by the pilot, not split day/night: the logbook splits them by the sun */
+  takeoffs?: number;
+  landings?: number;
   registration?: string;
   aircraftType?: string;
   flightNumber?: string;
@@ -184,7 +203,15 @@ export interface LogbookLeg {
   fstdMin?: number;
 }
 
-export const ep5Legs = (ep5: Ep5): LogbookLeg[] => ep5.legs.map((l) => ({ date: l.date, dep: l.dep, arr: l.arr, out: l.out, in: l.in, totalMin: l.totalMin, nightMin: l.nightMin, registration: l.registration, flightNumber: l.line && /^\d{1,4}[A-Z]?$/.test(l.line) ? `AF${l.line}` : undefined }));
+export const ep5Legs = (ep5: Ep5): LogbookLeg[] =>
+  ep5.legs.map((l) => {
+    const sab = sabLandings(l.sab);
+    return {
+      date: l.date, dep: l.dep, arr: l.arr, out: l.out, in: l.in, totalMin: l.totalMin, nightMin: l.nightMin, registration: l.registration,
+      flightNumber: l.line && /^\d{1,4}[A-Z]?$/.test(l.line) ? `AF${l.line}` : undefined,
+      ...(sab ? { takeoffs: sab.takeoffs, landings: sab.landings, remarks: sab.hud ? "HUD" : undefined } : {}),
+    };
+  });
 
 const FUNCTIONS = ["PIC", "PICUS", "SIC", "DUAL", "FI", "FE"];
 
@@ -253,14 +280,18 @@ export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string 
       flightNumber: l.flightNumber,
       function: fn,
       picName: l.picName,
-      pilotFlying: base.pilotFlying,
+      // the SAB code says the pilot took off or landed: pilot flying
+      pilotFlying: l.takeoffs || l.landings ? true : base.pilotFlying,
       ifr: base.airline ? true : (l.ifrMin ?? 0) > 0,
       xcMin: l.xcMin,
       isFstd: sim,
       fstdType: sim ? l.fstdType || undefined : undefined,
       fstdMin: sim ? l.fstdMin : undefined,
       operation: l.multiPilotMin !== undefined ? (l.multiPilotMin > 0 ? "multi_pilot" : "single_pilot") : base.airline ? "multi_pilot" : undefined,
-      autoLandings: false,
+      // counted takeoffs and landings, split day and night by the sun at each end
+      autoLandings: l.takeoffs !== undefined || l.landings !== undefined,
+      takeoffs: l.takeoffs,
+      landings: l.landings,
       takeoffsDay: l.landingsDay ?? 0,
       takeoffsNight: l.landingsNight ?? 0,
       landingsDay: l.landingsDay ?? 0,
