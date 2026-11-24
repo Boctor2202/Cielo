@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, SectionList, View } from "react-native";
 import { router } from "expo-router";
 import { formatClock, formatDuration, minutesBetween } from "@cielo/core";
@@ -8,6 +8,7 @@ import { useApp } from "../../src/state";
 import { RosterPdfError, pickAndImportRoster } from "../../src/rosterImport";
 import { Requires } from "../../src/components/Access";
 import { CalendarFeedsCard } from "../../src/components/CalendarFeedsCard";
+import { feedRosters, syncFeed } from "../../src/calendarFeeds";
 import { space, useTheme } from "../../src/theme";
 
 export default function Roster() {
@@ -25,6 +26,28 @@ function RosterScreen() {
   const [importing, setImporting] = useState(false);
   // upcoming duties by default; "past" shows the last 90 days, newest first, so earlier events can be corrected
   const [when, setWhen] = useState<"next" | "past">("next");
+  // the calendar links subscribed to: read again from the top of the screen (greyed out without one)
+  const [feedCount, setFeedCount] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  useEffect(() => {
+    void feedRosters(store).then((r) => setFeedCount(r.length));
+  }, [store, rosterEvents]);
+  const syncAll = async () => {
+    setSyncing(true);
+    const sum = { added: 0, updated: 0, removed: 0 };
+    let failed = false;
+    try {
+      for (const f of await feedRosters(store)) {
+        const r = await syncFeed(store, pilot, f, session?.access_token).catch(() => ({ error: "upstream" as const }));
+        if ("error" in r) failed = true;
+        else (sum.added += r.added, sum.updated += r.updated, sum.removed += r.removed);
+      }
+      await reload();
+    } finally {
+      setSyncing(false);
+    }
+    Alert.alert(t("roster.feed.title"), failed ? t("roster.syncFailed") : t("roster.feed.done", sum));
+  };
 
   // read-only without a live subscription: the roster stays visible, adding / importing opens the plans
   const addEvent = () => (access.canWrite ? router.push({ pathname: "/roster/[id]", params: { id: "new" } }) : router.push("/subscription"));
@@ -95,7 +118,10 @@ function RosterScreen() {
                 { value: "past", label: t("roster.past") },
               ]}
             />
-            <Button kind="secondary" small title={t("roster.import")} loading={importing} onPress={() => void importRoster()} />
+            <Row style={{ gap: space.sm }}>
+              <Button style={{ flex: 1 }} kind="secondary" small title={feedCount ? t("roster.sync") : t("roster.syncNone")} loading={syncing} disabled={!feedCount || syncing} onPress={() => void syncAll()} />
+              <Button style={{ flex: 1 }} kind="secondary" small title={t("roster.import")} loading={importing} onPress={() => void importRoster()} />
+            </Row>
             <Txt variant="small" style={{ textAlign: "center" }}>{t("roster.importHint")}</Txt>
             <CalendarFeedsCard />
           </View>

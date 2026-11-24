@@ -1192,6 +1192,9 @@
         "merged": "Roster updated: {added} new, {updated} changed, {removed} removed, {linked} linked to logged flights"
       },
       "addEvent": "Add event",
+      "sync": "Sync",
+      "syncNone": "No roster linked: subscribe to your calendar link in Import.",
+      "syncFailed": "The sync failed: try again in a moment.",
       "today": "Today",
       "month": "Month",
       "list": "List",

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight, Hotel, NotebookPen, Plus, Trash2, Upload } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Hotel, Loader2, NotebookPen, Plus, RefreshCw, Trash2, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ROSTER_KINDS, analyseTable, mergeRosterImport, printedDutiesToEvents, type PrintedDuty, combineUtc, icalToRosterEvent, isoDate, parseCsv, parseFlexibleDate, parseIcal, stamp, type RosterEvent, type RosterEventKind, rosterLayovers } from "@cielo/core";
@@ -8,6 +8,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, Field, Modal, PageTitle, Segmented, useToast } from "@/components/app/ui";
 import { DropZone } from "@/components/app/DropZone";
 import { CalendarFeeds } from "@/components/app/CalendarFeeds";
+import { syncFeed } from "@/lib/calendarFeeds";
 import { useAirports } from "@/lib/airports";
 import { useFlights, useFormatDate, usePilot, useTable } from "@/lib/hooks";
 import { put, saveLayover, saveRosterEvent, softDelete } from "@/lib/repo";
@@ -40,6 +41,22 @@ export default function RosterPage() {
   const airports = useAirports();
   const fd = useFormatDate();
   const { toast, toastNode } = useToast();
+  // the calendar links the pilot subscribed to: read again from the top of the page
+  const rosters = useTable("rosters");
+  const feeds = (rosters ?? []).filter((r) => r.source === "ical_url" && !r.deletedAt && r.fileName);
+  const [syncing, setSyncing] = useState(false);
+  const syncAll = async () => {
+    setSyncing(true);
+    const sum = { added: 0, updated: 0, removed: 0 };
+    let failed = false;
+    for (const f of feeds) {
+      const r = await syncFeed(f).catch(() => ({ error: "upstream" as const }));
+      if ("error" in r) failed = true;
+      else (sum.added += r.added, sum.updated += r.updated, sum.removed += r.removed);
+    }
+    setSyncing(false);
+    toast(failed ? t("syncFailed") : t("feed.done", sum));
+  };
   const [view, setView] = useState<"month" | "list">("month");
   const [cursor, setCursor] = useState(() => isoDate(new Date()).slice(0, 7));
   const [importOpen, setImportOpen] = useState(false);
@@ -180,6 +197,9 @@ export default function RosterPage() {
         subtitle={t("subtitle")}
         actions={
           <>
+            <button type="button" className="btn btn-secondary btn-sm" disabled={!feeds.length || syncing} title={feeds.length ? undefined : t("syncNone")} onClick={() => void syncAll()}>
+              {syncing ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />} {t("sync")}
+            </button>
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => setImportOpen(true)}><Upload size={15} /> {t("import")}</button>
             <button type="button" className="btn btn-primary btn-sm" onClick={() => setEdit({ kind: "FLIGHT", startUtc: `${today}T08:00:00.000Z`, endUtc: `${today}T10:00:00.000Z` })}><Plus size={15} /> {t("addEvent")}</button>
           </>
