@@ -60,6 +60,8 @@ interface FormState {
   on: string;
   in: string;
   aircraftId: string | null;
+  /** the registration written on the flight (an import), kept when no aircraft of the list matches it */
+  registration: string;
   /** type picked directly when no aircraft (registration) is chosen */
   typeIcao: string;
   /** null: the chosen aircraft's default */
@@ -140,6 +142,7 @@ function FlightForm() {
         on: formatClock(f.onUtc),
         in: formatClock(f.inUtc),
         aircraftId: f.aircraftId ?? null,
+        registration: f.registration ?? "",
         typeIcao: f.aircraftId ? "" : (f.aircraftTypeIcao ?? ""),
         operation: f.multiPilotMin > 0 ? "multi_pilot" : "single_pilot",
         function: f.function,
@@ -190,6 +193,7 @@ function FlightForm() {
       on: "",
       in: ev ? formatClock(ev.endUtc) : "",
       aircraftId: ac?.id ?? null,
+      registration: ac?.registration ?? "",
       typeIcao: "",
       operation: null,
       function: pilot.defaultFunction,
@@ -227,7 +231,10 @@ function FlightForm() {
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm((s) => ({ ...s, [k]: v }));
 
-  const selectedAircraft = aircraft.find((a) => a.id === form.aircraftId);
+  const plainReg = (r?: string | null) => (r ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  // the chosen aircraft, or the one of the list with the flight's registration (an imported flight)
+  const selectedAircraft = aircraft.find((a) => a.id === form.aircraftId) ?? (form.registration ? aircraft.find((a) => !a.deletedAt && plainReg(a.registration) === plainReg(form.registration)) : undefined);
+  const shownReg = selectedAircraft?.registration ?? (form.registration || undefined);
 
   /** "Paste a flight report": the airline's post-flight e-mail copied to the clipboard fills the form. */
   const pasteReport = async () => {
@@ -251,6 +258,7 @@ function FlightForm() {
       on: rep.on ?? s.on,
       in: rep.in ?? s.in,
       aircraftId: plane?.id ?? s.aircraftId,
+      registration: plane?.registration ?? rep.registration?.toUpperCase() ?? s.registration,
       ...(named ? { pilotFlying: tookOff || landed, takeoffsDay: tookOff ? 1 : 0, takeoffsNight: 0, landingsDay: landed ? 1 : 0, landingsNight: 0, autoLandings: landed } : {}),
     }));
     if (rep.registration && !plane) Alert.alert(t("report.paste"), t("report.unknownAircraft", { reg: rep.registration }));
@@ -273,7 +281,7 @@ function FlightForm() {
       on: form.on || undefined,
       in: form.in || undefined,
       aircraftId: form.aircraftId,
-      registration: selectedAircraft?.registration,
+      registration: shownReg,
       aircraftTypeIcao: selectedType?.icao ?? (form.typeIcao || undefined),
       aircraftModel: selectedType ? `${selectedType.manufacturer} ${selectedType.model}` : undefined,
       operation: form.operation ?? selectedAircraft?.defaultOperation ?? (selectedType?.multiPilot ? "multi_pilot" : undefined),
@@ -507,7 +515,7 @@ function FlightForm() {
           </Row>
           {/* actual times of the aircraft's flights that day, from FlightAware */}
           <FlightAwareFill
-            registration={selectedAircraft?.registration}
+            registration={shownReg}
             date={form.date}
             onPick={(f) =>
               setForm((s) => ({
@@ -540,8 +548,8 @@ function FlightForm() {
               opacity: pressed ? 0.6 : 1,
             })}
           >
-            <Txt style={selectedAircraft ? mono : undefined} color={selectedAircraft ? c.text : c.muted}>
-              {selectedAircraft ? aircraftLabel(selectedAircraft, aircraftTypes) : t("flight.chooseAircraft")}
+            <Txt style={selectedAircraft || shownReg ? mono : undefined} color={selectedAircraft || shownReg ? c.text : c.muted}>
+              {selectedAircraft ? aircraftLabel(selectedAircraft, aircraftTypes) : shownReg ?? t("flight.chooseAircraft")}
             </Txt>
             {selectedType ? (
               <Txt variant="small">
@@ -549,7 +557,7 @@ function FlightForm() {
               </Txt>
             ) : null}
           </Pressable>
-          <AircraftPhoto registration={selectedAircraft?.registration} />
+          <AircraftPhoto registration={shownReg} />
           {!selectedAircraft ? (
             <AircraftTypeField
               types={aircraftTypes}
@@ -723,7 +731,7 @@ function FlightForm() {
         onClose={() => setPicker(false)}
         onPick={(a) => {
           const type = aircraftTypes.find((x) => x.id === a.aircraftTypeId);
-          setForm((s) => ({ ...s, aircraftId: a.id, ifr: existing ? s.ifr : defaultIfrFor(pilot.defaultIfr, type) }));
+          setForm((s) => ({ ...s, aircraftId: a.id, registration: a.registration, ifr: existing ? s.ifr : defaultIfrFor(pilot.defaultIfr, type) }));
           setPicker(false);
         }}
       />
