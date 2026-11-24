@@ -1216,7 +1216,34 @@
       "deleteEvent": "Supprimer l'événement",
       "option": "Option",
       "optionHint": "Option : prévue mais pas encore confirmée. Elle n'entre ni dans vos limites FTL ni dans vos escales tant qu'elle n'est pas confirmée (nouvel import du roster ou bouton ci-dessous).",
-      "confirmOption": "Marquer confirmée"
+      "confirmOption": "Marquer confirmée",
+      "feed": {
+        "title": "S'abonner à un calendrier",
+        "help": "Collez le lien d'un calendrier qui contient votre roster : Geardown le lit maintenant puis toutes les heures, dans l'app et sur le site. Les entrées personnelles (sans trajet ni mot de service) sont ignorées.",
+        "placeholder": "webcal://… ou https://….ics",
+        "subscribe": "S'abonner",
+        "syncing": "Lecture du calendrier…",
+        "syncNow": "Synchroniser",
+        "remove": "Se désabonner",
+        "removeConfirm": "Arrêter de synchroniser ce calendrier ? Ses services pas encore volés quittent le roster.",
+        "last": "Synchronisé {when}",
+        "never": "Pas encore synchronisé",
+        "done": "{added} ajoutés · {updated} modifiés · {removed} retirés",
+        "how": "Où trouver le lien",
+        "howApple": "Calendrier Apple : sur iCloud.com, partagez le calendrier en calendrier public et copiez son lien webcal.",
+        "howGoogle": "Google Agenda : Paramètres › le calendrier › « Adresse secrète au format iCal ».",
+        "howOutlook": "Outlook : Paramètres › Calendrier › Calendriers partagés › Publier un calendrier › lien ICS.",
+        "howPortal": "Portail équipage ou app de roster : son lien « s'abonner » ou iCal / webcal.",
+        "err": {
+          "bad_url": "Ce n'est pas un lien de calendrier (webcal:// ou https://).",
+          "signin": "Connectez-vous pour synchroniser un calendrier.",
+          "not_found": "Calendrier introuvable ou privé : vérifiez le lien.",
+          "not_calendar": "Ce lien ne mène pas à un calendrier (iCal).",
+          "too_big": "Ce calendrier est trop volumineux.",
+          "rate_limited": "Trop de synchronisations, réessayez plus tard.",
+          "upstream": "Le calendrier est illisible pour le moment."
+        }
+      }
     },
     "layover": {
       "title": "Escale {icao}",

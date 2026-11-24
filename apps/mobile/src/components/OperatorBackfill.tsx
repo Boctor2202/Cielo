@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Platform } from "react-native";
 import { flightRevision, misreadOperators, operatorIndex, retypeLogbook, stamp, type Flight, type FlightRevision, type SyncedRecord } from "@cielo/core";
 import { airlines } from "../airlines";
+import { syncFeedsIfStale } from "../calendarFeeds";
 import { useApp } from "../state";
 
 const KEY = "backfill:operators:v1";
@@ -12,10 +13,12 @@ const REPAIR = "repair:operators:v2";
  * recognises for them (call sign, aircraft, what it learned). Signatures stay valid (the operator is not signed).
  */
 export function OperatorBackfill() {
-  const { store, pilot, access, reload } = useApp();
+  const { store, pilot, access, reload, session } = useApp();
   useEffect(() => {
     if (!pilot || !access.canWrite) return;
     const id = setTimeout(async () => {
+      // calendars subscribed to for the roster, read again when older than an hour
+      void syncFeedsIfStale(store, pilot, session?.access_token).then((n) => (n ? reload() : undefined)).catch(() => undefined);
       try {
         // at each launch: flights and aircraft imported with a type name instead of its designator
         {
@@ -72,6 +75,6 @@ export function OperatorBackfill() {
       }
     }, 8000);
     return () => clearTimeout(id);
-  }, [pilot?.id, access.canWrite]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pilot?.id, access.canWrite, session?.access_token]); // eslint-disable-line react-hooks/exhaustive-deps
   return null;
 }
