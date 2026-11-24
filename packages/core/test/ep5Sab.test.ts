@@ -14,7 +14,7 @@ describe("Air France SAB code", () => {
   });
   it("logs a landing only for the leg the pilot landed", () => {
     const [row] = legsToRows([{ date: "2026-09-02", dep: "LFPG", arr: "EGCC", out: "10:00", in: "11:30", totalMin: 90, takeoffs: 0, landings: 1 }], (c) => c, { function: "SIC", pilotFlying: false, airline: true });
-    const f = deriveFlightTimes(row!.input, { airports: () => undefined });
+    const f = deriveFlightTimes(row!.input!, { airports: () => undefined });
     expect(f.takeoffsDay + f.takeoffsNight).toBe(0);
     expect(f.landingsDay + f.landingsNight).toBe(1);
   });
@@ -48,6 +48,6 @@ describe("HUD recency", () => {
   });
   it("reads the HUD counts from the SAB code", () => {
     const [row] = legsToRows([{ date: "2026-09-02", dep: "LFPG", arr: "EGCC", out: "10:00", in: "11:30", totalMin: 90, takeoffs: 0, landings: 1, hudTakeoffs: 0, hudLandings: 1 }], (c) => c, { function: "SIC", pilotFlying: false, airline: true });
-    expect([row!.input.hudTakeoffs, row!.input.hudLandings]).toEqual([undefined, 1]);
+    expect([row!.input!.hudTakeoffs, row!.input!.hudLandings]).toEqual([undefined, 1]);
   });
 });
