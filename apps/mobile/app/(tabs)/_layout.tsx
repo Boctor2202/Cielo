@@ -41,7 +41,9 @@ export default function TabsLayout() {
       <ThreeGreensO size={22} color={c.text} />
     </View>
   );
-  // the account (profile, licences, subscription, data, settings): from the avatar, with the sync state beside it
+  // the account (profile, licences, subscription, data, settings): from the avatar, with the sync state beside it.
+  // The main tabs carry no centred title: with the wordmark, the trial and sync pills and the avatar, a title
+  // between them ran under the pills on a phone. The tab bar below already names the page.
   const account = () => (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginRight: 14 }}>
       <TrialPill />
@@ -71,8 +73,8 @@ export default function TabsLayout() {
       }}
     >
       {/* Home · Logbook · + · Activity · Career; the account (former "More") opens from the avatar, top right */}
-      <Tabs.Screen name="index" options={{ title: t("tabs.home"), headerTitle: t("dash.title"), headerLeft: brand, tabBarIcon: icon("speedometer-outline"), headerRight: account }} />
-      <Tabs.Screen name="logbook" options={{ title: t("tabs.logbook"), headerTitle: t("log.title"), headerLeft: brand, tabBarIcon: icon("book-outline"), headerRight: account }} />
+      <Tabs.Screen name="index" options={{ title: t("tabs.home"), headerTitle: "", headerLeft: brand, tabBarIcon: icon("speedometer-outline"), headerRight: account }} />
+      <Tabs.Screen name="logbook" options={{ title: t("tabs.logbook"), headerTitle: "", headerLeft: brand, tabBarIcon: icon("book-outline"), headerRight: account }} />
       <Tabs.Screen
         name="new"
         options={{
@@ -86,8 +88,8 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen name="activity" options={{ title: t("tabs.activity"), headerTitle: t("tabs.activity"), headerLeft: brand, tabBarIcon: icon("calendar-outline"), headerRight: account }} />
-      <Tabs.Screen name="career" options={{ title: t("tabs.career"), headerTitle: t("tabs.career"), headerLeft: brand, tabBarIcon: icon("briefcase-outline"), headerRight: account }} />
+      <Tabs.Screen name="activity" options={{ title: t("tabs.activity"), headerTitle: "", headerLeft: brand, tabBarIcon: icon("calendar-outline"), headerRight: account }} />
+      <Tabs.Screen name="career" options={{ title: t("tabs.career"), headerTitle: "", headerLeft: brand, tabBarIcon: icon("briefcase-outline"), headerRight: account }} />
       <Tabs.Screen name="layovers" options={sub(t("lay.title"))} />
       <Tabs.Screen name="radar" options={sub(t("radar.title"))} />
       <Tabs.Screen name="more" options={sub(t("tabs.account"))} />
