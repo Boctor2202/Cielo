@@ -588,6 +588,10 @@
         "until": "jusqu'au {date}",
         "pax": "Passagers (3 en 90 jours)",
         "hud": "HUD (3 en 90 jours)",
+        "hudTo90": "Décollages HUD, 90 jours",
+        "hudLdg90": "Atterrissages HUD, 90 jours",
+        "hudValid": "Expérience HUD valide jusqu'au",
+        "hudTotal": "Total HUD",
         "night": "Nuit",
         "ftl28": "temps de vol, 28 jours",
         "ftl": {

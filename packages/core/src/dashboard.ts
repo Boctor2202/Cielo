@@ -19,7 +19,8 @@ export type WidgetId =
   | "byOperator"
   | "nextLayover"
   | "nextBadge"
-  | "jobs";
+  | "jobs"
+  | "hud";
 
 export interface WidgetSpec {
   id: WidgetId;
@@ -43,6 +44,7 @@ export const WIDGETS: WidgetSpec[] = [
   { id: "nextLayover", sizes: ["s", "l"], label: { fr: "Prochaine escale", en: "Next layover" }, max: true },
   { id: "nextBadge", sizes: ["s", "l"], label: { fr: "Prochain badge", en: "Next badge" } },
   { id: "jobs", sizes: ["s", "l"], label: { fr: "Offres pour toi", en: "Jobs for you" }, max: true },
+  { id: "hud", sizes: ["l", "s"], label: { fr: "Décollages et atterrissages HUD", en: "HUD takeoffs and landings" } },
 ];
 
 export interface WidgetPlacement {
@@ -65,8 +67,27 @@ const SPEC = new Map(WIDGETS.map((w) => [w.id, w]));
 export const widgetSpec = (id: WidgetId) => SPEC.get(id)!;
 export const widgetLabel = (id: WidgetId, locale: string) => SPEC.get(id)?.label[locale === "fr" ? "fr" : "en"] ?? id;
 
-/** The pilot's widgets, cleaned: unknown ids and duplicates dropped, sizes the widget allows; the default if none. */
-export function dashboardWidgets(pilot: Pick<Pilot, "dashboard"> | undefined): WidgetPlacement[] {
+/**
+ * A pilot who flies with a head-up display (an Air France pilot: HUD takeoffs or landings in the logbook, or
+ * flights with Air France): the Overview offers the HUD counter.
+ */
+export function isHudPilot(flights: Flight[]): boolean {
+  return flights.some((f) => !f.deletedAt && ((f.hudTakeoffs ?? 0) + (f.hudLandings ?? 0) > 0 || /^air france$/i.test(f.operator?.trim() ?? "")));
+}
+
+/**
+ * The pilot's widgets, cleaned: unknown ids and duplicates dropped, sizes the widget allows; the default if none.
+ * `hud`: the HUD counter is added after the first widget for a pilot who flies with a HUD, unless taken off.
+ */
+export function dashboardWidgets(pilot: Pick<Pilot, "dashboard"> | undefined, opts: { hud?: boolean } = {}): WidgetPlacement[] {
+  const list = cleanWidgets(pilot);
+  if (opts.hud && !list.some((w) => w.id === "hud") && !(pilot?.dashboard?.dropped ?? []).includes("hud")) {
+    return [...list.slice(0, 1), { id: "hud", size: "l" }, ...list.slice(1)];
+  }
+  return list;
+}
+
+function cleanWidgets(pilot: Pick<Pilot, "dashboard"> | undefined): WidgetPlacement[] {
   const raw = pilot?.dashboard?.widgets;
   if (!Array.isArray(raw)) return DEFAULT_WIDGETS;
   const seen = new Set<string>();
@@ -84,7 +105,29 @@ export function dashboardWidgets(pilot: Pick<Pilot, "dashboard"> | undefined): W
 export const hiddenWidgets = (shown: WidgetPlacement[]) => WIDGETS.filter((w) => !shown.some((s) => s.id === w.id));
 
 /** The layout as stored on the pilot record. */
-export const dashboardValue = (widgets: WidgetPlacement[]): NonNullable<Pilot["dashboard"]> => ({ widgets: widgets.map((w) => ({ id: w.id, size: w.size })) });
+export const dashboardValue = (widgets: WidgetPlacement[], prev?: Pick<Pilot, "dashboard">): NonNullable<Pilot["dashboard"]> => {
+  // a widget offered automatically and taken off stays off
+  const dropped = new Set(prev?.dashboard?.dropped ?? []);
+  if (widgets.some((w) => w.id === "hud")) dropped.delete("hud");
+  else if (prev && (prev.dashboard?.widgets ?? []).some((w) => w.id === "hud")) dropped.add("hud");
+  return { widgets: widgets.map((w) => ({ id: w.id, size: w.size })), ...(dropped.size ? { dropped: [...dropped] } : {}) };
+};
+
+/** HUD counts: all time, and the 90-day HUD recency (3 takeoffs and 3 landings). */
+export function hudSummary(flights: Flight[], today: string) {
+  const live = flights.filter((f) => !f.deletedAt && !f.isFstd);
+  const takeoffs = live.reduce((s, f) => s + (f.hudTakeoffs ?? 0), 0);
+  const landings = live.reduce((s, f) => s + (f.hudLandings ?? 0), 0);
+  const from = addDaysIso(today, -89);
+  const recent = live.filter((f) => f.date >= from && f.date <= today);
+  return {
+    takeoffs,
+    landings,
+    takeoffs90: recent.reduce((s, f) => s + (f.hudTakeoffs ?? 0), 0),
+    landings90: recent.reduce((s, f) => s + (f.hudLandings ?? 0), 0),
+  };
+}
+const addDaysIso = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
 
 export function moveWidget(list: WidgetPlacement[], from: number, to: number): WidgetPlacement[] {
   if (to < 0 || to >= list.length || from === to) return list;

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, ArrowUpRight, BadgeCheck, Briefcase, Building2, CalendarClock, Check, Clock, FileWarning, Gauge, Globe2, GripVertical, Hotel, Maximize2, Medal, Minimize2, Minus, Plane, PlaneLanding, ShieldCheck, SlidersHorizontal, X, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, BadgeCheck, Briefcase, Building2, CalendarClock, Check, Clock, FileWarning, Gauge, Globe2, GripVertical, Eye, Hotel, Maximize2, Medal, Minimize2, Minus, Plane, PlaneLanding, ShieldCheck, SlidersHorizontal, X, type LucideIcon } from "lucide-react";
 import React, { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -27,8 +27,7 @@ import {
   type Pilot,
   type RecencyStatus,
   type WidgetId,
-  type WidgetPlacement,
-} from "@cielo/core";
+  type WidgetPlacement, hudSummary, isHudPilot } from "@cielo/core";
 import { Link } from "@/i18n/navigation";
 import { CityPhoto } from "./CityPhoto";
 import { Meter, type Level } from "@/components/app/ui";
@@ -51,6 +50,7 @@ const LOOK: Record<WidgetId, { icon: LucideIcon; tone: string }> = {
   nextLayover: { icon: Hotel, tone: "#fb923c" },
   nextBadge: { icon: Medal, tone: "#a78bfa" },
   jobs: { icon: Briefcase, tone: "#facc15" },
+  hud: { icon: Eye, tone: "#22d3ee" },
 };
 
 const LEVEL_TEXT: Record<Level, string> = { neutral: "text-muted", ok: "text-ok", info: "text-accent", caution: "text-caution", warning: "text-warning" };
@@ -89,7 +89,10 @@ export function OverviewWidgets({
   const airports = useAirports();
   const roster = useTable("roster_events");
   const layovers = useTable("layovers");
-  const saved = useMemo(() => dashboardWidgets(pilot), [pilot]);
+  // an Air France pilot (HUD flights or flights with Air France): the HUD counter is offered
+  const hudPilot = useMemo(() => isHudPilot(flights), [flights]);
+  const hud = useMemo(() => hudSummary(flights, today), [flights, today]);
+  const saved = useMemo(() => dashboardWidgets(pilot, { hud: hudPilot }), [pilot, hudPilot]);
   const [draft, setDraft] = useState<WidgetPlacement[] | null>(null);
   const [dragging, setDragging] = useState<number | null>(null);
   const widgets = draft ?? saved;
@@ -253,6 +256,18 @@ export function OverviewWidgets({
         }
       : null,
     jobs: { value: t("jobsValue"), sub: t("jobsSub"), href: "/app/emplois" },
+    hud: {
+      href: "/app/documents",
+      value: `T/O ${hud.takeoffs} · LDG ${hud.landings}`,
+      level: recency.hud?.valid ? "ok" : "warning",
+      sub: recency.hud?.valid && recency.hud.validUntil ? t("until", { date: fd(recency.hud.validUntil, { day: "numeric", month: "short" }) }) : t("notCurrent"),
+      list: rows([
+        { key: "hto", label: t("hudTo90"), value: `${hud.takeoffs90} / 3`, ratio: Math.min(1, hud.takeoffs90 / 3), level: hud.takeoffs90 >= 3 ? "ok" : "warning" },
+        { key: "hldg", label: t("hudLdg90"), value: `${hud.landings90} / 3`, ratio: Math.min(1, hud.landings90 / 3), level: hud.landings90 >= 3 ? "ok" : "warning" },
+        { key: "hval", label: t("hudValid"), value: recency.hud?.valid && recency.hud.validUntil ? fd(recency.hud.validUntil, { day: "numeric", month: "short", year: "numeric" }) : t("notCurrent"), level: recency.hud?.valid ? "ok" : "warning" },
+        { key: "htot", label: t("hudTotal"), value: `T/O ${hud.takeoffs} · LDG ${hud.landings}` },
+      ]),
+    },
   };
 
   const locked = (id: WidgetId) => !!widgetSpec(id).max && !canMax && (id === "jobs" || id === "nextLayover");
@@ -320,7 +335,7 @@ export function OverviewWidgets({
   const span = (w: WidgetPlacement) => (w.id === "hero" && w.size === "l" ? "md:col-span-4" : w.size === "l" ? "md:col-span-2" : "md:col-span-1");
 
   const save = async () => {
-    if (draft) await updatePilot({ dashboard: dashboardValue(draft) });
+    if (draft) await updatePilot({ dashboard: dashboardValue(draft, pilot) });
     setDraft(null);
   };
   const toggle = (id: WidgetId) =>
@@ -391,7 +406,7 @@ export function OverviewWidgets({
             <p className="text-sm font-semibold">{t("panel")}</p>
             <p className="mt-1 text-xs text-muted">{t("panelHint")}</p>
             <ul className="mt-3 divide-y divide-border">
-              {WIDGETS.map((w) => {
+              {WIDGETS.filter((w) => w.id !== "hud" || hudPilot).map((w) => {
                 const on = widgets.some((x) => x.id === w.id);
                 return (
                   <li key={w.id} className="flex items-center justify-between gap-3 py-2 text-sm">

@@ -69,3 +69,19 @@ describe("Air France aircraft codes and flights confirmed from the roster", () =
     expect(landingsFill(actual, planned, "now", true)).toMatchObject({ id: "r", createdAt: "c", rosterEventId: "e", registration: "F-HZUA", aircraftTypeIcao: "BCS3", totalMin: 151, pilotFlying: false, landingsDay: 0 });
   });
 });
+
+describe("HUD widget on the Overview", () => {
+  it("is offered to a pilot flying with a HUD, and stays off once taken off", async () => {
+    const { dashboardWidgets, dashboardValue, isHudPilot, hudSummary } = await import("../src");
+    const f = { id: "a", date: "2026-11-01", hudTakeoffs: 1, hudLandings: 1, isFstd: false } as never;
+    expect(isHudPilot([f])).toBe(true);
+    expect(isHudPilot([{ id: "b", date: "2026-11-01", operator: "Air France" } as never])).toBe(true);
+    expect(isHudPilot([{ id: "c", date: "2026-11-01" } as never])).toBe(false);
+    const shown = dashboardWidgets(undefined, { hud: true });
+    expect(shown[1]).toEqual({ id: "hud", size: "l" });
+    const saved = dashboardValue(shown.filter((w) => w.id !== "hud"), { dashboard: dashboardValue(shown) });
+    expect(saved.dropped).toEqual(["hud"]);
+    expect(dashboardWidgets({ dashboard: saved }, { hud: true }).some((w) => w.id === "hud")).toBe(false);
+    expect(hudSummary([f], "2026-11-24")).toEqual({ takeoffs: 1, landings: 1, takeoffs90: 1, landings90: 1 });
+  });
+});
