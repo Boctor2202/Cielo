@@ -64,7 +64,7 @@ const LABELS: Record<"fr" | "en", Record<string, string>> = {
     takeoffsDay: "Décollages jour", takeoffsNight: "Décollages nuit", landingsDay: "Atterrissages jour", landingsNight: "Atterrissages nuit",
     pilotFlying: "PF", approaches: "Approches", isFstd: "Simulateur", fstdType: "Type de simulateur", fstdQualification: "Qualification FSTD",
     fstdMin: "Temps simulateur", crew: "Équipage", remarks: "Remarques",
-    simInstrumentMin: "Instrument simulé", holdings: "Attentes", groundTrainingMin: "Instruction au sol", soloMin: "Solo",
+    simInstrumentMin: "Instrument simulé", holdings: "Attentes", hudTakeoffs: "Décollages HUD", hudLandings: "Atterrissages HUD", groundTrainingMin: "Instruction au sol", soloMin: "Solo",
     safetyPilotName: "Pilote de sécurité / instructeur", purpose: "Objet du vol", via: "Escales", loggedShare: "Part du temps bloc (équipage renforcé)",
   },
   en: {
@@ -76,7 +76,7 @@ const LABELS: Record<"fr" | "en", Record<string, string>> = {
     takeoffsDay: "Day take-offs", takeoffsNight: "Night take-offs", landingsDay: "Day landings", landingsNight: "Night landings",
     pilotFlying: "PF", approaches: "Approaches", isFstd: "Simulator", fstdType: "Simulator type", fstdQualification: "FSTD qualification",
     fstdMin: "Simulator time", crew: "Crew", remarks: "Remarks",
-    simInstrumentMin: "Simulated instrument", holdings: "Holds", groundTrainingMin: "Ground training", soloMin: "Solo",
+    simInstrumentMin: "Simulated instrument", holdings: "Holds", hudTakeoffs: "HUD take-offs", hudLandings: "HUD landings", groundTrainingMin: "Ground training", soloMin: "Solo",
     safetyPilotName: "Safety pilot / instructor", purpose: "Purpose of flight", via: "Stops", loggedShare: "Logged share of block (augmented crew)",
   },
 };

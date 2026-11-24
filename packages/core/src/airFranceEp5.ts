@@ -191,6 +191,9 @@ export interface LogbookLeg {
   /** takeoffs and landings by the pilot, not split day/night: the logbook splits them by the sun */
   takeoffs?: number;
   landings?: number;
+  /** of those, flown with the head-up display */
+  hudTakeoffs?: number;
+  hudLandings?: number;
   registration?: string;
   aircraftType?: string;
   flightNumber?: string;
@@ -209,7 +212,7 @@ export const ep5Legs = (ep5: Ep5): LogbookLeg[] =>
     return {
       date: l.date, dep: l.dep, arr: l.arr, out: l.out, in: l.in, totalMin: l.totalMin, nightMin: l.nightMin, registration: l.registration,
       flightNumber: l.line && /^\d{1,4}[A-Z]?$/.test(l.line) ? `AF${l.line}` : undefined,
-      ...(sab ? { takeoffs: sab.takeoffs, landings: sab.landings, remarks: sab.hud ? "HUD" : undefined } : {}),
+      ...(sab ? { takeoffs: sab.takeoffs, landings: sab.landings, hudTakeoffs: sab.hud ? sab.takeoffs : 0, hudLandings: sab.hud ? sab.landings : 0 } : {}),
     };
   });
 
@@ -292,6 +295,8 @@ export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string 
       autoLandings: l.takeoffs !== undefined || l.landings !== undefined,
       takeoffs: l.takeoffs,
       landings: l.landings,
+      hudTakeoffs: l.hudTakeoffs || undefined,
+      hudLandings: l.hudLandings || undefined,
       takeoffsDay: l.landingsDay ?? 0,
       takeoffsNight: l.landingsNight ?? 0,
       landingsDay: l.landingsDay ?? 0,

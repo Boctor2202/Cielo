@@ -60,7 +60,10 @@ export default function RosterPage() {
   const byDay = useMemo(() => {
     const map = new Map<string, RosterEvent[]>();
     for (const e of sorted) {
-      const k = e.startUtc.slice(0, 10);
+      // a whole local day (a standby "ON" from 23:00 to 22:59 UTC) belongs to the day it mostly covers
+      const s = Date.parse(e.startUtc);
+      const len = Date.parse(e.endUtc) - s;
+      const k = len >= 20 * 3_600_000 ? new Date(s + len / 2).toISOString().slice(0, 10) : e.startUtc.slice(0, 10);
       map.set(k, [...(map.get(k) ?? []), e]);
     }
     return map;

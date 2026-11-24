@@ -6,6 +6,9 @@ export interface RecencyStatus {
   passengers: RecencyCheck;
   /** FCL.060(b)(2): at night, 1 of those 3 at night (unless holding an IR). */
   night: RecencyCheck;
+  /** HUD recency (Air France): 3 takeoffs and 3 landings with the HUD in the preceding 90 days; only for a
+   * pilot whose logbook holds HUD takeoffs or landings */
+  hud?: RecencyCheck;
   lastFlightDate?: string;
   daysSinceLastFlight?: number;
 }
@@ -34,10 +37,15 @@ export function computeRecency(flights: Flight[], today: string, typeFilter?: st
   const passengers = check(window, relevant, 3, (f) => f.takeoffsDay + f.takeoffsNight, (f) => f.landingsDay + f.landingsNight);
   const night = check(window, relevant, 1, (f) => f.takeoffsNight, (f) => f.landingsNight);
 
+  const hudTo = (f: Flight) => f.hudTakeoffs ?? 0;
+  const hudLdg = (f: Flight) => f.hudLandings ?? 0;
+  const hud = relevant.some((f) => hudTo(f) + hudLdg(f) > 0) ? check(window, relevant, 3, hudTo, hudLdg) : undefined;
+
   const lastFlight = relevant.find((f) => !f.isFstd);
   return {
     passengers,
     night,
+    ...(hud ? { hud } : {}),
     lastFlightDate: lastFlight?.date,
     daysSinceLastFlight: lastFlight ? daysBetween(lastFlight.date, today) : undefined,
   };

@@ -215,6 +215,9 @@ export interface Flight extends SyncedRecord {
   simInstrumentMin?: number;
   /** holding procedures flown (FAA 61.57 IFR currency) */
   holdings?: number;
+  /** takeoffs and landings flown with the head-up display (HUD recency, Air France SAB codes H, G, K) */
+  hudTakeoffs?: number;
+  hudLandings?: number;
   /** ground training received, not flight time (FAA 61.51(b)(3)) */
   groundTrainingMin?: number;
   /** solo flight time (FAA, Transport Canada) */

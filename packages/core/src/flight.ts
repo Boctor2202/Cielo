@@ -45,6 +45,8 @@ export interface FlightFormInput {
   remarks?: string;
   simInstrumentMin?: number;
   holdings?: number;
+  hudTakeoffs?: number;
+  hudLandings?: number;
   groundTrainingMin?: number;
   soloMin?: number;
   safetyPilotName?: string;
@@ -222,7 +224,7 @@ export function canonicalFlightContent(f: Flight): string {
 }
 
 /** Entries some authorities require beyond the EASA columns. */
-export const EXTRA_FLIGHT_FIELDS = ["simInstrumentMin", "holdings", "groundTrainingMin", "soloMin", "safetyPilotName", "purpose", "via"] as const;
+export const EXTRA_FLIGHT_FIELDS = ["simInstrumentMin", "holdings", "groundTrainingMin", "soloMin", "safetyPilotName", "purpose", "via", "hudTakeoffs", "hudLandings"] as const;
 export type ExtraFlightField = (typeof EXTRA_FLIGHT_FIELDS)[number];
 
 /** The extra entries of a flight from the form, cleaned: durations within the flight, names trimmed. */
@@ -232,6 +234,8 @@ export function extraFlightFields(input: Partial<FlightFormInput>, totalMin: num
   return {
     simInstrumentMin: dur(input.simInstrumentMin, totalMin),
     holdings: input.holdings && input.holdings > 0 ? Math.round(input.holdings) : undefined,
+    hudTakeoffs: input.hudTakeoffs && input.hudTakeoffs > 0 ? Math.min(99, Math.round(input.hudTakeoffs)) : undefined,
+    hudLandings: input.hudLandings && input.hudLandings > 0 ? Math.min(99, Math.round(input.hudLandings)) : undefined,
     groundTrainingMin: dur(input.groundTrainingMin),
     soloMin: dur(input.soloMin, totalMin),
     safetyPilotName: input.safetyPilotName?.trim() || undefined,

@@ -165,6 +165,10 @@ export function OverviewWidgets({
       list: rows([
         { key: "pax", label: t("pax"), value: recency.passengers.valid && recency.passengers.validUntil ? t("until", { date: fd(recency.passengers.validUntil, { day: "numeric", month: "short" }) }) : t("notCurrent"), level: recency.passengers.valid ? "ok" : "warning" },
         { key: "night", label: t("night"), value: recency.night.valid && recency.night.validUntil ? t("until", { date: fd(recency.night.validUntil, { day: "numeric", month: "short" }) }) : t("notCurrent"), level: recency.night.valid ? "ok" : "caution" },
+        // HUD recency, for a pilot whose logbook holds HUD takeoffs or landings
+        ...(recency.hud
+          ? [{ key: "hud", label: t("hud"), value: recency.hud.valid && recency.hud.validUntil ? t("until", { date: fd(recency.hud.validUntil, { day: "numeric", month: "short" }) }) : `${t("notCurrent")} · ${recency.hud.takeoffs}/3 · ${recency.hud.landings}/3`, level: recency.hud.valid ? "ok" : "warning" } as const]
+          : []),
       ]),
     },
     expiries: expiries[0]

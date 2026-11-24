@@ -176,6 +176,8 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
       fstdMin: input.isFstd ? (input.fstdMin ?? 0) : 0,
       crew: [],
       remarks: input.remarks || undefined,
+      hudTakeoffs: input.hudTakeoffs || undefined,
+      hudLandings: input.hudLandings || undefined,
       signatureId: null,
       locked: false,
     };

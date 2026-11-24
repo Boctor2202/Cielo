@@ -586,6 +586,7 @@
         "notCurrent": "Pas à jour",
         "until": "jusqu'au {date}",
         "pax": "Passagers (3 en 90 jours)",
+        "hud": "HUD (3 en 90 jours)",
         "night": "Nuit",
         "ftl28": "temps de vol, 28 jours",
         "ftl": {
@@ -763,6 +764,8 @@
         "show": "Afficher",
         "simInstrumentMin": "Instrument simulé (capote)",
         "holdings": "Attentes",
+        "hudTakeoffs": "Décollages HUD",
+        "hudLandings": "Atterrissages HUD",
         "groundTrainingMin": "Instruction au sol reçue",
         "groundHint": "Ce n'est pas du temps de vol : compté à part des totaux.",
         "soloMin": "Solo",

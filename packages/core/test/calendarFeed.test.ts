@@ -61,3 +61,12 @@ describe("a feed whose UIDs change at each reading (Leon)", () => {
     expect(again.put).toHaveLength(0);
   });
 });
+
+describe("a printed leg with an airport missing", () => {
+  it("is the same leg as the feed's at the same time", () => {
+    const cut = { id: "cut", pilotId: "p", rosterId: "pdf", kind: "FLIGHT", startUtc: "2026-12-02T23:30:00.000Z", endUtc: "2026-12-02T23:59:00.000Z", depIcao: "LFPG", arrIcao: null, createdAt: "x", updatedAt: "x" } as never;
+    const m = mergeCalendarFeed(cal([ev("c", "Flight CDG-GVA", "20261202T2330Z", "20261203T0026Z")]), { ...ctx, existing: [cut] });
+    expect(m).toMatchObject({ added: 0, merged: 1 });
+    expect(m.put[0]).toMatchObject({ id: "cut", arrIcao: "LSGG" });
+  });
+});

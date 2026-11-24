@@ -88,6 +88,8 @@ interface FormState {
   /* entries some authorities require beyond EASA (h:mm strings, counts, text) */
   simInstr: string;
   holdings: number;
+  hudTakeoffs: number;
+  hudLandings: number;
   ground: string;
   solo: string;
   safetyPilot: string;
@@ -161,6 +163,8 @@ function FlightForm() {
         remarks: f.remarks ?? "",
         simInstr: f.simInstrumentMin ? formatDuration(f.simInstrumentMin) : "",
         holdings: f.holdings ?? 0,
+        hudTakeoffs: f.hudTakeoffs ?? 0,
+        hudLandings: f.hudLandings ?? 0,
         ground: f.groundTrainingMin ? formatDuration(f.groundTrainingMin) : "",
         solo: f.soloMin ? formatDuration(f.soloMin) : "",
         safetyPilot: f.safetyPilotName ?? "",
@@ -208,6 +212,8 @@ function FlightForm() {
       remarks: "",
       simInstr: "",
       holdings: 0,
+      hudTakeoffs: 0,
+      hudLandings: 0,
       ground: "",
       solo: "",
       safetyPilot: "",
@@ -291,6 +297,8 @@ function FlightForm() {
       remarks: form.remarks || undefined,
       simInstrumentMin: parseDuration(normDuration(form.simInstr)) ?? undefined,
       holdings: form.holdings || undefined,
+      hudTakeoffs: form.hudTakeoffs || undefined,
+      hudLandings: form.hudLandings || undefined,
       groundTrainingMin: parseDuration(normDuration(form.ground)) ?? undefined,
       soloMin: parseDuration(normDuration(form.solo)) ?? undefined,
       safetyPilotName: form.safetyPilot || undefined,
@@ -722,7 +730,7 @@ function ExtraEntries({ form, set }: { form: FormState; set: <K extends keyof Fo
   const { t, pilot } = useApp();
   const c = useTheme();
   const wanted = extraFieldsFor(frameworkOf(pilot), pilot.authority);
-  const filled = !!(form.simInstr || form.holdings || form.ground || form.solo || form.safetyPilot || form.purpose || form.via);
+  const filled = !!(form.simInstr || form.holdings || form.hudTakeoffs || form.hudLandings || form.ground || form.solo || form.safetyPilot || form.purpose || form.via);
   const [open, setOpen] = useState(wanted.length > 0 || filled);
   const order = [...wanted, ...EXTRA_FLIGHT_FIELDS.filter((k) => !wanted.includes(k))];
   const field = (k: (typeof EXTRA_FLIGHT_FIELDS)[number]) => {
@@ -734,10 +742,12 @@ function ExtraEntries({ form, set }: { form: FormState; set: <K extends keyof Fo
       case "soloMin":
         return <DurationField key={k} label={t("flight.x.soloMin")} hint={t("flight.cappedHint")} value={form.solo} onChange={(s) => set("solo", s)} />;
       case "holdings":
+      case "hudTakeoffs":
+      case "hudLandings":
         return (
           <Row key={k} style={{ justifyContent: "space-between", alignItems: "center" }}>
-            <Txt variant="label">{t("flight.x.holdings")}</Txt>
-            <Stepper label="" value={form.holdings} onChange={(v) => set("holdings", v)} />
+            <Txt variant="label">{t(`flight.x.${k}`)}</Txt>
+            <Stepper label="" value={form[k]} onChange={(v) => set(k, v)} />
           </Row>
         );
       case "safetyPilotName":

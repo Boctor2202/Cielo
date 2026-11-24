@@ -586,6 +586,7 @@
         "notCurrent": "Not current",
         "until": "until {date}",
         "pax": "Passengers (3 in 90 days)",
+        "hud": "HUD (3 in 90 days)",
         "night": "Night",
         "ftl28": "flight time, 28 days",
         "ftl": {
@@ -763,6 +764,8 @@
         "show": "Show",
         "simInstrumentMin": "Simulated instrument (hood)",
         "holdings": "Holds",
+        "hudTakeoffs": "HUD take-offs",
+        "hudLandings": "HUD landings",
         "groundTrainingMin": "Ground training received",
         "groundHint": "Not flight time: kept apart from the totals.",
         "soloMin": "Solo",

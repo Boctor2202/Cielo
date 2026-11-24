@@ -588,7 +588,9 @@ function ExtraEntries({ v, set, pilot }: { v: FlightFormInput; set: <K extends k
       case "soloMin":
         return <DurationInput value={v[k] || undefined} onChange={(m) => set(k, m)} />;
       case "holdings":
-        return <input type="number" min={0} max={99} className="input num" value={v.holdings ?? ""} onChange={(e) => set("holdings", Math.max(0, Number(e.target.value) || 0) || undefined)} />;
+      case "hudTakeoffs":
+      case "hudLandings":
+        return <input type="number" min={0} max={99} className="input num" value={v[k] ?? ""} onChange={(e) => set(k, Math.max(0, Number(e.target.value) || 0) || undefined)} />;
       case "via":
         return <input className="input num uppercase" placeholder="LFLY LFMN" value={viaText} onChange={(e) => { const x = e.target.value.toUpperCase(); setViaText(x); set("via", x.split(/[\s,;-]+/).filter(Boolean)); }} />;
       default:

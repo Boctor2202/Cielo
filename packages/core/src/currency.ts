@@ -13,7 +13,7 @@ import type { AircraftType, Flight, RegulatoryFramework } from "./types";
  * pilot flying), approaches from the flight's approach list.
  */
 
-export type CurrencyKind = "passengers" | "night" | "ifr";
+export type CurrencyKind = "passengers" | "night" | "ifr" | "hud";
 
 export interface CurrencyItem {
   /** "passengers:TR A320" — stable key for alerts */
@@ -145,6 +145,10 @@ export function computeCurrency(flights: Flight[], today: string, opts: Currency
       out.push(item("night", group, types, desc, today, 3, (f) => f.takeoffsNight, (f) => f.landingsNight, day90, plus89));
     } else if (!opts.holdsIr) {
       out.push(item("night", group, types, desc, today, 1, (f) => f.takeoffsNight, (f) => f.landingsNight, day90, plus89));
+    }
+    // HUD recency (Air France): 3 takeoffs and 3 landings with the HUD in 90 days, on a type flown with it
+    if (desc.some((f) => (f.hudTakeoffs ?? 0) + (f.hudLandings ?? 0) > 0)) {
+      out.push(item("hud", group, types, desc, today, 3, (f) => f.hudTakeoffs ?? 0, (f) => f.hudLandings ?? 0, day90, plus89));
     }
   }
 
