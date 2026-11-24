@@ -8,6 +8,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import {
   findDuplicate,
+  landingsFill,
   typeFromText,
   type DuplicateMatch,
   deriveFlightTimes,
@@ -42,6 +43,8 @@ export interface PreparedImport {
   duplicates: number[];
   /** the flight each duplicate matches (exactly or very likely) */
   duplicateOf: Record<number, DuplicateMatch>;
+  /** flights already logged without takeoffs and landings, completed from the document read again */
+  fills: { prev: Flight; next: Flight }[];
   skipped: number;
 }
 
@@ -65,6 +68,10 @@ export async function saveImportedRows(store: SqliteStore, pilot: Pilot, types: 
 /** Saves what prepareImportedRows built (after the pilot checked the totals). */
 export async function savePrepared(store: SqliteStore, p: PreparedImport): Promise<ImportResult> {
   const out = p.pairs.map((x) => x.flight);
+  if (p.fills.length) {
+    await store.bulkPut("flights", p.fills.map((x) => x.next));
+    await store.bulkPut("flight_revisions", p.fills.map((x) => stamp({ ...flightRevision(x.prev, x.next, "import")! } as Partial<SyncedRecord>) as unknown as FlightRevision));
+  }
   if (out.length) {
     await store.bulkPut("flights", out);
     // one "created by import" entry each in the audit trail
@@ -83,6 +90,8 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
   let pool = existing.filter((e) => !e.deletedAt);
   const dups: number[] = [];
   const duplicateOf: Record<number, DuplicateMatch> = {};
+  const fills: PreparedImport["fills"] = [];
+  const byId = new Map(existing.map((e) => [e.id, e]));
   let skipped = 0;
   for (const r of parsed) {
     if (!r.input || r.errors.length) {
@@ -178,9 +187,12 @@ export async function prepareImportedRows(store: SqliteStore, pilot: Pilot, type
     if (m && !("keepDuplicate" in r && (r as { keepDuplicate?: boolean }).keepDuplicate)) {
       dups.push(r.rowIndex);
       duplicateOf[r.rowIndex] = m;
+      const prev = byId.get(m.flight.id);
+      const next = prev && landingsFill(f, prev, now);
+      if (prev && next) fills.push({ prev, next });
       continue;
     }
     pairs.push({ rowIndex: r.rowIndex, flight: f });
   }
-  return { pairs, duplicates: dups, duplicateOf, skipped };
+  return { pairs, duplicates: dups, duplicateOf, fills, skipped };
 }

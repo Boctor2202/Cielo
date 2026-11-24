@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveFlightTimes, legsToRows, sabLandings } from "../src";
+import { deriveFlightTimes, landingsFill, legsToRows, sabLandings } from "../src";
 
 describe("Air France SAB code", () => {
   it("reads takeoffs and landings from the middle letter", () => {
@@ -17,5 +17,17 @@ describe("Air France SAB code", () => {
     const f = deriveFlightTimes(row!.input, { airports: () => undefined });
     expect(f.takeoffsDay + f.takeoffsNight).toBe(0);
     expect(f.landingsDay + f.landingsNight).toBe(1);
+  });
+});
+
+describe("EP5 read again over a logbook without landings", () => {
+  const logged = { id: "a", takeoffsDay: 0, takeoffsNight: 0, landingsDay: 0, landingsNight: 0, pilotFlying: false, remarks: undefined, signatureId: null, locked: false } as never;
+  const read = { takeoffsDay: 1, takeoffsNight: 0, landingsDay: 0, landingsNight: 1, remarks: "HUD" } as never;
+  it("adds the takeoffs, landings and HUD to the logged flight", () => {
+    expect(landingsFill(read, logged)).toMatchObject({ id: "a", takeoffsDay: 1, landingsNight: 1, pilotFlying: true, remarks: "HUD" });
+  });
+  it("leaves a signed flight or one that already has landings", () => {
+    expect(landingsFill(read, { ...(logged as object), signatureId: "s" } as never)).toBeNull();
+    expect(landingsFill(read, { ...(logged as object), landingsDay: 1 } as never)).toBeNull();
   });
 });
