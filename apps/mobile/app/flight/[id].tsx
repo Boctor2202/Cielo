@@ -120,6 +120,8 @@ function FlightForm() {
   const rosterEvent = rosterEventId ? rosterEvents.find((e) => e.id === rosterEventId) : undefined;
 
   const [form, setForm] = useState<FormState>(() => initialState(existing, rosterEvent));
+  // the HUD counts sit with the takeoffs and landings, for a pilot who flies with a head-up display
+  const hudPilot = !!form.hudTakeoffs || !!form.hudLandings || flights.some((f) => !f.deletedAt && (f.hudTakeoffs ?? 0) + (f.hudLandings ?? 0) > 0);
   const [picker, setPicker] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -430,6 +432,7 @@ function FlightForm() {
           </Row>
           <Txt variant="small" mono>
             {t("flight.landings")} ☀ {derived.landingsDay} · ☾ {derived.landingsNight} — T/O ☀ {derived.takeoffsDay} · ☾ {derived.takeoffsNight}
+            {form.hudTakeoffs || form.hudLandings ? ` — HUD T/O ${form.hudTakeoffs} · LDG ${form.hudLandings}` : ""}
           </Txt>
           {derived.warnings.map((w) => (
             <Txt key={w} variant="small" color={c.caution}>
@@ -607,6 +610,12 @@ function FlightForm() {
               </Row>
             </View>
           ) : null}
+          {hudPilot ? (
+            <Row gap={space.md}>
+              <Stepper label={t("flight.x.hudTakeoffs")} value={form.hudTakeoffs} onChange={(v) => set("hudTakeoffs", v)} />
+              <Stepper label={t("flight.x.hudLandings")} value={form.hudLandings} onChange={(v) => set("hudLandings", v)} />
+            </Row>
+          ) : null}
         </Card>
 
         {!form.isFstd ? (
@@ -730,9 +739,10 @@ function ExtraEntries({ form, set }: { form: FormState; set: <K extends keyof Fo
   const { t, pilot } = useApp();
   const c = useTheme();
   const wanted = extraFieldsFor(frameworkOf(pilot), pilot.authority);
-  const filled = !!(form.simInstr || form.holdings || form.hudTakeoffs || form.hudLandings || form.ground || form.solo || form.safetyPilot || form.purpose || form.via);
+  const filled = !!(form.simInstr || form.holdings || form.ground || form.solo || form.safetyPilot || form.purpose || form.via);
   const [open, setOpen] = useState(wanted.length > 0 || filled);
-  const order = [...wanted, ...EXTRA_FLIGHT_FIELDS.filter((k) => !wanted.includes(k))];
+  // the HUD counts are with the takeoffs and landings, not here
+  const order = [...wanted, ...EXTRA_FLIGHT_FIELDS.filter((k) => !wanted.includes(k))].filter((k) => k !== "hudTakeoffs" && k !== "hudLandings");
   const field = (k: (typeof EXTRA_FLIGHT_FIELDS)[number]) => {
     switch (k) {
       case "simInstrumentMin":

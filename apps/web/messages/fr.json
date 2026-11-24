@@ -709,6 +709,8 @@
       "toNight": "Décollages nuit",
       "ldgDay": "Atterrissages jour",
       "ldgNight": "Atterrissages nuit",
+      "hudTakeoffs": "dont décollages HUD",
+      "hudLandings": "dont atterrissages HUD",
       "approachesTitle": "Approches",
       "approachType": "Type",
       "runway": "Piste",
