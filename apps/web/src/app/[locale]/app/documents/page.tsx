@@ -2,6 +2,7 @@
 
 import { Award, BadgeCheck, Bell, CalendarClock, FileText, HeartPulse, IdCard, Languages, Moon, Plane, Plus, Radio, ShieldCheck, Trash2, Users, type LucideIcon } from "lucide-react";
 import { AircraftTypeInput } from "@/components/app/AircraftTypeInput";
+import { ClassRatingsCard } from "@/components/app/ClassRatingsCard";
 import { useTypes } from "@/lib/hooks";
 import { AuthorityInput } from "@/components/app/AuthorityInput";
 import { useEffect, useMemo, useState } from "react";
@@ -194,6 +195,7 @@ export default function DocumentsPage() {
               </div>
             </Card>
           )}
+          {flights && <ClassRatingsCard flights={flights} types={types ?? []} licenses={(licenses ?? []).filter((l) => !l.deletedAt)} today={today} />}
           <Card title={t("notifications")}>
             {perm === "granted" ? (
               <p className="flex items-center gap-2 text-sm text-success"><Bell size={16} /> {t("notificationsOn")}</p>

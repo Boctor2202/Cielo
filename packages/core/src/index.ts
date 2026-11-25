@@ -54,3 +54,4 @@ export * from "./flightContext";
 export * from "./grib2";
 export * from "./typeMatch";
 export * from "./calendarFeed";
+export * from "./classRatings";

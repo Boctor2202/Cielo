@@ -1504,7 +1504,24 @@
       "sumValid": "Valides",
       "sumSoon": "Bientôt",
       "sumExpired": "Expirés",
-      "noExpiryHint": "Sans date d'expiration"
+      "noExpiryHint": "Sans date d'expiration",
+      "cls": {
+        "title": "Qualifications de classe SEP / MEP",
+        "recency": "Passagers : 3 décollages et atterrissages en 90 jours",
+        "until": "valide jusqu'au {date}",
+        "expired": "expirée le {date}",
+        "noExpiry": "Ajoutez votre qualification {kind} avec sa date de fin de validité dans les documents ci-contre pour suivre sa prorogation.",
+        "sepRule": "Prorogation : contrôle de compétences à partir du {check}, ou par expérience entre le {from} et l'échéance (FCL.740.A(b)) :",
+        "hours": "Temps de vol dans la classe",
+        "picHours": "dont commandant de bord",
+        "takeoffs": "Décollages",
+        "landings": "Atterrissages",
+        "instructor": "Vol d'entraînement d'au moins 1 h avec un FI ou CRI",
+        "todo": "à faire",
+        "mepRule": "Prorogation : contrôle de compétences entre le {from} et le {to}, et pendant la validité au moins 10 étapes comme pilote de la classe, ou 1 avec un examinateur (FCL.740.A(a)).",
+        "sectors": "Étapes pendant la validité",
+        "source": "Règles EASA : FCL.060(b)(1), FCL.740(a)(1) et FCL.740.A, Easy Access Rules for Aircrew, consultées le 25 novembre 2026. Pour information : votre autorité fait foi."
+      }
     },
     "stats": {
       "title": "Statistiques",
