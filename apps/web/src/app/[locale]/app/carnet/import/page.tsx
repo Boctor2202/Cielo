@@ -188,7 +188,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
       const ep5 = d.reader === "airfrance-ep5";
       const role = d.role === "CDB" || d.role === "CDT" ? "PIC" : ep5 || d.role ? "SIC" : pilot?.defaultFunction ?? "PIC";
       setPdfRows(legsToRows(d.legs, (c) => airports?.get(c)?.icao, { function: role, pilotFlying: false, airline: ep5 }));
-      setApp(d.reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : undefined);
+      setApp(d.reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : d.reader === "logten-pdf" ? "LogTen" : undefined);
       setSource(d.reader === "ai" ? d.source ?? "?" : d.reader === "report" ? "report" : null);
       setPdfState(d.legs.length ? null : "none");
     } catch (e) {

@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { reportAiFailure } from "@/lib/server/anthropic";
-import { accessFor, noCardTrialDays, ep5Legs, parseAirFranceEp5, parseFlightReport, sheetCellText, tableSignature, type LogbookLeg, type StoredMapping } from "@cielo/core";
+import { accessFor, noCardTrialDays, ep5Legs, parseAirFranceEp5, parseLogTenEasa, parseFlightReport, sheetCellText, tableSignature, type LogbookLeg, type StoredMapping } from "@cielo/core";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { pdfText } from "@/lib/server/pdf";
 import { extractLegs, ImportAiError, mapTable } from "@/lib/server/importAi";
@@ -101,9 +101,13 @@ export async function POST(req: Request) {
     pdf = typeof body.pdf === "string" ? body.pdf.replace(/\s+/g, "") : "";
     if (!pdf || pdf.length > 8_000_000 || !/^[A-Za-z0-9+/=]+$/.test(pdf)) return Response.json({ error: "bad_request" }, { status: 400 });
     try {
-      const pages = await pdfText(Uint8Array.from(Buffer.from(pdf, "base64")), 40);
+      // a LogTen logbook prints its flights on two facing pages: a year is easily over a hundred pages
+      const pages = await pdfText(Uint8Array.from(Buffer.from(pdf, "base64")), 300);
       const ep5 = parseAirFranceEp5(pages);
       if (ep5) return Response.json({ reader: "airfrance-ep5", role: ep5.role ?? null, legs: ep5Legs(ep5) });
+      // LogTen's "EASA-FCL Compliant" PDF: read without AI, checked against the page totals it prints
+      const logten = parseLogTenEasa(pages);
+      if (logten) return Response.json({ reader: "logten-pdf", legs: logten.legs, previous: logten.previous ?? null, checked: logten.checked });
       text = pages.map((p) => p.map((i) => i.s).join(" ")).join("\n").slice(0, 60_000);
     } catch {
       // a scanned PDF: Claude reads the images

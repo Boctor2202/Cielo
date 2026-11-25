@@ -145,7 +145,7 @@ export default function ImportScreen() {
         if (pdf.length > BATCH_BYTES * 1.3) return fail("too_big");
         const d = await call({ kind: "pdf", pdf, fileName: a.name });
         if (d.error || !d.legs) return fail(d.error);
-        return show(d.legs, d.role, d.reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : d.source ?? "ai");
+        return show(d.legs, d.role, d.reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : d.reader === "logten-pdf" ? "LogTen" : d.source ?? "ai");
       }
       // Excel 97-2003 (.xls) cannot be read: ask for .xlsx or CSV
       if (/\.xls$/i.test(a.name) || a.mimeType === "application/vnd.ms-excel") return fail("xls");
@@ -269,7 +269,7 @@ export default function ImportScreen() {
           onCancel={() => setRows(null)}
           busy={busy === "save"}
           fills={review?.prepared.fills.length ?? 0}
-          source={source ? (source === "learned" ? t("uimp.learned") : source === "report" ? t("uimp.report") : t("uimp.ai", { source })) : null}
+          source={source ? (source === "learned" ? t("uimp.learned") : source === "report" ? t("uimp.report") : source === "LogTen" || source === "Air France · EP4 / EP5" ? t("uimp.reader", { source }) : t("uimp.ai", { source })) : null}
         />
       </Screen>
     );
