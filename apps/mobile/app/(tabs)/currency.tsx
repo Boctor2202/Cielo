@@ -6,6 +6,7 @@ import { Badge, Card, Dot, EmptyState, Row, Screen, Txt, statusColor } from "../
 import { Track } from "../../src/components/Bars";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { useCurrency } from "../../src/currency";
+import { ClassRatingsCard } from "../../src/components/ClassRatingsCard";
 import { holdsValidIr } from "../../src/currencyAlerts";
 import { statusLabel } from "../../src/licenseLabel";
 import { todayUtc, useApp } from "../../src/state";
@@ -90,6 +91,8 @@ export default function Currency() {
           {list[0]?.lastFlown ? <Txt variant="small" color={c.muted}>{t("cur.lastFlown", { date: formatDate(list[0].lastFlown, locale) })}</Txt> : null}
         </Card>
       ))}
+
+      <ClassRatingsCard />
 
       <Card onPress={() => router.navigate("/documents")}>
         <Txt variant="h2">{t("cur.validities")}</Txt>

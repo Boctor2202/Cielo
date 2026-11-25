@@ -1504,7 +1504,24 @@
       "sumValid": "Valid",
       "sumSoon": "Expiring",
       "sumExpired": "Expired",
-      "noExpiryHint": "No expiry date"
+      "noExpiryHint": "No expiry date",
+      "cls": {
+        "title": "SEP / MEP class ratings",
+        "recency": "Passengers: 3 takeoffs and landings in 90 days",
+        "until": "valid until {date}",
+        "expired": "expired on {date}",
+        "noExpiry": "Add your {kind} rating with its expiry date in the documents to follow its revalidation.",
+        "sepRule": "Revalidation: proficiency check from {check}, or by experience between {from} and expiry (FCL.740.A(b)):",
+        "hours": "Flight time in the class",
+        "picHours": "of which PIC",
+        "takeoffs": "Takeoffs",
+        "landings": "Landings",
+        "instructor": "Refresher training of at least 1 h with an FI or CRI",
+        "todo": "to do",
+        "mepRule": "Revalidation: proficiency check between {from} and {to}, and during the validity at least 10 route sectors as pilot of the class, or 1 with an examiner (FCL.740.A(a)).",
+        "sectors": "Route sectors during the validity",
+        "source": "EASA rules: FCL.060(b)(1), FCL.740(a)(1) and FCL.740.A, Easy Access Rules for Aircrew, read on 25 November 2026. For information: your authority's rules prevail."
+      }
     },
     "stats": {
       "title": "Statistics",
