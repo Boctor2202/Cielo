@@ -5,6 +5,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
 import { File } from "expo-file-system";
+import { uploadImportPdf } from "../src/importUpload";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   analyseTable, applyImportChoices, editImportedRow, IMPORT_FIELDS, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, titlesToMapping,
@@ -141,9 +142,13 @@ export default function ImportScreen() {
     setBusy("file");
     try {
       if (/\.pdf$/i.test(a.name) || a.mimeType === "application/pdf") {
-        const pdf = await new File(a.uri).base64();
-        if (pdf.length > BATCH_BYTES * 1.3) return fail("too_big");
-        const d = await call({ kind: "pdf", pdf, fileName: a.name });
+        const file = new File(a.uri);
+        // a request is limited to 4.5 MB: a larger PDF (a LogTen logbook of a whole career) is uploaded to the pilot's
+        // private folder, read once on the server and deleted
+        const big = (file.size ?? 0) > BATCH_BYTES;
+        const path = big ? await uploadImportPdf(await file.arrayBuffer()) : null;
+        if (big && !path) return fail("too_big");
+        const d = path ? await call({ kind: "pdf", storagePath: path, fileName: a.name }) : await call({ kind: "pdf", pdf: await file.base64(), fileName: a.name });
         if (d.error || !d.legs) return fail(d.error);
         return show(d.legs, d.role, d.reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : d.reader === "logten-pdf" ? "LogTen" : d.source ?? "ai");
       }
