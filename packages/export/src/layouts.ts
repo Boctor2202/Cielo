@@ -44,7 +44,14 @@ const remarks = (f: Flight) => {
   return parts.join(" / ");
 };
 
-/** EASA AMC1 FCL.050 logbook columns (1)–(13). PICUS is logged as PIC with a "PICUS" remark. */
+/**
+ * EASA AMC1 FCL.050 pilot logbook, columns 1-12 as numbered in the logbook form of the Easy Access Rules for Aircrew
+ * (1 date, 2 departure, 3 arrival, 4 aircraft, 5 single-pilot SE / ME and multi-pilot time, 6 total time of flight,
+ * 7 name PIC, 8 landings, 9 operational condition time, 10 pilot function time, 11 FSTD session, 12 remarks).
+ * Like LogTen's "EASA-FCL Compliant" logbook, column 8 also gives the takeoffs and column 10 splits pilot-in-command
+ * time into P1 and P1 u/s: instruction (h) asks PICUS time to be entered as PIC and certified by the PIC in the remarks,
+ * so the two sub-columns together are the PIC time.
+ */
 const EASA: Layout = {
   id: "EASA",
   title: "PILOT LOGBOOK — EASA Part-FCL (AMC1 FCL.050)",
@@ -58,27 +65,30 @@ const EASA: Layout = {
     { group: "2 DEPARTURE", sub: "TIME", w: 3.8, align: "center", value: (f) => (fl(f) ? formatClock(f.outUtc ?? f.offUtc) : "") },
     { group: "3 ARRIVAL", sub: "PLACE", w: 4.2, align: "center", value: (f) => (fl(f) ? f.arrIcao : "") },
     { group: "3 ARRIVAL", sub: "TIME", w: 3.8, align: "center", value: (f) => (fl(f) ? formatClock(f.inUtc ?? f.onUtc) : "") },
-    { group: "4 AIRCRAFT", sub: "MAKE, MODEL, VARIANT", w: 7.6, align: "left", value: (f) => (fl(f) ? (f.aircraftModel || f.aircraftTypeIcao || "") : "") },
+    { group: "4 AIRCRAFT", sub: "MAKE, MODEL, VARIANT", w: 7.2, align: "left", value: (f) => (fl(f) ? (f.aircraftModel || f.aircraftTypeIcao || "") : "") },
     { group: "4 AIRCRAFT", sub: "REGISTRATION", w: 5.2, align: "center", value: (f) => (fl(f) ? (f.registration ?? "") : "") },
-    { group: "5 SINGLE PILOT TIME", sub: "SE", w: 3.6, align: "right", value: (f, fmt) => t(f.singlePilotSeMin, fmt), sum: (x) => x.singlePilotSeMin },
-    { group: "5 SINGLE PILOT TIME", sub: "ME", w: 3.6, align: "right", value: (f, fmt) => t(f.singlePilotMeMin, fmt), sum: (x) => x.singlePilotMeMin },
-    { sub: "6 MULTI-PILOT TIME", w: 4.2, align: "right", value: (f, fmt) => t(f.multiPilotMin, fmt), sum: (x) => x.multiPilotMin },
-    { sub: "7 TOTAL TIME OF FLIGHT", w: 4.4, align: "right", value: (f, fmt) => t(f.totalMin, fmt), sum: (x) => x.totalMin },
-    { sub: "8 NAME PIC", w: 7, align: "left", value: (f) => (fl(f) ? (f.function === "PIC" ? "SELF" : (f.picName ?? "")) : "") },
-    { group: "9 LANDINGS", sub: "DAY", w: 2.6, align: "right", value: (f) => n(f.landingsDay), sum: (x) => x.landingsDay, sumKind: "count" },
-    { group: "9 LANDINGS", sub: "NIGHT", w: 2.6, align: "right", value: (f) => n(f.landingsNight), sum: (x) => x.landingsNight, sumKind: "count" },
-    { group: "10 OPERATIONAL CONDITION TIME", sub: "NIGHT", w: 3.8, align: "right", value: (f, fmt) => t(f.nightMin, fmt), sum: (x) => x.nightMin },
-    { group: "10 OPERATIONAL CONDITION TIME", sub: "IFR", w: 3.8, align: "right", value: (f, fmt) => t(f.ifrMin, fmt), sum: (x) => x.ifrMin },
-    // AMC1 FCL.050: PICUS is logged as PIC time (the PIC signs it); kept in this column on purpose. Everywhere else in
-    // Geardown (cockpit, CV, job matching) PIC means PIC only — see docs/definitions-heures.md.
-    { group: "11 PILOT FUNCTION TIME", sub: "PILOT-IN-COMMAND", w: 4.2, align: "right", value: (f, fmt) => t(f.picMin + f.picusMin, fmt), sum: (x) => x.picMin + x.picusMin },
-    { group: "11 PILOT FUNCTION TIME", sub: "CO-PILOT", w: 3.8, align: "right", value: (f, fmt) => t(f.copilotMin, fmt), sum: (x) => x.copilotMin },
-    { group: "11 PILOT FUNCTION TIME", sub: "DUAL", w: 3.8, align: "right", value: (f, fmt) => t(f.dualMin, fmt), sum: (x) => x.dualMin },
-    { group: "11 PILOT FUNCTION TIME", sub: "INSTRUCTOR", w: 3.8, align: "right", value: (f, fmt) => t(f.instructorMin + f.examinerMin, fmt), sum: (x) => x.instructorMin + x.examinerMin },
-    { group: "12 FSTD SESSION", sub: "DATE (dd/mm/yy)", w: 4.6, align: "center", value: (f) => (f.isFstd ? formatDateShort(f.date) : "") },
-    { group: "12 FSTD SESSION", sub: "TYPE", w: 4.4, align: "left", value: (f) => (f.isFstd ? (f.fstdType ?? "") : "") },
-    { group: "12 FSTD SESSION", sub: "TOTAL TIME OF SESSION", w: 4, align: "right", value: (f, fmt) => (f.isFstd ? t(f.fstdMin, fmt) : ""), sum: (x) => x.fstdMin },
-    { sub: "13 REMARKS AND ENDORSEMENTS", w: 10, align: "left", value: (f) => remarks(f) },
+    { group: "5 SINGLE-PILOT TIME / MULTI-PILOT TIME", sub: "SE", w: 3.6, align: "right", value: (f, fmt) => t(f.singlePilotSeMin, fmt), sum: (x) => x.singlePilotSeMin },
+    { group: "5 SINGLE-PILOT TIME / MULTI-PILOT TIME", sub: "ME", w: 3.6, align: "right", value: (f, fmt) => t(f.singlePilotMeMin, fmt), sum: (x) => x.singlePilotMeMin },
+    { group: "5 SINGLE-PILOT TIME / MULTI-PILOT TIME", sub: "MULTI-PILOT", w: 4.2, align: "right", value: (f, fmt) => t(f.multiPilotMin, fmt), sum: (x) => x.multiPilotMin },
+    { sub: "6 TOTAL TIME OF FLIGHT", w: 4.4, align: "right", value: (f, fmt) => t(f.totalMin, fmt), sum: (x) => x.totalMin },
+    { sub: "7 NAME PIC", w: 6.4, align: "left", value: (f) => (fl(f) ? (f.function === "PIC" ? "SELF" : (f.picName ?? "")) : "") },
+    { group: "8 TAKEOFFS", sub: "DAY", w: 2.4, align: "right", value: (f) => n(f.takeoffsDay), sum: (x) => x.takeoffsDay, sumKind: "count" },
+    { group: "8 TAKEOFFS", sub: "NIGHT", w: 2.4, align: "right", value: (f) => n(f.takeoffsNight), sum: (x) => x.takeoffsNight, sumKind: "count" },
+    { group: "8 LANDINGS", sub: "DAY", w: 2.4, align: "right", value: (f) => n(f.landingsDay), sum: (x) => x.landingsDay, sumKind: "count" },
+    { group: "8 LANDINGS", sub: "NIGHT", w: 2.4, align: "right", value: (f) => n(f.landingsNight), sum: (x) => x.landingsNight, sumKind: "count" },
+    { group: "9 OPERATIONAL CONDITION TIME", sub: "NIGHT", w: 3.8, align: "right", value: (f, fmt) => t(f.nightMin, fmt), sum: (x) => x.nightMin },
+    { group: "9 OPERATIONAL CONDITION TIME", sub: "IFR", w: 3.8, align: "right", value: (f, fmt) => t(f.ifrMin, fmt), sum: (x) => x.ifrMin },
+    // AMC1 FCL.050 (h): PICUS is entered as PIC time, certified by the PIC; it is shown apart (P1 u/s) as LogTen does.
+    // Everywhere else in Geardown (cockpit, CV, job matching) PIC means PIC only — see docs/definitions-heures.md.
+    { group: "10 PILOT FUNCTION TIME", sub: "PIC P1", w: 3.8, align: "right", value: (f, fmt) => t(f.picMin, fmt), sum: (x) => x.picMin },
+    { group: "10 PILOT FUNCTION TIME", sub: "PIC P1 U/S", w: 3.6, align: "right", value: (f, fmt) => t(f.picusMin, fmt), sum: (x) => x.picusMin },
+    { group: "10 PILOT FUNCTION TIME", sub: "CO-PILOT", w: 3.8, align: "right", value: (f, fmt) => t(f.copilotMin, fmt), sum: (x) => x.copilotMin },
+    { group: "10 PILOT FUNCTION TIME", sub: "DUAL", w: 3.8, align: "right", value: (f, fmt) => t(f.dualMin, fmt), sum: (x) => x.dualMin },
+    { group: "10 PILOT FUNCTION TIME", sub: "INSTRUCTOR", w: 3.8, align: "right", value: (f, fmt) => t(f.instructorMin + f.examinerMin, fmt), sum: (x) => x.instructorMin + x.examinerMin },
+    { group: "11 FSTD SESSION", sub: "DATE (dd/mm/yy)", w: 4.6, align: "center", value: (f) => (f.isFstd ? formatDateShort(f.date) : "") },
+    { group: "11 FSTD SESSION", sub: "TYPE", w: 4.4, align: "left", value: (f) => (f.isFstd ? (f.fstdType ?? "") : "") },
+    { group: "11 FSTD SESSION", sub: "TOTAL TIME OF SESSION", w: 4, align: "right", value: (f, fmt) => (f.isFstd ? t(f.fstdMin, fmt) : ""), sum: (x) => x.fstdMin },
+    { sub: "12 REMARKS AND ENDORSEMENTS", w: 10, align: "left", value: (f) => remarks(f) },
   ],
 };
 
@@ -219,7 +229,7 @@ const SACAA: Layout = {
   decimal: false,
   rowsPerPage: 20,
   columns: [
-    ...EASA.columns.filter((c) => !/^1[23] /.test(c.group ?? c.sub ?? "")),
+    ...EASA.columns.filter((c) => !/^1[12] /.test(c.group ?? c.sub ?? "")),
     { group: "INSTRUMENT", sub: "ACTUAL", w: 3.4, align: "right", value: (f, fmt) => t(f.actualImcMin, fmt), sum: (x) => x.actualImcMin },
     { group: "INSTRUMENT", sub: "SIMULATED", w: 3.4, align: "right", value: (f, fmt) => t((f.simInstrumentMin ?? 0) + (f.isFstd ? f.fstdMin : 0), fmt), sum: (x) => x.simInstrumentMin + x.fstdMin },
     { sub: "REMARKS AND ENDORSEMENTS", w: 10, align: "left", value: (f) => remarksZA(f) },
@@ -238,7 +248,7 @@ const HKCAD: Layout = {
   decimal: false,
   rowsPerPage: 20,
   columns: [
-    ...EASA.columns.filter((c) => !/^13 /.test(c.sub ?? "")),
+    ...EASA.columns.filter((c) => !/^12 /.test(c.sub ?? "")),
     { sub: "CAPACITY", w: 4, align: "center", value: (f) => (f.isFstd ? "" : f.function) },
     { sub: "REMARKS, TESTS AND CHECKS", w: 9, align: "left", value: (f) => remarks(f) },
   ],

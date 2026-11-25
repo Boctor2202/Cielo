@@ -55,3 +55,4 @@ export * from "./grib2";
 export * from "./typeMatch";
 export * from "./calendarFeed";
 export * from "./classRatings";
+export * from "./logtenPdf";

@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { reportAiFailure } from "@/lib/server/anthropic";
-import { accessFor, noCardTrialDays, ep5Legs, parseAirFranceEp5, parseFlightReport, sheetCellText, tableSignature, type LogbookLeg, type StoredMapping } from "@cielo/core";
+import { accessFor, noCardTrialDays, ep5Legs, parseAirFranceEp5, parseLogTenEasa, parseFlightReport, sheetCellText, tableSignature, type LogbookLeg, type StoredMapping } from "@cielo/core";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { pdfText } from "@/lib/server/pdf";
 import { extractLegs, ImportAiError, mapTable } from "@/lib/server/importAi";
@@ -14,6 +14,8 @@ export const maxDuration = 300;
 /**
  * POST /api/import-any — the universal import. Whatever the pilot has, in one door:
  *  { kind: "pdf", pdf: base64 }                 an airline statement, a logbook export
+ *  { kind: "pdf", storagePath }                 the same, too large for a request: uploaded first to the pilot's
+ *                                               folder of the private "imports" bucket, read once, then deleted
  *  { kind: "images", images: [{ data, type }] } photos of a paper logbook (several pages), of an ACARS screen…
  *  { kind: "text", text }                       a pasted e-mail or summary
  *  { kind: "table", header, rows }              a CSV / Excel the app could not map by itself
@@ -98,12 +100,26 @@ export async function POST(req: Request) {
   }
   let pdf = "";
   if (kind === "pdf") {
-    pdf = typeof body.pdf === "string" ? body.pdf.replace(/\s+/g, "") : "";
-    if (!pdf || pdf.length > 8_000_000 || !/^[A-Za-z0-9+/=]+$/.test(pdf)) return Response.json({ error: "bad_request" }, { status: 400 });
+    const storagePath = typeof body.storagePath === "string" ? body.storagePath : "";
+    if (storagePath) {
+      // a large file: the pilot's own upload, read once and deleted
+      if (!db || !storagePath.startsWith(`${user.id}/`) || storagePath.includes("..") || !/\.pdf$/i.test(storagePath)) return Response.json({ error: "bad_request" }, { status: 400 });
+      const { data: file, error } = await db.storage.from("imports").download(storagePath);
+      void db.storage.from("imports").remove([storagePath]);
+      if (error || !file) return Response.json({ error: "unreadable" }, { status: 422 });
+      pdf = Buffer.from(await file.arrayBuffer()).toString("base64");
+    } else {
+      pdf = typeof body.pdf === "string" ? body.pdf.replace(/\s+/g, "") : "";
+      if (!pdf || pdf.length > 8_000_000 || !/^[A-Za-z0-9+/=]+$/.test(pdf)) return Response.json({ error: "bad_request" }, { status: 400 });
+    }
     try {
-      const pages = await pdfText(Uint8Array.from(Buffer.from(pdf, "base64")), 40);
+      // a LogTen logbook prints its flights on two facing pages: a year is easily over a hundred pages
+      const pages = await pdfText(Uint8Array.from(Buffer.from(pdf, "base64")), 1500);
       const ep5 = parseAirFranceEp5(pages);
       if (ep5) return Response.json({ reader: "airfrance-ep5", role: ep5.role ?? null, legs: ep5Legs(ep5) });
+      // LogTen's "EASA-FCL Compliant" PDF: read without AI, checked against the page totals it prints
+      const logten = parseLogTenEasa(pages);
+      if (logten) return Response.json({ reader: "logten-pdf", legs: logten.legs, previous: logten.previous ?? null, checked: logten.checked });
       text = pages.map((p) => p.map((i) => i.s).join(" ")).join("\n").slice(0, 60_000);
     } catch {
       // a scanned PDF: Claude reads the images

@@ -1,12 +1,13 @@
 "use client";
 
+import { uploadImportPdf } from "@/lib/importUpload";
+
 import { CalendarDays, Camera, FileSpreadsheet, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   analyseTable, applyImportChoices, landingsFill, checkMapping, editImportedRow, IMPORT_FIELDS, matchImported, legsToRows, mappingToTitles, mappingUsable, parseCsv, rowsToFlights, sheetCellText, titlesToMapping,
-  type DateOrder, type DuplicateMatch, type ImportChoices, type ImportField, type ImportRowEdit, type ImportedRow, type LogbookLeg, type StoredMapping,
-} from "@cielo/core";
+  type DateOrder, type DuplicateMatch, type ImportChoices, type ImportField, type ImportRowEdit, type ImportedRow, type LogbookLeg, type StoredMapping, ep5Legs, parseAirFranceEp5, parseLogTenEasa } from "@cielo/core";
 import { apiFetch } from "@/lib/report";
 import { Link } from "@/i18n/navigation";
 import { Card, Field, PageTitle, Segmented, useToast } from "@/components/app/ui";
@@ -183,22 +184,47 @@ function FileImport({ photos = false }: { photos?: boolean }) {
         await flush();
         d = { ...last, legs };
       } else d = await importAny({ ...body, share });
-      if (d.error || !d.legs) return setPdfState(d.error ?? "error");
-      // an airline statement gives the role (CDB / OPL); a paper logbook or an e-mail does not: the pilot's usual function
-      const ep5 = d.reader === "airfrance-ep5";
-      const role = d.role === "CDB" || d.role === "CDT" ? "PIC" : ep5 || d.role ? "SIC" : pilot?.defaultFunction ?? "PIC";
-      setPdfRows(legsToRows(d.legs, (c) => airports?.get(c)?.icao, { function: role, pilotFlying: false, airline: ep5 }));
-      setApp(d.reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : undefined);
-      setSource(d.reader === "ai" ? d.source ?? "?" : d.reader === "report" ? "report" : null);
-      setPdfState(d.legs.length ? null : "none");
+      showLegs(d);
     } catch (e) {
       setPdfState((e as Error).message || "error");
     }
   }
+  // the flights a reader found (on the server, or here for a statement or a LogTen logbook), for review
+  function showLegs(d: Awaited<ReturnType<typeof importAny>>) {
+    if (d.error || !d.legs) return setPdfState(d.error ?? "error");
+    // an airline statement gives the role (CDB / OPL); a paper logbook or an e-mail does not: the pilot's usual function
+    const ep5 = d.reader === "airfrance-ep5";
+    const role = d.role === "CDB" || d.role === "CDT" ? "PIC" : ep5 || d.role ? "SIC" : pilot?.defaultFunction ?? "PIC";
+    setPdfRows(legsToRows(d.legs, (c) => airports?.get(c)?.icao, { function: role, pilotFlying: false, airline: ep5 }));
+    setApp(d.reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : d.reader === "logten-pdf" ? "LogTen" : undefined);
+    setSource(d.reader === "ai" ? d.source ?? "?" : d.reader === "report" ? "report" : null);
+    setPdfState(d.legs.length ? null : "none");
+  }
   const onPdf = async (file: File) => {
+    // read here first: an airline statement or a LogTen logbook needs no upload, whatever its size
+    fresh();
+    setRows(null);
+    setMapping(null);
+    setPdfRows(null);
+    setSource(null);
+    setPdfState("reading");
+    try {
+      const { pdfText } = await import("@/lib/pdfPages");
+      const pages = await pdfText(new Uint8Array(await file.arrayBuffer()), 1500);
+      const ep5 = parseAirFranceEp5(pages);
+      if (ep5) return showLegs({ reader: "airfrance-ep5", role: ep5.role ?? null, legs: ep5Legs(ep5) });
+      const logten = parseLogTenEasa(pages);
+      if (logten) return showLegs({ reader: "logten-pdf", legs: logten.legs });
+    } catch {
+      // a PDF the browser cannot read: the server tries
+    }
     const pdf = await b64(file);
-    // the server accepts requests up to 4.5 MB: a heavier PDF (usually a scan) is refused with a clear message
-    if (pdf.length > 4_200_000) return setPdfState("too_big");
+    // a request is limited to 4.5 MB: a larger PDF is uploaded to the pilot's private folder, read once, deleted
+    if (pdf.length > 4_200_000) {
+      const path = await uploadImportPdf(file);
+      if (!path) return setPdfState("too_big");
+      return fromServer({ kind: "pdf", storagePath: path, fileName: file.name });
+    }
     return fromServer({ kind: "pdf", pdf, fileName: file.name });
   };
 

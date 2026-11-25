@@ -200,6 +200,10 @@ export interface LogbookLeg {
   xcMin?: number;
   landingsDay?: number;
   landingsNight?: number;
+  /** takeoffs by day and night, when the document has them apart from the landings */
+  takeoffsDay?: number;
+  takeoffsNight?: number;
+  picusMin?: number;
   /** takeoffs and landings by the pilot, not split day/night: the logbook splits them by the sun */
   takeoffs?: number;
   landings?: number;
@@ -310,8 +314,8 @@ export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string 
       landings: l.landings,
       hudTakeoffs: l.hudTakeoffs || undefined,
       hudLandings: l.hudLandings || undefined,
-      takeoffsDay: l.landingsDay ?? 0,
-      takeoffsNight: l.landingsNight ?? 0,
+      takeoffsDay: l.takeoffsDay ?? l.landingsDay ?? 0,
+      takeoffsNight: l.takeoffsNight ?? l.landingsNight ?? 0,
       landingsDay: l.landingsDay ?? 0,
       landingsNight: l.landingsNight ?? 0,
     };
@@ -319,7 +323,7 @@ export function legsToRows(legs: LogbookLeg[], toIcao: (code: string) => string 
       rowIndex: i,
       input,
       warnings: !sim && ((dep && !d.known) || (arr && !a.known)) ? ["airport"] : undefined,
-      explicit: { total: l.totalMin, night: l.nightMin, ifr: l.ifrMin, pic: l.picMin, copilot: l.copilotMin, dual: l.dualMin, instructor: l.instructorMin, multiPilot: l.multiPilotMin, xc: l.xcMin },
+      explicit: { total: l.totalMin, night: l.nightMin, ifr: l.ifrMin, pic: l.picMin, picus: l.picusMin, copilot: l.copilotMin, dual: l.dualMin, instructor: l.instructorMin, multiPilot: l.multiPilotMin, xc: l.xcMin },
       errors,
     };
   });
