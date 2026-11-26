@@ -1,6 +1,6 @@
 import { getSyncStatus } from "../../src/syncStatus";
 import React, { useEffect, useState } from "react";
-import { Alert, Platform } from "react-native";
+import { Alert, Linking, Platform } from "react-native";
 import { router } from "expo-router";
 import Constants from "expo-constants";
 import { PILOT_FUNCTIONS, REGULATORS, frameworkOf, regulatorById, type IfrDefault, type Locale, type PilotFunction, type TimeDisplay } from "@cielo/core";
@@ -268,6 +268,11 @@ export default function More() {
         <Button kind="secondary" title={t("more.exportJson")} loading={busy === "json"} onPress={() => run("json", () => exportAllDataJson(store))} />
         <Button kind="danger" title={t("more.deleteAll")} loading={busy === "wipe"} onPress={confirmWipe} />
       </Card>
+
+      <MenuGroup title={t("more.g.follow")}>
+        <MenuRow icon={<Ionicons name="logo-linkedin" size={17} color="#fff" />} color="#0A66C2" label="LinkedIn" onPress={() => void Linking.openURL("https://www.linkedin.com/company/geardown/")} />
+        <MenuRow icon={<Ionicons name="logo-instagram" size={17} color="#fff" />} color="#E1306C" label="Instagram" onPress={() => void Linking.openURL("https://www.instagram.com/geardown_app/")} />
+      </MenuGroup>
 
       <Txt variant="small" style={{ textAlign: "center" }} color={c.muted}>
         Geardown · {t("more.version", { v: Constants.expoConfig?.version ?? "0.0.0" })}
