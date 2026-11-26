@@ -672,7 +672,8 @@
         "private": "Private flight",
         "training": "Training"
       },
-      "hideSim": "Hide simulator sessions"
+      "hideSim": "Hide simulator sessions",
+      "toTop": "Back to the top"
     },
     "form": {
       "newTitle": "New flight",

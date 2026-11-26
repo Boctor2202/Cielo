@@ -7,6 +7,7 @@ import { useAccess } from "@/lib/access";
 import { useAirports } from "@/lib/airports";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { BackToTop } from "@/components/app/BackToTop";
 import { PRIVATE_OPERATOR, TRAINING_OPERATOR, operatorIndex, sumFlights } from "@cielo/core";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Card, Empty, Overlay, PageTitle, useToast } from "@/components/app/ui";
@@ -379,6 +380,7 @@ export default function Logbook() {
         </Overlay>
       )}
       {toastNode}
+      <BackToTop label={t("toTop")} />
     </>
   );
 }
