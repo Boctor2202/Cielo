@@ -29,7 +29,7 @@ export const SITE = {
   },
   social: {
     instagram: "https://www.instagram.com/geardown_app/",
-    linkedin: "#",
+    linkedin: "https://www.linkedin.com/company/geardown/",
     youtube: "#",
     x: "#",
   },
