@@ -1,5 +1,6 @@
 "use client";
 
+import { OpeningPrompt } from "@/components/app/OpeningPrompt";
 import { AlertTriangle, ArrowRight, NotebookPen, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -75,6 +76,7 @@ export default function Dashboard() {
     return (
       <>
         <PageTitle title={name ? t("hello", { name }) : t("empty")} subtitle={t("today", { date: fd(today, { dateStyle: "full" }) })} />
+        <OpeningPrompt flights={flights} balances={balances ?? []} className="mb-4" />
         <Card>
           <Empty
             icon={<NotebookPen size={40} />}
@@ -108,6 +110,8 @@ export default function Dashboard() {
 
 
   return (
+    <>
+    <OpeningPrompt flights={flights} balances={balances} className="mb-4" />
     <OverviewWidgets
       pilot={pilot}
       flights={flights}
@@ -129,6 +133,7 @@ export default function Dashboard() {
         />
       }
     />
+    </>
   );
 }
 

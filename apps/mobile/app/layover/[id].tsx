@@ -5,7 +5,7 @@ import { Image } from "expo-image";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { Layover } from "@cielo/core";
-import { Button, Card, Chip, Field, Row, Screen, Txt } from "../../src/components/ui";
+import { Button, Card, Chip, Field, Row, Screen, Txt, tap } from "../../src/components/ui";
 import { DateField, isValidDate } from "../../src/components/DateField";
 import { lookupAirport } from "../../src/airports";
 import { API_URL, api, ApiError, fmtDistance, PLACE_CATEGORIES, type HotelHit, type Place, type PlaceCategory } from "../../src/api";
@@ -27,7 +27,7 @@ export default function LayoverRoute() {
 
 function LayoverScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t, layovers, put, remove, locale } = useApp();
+  const { t, layovers, put, remove, locale, session } = useApp();
   const c = useTheme();
   const l = layovers.find((x) => x.id === id);
   const airport = l ? lookupAirport(l.airportIcao) : undefined;
@@ -59,6 +59,38 @@ function LayoverScreen() {
       .then((d) => setPlaces({ state: "ok", data: d.places }))
       .catch((e) => setPlaces({ state: fail(e), data: [] }));
   }, [center, cat, locale]);
+
+  // recommendations of the Geardown members: a count from 2 on, and the pilot's own choice
+  const [recs, setRecs] = useState<{ counts: Record<string, number>; mine: Set<string> }>({ counts: {}, mine: new Set() });
+  const auth = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined;
+  useEffect(() => {
+    if (!places.data.length) return;
+    let alive = true;
+    fetch(`${API_URL}/api/escale/recs?ids=${places.data.map((p) => encodeURIComponent(p.id)).join(",")}`, { headers: { Accept: "application/json", ...auth } })
+      .then((r) => r.json() as Promise<{ counts?: Record<string, number>; mine?: string[] }>)
+      .then((d) => alive && setRecs({ counts: d.counts ?? {}, mine: new Set(d.mine ?? []) }))
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [places.data, session?.access_token]);
+  const recommend = async (id: string) => {
+    if (!auth) return;
+    tap();
+    const before = recs.mine;
+    const on = !before.has(id);
+    const mine = new Set(before);
+    if (on) mine.add(id);
+    else mine.delete(id);
+    setRecs((r) => ({ ...r, mine }));
+    const res = await fetch(`${API_URL}/api/escale/recs`, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json", ...auth }, body: JSON.stringify({ placeId: id, on }) }).catch(() => null);
+    const d = res?.ok ? ((await res.json()) as { count?: number }) : null;
+    if (d) setRecs((r) => ({ ...r, counts: { ...r.counts, [id]: d.count ?? 0 } }));
+    else setRecs((r) => ({ ...r, mine: before }));
+  };
+  // places recommended by members first, then Google's order
+  const ranked = useMemo(() => [...places.data].sort((a, b) => Number((recs.counts[b.id] ?? 0) >= 2) - Number((recs.counts[a.id] ?? 0) >= 2)), [places.data, recs.counts]);
 
 
   const searchHotels = (near: boolean) => {
@@ -149,8 +181,8 @@ function LayoverScreen() {
             {status(places.state)}
             {places.state === "ok" && places.data.length === 0 ? <Txt variant="muted">{t("lay.noResults")}</Txt> : null}
             {/* 8 at a time: each card loads one Google photo */}
-            {places.data.slice(0, shownCount).map((p, i) => (
-              <PlaceCard key={p.id} p={p} rank={i + 1} cat={cat} />
+            {ranked.slice(0, shownCount).map((p, i) => (
+              <PlaceCard key={p.id} p={p} rank={i + 1} cat={cat} recCount={recs.counts[p.id] ?? 0} recMine={recs.mine.has(p.id)} onRecommend={auth ? () => void recommend(p.id) : undefined} />
             ))}
             {places.data.length > shownCount ? <Button kind="secondary" small title={t("lay.more")} onPress={() => setShownCount((n) => n + 8)} /> : null}
             {places.data.length ? <Txt variant="small" style={{ textAlign: "center" }}>{t("lay.google")}</Txt> : null}
@@ -325,7 +357,7 @@ const CAT_LOOK: Record<PlaceCategory, { icon: React.ComponentProps<typeof Ionico
 };
 
 /** One place: its Google photo with the name over it, rank, rating, then the walk from the hotel; opens Google Maps. */
-function PlaceCard({ p, rank, cat }: { p: Place; rank: number; cat: PlaceCategory }) {
+function PlaceCard({ p, rank, cat, recCount, recMine, onRecommend }: { p: Place; rank: number; cat: PlaceCategory; recCount: number; recMine: boolean; onRecommend?: () => void }) {
   const { t } = useApp();
   const c = useTheme();
   const [failed, setFailed] = useState(false);
@@ -335,7 +367,7 @@ function PlaceCard({ p, rank, cat }: { p: Place; rank: number; cat: PlaceCategor
   return (
     <Pressable
       onPress={p.mapsUrl ? () => void Linking.openURL(p.mapsUrl!) : undefined}
-      style={({ pressed }) => ({ borderRadius: 18, overflow: "hidden", borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, opacity: pressed ? 0.9 : 1 })}
+      style={({ pressed }) => ({ borderRadius: 18, overflow: "hidden", borderWidth: 1, borderColor: recCount >= 2 ? "#22C55E99" : c.border, backgroundColor: c.surface, opacity: pressed ? 0.9 : 1 })}
     >
       <View style={{ height: 170, backgroundColor: look.color, alignItems: "center", justifyContent: "center" }}>
         {uri ? (
@@ -344,12 +376,30 @@ function PlaceCard({ p, rank, cat }: { p: Place; rank: number; cat: PlaceCategor
           <Ionicons name={look.icon} size={44} color="rgba(255,255,255,0.8)" />
         )}
         <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 12, paddingTop: 22, paddingBottom: 10, backgroundColor: "rgba(0,0,0,0.45)" }}>
-          <Txt numberOfLines={1} color="#fff" style={{ fontSize: 17, fontWeight: "800" }}>{p.name}</Txt>
+          {recCount >= 2 ? (
+            <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: "#22C55E", marginBottom: 4 }}>
+              <Ionicons name="thumbs-up" size={11} color="#0A1626" />
+              <Txt color="#0A1626" style={{ fontSize: 11, fontWeight: "800" }}>{t("lay.recBadge", { n: recCount })}</Txt>
+            </View>
+          ) : null}
+          <Txt numberOfLines={1} color="#fff" style={{ fontSize: 17, fontWeight: "800", marginRight: onRecommend ? 40 : 0 }}>{p.name}</Txt>
           {p.photo?.author && !failed ? <Txt numberOfLines={1} color="rgba(255,255,255,0.75)" style={{ fontSize: 10 }}>© {p.photo.author}</Txt> : null}
         </View>
         <View style={{ position: "absolute", top: 10, left: 10, minWidth: 28, height: 28, borderRadius: 14, paddingHorizontal: 6, alignItems: "center", justifyContent: "center", backgroundColor: rank <= 3 ? "#F5B301" : "rgba(0,0,0,0.55)" }}>
           <Txt mono color={rank <= 3 ? "#000" : "#fff"} style={{ fontSize: 13, fontWeight: "800" }}>{rank}</Txt>
         </View>
+        {onRecommend ? (
+          <Pressable
+            onPress={onRecommend}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityState={{ selected: recMine }}
+            accessibilityLabel={t(recMine ? "lay.recUndo" : "lay.recDo")}
+            style={{ position: "absolute", right: 10, bottom: 10, width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: recMine ? "#22C55E" : "rgba(0,0,0,0.55)" }}
+          >
+            <Ionicons name={recMine ? "thumbs-up" : "thumbs-up-outline"} size={16} color={recMine ? "#0A1626" : "#fff"} />
+          </Pressable>
+        ) : null}
         {p.rating ? (
           <View style={{ position: "absolute", top: 10, right: 10, flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 14, backgroundColor: "rgba(0,0,0,0.55)" }}>
             <Ionicons name="star" size={12} color="#F5B301" />

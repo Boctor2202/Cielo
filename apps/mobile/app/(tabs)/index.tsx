@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Roll } from "../../src/components/Roll";
+import { OpeningPrompt } from "../../src/components/OpeningPrompt";
 import { Pressable, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useIsFocused } from "expo-router";
@@ -461,6 +462,7 @@ export default function Dashboard() {
         </View>
 
         <AccessBanner />
+        <OpeningPrompt />
 
         {drafts.length ? (
           <Card onPress={() => router.navigate("/drafts")}>

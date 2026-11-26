@@ -1,5 +1,6 @@
 "use client";
 
+import { OpeningPrompt } from "@/components/app/OpeningPrompt";
 import { DateInput } from "@/components/app/DateInput";
 import { X, BookCopy, Building2, CalendarRange, Check, ListChecks, Clock, CloudFog, FileDown, MapPin, Moon, NotebookPen, Plane, PenLine, PlaneLanding, Plus, ScanSearch, ShieldCheck, Upload } from "lucide-react";
 import { SignManyModal } from "@/components/app/Signature";
@@ -35,6 +36,7 @@ export default function Logbook() {
   const access = useAccess();
   const [signMany, setSignMany] = useState(false);
   const flights = useFlights();
+  const balances = useTable("opening_balances");
   const d = useDuration();
   const fd = useFormatDate();
   const router = useRouter();
@@ -159,6 +161,7 @@ export default function Logbook() {
           </>
         }
       />
+      <OpeningPrompt flights={flights} balances={balances} className="mb-4" />
       <div className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_170px_160px_200px_auto]">
         <input className="input" type="search" placeholder={t("searchPlaceholder")} value={q} onChange={(e) => setQ(e.target.value)} />
         <select className="input" value={year} onChange={(e) => setYear(e.target.value)} aria-label={t("allYears")}>
