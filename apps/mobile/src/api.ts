@@ -34,6 +34,8 @@ export interface Place {
   openNow?: boolean;
   priceLevel?: number;
   mapsUrl?: string;
+  /** the place's first Google photo: its resource name (fetched on demand) and who took it */
+  photo?: { name: string; author?: string; authorUri?: string };
 }
 export interface HotelHit {
   id: string;

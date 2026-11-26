@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AirportWeather } from "../../src/components/Weather";
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, View } from "react-native";
+import { Image } from "expo-image";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { Layover } from "@cielo/core";
 import { Button, Card, Chip, Field, Row, Screen, Txt } from "../../src/components/ui";
 import { DateField, isValidDate } from "../../src/components/DateField";
 import { lookupAirport } from "../../src/airports";
-import { api, ApiError, fmtDistance, PLACE_CATEGORIES, type HotelHit, type Place, type PlaceCategory } from "../../src/api";
+import { API_URL, api, ApiError, fmtDistance, PLACE_CATEGORIES, type HotelHit, type Place, type PlaceCategory } from "../../src/api";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { ReadOnlyError, useApp } from "../../src/state";
 import { Requires } from "../../src/components/Access";
@@ -36,6 +37,7 @@ function LayoverScreen() {
   const [hits, setHits] = useState<Load<HotelHit[]>>({ state: "idle", data: [] });
   const [cat, setCat] = useState<PlaceCategory>("restaurants");
   const [places, setPlaces] = useState<Load<Place[]>>({ state: "idle", data: [] });
+  const [shownCount, setShownCount] = useState(8);
 
   // the saved hotel's position (only its Google place id is stored)
   useEffect(() => {
@@ -52,6 +54,7 @@ function LayoverScreen() {
   useEffect(() => {
     if (!center) return;
     setPlaces({ state: "loading", data: [] });
+    setShownCount(8);
     api<{ places: Place[] }>(`/api/escale/places?lat=${center.lat}&lng=${center.lng}&cat=${cat}&lang=${locale}`)
       .then((d) => setPlaces({ state: "ok", data: d.places }))
       .catch((e) => setPlaces({ state: fail(e), data: [] }));
@@ -145,25 +148,11 @@ function LayoverScreen() {
             </ScrollView>
             {status(places.state)}
             {places.state === "ok" && places.data.length === 0 ? <Txt variant="muted">{t("lay.noResults")}</Txt> : null}
-            {places.data.map((p, i) => (
-              <Card key={p.id} onPress={p.mapsUrl ? () => void Linking.openURL(p.mapsUrl!) : undefined}>
-                <Row gap={12}>
-                  <Txt mono style={{ width: 22, fontSize: 15 }} color={c.muted}>{i + 1}</Txt>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Txt style={{ fontWeight: "600" }} numberOfLines={1}>{p.name}</Txt>
-                    <Txt variant="small" numberOfLines={1}>
-                      {[fmtDistance(p.distanceM), p.openNow === undefined ? null : p.openNow ? t("lay.openNow") : t("lay.closedNow"), p.address].filter(Boolean).join(" · ")}
-                    </Txt>
-                  </View>
-                  {p.rating ? (
-                    <View style={{ alignItems: "flex-end" }}>
-                      <Txt mono style={{ fontSize: 16 }}>★ {p.rating.toFixed(1)}</Txt>
-                      <Txt variant="small">{t("lay.reviews", { n: p.reviews ?? 0 })}</Txt>
-                    </View>
-                  ) : null}
-                </Row>
-              </Card>
+            {/* 8 at a time: each card loads one Google photo */}
+            {places.data.slice(0, shownCount).map((p, i) => (
+              <PlaceCard key={p.id} p={p} rank={i + 1} cat={cat} />
             ))}
+            {places.data.length > shownCount ? <Button kind="secondary" small title={t("lay.more")} onPress={() => setShownCount((n) => n + 8)} /> : null}
             {places.data.length ? <Txt variant="small" style={{ textAlign: "center" }}>{t("lay.google")}</Txt> : null}
         </>
 
@@ -320,3 +309,59 @@ function LayoverDetails({ l }: { l: Layover }) {
 }
 
 
+
+const CAT_LOOK: Record<PlaceCategory, { icon: React.ComponentProps<typeof Ionicons>["name"]; color: string }> = {
+  restaurants: { icon: "restaurant", color: "#C2410C" },
+  bars: { icon: "wine", color: "#7E22CE" },
+  nightlife: { icon: "musical-notes", color: "#4338CA" },
+  cafes: { icon: "cafe", color: "#92400E" },
+  beaches: { icon: "umbrella", color: "#0369A1" },
+  culture: { icon: "library", color: "#334155" },
+  shows: { icon: "ticket", color: "#9D174D" },
+  cinema: { icon: "film", color: "#1E293B" },
+  parks: { icon: "leaf", color: "#15803D" },
+  wellness: { icon: "sparkles", color: "#0F766E" },
+  shopping: { icon: "bag-handle", color: "#B91C1C" },
+};
+
+/** One place: its Google photo with the name over it, rank, rating, then the walk from the hotel; opens Google Maps. */
+function PlaceCard({ p, rank, cat }: { p: Place; rank: number; cat: PlaceCategory }) {
+  const { t } = useApp();
+  const c = useTheme();
+  const [failed, setFailed] = useState(false);
+  const look = CAT_LOOK[cat];
+  const uri = p.photo && !failed ? `${API_URL}/api/escale/photo?name=${encodeURIComponent(p.photo.name)}` : null;
+  const meta = [p.type, p.priceLevel ? "€".repeat(p.priceLevel) : null, fmtDistance(p.distanceM), p.openNow === undefined ? null : p.openNow ? t("lay.openNow") : t("lay.closedNow")].filter(Boolean).join(" · ");
+  return (
+    <Pressable
+      onPress={p.mapsUrl ? () => void Linking.openURL(p.mapsUrl!) : undefined}
+      style={({ pressed }) => ({ borderRadius: 18, overflow: "hidden", borderWidth: 1, borderColor: c.border, backgroundColor: c.surface, opacity: pressed ? 0.9 : 1 })}
+    >
+      <View style={{ height: 170, backgroundColor: look.color, alignItems: "center", justifyContent: "center" }}>
+        {uri ? (
+          <Image source={{ uri }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" transition={200} onError={() => setFailed(true)} />
+        ) : (
+          <Ionicons name={look.icon} size={44} color="rgba(255,255,255,0.8)" />
+        )}
+        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 12, paddingTop: 22, paddingBottom: 10, backgroundColor: "rgba(0,0,0,0.45)" }}>
+          <Txt numberOfLines={1} color="#fff" style={{ fontSize: 17, fontWeight: "800" }}>{p.name}</Txt>
+          {p.photo?.author && !failed ? <Txt numberOfLines={1} color="rgba(255,255,255,0.75)" style={{ fontSize: 10 }}>© {p.photo.author}</Txt> : null}
+        </View>
+        <View style={{ position: "absolute", top: 10, left: 10, minWidth: 28, height: 28, borderRadius: 14, paddingHorizontal: 6, alignItems: "center", justifyContent: "center", backgroundColor: rank <= 3 ? "#F5B301" : "rgba(0,0,0,0.55)" }}>
+          <Txt mono color={rank <= 3 ? "#000" : "#fff"} style={{ fontSize: 13, fontWeight: "800" }}>{rank}</Txt>
+        </View>
+        {p.rating ? (
+          <View style={{ position: "absolute", top: 10, right: 10, flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 14, backgroundColor: "rgba(0,0,0,0.55)" }}>
+            <Ionicons name="star" size={12} color="#F5B301" />
+            <Txt mono color="#fff" style={{ fontSize: 13, fontWeight: "700" }}>{p.rating.toFixed(1)}</Txt>
+            <Txt color="rgba(255,255,255,0.75)" style={{ fontSize: 11 }}>({p.reviews ?? 0})</Txt>
+          </View>
+        ) : null}
+      </View>
+      <Row style={{ paddingHorizontal: 12, paddingVertical: 10, alignItems: "center" }} gap={8}>
+        <Txt variant="small" numberOfLines={1} style={{ flex: 1 }}>{meta}</Txt>
+        {p.mapsUrl ? <Ionicons name="open-outline" size={16} color={c.accent} /> : null}
+      </Row>
+    </Pressable>
+  );
+}
