@@ -1522,6 +1522,39 @@
         "mepRule": "Revalidation: proficiency check between {from} and {to}, and during the validity at least 10 route sectors as pilot of the class, or 1 with an examiner (FCL.740.A(a)).",
         "sectors": "Route sectors during the validity",
         "source": "EASA rules: FCL.060(b)(1), FCL.740(a)(1) and FCL.740.A, Easy Access Rules for Aircrew, read on 25 November 2026. For information: your authority's rules prevail."
+      },
+      "scan": {
+        "button": "Read a document",
+        "title": "Read a licence or a medical certificate",
+        "intro": "Take a photo of your licence (the card or the pages with your ratings) or of your medical certificate, or choose its PDF. Geardown reads it and fills the entries; you check each one before it is saved.",
+        "privacyTitle": "What happens to your document",
+        "privacy": "The pages are sent to Anthropic (Claude, United States), which reads them for Geardown and does not use them to train its models; Anthropic deletes them within 30 days. Geardown keeps neither the photo nor the PDF: only the entries you save (title, number, dates and, for a medical certificate, its class and limitation codes). Your address, date of birth and any other health information are not kept.",
+        "consent": "I agree to my document, including the health data of a medical certificate, being sent to Anthropic to be read. I can withdraw this consent at any time by unticking this box.",
+        "needConsent": "Tick the box to agree before sending your document.",
+        "drop": "Drop photos (up to 4) or a PDF, or click to choose",
+        "reading": "Reading your document…",
+        "none": "No licence or medical certificate entry was found. Try a sharper photo, flat and well lit.",
+        "check": "Check each entry: tick the ones to save, correct a title or a date if needed. Changed values are highlighted.",
+        "again": "Read another document",
+        "save": "{count, plural, =0 {Nothing to save} one {Save 1 entry} other {Save # entries}}",
+        "action": {
+          "new": "New",
+          "update": "Update",
+          "same": "Unchanged"
+        },
+        "f": {
+          "issuedOn": "Issued / exam",
+          "validUntil": "Valid until",
+          "lastCheckOn": "Last check"
+        },
+        "err": {
+          "plan": "Reading a document is part of the Max plan.",
+          "rate_limited": "Too many documents in an hour. Try again later.",
+          "refused": "This document could not be read.",
+          "unreadable": "This document could not be read. Try a sharper photo.",
+          "bad_request": "Choose photos (JPEG, PNG) or a PDF of 8 MB at most.",
+          "failed": "Reading failed. Try again in a moment."
+        }
       }
     },
     "stats": {

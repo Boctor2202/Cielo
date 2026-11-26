@@ -7,7 +7,7 @@ type Key = "notice" | "privacy" | "terms" | "cookies";
 const c = SITE.company;
 const P = SITE.pricing;
 const eur = (n: number | undefined, locale: "fr" | "en") => (n === undefined ? "" : locale === "fr" ? `${n.toFixed(2).replace(".", ",")} €` : `€${n.toFixed(2)}`);
-export const LEGAL_UPDATED = "2026-11-21";
+export const LEGAL_UPDATED = "2026-11-26";
 
 export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
   fr: {
@@ -24,9 +24,17 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
       title: "Politique de confidentialité (RGPD)",
       sections: [
         { h: "Responsable du traitement", p: [`${c.legalName}, ${c.address}. Contact : ${SITE.contactEmail}.`] },
-        { h: "Données traitées", p: ["Données de compte : adresse e-mail, nom, mode de connexion (e-mail, Apple, Google).", "Données de carnet de vol : vols, appareils, licences, aptitude médicale (date de validité), roster, escales, signatures, documents joints que vous ajoutez.", "Données techniques : journaux de connexion et de synchronisation, nécessaires à la sécurité du service."] },
-        { h: "Finalités et bases légales", p: ["Fournir le carnet de vol et sa synchronisation (exécution du contrat).", "Envoyer les alertes d'échéance que vous avez activées (exécution du contrat).", "Facturer les abonnements (obligation légale et exécution du contrat).", "Sécuriser le service (intérêt légitime)."] },
-        { h: "Données de santé", p: ["Geardown n'enregistre de votre certificat médical que sa classe et ses dates. N'ajoutez pas de document médical détaillé : si vous le faites, il est stocké chiffré et n'est accessible qu'à vous."] },
+        { h: "Données traitées", p: ["Données de compte : adresse e-mail, nom, mode de connexion (e-mail, Apple, Google).", "Données de carnet de vol : vols, appareils, licences et qualifications, aptitude médicale (classe, dates, codes de limitation), roster, escales, signatures, documents joints que vous ajoutez.", "Données techniques : journaux de connexion et de synchronisation, nécessaires à la sécurité du service."] },
+        { h: "Finalités et bases légales", p: ["Fournir le carnet de vol et sa synchronisation (exécution du contrat).", "Envoyer les alertes d'échéance que vous avez activées (exécution du contrat).", "Facturer les abonnements (obligation légale et exécution du contrat).", "Sécuriser le service (intérêt légitime).", "Lire, à votre demande, une licence ou un certificat médical pour remplir vos documents (votre consentement ; pour les données de santé, votre consentement explicite, article 9.2.a du RGPD)."] },
+        {
+          h: "Données de santé",
+          p: [
+            "De votre certificat médical, Geardown n'enregistre que sa classe, ses dates, l'AeMC ou le médecin examinateur et, si vous les indiquez, ses codes de limitation (VDL, VML…). N'ajoutez pas de document médical détaillé : si vous le faites, il est stocké de façon privée et n'est accessible qu'à vous.",
+            "Lecture d'un document (offre Max) : si vous choisissez « Lire un document », la photo ou le PDF de votre licence ou de votre certificat médical est envoyé à Anthropic, qui le lit pour Geardown. Cet envoi n'a lieu qu'avec votre consentement explicite, donné en cochant une case avant l'envoi. Geardown ne conserve ni la photo ni le PDF, ni aucune autre donnée qu'il contient (adresse, date de naissance, autres informations de santé) : seulement les fiches que vous vérifiez puis enregistrez.",
+            "Anthropic n'utilise pas ces contenus pour entraîner ses modèles et les supprime dans les 30 jours, sauf s'il doit les conserver plus longtemps pour faire respecter sa politique d'utilisation ou pour se conformer à la loi.",
+            "Vous pouvez retirer votre consentement à tout moment en décochant la case : aucun document n'est plus envoyé. Le retrait ne remet pas en cause les lectures déjà faites. Les fiches enregistrées se modifient et se suppriment depuis la page Documents.",
+          ],
+        },
         {
           h: "Destinataires et sous-traitants",
           p: [
@@ -34,12 +42,12 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
             "Site et fonctions serveur : Vercel (États-Unis).",
             "Paiement : Stripe (abonnements web) ; Apple et RevenueCat (abonnements dans l'app iPhone).",
             "E-mails (connexion, alertes d'échéance, rappels de fin d'essai) : Resend (États-Unis).",
-            "Lecture automatique des documents que vous importez (photos de carnet, relevés PDF) et rédaction de lettres de motivation, à votre demande : Anthropic (États-Unis). Ces contenus ne servent pas à entraîner ses modèles.",
+            "Lecture automatique des documents que vous importez (photos de carnet, relevés PDF, licence, certificat médical) et rédaction de lettres de motivation, à votre demande : Anthropic (États-Unis), comme sous-traitant. Ces contenus ne servent pas à entraîner ses modèles et sont supprimés par Anthropic dans les 30 jours (sauf contrôle du respect de sa politique d'utilisation ou obligation légale).",
             "Remplissage d'un vol depuis l'ADS-B : seuls l'immatriculation et la date sont envoyés à FlightAware.",
             "Aucune donnée n'est vendue ni utilisée à des fins publicitaires.",
           ],
         },
-        { h: "Transferts hors de l'Union européenne", p: ["Le Royaume-Uni bénéficie d'une décision d'adéquation de la Commission européenne. Les transferts vers les États-Unis sont encadrés par les garanties prévues par le RGPD (Data Privacy Framework ou clauses contractuelles types de la Commission européenne)."] },
+        { h: "Transferts hors de l'Union européenne", p: ["Le Royaume-Uni bénéficie d'une décision d'adéquation de la Commission européenne. Les transferts vers les États-Unis sont encadrés par les garanties prévues par le RGPD (Data Privacy Framework ou clauses contractuelles types de la Commission européenne). Pour Anthropic, ce sont les clauses contractuelles types, intégrées à son avenant relatif au traitement des données."] },
         { h: "Durée de conservation", p: ["Vos données sont conservées tant que votre compte est actif. Elles sont supprimées dans les 30 jours suivant la suppression du compte, sauf obligations légales (facturation : 10 ans).", "Pour qu'un même utilisateur ne bénéficie qu'une fois de l'essai gratuit, nous conservons une empreinte chiffrée et irréversible de l'adresse e-mail (et non l'adresse elle-même) avec la date de début de l'essai, y compris après la suppression du compte, pendant 3 ans au plus. Base légale : notre intérêt légitime à prévenir les abus de l'offre d'essai."] },
         { h: "Vos droits", p: ["Accès, rectification, effacement, limitation, opposition et portabilité. Depuis Paramètres › Mes données, vous pouvez télécharger l'intégralité de vos données (JSON) et supprimer votre compte. Vous pouvez aussi nous écrire et saisir la CNIL (cnil.fr)."] },
         { h: "Sécurité", p: ["Chiffrement en transit (TLS), cloisonnement des données par compte (Row Level Security), stockage privé des documents, sauvegardes automatiques."] },
@@ -83,9 +91,17 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
       title: "Privacy policy (GDPR)",
       sections: [
         { h: "Controller", p: [`${c.legalName}, ${c.address}. Contact: ${SITE.contactEmail}.`] },
-        { h: "Data processed", p: ["Account data: e-mail address, name, sign-in method (e-mail, Apple, Google).", "Logbook data: flights, aircraft, licences, medical certificate (validity dates), roster, layovers, signatures, attachments you add.", "Technical data: sign-in and sync logs required for service security."] },
-        { h: "Purposes and legal bases", p: ["Provide the logbook and its sync (contract).", "Send the expiry alerts you enabled (contract).", "Bill subscriptions (legal obligation and contract).", "Secure the service (legitimate interest)."] },
-        { h: "Health data", p: ["Geardown only stores your medical certificate class and dates. Do not upload detailed medical documents: if you do, they are stored encrypted and accessible to you only."] },
+        { h: "Data processed", p: ["Account data: e-mail address, name, sign-in method (e-mail, Apple, Google).", "Logbook data: flights, aircraft, licences and ratings, medical certificate (class, dates, limitation codes), roster, layovers, signatures, attachments you add.", "Technical data: sign-in and sync logs required for service security."] },
+        { h: "Purposes and legal bases", p: ["Provide the logbook and its sync (contract).", "Send the expiry alerts you enabled (contract).", "Bill subscriptions (legal obligation and contract).", "Secure the service (legitimate interest).", "Read, at your request, a licence or a medical certificate to fill in your documents (your consent; for health data, your explicit consent, GDPR article 9(2)(a))."] },
+        {
+          h: "Health data",
+          p: [
+            "From your medical certificate, Geardown only stores its class, its dates, the AeMC or aero-medical examiner and, if you enter them, its limitation codes (VDL, VML…). Do not upload detailed medical documents: if you do, they are stored privately and accessible to you only.",
+            "Reading a document (Max plan): if you choose \"Read a document\", the photo or PDF of your licence or medical certificate is sent to Anthropic, which reads it for Geardown. This only happens with your explicit consent, given by ticking a box before sending. Geardown keeps neither the photo nor the PDF, nor any other data it contains (address, date of birth, other health information): only the entries you check and then save.",
+            "Anthropic does not use this content to train its models and deletes it within 30 days, unless it must keep it longer to enforce its usage policy or to comply with the law.",
+            "You can withdraw your consent at any time by unticking the box: no document is sent any more. Withdrawal does not affect readings already made. Saved entries can be edited and deleted from the Documents page.",
+          ],
+        },
         {
           h: "Recipients and processors",
           p: [
@@ -93,12 +109,12 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
             "Website and server functions: Vercel (United States).",
             "Payment: Stripe (web subscriptions); Apple and RevenueCat (in-app subscriptions on iPhone).",
             "E-mail (sign-in, expiry alerts, trial reminders): Resend (United States).",
-            "Automatic reading of documents you import (logbook photos, PDF statements) and cover letters written at your request: Anthropic (United States). This content is not used to train its models.",
+            "Automatic reading of documents you import (logbook photos, PDF statements, licence, medical certificate) and cover letters written at your request: Anthropic (United States), as a processor. This content is not used to train its models and is deleted by Anthropic within 30 days (except to enforce its usage policy or to comply with the law).",
             "Filling a flight from ADS-B: only the registration and date are sent to FlightAware.",
             "No data is sold or used for advertising.",
           ],
         },
-        { h: "Transfers outside the European Union", p: ["The United Kingdom benefits from a European Commission adequacy decision. Transfers to the United States rely on the safeguards provided by the GDPR (Data Privacy Framework or the European Commission's standard contractual clauses)."] },
+        { h: "Transfers outside the European Union", p: ["The United Kingdom benefits from a European Commission adequacy decision. Transfers to the United States rely on the safeguards provided by the GDPR (Data Privacy Framework or the European Commission's standard contractual clauses). For Anthropic, these are the standard contractual clauses included in its data processing addendum."] },
         { h: "Retention", p: ["Data is kept while your account is active and deleted within 30 days of account deletion, except legal obligations (invoices: 10 years).", "So that the free trial is given only once per person, we keep an irreversible encrypted fingerprint of the e-mail address (not the address itself) with the date the trial started, including after the account is deleted, for at most 3 years. Legal basis: our legitimate interest in preventing abuse of the trial offer."] },
         { h: "Your rights", p: ["Access, rectification, erasure, restriction, objection and portability. From Settings › My data you can download all your data (JSON) and delete your account. You can also contact us and lodge a complaint with your supervisory authority."] },
         { h: "Security", p: ["Encryption in transit (TLS), per-account data isolation (Row Level Security), private document storage, automatic backups."] },

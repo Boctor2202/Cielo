@@ -7,6 +7,7 @@ export * from "./flight";
 export * from "./totals";
 export * from "./recency";
 export * from "./licenses";
+export * from "./documentScan";
 export * from "./audit";
 export * from "./ftl";
 export * from "./csv";
