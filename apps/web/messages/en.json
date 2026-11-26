@@ -960,7 +960,7 @@
         "cancel": "Cancel the import",
         "fix": "Fix the columns",
         "confirm": "Confirm and import ({count, plural, one {# flight} other {# flights}})",
-        "confirmFills": "Add the takeoffs and landings to {count, plural, one {# flight} other {# flights}} already logged",
+        "confirmFills": "Update {count, plural, one {# flight} other {# flights}} already logged (actual times, aircraft, takeoffs and landings)",
         "timesTitle": "Times to check",
         "timesText": "Rows {rows}: the departure and arrival times do not match the total time written. Geardown keeps the written total; check the times (a misread or miswritten hour) before or after importing.",
         "airportsTitle": "Airports to check",

@@ -200,8 +200,29 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     setSource(d.reader === "ai" ? d.source ?? "?" : d.reader === "report" ? "report" : null);
     setPdfState(d.legs.length ? null : "none");
   }
-  const onPdf = async (file: File) => {
-    // read here first: an airline statement or a LogTen logbook needs no upload, whatever its size
+  // one PDF: read here first (an airline statement or a LogTen logbook needs no upload, whatever its size), else on
+  // the server; a request is limited to 4.5 MB, so a larger PDF is uploaded to the pilot's private folder first
+  async function readPdf(file: File): Promise<Awaited<ReturnType<typeof importAny>>> {
+    try {
+      const { pdfText } = await import("@/lib/pdfPages");
+      const pages = await pdfText(new Uint8Array(await file.arrayBuffer()), 1500);
+      const ep5 = parseAirFranceEp5(pages);
+      if (ep5) return { reader: "airfrance-ep5", role: ep5.role ?? null, legs: ep5Legs(ep5) };
+      const logten = parseLogTenEasa(pages);
+      if (logten) return { reader: "logten-pdf", legs: logten.legs };
+    } catch {
+      // a PDF the browser cannot read: the server tries
+    }
+    const pdf = await b64(file);
+    if (pdf.length > 4_200_000) {
+      const path = await uploadImportPdf(file);
+      if (!path) return { error: "too_big" };
+      return importAny({ kind: "pdf", storagePath: path, fileName: file.name, share });
+    }
+    return importAny({ kind: "pdf", pdf, fileName: file.name, share });
+  }
+  // one or several PDFs (a year of monthly statements): read one after the other, their flights reviewed together
+  const onPdfs = async (files: File[]) => {
     fresh();
     setRows(null);
     setMapping(null);
@@ -209,29 +230,32 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     setSource(null);
     setPdfState("reading");
     try {
-      const { pdfText } = await import("@/lib/pdfPages");
-      const pages = await pdfText(new Uint8Array(await file.arrayBuffer()), 1500);
-      const ep5 = parseAirFranceEp5(pages);
-      if (ep5) return showLegs({ reader: "airfrance-ep5", role: ep5.role ?? null, legs: ep5Legs(ep5) });
-      const logten = parseLogTenEasa(pages);
-      if (logten) return showLegs({ reader: "logten-pdf", legs: logten.legs });
-    } catch {
-      // a PDF the browser cannot read: the server tries
+      const all: Awaited<ReturnType<typeof importAny>>[] = [];
+      for (const f of files) {
+        const d = await readPdf(f);
+        if (d.error) {
+          // a single file's error is the answer; among several, the others are still shown
+          if (files.length === 1) return setPdfState(d.error);
+          continue;
+        }
+        all.push(d);
+      }
+      if (!all.length) return setPdfState("none");
+      const first = all[0]!;
+      const sameReader = all.every((d) => d.reader === first.reader);
+      showLegs({ ...first, reader: sameReader ? first.reader : undefined, role: all.find((d) => d.role)?.role ?? null, legs: all.flatMap((d) => d.legs ?? []) });
+    } catch (e) {
+      setPdfState((e as Error).message || "error");
     }
-    const pdf = await b64(file);
-    // a request is limited to 4.5 MB: a larger PDF is uploaded to the pilot's private folder, read once, deleted
-    if (pdf.length > 4_200_000) {
-      const path = await uploadImportPdf(file);
-      if (!path) return setPdfState("too_big");
-      return fromServer({ kind: "pdf", storagePath: path, fileName: file.name });
-    }
-    return fromServer({ kind: "pdf", pdf, fileName: file.name });
   };
+  const onPdf = (file: File) => onPdfs([file]);
 
   async function onFiles(files: File[]) {
     try {
       const images = files.filter((f) => f.type.startsWith("image/"));
       if (images.length) return await fromServer({ kind: "images", images: await Promise.all(images.slice(0, 12).map(shrinkImage)), fileName: images[0]!.name });
+      const pdfs = files.filter((f) => /\.pdf$/i.test(f.name) || f.type === "application/pdf");
+      if (pdfs.length > 1) return await onPdfs(pdfs.slice(0, 24));
       return await onFile(files[0]!);
     } catch (e) {
       setRows(null);

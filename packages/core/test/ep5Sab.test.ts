@@ -85,3 +85,22 @@ describe("HUD widget on the Overview", () => {
     expect(hudSummary([f], "2026-11-24")).toEqual({ takeoffs: 1, landings: 1, takeoffs90: 1, landings90: 1 });
   });
 });
+
+describe("EP5 before August 2025", () => {
+  it("reads its column order, decimal commas and day / night split", async () => {
+    const { parseAirFranceEp5, ep5Legs } = await import("../src");
+    const row = (y: number, cells: string[]) => cells.map((s, i) => ({ x: 40 + i * 30, y, s }));
+    const page = [
+      ...row(800, ["CARNET DE VOL - EP 5", "MOIS :", "JANVIER", "2025"]),
+      ...row(780, ["OFFICIER", "PILOTE"]),
+      ...row(500, ["83,73", "U-223", "HZUM", "0", "CDG", "04", "11,73", "HEL", "04", "14,68", "JND", "2,95", "2,28", "0,67"]),
+      ...row(480, ["0,85", "U-223", "HPNI", "0", "AMS", "29", "12,95", "CDG", "29", "14,00", "JPD", "1,05", "1,05", "0,00"]),
+    ];
+    const r = parseAirFranceEp5([page])!;
+    expect(r.role).toBe("OPL");
+    const legs = ep5Legs(r);
+    expect(legs[0]).toMatchObject({ date: "2025-01-04", dep: "CDG", arr: "HEL", out: "11:44", in: "14:41", totalMin: 177, nightMin: 40, registration: "F-HZUM", aircraftType: "BCS3", takeoffs: 0, landings: 0 });
+    // P: takeoff and landing as PICUS
+    expect(legs[1]).toMatchObject({ takeoffs: 1, landings: 1, function: "PICUS", hudLandings: 0 });
+  });
+});

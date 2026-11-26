@@ -136,21 +136,37 @@ export default function ImportScreen() {
 
   const pickFile = async () => {
     tap();
-    const res = await DocumentPicker.getDocumentAsync({ type: ["application/pdf", "text/csv", "text/comma-separated-values", "text/plain", "*/*"], copyToCacheDirectory: true });
-    const a = res.canceled ? undefined : res.assets?.[0];
+    // several PDFs at once (a year of monthly statements); any other file one at a time
+    const res = await DocumentPicker.getDocumentAsync({ type: ["application/pdf", "text/csv", "text/comma-separated-values", "text/plain", "*/*"], copyToCacheDirectory: true, multiple: true });
+    const assets = res.canceled ? [] : (res.assets ?? []);
+    const a = assets[0];
     if (!a) return;
+    const isPdf = (x: { name: string; mimeType?: string | null }) => /\.pdf$/i.test(x.name) || x.mimeType === "application/pdf";
     setBusy("file");
     try {
-      if (/\.pdf$/i.test(a.name) || a.mimeType === "application/pdf") {
-        const file = new File(a.uri);
-        // a request is limited to 4.5 MB: a larger PDF (a LogTen logbook of a whole career) is uploaded to the pilot's
-        // private folder, read once on the server and deleted
-        const big = (file.size ?? 0) > BATCH_BYTES;
-        const path = big ? await uploadImportPdf(await file.arrayBuffer()) : null;
-        if (big && !path) return fail("too_big");
-        const d = path ? await call({ kind: "pdf", storagePath: path, fileName: a.name }) : await call({ kind: "pdf", pdf: await file.base64(), fileName: a.name });
-        if (d.error || !d.legs) return fail(d.error);
-        return show(d.legs, d.role, d.reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : d.reader === "logten-pdf" ? "LogTen" : d.source ?? "ai");
+      const pdfs = assets.filter(isPdf).slice(0, 24);
+      if (pdfs.length) {
+        const all: Result[] = [];
+        for (const p of pdfs) {
+          const file = new File(p.uri);
+          // a request is limited to 4.5 MB: a larger PDF (a LogTen logbook of a whole career) is uploaded to the
+          // pilot's private folder, read once on the server and deleted
+          const big = (file.size ?? 0) > BATCH_BYTES;
+          const path = big ? await uploadImportPdf(await file.arrayBuffer()) : null;
+          if (big && !path) {
+            if (pdfs.length === 1) return fail("too_big");
+            continue;
+          }
+          const d = path ? await call({ kind: "pdf", storagePath: path, fileName: p.name }) : await call({ kind: "pdf", pdf: await file.base64(), fileName: p.name });
+          if (d.error || !d.legs) {
+            if (pdfs.length === 1) return fail(d.error);
+            continue;
+          }
+          all.push(d);
+        }
+        if (!all.length) return fail("error");
+        const reader = all.every((d) => d.reader === all[0]!.reader) ? all[0]!.reader : undefined;
+        return show(all.flatMap((d) => d.legs ?? []), all.find((d) => d.role)?.role ?? null, reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : reader === "logten-pdf" ? "LogTen" : all[0]!.source ?? "ai");
       }
       // Excel 97-2003 (.xls) cannot be read: ask for .xlsx or CSV
       if (/\.xls$/i.test(a.name) || a.mimeType === "application/vnd.ms-excel") return fail("xls");
