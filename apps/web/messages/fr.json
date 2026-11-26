@@ -45,22 +45,22 @@
   },
   "features": {
     "title": "Tout ce qu'un carnet de vol devrait faire",
-    "subtitle": "Dix outils, une seule source de vérité pour votre expérience aéronautique.",
+    "subtitle": "Douze outils, une seule source de vérité pour votre expérience aéronautique.",
     "items": {
       "logbook": {
         "title": "Carnet de vol et exports au format des autorités",
         "text": "Vos vols mois par mois avec leurs totaux, filtrés par année, type ou exploitant. Saisissez l'immatriculation : Geardown retrouve les aéroports et les heures grâce aux signaux ADS-B. Export PDF aux formats EASA, FAA et CASA, plus CSV et Excel.",
         "points": [
           "Toutes les colonnes de l'AMC1 FCL.050, temps de nuit au crépuscule civil",
-          "SE / ME / multipilote déduits de l'avion",
-          "Report des totaux de votre carnet papier"
+          "SE / ME / multipilote déduits de l'avion, décollages et atterrissages HUD",
+          "Report des totaux de vos anciens carnets, proposé dès l'inscription"
         ]
       },
       "import": {
         "title": "Import de n'importe quel carnet",
-        "text": "Fichiers CSV ou Excel, exports d'autres applications, relevés PDF de compagnie, roster, e-mail de fin de vol collé tel quel ou photos de vos pages papier. Rien n'est enregistré avant que vous ayez vérifié vos totaux.",
+        "text": "Fichiers CSV ou Excel, exports d'autres applications, relevés de compagnie (dont les EP4 et EP5 Air France), PDF EASA de LogTen, roster, e-mail de fin de vol collé tel quel ou photos de vos pages papier. Plusieurs PDF d'un coup. Rien n'est enregistré avant que vous ayez vérifié vos totaux.",
         "points": [
-          "Détection automatique des colonnes, correction avant import",
+          "Relevés Air France et PDF LogTen lus sans IA, contrôlés sur leurs propres totaux",
           "Écran « Vérifiez vos totaux » avant d'enregistrer",
           "Un import se défait sans toucher au reste du carnet"
         ]
@@ -76,11 +76,11 @@
       },
       "licenses": {
         "title": "Licences, médical, qualifications",
-        "text": "Licences, aptitude médicale, SEP, MEP, TR, IR, FI, LPE… Alertes à 90, 30 et 7 jours avant chaque échéance, par notification et e-mail.",
+        "text": "Licences, aptitude médicale, SEP, MEP, TR, IR, FI, LPE… Une photo de votre licence ou de votre certificat médical suffit pour remplir les fiches (offre Max), que vous vérifiez avant d'enregistrer. Alertes à 90, 30 et 7 jours avant chaque échéance, par notification et e-mail.",
         "points": [
-          "Expérience récente FCL.060 calculée",
-          "Scans de vos documents dans un espace privé",
-          "Seuils d'alerte personnalisables"
+          "Expérience récente FCL.060, prorogation SEP par l'expérience et suivi MEP (FCL.740.A)",
+          "Récence HUD : 3 décollages et 3 atterrissages sur 90 jours",
+          "Lecture d'une licence ou d'un certificat médical en photo, avec votre consentement"
         ]
       },
       "ftl": {
@@ -135,6 +135,24 @@
           "Heures par catégorie et par type, toujours à jour",
           "Contrôle avant envoi pour les logiciels de tri (ATS), sans garantie de résultat",
           "Export PDF, texte et JSON Resume, en français ou en anglais"
+        ]
+      },
+      "roster": {
+        "title": "Planning synchronisé avec votre calendrier",
+        "text": "Collez le lien de votre calendrier (iCloud, Google, Outlook ou portail équipage) : vos services se mettent à jour tout seuls, à l'ouverture de l'application et toutes les heures. Une fois effectués, vos vols vous sont proposés pour le carnet, déjà remplis.",
+        "points": [
+          "Vols, réserves, repos, simulateurs et mises en place reconnus",
+          "Doublons fusionnés, même quand le portail change ses identifiants",
+          "Import d'un planning en PDF ou d'un fichier .ics"
+        ]
+      },
+      "layovers": {
+        "title": "Escales",
+        "text": "Pour chaque escale : météo METAR et TAF, heure locale, hôtel, contacts et les meilleures adresses autour, avec leur photo et le temps à pied depuis l'hôtel. Les escales se créent toutes seules depuis votre planning.",
+        "points": [
+          "Restaurants, bars, plages, culture… classés par note ou par distance",
+          "Adresses recommandées par les pilotes Geardown, à partir de 2 recommandations",
+          "Piste favorable au vent estimée depuis le METAR"
         ]
       }
     }
