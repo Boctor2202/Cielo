@@ -3128,12 +3128,12 @@
         "d": "CV, relevé d'heures, licences et pièces jointes dans un seul PDF."
       },
       "roster": {
-        "t": "Roster importé",
-        "d": "Votre planning devient vos vols et vos escales, sans ressaisie."
+        "t": "Planning synchronisé avec votre calendrier",
+        "d": "Abonnez-vous au lien de votre calendrier (iCloud, Google, Outlook, portail équipage) : les services se mettent à jour seuls, les étapes effectuées deviennent des vols."
       },
       "layovers": {
         "t": "Escales",
-        "d": "Hôtel, contacts et les meilleures adresses autour, avec une photo de la ville."
+        "d": "Hôtel, contacts et les meilleures adresses autour, chacune avec sa photo et le temps à pied depuis l'hôtel."
       },
       "radar": {
         "t": "Radar et traces ADS-B",
@@ -3143,7 +3143,15 @@
         "t": "Badges et paliers",
         "d": "Vos premières fois et vos paliers d'heures, à célébrer et à partager."
       },
-      "lead": "Les détails qui vous font gagner une soirée avant un contrôle ou un entretien."
+      "lead": "Les détails qui vous font gagner une soirée avant un contrôle ou un entretien.",
+      "imports": {
+        "t": "Relevés et carnets lus sans IA",
+        "d": "EP4 et EP5 Air France (tous formats), PDF EASA de LogTen, CSV et Excel : plusieurs fichiers d'un coup, vérifiés sur leurs propres totaux."
+      },
+      "ratings": {
+        "t": "Récence, SEP / MEP et HUD",
+        "d": "3 décollages et atterrissages en 90 jours, prorogation des qualifications de classe par l'expérience, récence HUD pour ceux qui volent avec."
+      }
     },
     "mobile": {
       "label": "Sur iPhone",
@@ -3164,6 +3172,30 @@
       "title": "Une immatriculation, tout le vol.",
       "text": "Tapez l'immatriculation : Geardown retrouve le vol dans les données ADS-B, remplit les aéroports et les heures bloc, et l'ajoute à vos totaux.",
       "video": "Démo : un vol rempli depuis les données ADS-B et enregistré dans le carnet"
+    },
+    "showcase": {
+      "title": "Le même carnet, sur votre bureau et dans votre poche",
+      "text": "Chaque écran ici est la vraie application, avec les données du pilote de démonstration.",
+      "dashboard": {
+        "tab": "Vue d'ensemble",
+        "text": "Temps total, objectifs et les 12 derniers mois d'un coup d'œil, avec les widgets que vous choisissez."
+      },
+      "logbook": {
+        "tab": "Carnet",
+        "text": "Chaque vol avec ses heures, son avion, sa fonction et ses remarques, les totaux prêts pour un contrôle."
+      },
+      "roster": {
+        "tab": "Planning",
+        "text": "Votre planning synchronisé depuis le lien de votre calendrier (iCloud, Google, Outlook ou portail équipage), et vos vols enregistrés une fois effectués."
+      },
+      "stats": {
+        "tab": "Statistiques",
+        "text": "Distance parcourue, aéroports, conditions et heures par type, année après année."
+      },
+      "ratings": {
+        "tab": "Récence et qualifications",
+        "text": "Expérience récente passagers et de nuit, prorogation SEP et MEP, décollages et atterrissages HUD : ce qui expire, et quand."
+      }
     }
   }
 }
