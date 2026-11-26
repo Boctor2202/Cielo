@@ -151,8 +151,7 @@
         "text": "Pour chaque escale : météo METAR et TAF, heure locale, hôtel, contacts et les meilleures adresses autour, avec leur photo et le temps à pied depuis l'hôtel. Les escales se créent toutes seules depuis votre planning.",
         "points": [
           "Restaurants, bars, plages, culture… classés par note ou par distance",
-          "Adresses recommandées par les pilotes Geardown, à partir de 2 recommandations",
-          "Piste favorable au vent estimée depuis le METAR"
+          "Adresses recommandées par les pilotes Geardown, à partir de 2 recommandations"
         ]
       }
     },
