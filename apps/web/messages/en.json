@@ -57,10 +57,10 @@
         ]
       },
       "import": {
-        "title": "Import any logbook",
-        "text": "CSV or Excel files, exports from other logbook apps, airline statements (including Air France EP4 and EP5), LogTen's EASA PDF, your roster, an end-of-flight e-mail pasted as is, or photos of your paper pages. Several PDFs at once. Nothing is saved until you have checked your totals.",
+        "title": "Import from every airline and every logbook app",
+        "text": "Statements from any airline (Air France EP4 and EP5 are read directly), exports from every logbook and crew app (LogTen, Leon…), CSV or Excel files, an end-of-flight e-mail or photos of your paper pages, several PDFs at once. Known formats are read without AI, all the others by AI (Max plan). Nothing is saved until you have checked your totals.",
         "points": [
-          "Air France statements and LogTen PDFs read without AI, checked against their own totals",
+          "Known formats read without AI and checked against their own totals, the others read by AI",
           "“Check your totals” screen before saving",
           "Any import can be undone without touching the rest"
         ]
@@ -138,12 +138,12 @@
         ]
       },
       "roster": {
-        "title": "Roster synced from your calendar",
-        "text": "Paste your calendar link (iCloud, Google, Outlook or your crew portal): your duties update by themselves, when the app opens and every hour. Once flown, your flights are offered to the logbook, already filled in.",
+        "title": "Every roster, synced",
+        "text": "Any airline's roster: paste your calendar link (iCloud, Google, Outlook or a crew portal such as Leon), import an .ics file or your roster as a PDF (Leon, AIMS, Netline, CAE…). The link updates by itself, when the app opens and every hour, and your flown flights are offered to the logbook, already filled in.",
         "points": [
           "Flights, standby, rest, simulator and positioning recognised",
           "Duplicates merged, even when the portal changes its identifiers",
-          "Import a roster as a PDF or an .ics file"
+          "PDF rosters: Leon read without AI, other layouts by AI (Max plan)"
         ]
       },
       "layovers": {
@@ -155,6 +155,14 @@
           "Runway favoured by the wind, estimated from the METAR"
         ]
       }
+    },
+    "layShow": {
+      "where": "Layover in Lisbon",
+      "what": "Best-rated restaurants around the hotel",
+      "live": "Live",
+      "walk": "{min} min walk",
+      "km": "{km} km",
+      "attribution": "Photos and ratings: Google Maps"
     }
   },
   "pricing": {

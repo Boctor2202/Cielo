@@ -1,3 +1,4 @@
+import { LayoverShowcase } from "./LayoverShowcase";
 import { DemoClip, type ClipName } from "./DemoClip";
 import { useLocale, useMessages, useTranslations } from "next-intl";
 import { ArrowRight, BadgeCheck, Briefcase, CalendarClock, CalendarRange, Check, Hotel, CloudOff, FileDown, FileUser, Lock, Map, PenLine, ScanSearch, ShieldCheck, Upload } from "lucide-react";
@@ -224,7 +225,9 @@ export function Features({ detailed = false }: { detailed?: boolean }) {
                   ))}
                 </ul>
               </div>
-              {CLIPS[k] ? (
+              {k === "layovers" ? (
+                <LayoverShowcase alt={t(`items.${k}.title`)} />
+              ) : CLIPS[k] ? (
                 <div className="overflow-hidden rounded-2xl border border-border shadow-[0_40px_90px_-30px_rgba(2,6,23,.55)]">
                   <DemoClip name={CLIPS[k]!} label={t(`items.${k}.title`)} />
                 </div>

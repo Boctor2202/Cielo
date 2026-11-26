@@ -57,10 +57,10 @@
         ]
       },
       "import": {
-        "title": "Import de n'importe quel carnet",
-        "text": "Fichiers CSV ou Excel, exports d'autres applications, relevés de compagnie (dont les EP4 et EP5 Air France), PDF EASA de LogTen, roster, e-mail de fin de vol collé tel quel ou photos de vos pages papier. Plusieurs PDF d'un coup. Rien n'est enregistré avant que vous ayez vérifié vos totaux.",
+        "title": "Import de toutes les compagnies et de tous les logiciels",
+        "text": "Relevés de n'importe quelle compagnie (les EP4 et EP5 Air France sont lus directement), exports de tous les logiciels de carnet et d'équipage (LogTen, Leon…), fichiers CSV ou Excel, e-mail de fin de vol ou photos de vos pages papier, plusieurs PDF d'un coup. Les formats connus sont lus sans IA, tous les autres par l'IA (offre Max). Rien n'est enregistré avant que vous ayez vérifié vos totaux.",
         "points": [
-          "Relevés Air France et PDF LogTen lus sans IA, contrôlés sur leurs propres totaux",
+          "Formats connus lus sans IA et contrôlés sur leurs propres totaux, les autres lus par l'IA",
           "Écran « Vérifiez vos totaux » avant d'enregistrer",
           "Un import se défait sans toucher au reste du carnet"
         ]
@@ -138,12 +138,12 @@
         ]
       },
       "roster": {
-        "title": "Planning synchronisé avec votre calendrier",
-        "text": "Collez le lien de votre calendrier (iCloud, Google, Outlook ou portail équipage) : vos services se mettent à jour tout seuls, à l'ouverture de l'application et toutes les heures. Une fois effectués, vos vols vous sont proposés pour le carnet, déjà remplis.",
+        "title": "Tous les plannings, synchronisés",
+        "text": "Le planning de n'importe quelle compagnie : collez le lien de votre calendrier (iCloud, Google, Outlook ou portail équipage comme Leon), importez un fichier .ics ou votre planning en PDF (Leon, AIMS, Netline, CAE…). Le lien se met à jour tout seul, à l'ouverture de l'application et toutes les heures, et vos vols effectués vous sont proposés pour le carnet, déjà remplis.",
         "points": [
           "Vols, réserves, repos, simulateurs et mises en place reconnus",
           "Doublons fusionnés, même quand le portail change ses identifiants",
-          "Import d'un planning en PDF ou d'un fichier .ics"
+          "Planning PDF : Leon lu sans IA, les autres mises en page par l'IA (offre Max)"
         ]
       },
       "layovers": {
@@ -155,6 +155,14 @@
           "Piste favorable au vent estimée depuis le METAR"
         ]
       }
+    },
+    "layShow": {
+      "where": "Escale à Lisbonne",
+      "what": "Restaurants les mieux notés autour de l'hôtel",
+      "live": "En direct",
+      "walk": "{min} min à pied",
+      "km": "{km} km",
+      "attribution": "Photos et notes : Google Maps"
     }
   },
   "pricing": {
