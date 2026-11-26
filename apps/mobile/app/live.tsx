@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, View } from "react-native";
+import { Alert, Linking, Pressable, ScrollView, View } from "react-native";
 import { Stack, router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LIVE_STEPS, formatDuration, goAround, liveMinutes, nextStep, setStepClock, shiftLast, stampStep, type LiveFlight, type LiveStep } from "@cielo/core";
 import { AircraftPicker, aircraftLabel } from "../src/components/AircraftPicker";
 import { Button, Card, Row, Txt, tap } from "../src/components/ui";
 import type { I18nKey } from "../src/i18n";
-import { airportHere, loadLive, saveLive } from "../src/liveFlight";
+import { airportHere, loadLive, locationAllowed, saveLive, type HereResult } from "../src/liveFlight";
 import { lookupAirport } from "../src/airports";
 import { useApp } from "../src/state";
 import { space, useTheme } from "../src/theme";
@@ -25,11 +25,18 @@ export default function LiveFlightScreen() {
   const [now, setNow] = useState(() => new Date());
   const [busy, setBusy] = useState(false);
   const [picker, setPicker] = useState(false);
+  // what the phone's position gave, said on screen (refused, no signal, no airport near)
+  const [gps, setGps] = useState<HereResult | null>(null);
 
   // the flight in progress, or a new one prepared from the roster (a duty around now) and the last flight
   useEffect(() => {
     void (async () => {
       const saved = await loadLive(store);
+      // iOS asks for the position now, before the first tap, not in the middle of a step
+      if (!saved?.out) {
+        const p = await locationAllowed();
+        if (!p.granted) setGps({ status: "denied", canAskAgain: p.canAskAgain });
+      }
       if (saved) return setF(saved);
       const nowMs = Date.now();
       const duty = rosterEvents
@@ -71,13 +78,28 @@ export default function LiveFlightScreen() {
     const stamped = stampStep(f, new Date());
     update(stamped);
     // the airport the phone is at, at off-block and on-block
-    if (step === "out" || step === "in") {
-      setBusy(true);
-      const here = await airportHere();
-      setBusy(false);
-      if (here) update(step === "out" ? { ...stamped, depIcao: here, depFrom: "gps" } : { ...stamped, arrIcao: here, arrFrom: "gps" });
-    }
+    if (step === "out" || step === "in") await locate(stamped, step === "out" ? "dep" : "arr");
   };
+  /** The airport the phone is at, for the departure (off-block) or the arrival (on-block). */
+  const locate = async (base: LiveFlight, which: "dep" | "arr") => {
+    setBusy(true);
+    const here = await airportHere();
+    setBusy(false);
+    setGps(here);
+    if (here.status === "ok") update(which === "dep" ? { ...base, depIcao: here.icao, depFrom: "gps" } : { ...base, arrIcao: here.icao, arrFrom: "gps" });
+  };
+  const km = (n?: number) => (n === undefined ? "" : n < 10 ? n.toFixed(1).replace(".", t("live.decimal")) : String(Math.round(n)));
+  const gpsLine = !gps
+    ? null
+    : gps.status === "ok"
+      ? t("live.gpsOk", { icao: gps.icao, km: km(gps.km) })
+      : gps.status === "far"
+        ? gps.nearest
+          ? t("live.gpsFar", { icao: gps.nearest, km: km(gps.km) })
+          : t("live.gpsNone")
+        : gps.status === "denied"
+          ? t("live.gpsDenied")
+          : t("live.gpsUnavailable");
 
   const editClock = (s: LiveStep) => {
     if (!f?.[s] && s !== step) return;
@@ -162,6 +184,18 @@ export default function LiveFlightScreen() {
           <Txt variant="small" numberOfLines={1} style={{ textAlign: "right" }}>{[airportName(f.arrIcao), from(f.arrFrom)].filter(Boolean).join(" · ")}</Txt>
         </Pressable>
       </Row>
+
+      {gpsLine ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, padding: 10, borderRadius: 12, backgroundColor: gps?.status === "ok" ? c.accent + "1A" : c.surface }}>
+          <Ionicons name={gps?.status === "ok" ? "locate" : "warning-outline"} size={16} color={gps?.status === "ok" ? c.accent : c.warning} />
+          <Txt variant="small" style={{ flex: 1 }}>{gpsLine}</Txt>
+          {gps?.status === "denied" ? (
+            <Button kind="secondary" small title={t("live.openSettings")} onPress={() => void Linking.openSettings()} />
+          ) : gps?.status !== "ok" && (f.out || f.in) ? (
+            <Button kind="secondary" small title={t("live.retry")} onPress={() => void locate(f, f.in ? "arr" : "dep")} />
+          ) : null}
+        </View>
+      ) : null}
 
       <Card style={{ alignItems: "center", gap: 2 }}>
         <Txt variant="small">{f.off ? t("live.flightTime") : t("live.blockTime")}</Txt>

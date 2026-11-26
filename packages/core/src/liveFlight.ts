@@ -93,7 +93,7 @@ export function nearestAirport<A extends { icao: string; lat: number; lon: numbe
   let best: A | undefined;
   let bestD = maxKm;
   for (const a of list) {
-    if (Math.abs(a.lat - lat) > 0.2 || !/^[A-Z]{4}$/.test(a.icao)) continue;
+    if (Math.abs(a.lat - lat) > maxKm / 111 + 0.01 || !/^[A-Z]{4}$/.test(a.icao)) continue;
     const d = km(lat, lon, a.lat, a.lon);
     // a small field next to an airport does not win over it at about the same distance
     const w = d + (a.size === 3 ? 0 : a.size === 2 ? 0.5 : 2);
