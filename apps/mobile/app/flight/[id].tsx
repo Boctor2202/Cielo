@@ -40,6 +40,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { FlightSignature } from "../../src/components/FlightSignature";
 import { DateField } from "../../src/components/DateField";
 import { flightHash } from "../../src/signing";
+import { saveLive } from "../../src/liveFlight";
 import { FlightHistory } from "../../src/components/FlightHistory";
 import { DurationField, normDuration } from "../../src/components/DurationField";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, ToggleRow, Txt, tap } from "../../src/components/ui";
@@ -117,13 +118,49 @@ export default function FlightFormRoute() {
 }
 
 function FlightForm() {
-  const { id, rosterEventId } = useLocalSearchParams<{ id: string; rosterEventId?: string }>();
+  const { id, rosterEventId, ...live } = useLocalSearchParams<{
+    id: string;
+    rosterEventId?: string;
+    /** "1": a flight logged with "I'm flying now", its times and airports below */
+    live?: string;
+    liveDate?: string;
+    liveDep?: string;
+    liveArr?: string;
+    liveOut?: string;
+    liveOff?: string;
+    liveOn?: string;
+    liveIn?: string;
+    liveAircraft?: string;
+    liveReg?: string;
+    liveNumber?: string;
+    liveTg?: string;
+  }>();
   const { t, flights, aircraft, aircraftTypes, rosterEvents, pilot, put, store } = useApp();
   const c = useTheme();
   const existing = id && id !== "new" ? flights.find((f) => f.id === id) : undefined;
   const rosterEvent = rosterEventId ? rosterEvents.find((e) => e.id === rosterEventId) : undefined;
 
-  const [form, setForm] = useState<FormState>(() => initialState(existing, rosterEvent));
+  const [form, setForm] = useState<FormState>(() => {
+    const base = initialState(existing, rosterEvent);
+    if (existing || live.live !== "1") return base;
+    // "I'm flying now": the stamped times, the airports and the aircraft
+    const ac = live.liveAircraft ? aircraft.find((a) => a.id === live.liveAircraft) : undefined;
+    const tg = Number(live.liveTg ?? 0);
+    return {
+      ...base,
+      date: live.liveDate || base.date,
+      depIcao: live.liveDep || base.depIcao,
+      arrIcao: live.liveArr || base.arrIcao,
+      out: live.liveOut ?? "",
+      off: live.liveOff ?? "",
+      on: live.liveOn ?? "",
+      in: live.liveIn ?? "",
+      aircraftId: ac?.id ?? base.aircraftId,
+      registration: ac?.registration ?? live.liveReg ?? base.registration,
+      flightNumber: live.liveNumber || base.flightNumber,
+      remarks: tg > 0 ? t("live.tgRemark", { n: tg }) : base.remarks,
+    };
+  });
   // the HUD counts sit with the takeoffs and landings, for a pilot who flies with a head-up display
   const hudPilot = !!form.hudTakeoffs || !!form.hudLandings || flights.some((f) => !f.deletedAt && (f.hudTakeoffs ?? 0) + (f.hudLandings ?? 0) > 0);
   const [picker, setPicker] = useState(false);
@@ -398,6 +435,8 @@ function FlightForm() {
         }
       }
       const saved = await put("flights", flight);
+      // the flight logged with "I'm flying now" is in the logbook: the one in progress is done
+      if (live.live === "1") await saveLive(store, null);
       if (rosterEvent && (!rosterEvent.flightId || !flights.some((f) => f.id === rosterEvent.flightId))) await put("roster_events", { ...rosterEvent, flightId: saved.id });
       router.back();
       // a new flight: what it brought to the logbook
