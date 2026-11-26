@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { Award, BadgeCheck, Bell, CalendarClock, FileText, HeartPulse, IdCard, Languages, Moon, Plane, Plus, Radio, ShieldCheck, Trash2, Users, type LucideIcon } from "lucide-react";
 import { AircraftTypeInput } from "@/components/app/AircraftTypeInput";
 import { ClassRatingsCard } from "@/components/app/ClassRatingsCard";
@@ -270,8 +271,7 @@ export default function DocumentsPage() {
               )}
               {form.issued && draft.kind !== "medical" && (
                 <Field label={t(`dates.${form.issued}`)}>
-                  <input
-                    type="date"
+                  <DateInput
                     className="input num"
                     value={draft.issuedOn ?? ""}
                     onChange={(e) => {
@@ -283,7 +283,7 @@ export default function DocumentsPage() {
                 </Field>
               )}
               {(form.validity === true || (form.validity === "optional" && (showExpiry || draft.validUntil))) && (
-                <Field label={t("validUntil")}><input type="date" className="input num" value={draft.validUntil ?? ""} onChange={(e) => setDraft({ ...draft, validUntil: e.target.value || null })} /></Field>
+                <Field label={t("validUntil")}><DateInput className="input num" value={draft.validUntil ?? ""} onChange={(e) => setDraft({ ...draft, validUntil: e.target.value || null })} /></Field>
               )}
               {form.validity === "optional" && !showExpiry && !draft.validUntil && (
                 <p className="self-end pb-2 text-xs text-muted">
@@ -292,7 +292,7 @@ export default function DocumentsPage() {
                 </p>
               )}
               {form.lastCheck && (
-                <Field label={t("lastCheckRating")}><input type="date" className="input num" value={draft.lastCheckOn ?? ""} onChange={(e) => setDraft({ ...draft, lastCheckOn: e.target.value || null })} /></Field>
+                <Field label={t("lastCheckRating")}><DateInput className="input num" value={draft.lastCheckOn ?? ""} onChange={(e) => setDraft({ ...draft, lastCheckOn: e.target.value || null })} /></Field>
               )}
               {(form.validity === true || draft.validUntil) && (
                 <Field label={t("alertDays")}>
@@ -401,7 +401,7 @@ function MedicalFields({ draft, setDraft }: { draft: Draft; setDraft: (d: Draft)
         </div>
       </Field>
       <Field label={t("dates.examOn")}>
-        <input type="date" className="input num" value={draft.issuedOn ?? ""} onChange={(e) => recompute({ issuedOn: e.target.value || null })} />
+        <DateInput className="input num" value={draft.issuedOn ?? ""} onChange={(e) => recompute({ issuedOn: e.target.value || null })} />
       </Field>
       <Field label={t("medical.age")} className="sm:col-span-2" hint={t("medical.ageHint")}>
         <div className="flex flex-wrap gap-2">

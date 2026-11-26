@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { X, BookCopy, Building2, CalendarRange, Check, ListChecks, Clock, CloudFog, FileDown, MapPin, Moon, NotebookPen, Plane, PenLine, PlaneLanding, Plus, ScanSearch, ShieldCheck, Upload } from "lucide-react";
 import { SignManyModal } from "@/components/app/Signature";
 import { TrashButton } from "@/components/app/Trash";
@@ -356,9 +357,9 @@ export default function Logbook() {
           </button>
           <span className="flex items-center gap-1.5 text-xs text-white/70">
             <CalendarRange size={14} className="shrink-0 text-white/60" />
-            <input type="date" className="input num h-9 w-[9.5rem] !bg-white/10 !text-white" value={rangeFrom} onChange={(e) => setRangeFrom(e.target.value)} aria-label={t("assign.from")} />
+            <DateInput className="input num h-9 w-[9.5rem] !bg-white/10 !text-white" value={rangeFrom} onChange={(e) => setRangeFrom(e.target.value)} aria-label={t("assign.from")} />
             →
-            <input type="date" className="input num h-9 w-[9.5rem] !bg-white/10 !text-white" value={rangeTo} onChange={(e) => setRangeTo(e.target.value)} aria-label={t("assign.to")} />
+            <DateInput className="input num h-9 w-[9.5rem] !bg-white/10 !text-white" value={rangeTo} onChange={(e) => setRangeTo(e.target.value)} aria-label={t("assign.to")} />
             <button type="button" className="btn btn-secondary btn-sm" disabled={!rangeFrom && !rangeTo} onClick={pickRange}>{t("assign.range")}</button>
           </span>
           <span className="flex min-w-48 flex-1 items-center gap-2">

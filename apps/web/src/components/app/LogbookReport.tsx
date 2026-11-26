@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { EXPORT_EN, exportMonth } from "@cielo/export";
 import { Roll } from "@/components/ui/Roll";
 import { Download, FileSpreadsheet, RotateCcw } from "lucide-react";
@@ -136,9 +137,9 @@ export function LogbookReport({ flights, today }: { flights: Flight[]; today: st
           ))}
           {preset === "custom" && (
             <span className="flex items-center gap-1.5 text-xs text-muted">
-              <input type="date" className={sel} value={from} onChange={(e) => setFrom(e.target.value)} aria-label={t("from")} />
+              <DateInput className={sel} value={from} onChange={(e) => setFrom(e.target.value)} aria-label={t("from")} />
               →
-              <input type="date" className={sel} value={to} onChange={(e) => setTo(e.target.value)} aria-label={t("to")} />
+              <DateInput className={sel} value={to} onChange={(e) => setTo(e.target.value)} aria-label={t("to")} />
             </span>
           )}
         </div>

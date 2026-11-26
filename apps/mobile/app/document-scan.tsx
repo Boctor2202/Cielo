@@ -9,13 +9,13 @@ import { planScan, type ScanPlanItem, type ScannedDocument } from "@cielo/core";
 import { API_URL } from "../src/api";
 import { Button, Card, Field, Row, Txt, tap } from "../src/components/ui";
 import { Paywall } from "../src/components/Access";
+import { DateField, isValidDate } from "../src/components/DateField";
 import type { I18nKey } from "../src/i18n";
 import { useApp } from "../src/state";
 import { space, useTheme } from "../src/theme";
 
 const CONSENT_KEY = "docScanConsentAt";
 type Row = ScanPlanItem & { on: boolean };
-const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * "Read a document": a photo or the PDF of a licence or a medical certificate, read by Claude on the server,
@@ -86,7 +86,7 @@ export default function DocumentScanScreen() {
   const edit = (i: number, patch: Partial<Row["draft"]>) => setRows((rs) => rs!.map((r, j) => (j === i ? { ...r, on: true, draft: { ...r.draft, ...patch } } : r)));
   const chosen = rows?.filter((r) => r.on) ?? [];
   const save = async () => {
-    if (chosen.some((r) => [r.draft.issuedOn, r.draft.validUntil, r.draft.lastCheckOn].some((d) => d && !ISO.test(d)))) return Alert.alert(t("dscan.title"), t("dscan.badDate"));
+    if (chosen.some((r) => [r.draft.issuedOn, r.draft.validUntil, r.draft.lastCheckOn].some((d) => d && !isValidDate(d)))) return Alert.alert(t("dscan.title"), t("dscan.badDate"));
     setSaving(true);
     try {
       await putMany("licenses", chosen.map((r) => ({ ...r.draft, pilotId: pilot.id })));
@@ -109,19 +109,14 @@ export default function DocumentScanScreen() {
               <Switch value={r.on} onValueChange={(v) => setRows((rs) => rs!.map((x, j) => (j === i ? { ...x, on: v } : x)))} />
             </Row>
             <Field value={r.draft.code} onChangeText={(v) => edit(i, { code: v })} />
-            <Row gap={8}>
-              {(["issuedOn", "validUntil"] as const).map((f) => (
-                <Field
-                  key={f}
-                  style={{ flex: 1 }}
-                  label={t(`dscan.f.${f}` as I18nKey) + (r.changes.includes(f) ? " •" : "")}
-                  monoValue
-                  placeholder={t("dscan.datePh")}
-                  value={r.draft[f] ?? ""}
-                  onChangeText={(v) => edit(i, { [f]: v.trim() || null })}
-                />
-              ))}
-            </Row>
+            {(["issuedOn", "validUntil"] as const).map((f) => (
+              <DateField
+                key={f}
+                label={t(`dscan.f.${f}` as I18nKey) + (r.changes.includes(f) ? " •" : "")}
+                value={r.draft[f] ?? ""}
+                onChange={(v) => edit(i, { [f]: v || null })}
+              />
+            ))}
             {r.draft.number || r.draft.authority ? <Txt variant="small">{[r.draft.authority, r.draft.number].filter(Boolean).join(" · ")}</Txt> : null}
             {r.draft.kind === "medical" && r.draft.notes?.match(/^Limitations?: .*$/m) ? <Txt variant="small">{r.draft.notes.match(/^Limitations?: .*$/m)![0]}</Txt> : null}
           </Card>

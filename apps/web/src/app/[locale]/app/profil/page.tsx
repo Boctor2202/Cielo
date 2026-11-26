@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { MySignatureCard } from "@/components/app/Signature";
 import { Roll } from "@/components/ui/Roll";
 import { Settings2, BadgeCheck, Camera, Check, Pencil, Plane, Trash2, X } from "lucide-react";
@@ -196,7 +197,7 @@ export default function ProfilePage() {
                 }
               />
               <Field label={t("f.birthDate")}>
-                <input id="p-birth" className="input num" type="date" max={today} value={draft.birthDate ?? ""} onChange={(e) => set("birthDate", e.target.value || null)} />
+                <DateInput id="p-birth" className="input num" max={today} value={draft.birthDate ?? ""} onChange={(e) => set("birthDate", e.target.value || null)} />
               </Field>
               <Field label={t("f.authority")}>
                 <select

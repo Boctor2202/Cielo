@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { Plus, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -69,7 +70,7 @@ export function GoalsEditor({ goals, flights, today, onClose }: { goals: PilotGo
               </label>
               <label className="text-xs text-muted">
                 {t("by")}
-                <input type="date" className="input mt-1" min={today} value={g.by ?? ""} onChange={(e) => set(i, { by: e.target.value || undefined })} />
+                <DateInput className="input mt-1" min={today} value={g.by ?? ""} onChange={(e) => set(i, { by: e.target.value || undefined })} />
               </label>
               <button type="button" className="btn btn-ghost !p-2 text-muted" onClick={() => setList((l) => l.filter((_, j) => j !== i))} aria-label={t("remove")}>
                 <Trash2 size={16} />

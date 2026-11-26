@@ -38,6 +38,7 @@ import { FlightAwareFill } from "../../src/components/FlightAwareFill";
 import * as Clipboard from "expo-clipboard";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { FlightSignature } from "../../src/components/FlightSignature";
+import { DateField } from "../../src/components/DateField";
 import { flightHash } from "../../src/signing";
 import { FlightHistory } from "../../src/components/FlightHistory";
 import { DurationField, normDuration } from "../../src/components/DurationField";
@@ -477,15 +478,7 @@ function FlightForm() {
 
         <Card>
           <ToggleRow label={t("flight.fstd")} value={form.isFstd} onChange={(v) => set("isFstd", v)} />
-          <Field
-            label={t("flight.date")}
-            value={form.date}
-            monoValue
-            placeholder="YYYY-MM-DD"
-            keyboardType="numbers-and-punctuation"
-            maxLength={10}
-            onChangeText={(s) => set("date", s)}
-          />
+          <DateField label={t("flight.date")} value={form.date} onChange={(v) => set("date", v)} />
           <Row>
             <Chip label={t("common.today")} selected={form.date === todayUtc()} onPress={() => set("date", todayUtc())} />
             <Chip

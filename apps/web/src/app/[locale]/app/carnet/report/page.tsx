@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
@@ -40,7 +41,7 @@ export default function CarryForward() {
           >
             <div className="grid gap-4 sm:grid-cols-3">
               <Field label={t("label")}><input className="input" placeholder={t("labelPh")} value={draft.label ?? ""} onChange={(e) => setDraft({ ...draft, label: e.target.value })} /></Field>
-              <Field label={t("asOf")}><input type="date" className="input num" required value={draft.asOfDate} onChange={(e) => setDraft({ ...draft, asOfDate: e.target.value })} /></Field>
+              <Field label={t("asOf")}><DateInput className="input num" required value={draft.asOfDate} onChange={(e) => setDraft({ ...draft, asOfDate: e.target.value })} /></Field>
               <Field label={t("type")}><input className="input num uppercase" value={draft.aircraftTypeIcao ?? ""} onChange={(e) => setDraft({ ...draft, aircraftTypeIcao: e.target.value.toUpperCase() || null })} /></Field>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, Platform, Pressable, ScrollView, View, type StyleProp, type ViewStyle } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -8,6 +8,27 @@ import { glass, space, useTheme } from "../theme";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const isoDay = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+/** "17112026" → "17/11/2026" as the pilot types, the European order (month mode: "032026" → "03/2026"). */
+export function typedDate(raw: string, month = false): string {
+  const d = raw.replace(/\D/g, "").slice(0, month ? 6 : 8);
+  if (month) return d.length <= 2 ? d : `${d.slice(0, 2)}/${d.slice(2)}`;
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+}
+/** "17/11/2026" → "2026-11-17" once complete; anything shorter stays as typed (and reads as not valid yet). */
+export function typedToIso(text: string, month = false): string {
+  const d = text.replace(/\D/g, "");
+  if (month) return d.length === 6 ? `${d.slice(2)}-${d.slice(0, 2)}` : text;
+  return d.length === 8 ? `${d.slice(4)}-${d.slice(2, 4)}-${d.slice(0, 2)}` : text;
+}
+/** "2026-11-17" → "17/11/2026" (month: "2026-03" → "03/2026"); anything else as it is. */
+export function isoToTyped(v: string): string {
+  const m = v.match(/^(\d{4})-(\d{2})(?:-(\d{2}))?$/);
+  if (!m) return v;
+  return m[3] ? `${m[3]}/${m[2]}/${m[1]}` : `${m[2]}/${m[1]}`;
+}
 
 /** "20261117" → "2026-11-17" as the pilot types (month mode: "202603" → "2026-03"). */
 export function formatDateDigits(raw: string, month = false): string {
@@ -25,7 +46,8 @@ export function isValidDate(s: string, month = false): boolean {
 }
 
 /**
- * Date typed as digits on the number pad, dashes added on the fly, like the clock fields of the flight
+ * Date typed as digits on the number pad in the European order (day, month, year), slashes added on the fly,
+ * stored as YYYY-MM-DD, like the clock fields of the flight
  * form. `quick` adds one-tap chips (today, yesterday, in one year…). Empty is allowed unless `required`.
  */
 export function DateField({
@@ -51,6 +73,12 @@ export function DateField({
   const c = useTheme();
   // the iOS calendar, next to the typed field (typing stays the fastest way for a pilot who knows the date)
   const [picking, setPicking] = useState<Date | null>(null);
+  // what the field shows: the value in the European order, or the digits typed so far
+  const [text, setText] = useState(() => isoToTyped(value));
+  useEffect(() => {
+    if (typedToIso(text, month) !== value) setText(isoToTyped(value));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, month]);
   const openPicker = () => setPicking(isValidDate(value) ? new Date(`${value}T12:00:00`) : new Date());
   const bad = value ? !isValidDate(value, month) : !!required;
   const shift = (days: number, years = 0) => {
@@ -72,8 +100,15 @@ export function DateField({
       <Field
         style={{ flex: 1 }}
         label={label}
-        value={value}
-        onChangeText={(s) => onChange(formatDateDigits(s, month))}
+        value={text}
+        onChangeText={(s) => {
+          // backspace on a slash: the digit before it goes too
+          const digits = (x: string) => x.replace(/\D/g, "");
+          const erased = s.length < text.length && digits(s) === digits(text);
+          const next = typedDate(erased ? digits(s).slice(0, -1) : s, month);
+          setText(next);
+          onChange(typedToIso(next, month));
+        }}
         keyboardType="number-pad"
         placeholder={month ? t("date.monthPh") : t("date.dayPh")}
         maxLength={month ? 7 : 10}
