@@ -441,7 +441,10 @@ const en = {
   "flight.invalidDate": "Enter a valid date (YYYY-MM-DD).",
   "flight.invalidAirports": "Enter departure and arrival ICAO codes.",
   "flight.warn.night.unknownAirport": "Unknown airport: night time cannot be computed.",
-  "flight.locked": "This entry is signed and locked.",
+  "flight.locked": "This flight is signed: any change will void the signature.",
+  "flight.voidSigTitle": "Void the signature?",
+  "flight.voidSigBody": "This flight is signed. Saving your changes removes the signature; you can sign it again afterwards.",
+  "flight.voidSigOk": "Save and void",
 
   "airport.placeholder": "ICAO, IATA or name",
   "airport.unknown": "Unknown airport",
@@ -2199,7 +2202,10 @@ const fr: Dict = {
   "flight.invalidDate": "Saisissez une date valide (AAAA-MM-JJ).",
   "flight.invalidAirports": "Saisissez les codes OACI de départ et d'arrivée.",
   "flight.warn.night.unknownAirport": "Aérodrome inconnu : le temps de nuit ne peut pas être calculé.",
-  "flight.locked": "Cette entrée est signée et verrouillée.",
+  "flight.locked": "Ce vol est signé : toute modification annulera la signature.",
+  "flight.voidSigTitle": "Annuler la signature ?",
+  "flight.voidSigBody": "Ce vol est signé. Enregistrer vos modifications retire la signature ; vous pourrez le signer à nouveau ensuite.",
+  "flight.voidSigOk": "Enregistrer et annuler",
 
   "airport.placeholder": "OACI, IATA ou nom",
   "airport.unknown": "Aérodrome inconnu",

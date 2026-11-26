@@ -51,12 +51,14 @@ export function pendingDrafts(events: RosterEvent[], flights: Flight[], dismisse
   const from = new Date(now.getTime() - WINDOW_DAYS * 86_400_000).toISOString();
   const logged = new Set(flights.filter((f) => !f.deletedAt && !f.isFstd).map((f) => routeKey(f.date, f.depIcao, f.arrIcao)));
   const linked = new Set(flights.filter((f) => !f.deletedAt && f.rosterEventId).map((f) => f.rosterEventId!));
+  // a duty linked to a flight since deleted is a flight to log again
+  const live = new Set(flights.filter((f) => !f.deletedAt).map((f) => f.id));
   return events
     .filter(
       (e) =>
         !e.deletedAt &&
         e.kind === "FLIGHT" &&
-        !e.flightId &&
+        !(e.flightId && live.has(e.flightId)) &&
         !linked.has(e.id) &&
         !dismissed.has(e.id) &&
         !!e.depIcao &&

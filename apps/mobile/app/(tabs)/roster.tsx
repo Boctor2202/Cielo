@@ -20,7 +20,9 @@ export default function Roster() {
 }
 
 function RosterScreen() {
-  const { t, locale, rosterEvents, access, store, pilot, reload, session } = useApp();
+  const { t, locale, rosterEvents, flights, access, store, pilot, reload, session } = useApp();
+  // a duty linked to a flight since deleted is a flight to log again
+  const liveFlights = useMemo(() => new Set(flights.map((f) => f.id)), [flights]);
   const wide = useWide();
   const c = useTheme();
   const [importing, setImporting] = useState(false);
@@ -163,7 +165,7 @@ function RosterScreen() {
                         {formatDuration(minutesBetween(e.startUtc, e.endUtc))} · UTC
                       </Txt>
                     ) : null}
-                    {!option && (e.kind === "FLIGHT" || e.kind === "SIM") && !e.flightId && e.startUtc < new Date().toISOString() ? (
+                    {!option && (e.kind === "FLIGHT" || e.kind === "SIM") && !(e.flightId && liveFlights.has(e.flightId)) && e.startUtc < new Date().toISOString() ? (
                       <Button kind="secondary" small title={t("roster.log")} onPress={() => router.push({ pathname: "/flight/[id]", params: { id: "new", rosterEventId: e.id } })} />
                     ) : null}
                   </View>
