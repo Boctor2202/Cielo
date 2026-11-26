@@ -383,9 +383,109 @@ function PhoneShot({ src, alt }: { src: string; alt: "dashboard" | "logbook" | "
   );
 }
 
+/* ---------- The real app, on the desk and in the pocket ---------- */
+
+const SHOWCASE = ["dashboard", "logbook", "roster", "stats", "ratings"] as const;
+
+/**
+ * The real screens of the app with the demo pilot's data, on a computer and on a phone side by side: a tab per
+ * screen, turning by itself until the visitor picks one.
+ */
+export function Showcase() {
+  const t = useTranslations("home2.showcase");
+  const locale = useLocale();
+  const lang = locale === "fr" ? "fr" : "en";
+  const reduce = !!useReducedMotion();
+  const [i, setI] = useState(0);
+  const [held, setHeld] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const seen = useInView(ref, { margin: "-20% 0px" });
+  useEffect(() => {
+    if (reduce || held || !seen) return;
+    const id = setInterval(() => setI((k) => (k + 1) % SHOWCASE.length), 5000);
+    return () => clearInterval(id);
+  }, [reduce, held, seen]);
+  const key = SHOWCASE[i]!;
+  return (
+    <section ref={ref} className="border-t border-border">
+      <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+        <h2 className="max-w-2xl text-balance font-display text-3xl tracking-[-0.02em] sm:text-4xl">{t("title")}</h2>
+        <p className="mt-3 max-w-xl text-lg text-muted">{t("text")}</p>
+        <div className="mt-8 flex flex-wrap gap-2" role="tablist" aria-label={t("title")}>
+          {SHOWCASE.map((k, j) => (
+            <button
+              key={k}
+              type="button"
+              role="tab"
+              aria-selected={j === i}
+              onClick={() => (setI(j), setHeld(true))}
+              className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${j === i ? "border-accent bg-accent/12 text-accent" : "border-border text-muted hover:text-text"}`}
+            >
+              {t(`${k}.tab`)}
+            </button>
+          ))}
+        </div>
+        <p className="mt-4 min-h-[3rem] max-w-2xl text-[15.5px] leading-relaxed text-muted" aria-live="polite">{t(`${key}.text`)}</p>
+        <div className="relative mt-6 pb-10 sm:pb-16">
+          {/* the computer: a browser window */}
+          <div className="overflow-hidden rounded-2xl border border-border bg-[#0b1626] shadow-[0_40px_90px_-30px_rgba(2,6,23,.55)] lg:mr-28">
+            <div className="flex items-center gap-1.5 border-b border-white/10 bg-[#101c2e] px-3 py-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+              <span className="mx-auto rounded-md bg-white/5 px-10 py-0.5 text-[11px] text-white/45">geardown.app</span>
+            </div>
+            <div className="relative aspect-[1600/1000]">
+              <AnimatePresence initial={false}>
+                <motion.img
+                  key={key}
+                  src={`/immersive/screens/desk-${key}-${lang}.webp`}
+                  alt={t(`${key}.tab`)}
+                  width={1600}
+                  height={1000}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover object-top"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: reduce ? 0 : 0.6, ease }}
+                />
+              </AnimatePresence>
+            </div>
+          </div>
+          {/* the phone, over the window's corner */}
+          <div className="absolute -bottom-2 right-2 w-[30%] max-w-[230px] sm:right-6 lg:right-0">
+            <div className="relative overflow-hidden rounded-[30px] border-[6px] border-[#0b0b0e] bg-[#0b0b0e] shadow-[0_30px_70px_-20px_rgba(0,0,0,.75)]">
+              <div className="relative aspect-[520/1125]">
+                <AnimatePresence initial={false}>
+                  <motion.img
+                    key={key}
+                    src={`/immersive/screens/phone-${key}-${lang}.webp`}
+                    alt=""
+                    width={520}
+                    height={1125}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full rounded-[24px] object-cover object-top"
+                    initial={{ opacity: 0, y: reduce ? 0 : 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: reduce ? 0 : 0.6, ease }}
+                  />
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------- And everything else ---------- */
 
-const MORE = ["audit", "roster", "offline", "layovers", "exports", "radar", "cv", "badges"] as const;
+const MORE = ["audit", "roster", "imports", "ratings", "offline", "layovers", "exports", "radar", "cv", "badges"] as const;
 
 /** Everything else, as a list between hairlines: the name, then what it does. */
 export function MoreFeatures() {

@@ -3128,12 +3128,12 @@
         "d": "CV, hours statement, licences and attachments in a single PDF."
       },
       "roster": {
-        "t": "Roster import",
-        "d": "Your schedule becomes your flights and layovers, without retyping."
+        "t": "Roster synced from your calendar",
+        "d": "Subscribe to your calendar link (iCloud, Google, Outlook, crew portal): duties update by themselves, flown legs become flights."
       },
       "layovers": {
         "t": "Layovers",
-        "d": "Hotel, contacts and the best places around, with a photo of the city."
+        "d": "Hotel, contacts and the best places around, each with its photo and the walk from the hotel."
       },
       "radar": {
         "t": "Radar and ADS-B tracks",
@@ -3143,7 +3143,15 @@
         "t": "Badges and milestones",
         "d": "Your firsts and hour milestones, to celebrate and share."
       },
-      "lead": "The details that save you an evening before a check or an interview."
+      "lead": "The details that save you an evening before a check or an interview.",
+      "imports": {
+        "t": "Statements and logbooks read without AI",
+        "d": "Air France EP4 and EP5 (all formats), LogTen's EASA PDF, CSV and Excel: several files at once, checked against their own totals."
+      },
+      "ratings": {
+        "t": "Recency, SEP / MEP and HUD",
+        "d": "3 takeoffs and landings in 90 days, class rating revalidation by experience, HUD recency for the pilots who fly with one."
+      }
     },
     "mobile": {
       "label": "On iPhone",
@@ -3164,6 +3172,30 @@
       "title": "One registration, the whole flight.",
       "text": "Type the registration: Geardown finds the flight in the ADS-B data, fills in the airports and the block times, and adds it to your totals.",
       "video": "Demo: a flight filled from ADS-B data and saved to the logbook"
+    },
+    "showcase": {
+      "title": "The same logbook on your desk and in your pocket",
+      "text": "Every screen here is the real app, with the demo pilot's data.",
+      "dashboard": {
+        "tab": "Overview",
+        "text": "Total time, goals and the last 12 months at a glance, with the widgets you choose."
+      },
+      "logbook": {
+        "tab": "Logbook",
+        "text": "Every flight with its times, aircraft, function and remarks, totals ready for a check."
+      },
+      "roster": {
+        "tab": "Roster",
+        "text": "Your schedule synced from your calendar link (iCloud, Google, Outlook or your crew portal), and your flights logged once flown."
+      },
+      "stats": {
+        "tab": "Statistics",
+        "text": "Distance flown, airports, conditions and hours by type, year after year."
+      },
+      "ratings": {
+        "tab": "Recency and ratings",
+        "text": "Passenger and night recency, SEP and MEP revalidation, HUD takeoffs and landings: what lapses, and when."
+      }
     }
   }
 }
