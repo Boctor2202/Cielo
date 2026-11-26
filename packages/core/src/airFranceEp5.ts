@@ -35,9 +35,11 @@ export interface Ep5Leg {
  * T takeoff only, L landing only, G takeoff only with the HUD, K landing only with the HUD. Any other letter:
  * the pilot did neither (pilot monitoring, relief, positioning).
  */
-export function sabLandings(sab: string | undefined): { takeoffs: number; landings: number; hud: boolean } | null {
+export function sabLandings(sab: string | undefined): { takeoffs: number; landings: number; hud: boolean; picus?: boolean } | null {
   const c = sab && /^[A-Z]{3}$/.test(sab) ? sab[1] : undefined;
   if (!c) return null;
+  // P: takeoff and landing as pilot-in-command under supervision (PICUS)
+  if (c === "P") return { takeoffs: 1, landings: 1, hud: false, picus: true };
   const takeoffs = "HBTG".includes(c) ? 1 : 0;
   const landings = "HBLK".includes(c) ? 1 : 0;
   return { takeoffs, landings, hud: "HGK".includes(c) };
@@ -51,7 +53,7 @@ const AF_TYPES: Record<string, string> = {
   "223": "BCS3", "318": "A318", "319": "A319", "320": "A320", "321": "A321", "332": "A332", "359": "A359", "772": "B772", "77W": "B77W", "789": "B789",
 };
 export function airFranceType(code: string | undefined): string | undefined {
-  const c = code?.trim().toUpperCase().replace(/^U-(\d{2})$/, "2$1");
+  const c = code?.trim().toUpperCase().replace(/^U-\s?(\d{2})$/, "2$1").replace(/^U-\s?(\d{3})$/, "$1");
   return c ? AF_TYPES[c] : undefined;
 }
 
@@ -90,6 +92,13 @@ export function isAirFranceEp5(pages: PdfTextItem[][]): boolean {
  * and scheduled times, then its actual flight time; day and night are not split per leg (the night figure on
  * a duty's last line is the whole duty's), so the logbook works night out itself.
  */
+/**
+ * The EP5 as printed before August 2025: decimal hours with a comma, and each line as stop time, type ("U-223"),
+ * registration, nature, departure, day, time, arrival, day, time, SAB code, then the flight time and its day and
+ * night parts ("83,73 U-223 HZUM 0 CDG 04 11,73 HEL 04 14,68 JND 2,95 2,28 0,67").
+ */
+const LEG_OLD = /^(?:\d{1,4}\.\d{2}\s+)?(U-\s?\d{2,3}|[A-Z0-9-]{2,6})\s+([A-Z0-9]{4,5})\s+(\w{1,2})\s+([A-Z]{3})\s+(\d{1,2})\s+(\d{1,2}\.\d{2})\s+([A-Z]{3})\s+(\d{1,2})\s+(\d{1,2}\.\d{2})\s+([A-Z]{3})\s+(\d{1,2}\.\d{2})(?:\s+(\d{1,2}\.\d{2}))?(?:\s+(\d{1,2}\.\d{2}))?/;
+
 const isEp4 = (text: string) => /FEUILLE HORAIRE/.test(text) && /EP\s?4/.test(text);
 const DH = "(\\d{1,2})\\s*[|I¦l]?\\s*(\\d{1,2}\\.\\d{2})";
 const DH_ = "\\d{1,2}\\s*[|I¦l]?\\s*\\d{1,2}\\.\\d{2}";
@@ -101,6 +110,10 @@ const LEG = /^(\d+)\s+(\S+)\s+([A-Z0-9]{4,5})\s+([A-Z]{3})\s+([A-Z]{3})\s+(\d{1,
 export function parseAirFranceEp5(pages: PdfTextItem[][]): Ep5 | null {
   if (!isAirFranceEp5(pages)) return null;
   const out: Ep5 = { legs: [] };
+  // the pilot's function, from any page (the EP4 says "OPL 100%", the cover of an older EP5 "OFFICIER PILOTE")
+  const whole = plain(pages.flat().map((i) => i.s).join(" "));
+  const fn = /\b(?:CDB|CDT|OPL)\b|OFFICIER PILOTE|COMMANDANT DE BORD/.exec(whole)?.[0];
+  if (fn) out.role = fn.startsWith("OFFICIER") ? "OPL" : fn.startsWith("COMMANDANT") ? "CDB" : fn;
   const seen = new Set<string>();
   for (const page of pages) {
     const text = plain(page.map((i) => i.s).join(" "));
@@ -124,6 +137,17 @@ export function parseAirFranceEp5(pages: PdfTextItem[][]): Ep5 | null {
       const joined = r.map((i) => i.s.trim()).join(" ").replace(/\s+/g, " ");
       let line: string | undefined;
       let m = LEG.exec(joined);
+      // the format before August 2025: its own column order, decimal commas, day and night given on the line
+      let oldDay: string | undefined;
+      let oldNight: string | undefined;
+      if (!m && !ep4) {
+        const o = LEG_OLD.exec(joined.replace(/(\d),(\d{2})\b/g, "$1.$2"));
+        if (o) {
+          m = [o[0], o[3], o[1], o[2], o[10], o[4], o[5], o[6], o[7], o[8], o[9], o[11]] as unknown as RegExpExecArray;
+          oldDay = o[12];
+          oldNight = o[13];
+        }
+      }
       if (ep4) {
         const q = LEG4.exec(joined);
         // the same groups as an EP5 line
@@ -152,6 +176,8 @@ export function parseAirFranceEp5(pages: PdfTextItem[][]): Ep5 | null {
         } else if (dayMin === undefined) dayMin = v;
         else if (nightMin === undefined) nightMin = v;
       }
+      if (oldDay !== undefined) dayMin = dec(oldDay);
+      if (oldNight !== undefined) nightMin = dec(oldNight);
       const totalMin = dec(total!);
       if (nightMin === undefined && dayMin !== undefined) nightMin = Math.max(0, totalMin - dayMin);
       const key = `${date}|${dep}|${arr}|${h1}`;
@@ -230,6 +256,7 @@ export const ep5Legs = (ep5: Ep5): LogbookLeg[] =>
       aircraftType: airFranceType(l.typeCode),
       flightNumber: l.line && /^\d{1,4}[A-Z]?$/.test(l.line) ? `AF${l.line}` : undefined,
       ...(sab ? { takeoffs: sab.takeoffs, landings: sab.landings, hudTakeoffs: sab.hud ? sab.takeoffs : 0, hudLandings: sab.hud ? sab.landings : 0 } : {}),
+      ...(sab?.picus ? { function: "PICUS" } : {}),
     };
   });
 
