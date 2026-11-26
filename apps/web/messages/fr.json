@@ -672,7 +672,8 @@
         "private": "Vol privé",
         "training": "Formation"
       },
-      "hideSim": "Masquer les séances simulateur"
+      "hideSim": "Masquer les séances simulateur",
+      "toTop": "Remonter en haut"
     },
     "form": {
       "newTitle": "Nouveau vol",
