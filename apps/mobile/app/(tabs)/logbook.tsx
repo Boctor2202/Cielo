@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, SectionList, StyleSheet, TextInput, View } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Animated, Pressable, ScrollView, SectionList, StyleSheet, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { PRIVATE_OPERATOR, TRAINING_OPERATOR, formatClock, formatDuration, operatorIndex, sumFlights, type Flight } from "@cielo/core";
@@ -180,9 +180,21 @@ export default function Logbook() {
       { text: t("common.delete"), style: "destructive", onPress: () => void remove("flights", f.id) },
     ]);
 
+  // back to the top of a long list: an arrow that shows once the pilot has scrolled down, and goes away at the top
+  const listRef = useRef<SectionList<Flight>>(null);
+  const [far, setFar] = useState(false);
+  const topFade = useRef(new Animated.Value(0)).current;
+  const topShown = far && view === "list" && !selecting;
+  useEffect(() => {
+    Animated.timing(topFade, { toValue: topShown ? 1 : 0, duration: 180, useNativeDriver: true }).start();
+  }, [topShown, topFade]);
+
   return (
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <SectionList
+        ref={listRef}
+        onScroll={(e) => setFar(e.nativeEvent.contentOffset.y > 900)}
+        scrollEventThrottle={64}
         sections={view === "calendar" ? [] : sections}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
@@ -520,6 +532,17 @@ export default function Logbook() {
           </Row>
         </View>
       ) : null}
+      <Animated.View pointerEvents={topShown ? "auto" : "none"} style={{ position: "absolute", right: 18, bottom: 108, opacity: topFade, transform: [{ scale: topFade.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("log.toTop")}
+          hitSlop={8}
+          onPress={() => (tap(), (listRef.current as unknown as { getScrollResponder?: () => { scrollTo?: (o: { y: number; animated: boolean }) => void } | null })?.getScrollResponder?.()?.scrollTo?.({ y: 0, animated: true }))}
+          style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: c.accent, opacity: pressed ? 0.8 : 0.95, shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } })}
+        >
+          <Ionicons name="arrow-up" size={22} color="#fff" />
+        </Pressable>
+      </Animated.View>
     </View>
   );
 }
