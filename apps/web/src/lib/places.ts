@@ -38,6 +38,8 @@ export interface Place {
   openNow?: boolean;
   priceLevel?: number;
   mapsUrl?: string;
+  /** the place's first Google photo: its resource name (fetched on demand) and who took it */
+  photo?: { name: string; author?: string; authorUri?: string };
 }
 
 const PRICE: Record<string, number> = { PRICE_LEVEL_FREE: 0, PRICE_LEVEL_INEXPENSIVE: 1, PRICE_LEVEL_MODERATE: 2, PRICE_LEVEL_EXPENSIVE: 3, PRICE_LEVEL_VERY_EXPENSIVE: 4 };
@@ -92,11 +94,14 @@ interface GPlace {
   googleMapsUri?: string;
   priceLevel?: string;
   currentOpeningHours?: { openNow?: boolean };
+  photos?: { name: string; authorAttributions?: { displayName?: string; uri?: string }[] }[];
 }
 
 const NEARBY_FIELDS = [
   "places.id", "places.displayName", "places.primaryTypeDisplayName", "places.rating", "places.userRatingCount",
   "places.shortFormattedAddress", "places.location", "places.googleMapsUri", "places.priceLevel", "places.currentOpeningHours.openNow",
+  // the photos' names come with the search; each image is fetched only when shown (/api/escale/photo)
+  "places.photos",
 ].join(",");
 
 /** The best-rated places of a category around a point, ranked by corrected rating. */
@@ -137,6 +142,7 @@ export async function nearby(center: { lat: number; lng: number }, cat: PlaceCat
         openNow: p.currentOpeningHours?.openNow,
         priceLevel: p.priceLevel ? PRICE[p.priceLevel] : undefined,
         mapsUrl: p.googleMapsUri,
+        photo: p.photos?.[0]?.name ? { name: p.photos[0].name, author: p.photos[0].authorAttributions?.[0]?.displayName, authorUri: p.photos[0].authorAttributions?.[0]?.uri } : undefined,
       };
     })
     .sort((a, b) => b.score - a.score);
