@@ -75,6 +75,7 @@ function Headline({ text }: { text: string }) {
 
 /** The app screens over the film, tilting a little with the pointer. */
 function HeroScreens() {
+  const lang = useLocale() === "fr" ? "fr" : "en";
   const reduce = !!useReducedMotion();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -92,8 +93,20 @@ function HeroScreens() {
       }}
       onPointerLeave={() => (x.set(0), y.set(0))}
     >
-      <motion.div className="mx-auto w-[300px]" style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.4, ease }}>
-        <PhoneCycle />
+      <motion.div className="relative h-[560px]" style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.4, ease }}>
+        {/* the computer: the same logbook in a browser window, behind the phone and running off the edge */}
+        <div className="absolute left-6 top-6 w-[600px] overflow-hidden rounded-xl border border-white/15 bg-[#0b1626] shadow-[0_40px_90px_-30px_rgba(0,0,0,.8)]">
+          <div className="flex items-center gap-1.5 border-b border-white/10 bg-[#101c2e] px-3 py-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+            <span className="mx-auto rounded-md bg-white/5 px-10 py-0.5 text-[11px] text-white/45">geardown.app</span>
+          </div>
+          <img src={`/immersive/screens/desk-dashboard-${lang}.webp`} alt="" width={1600} height={1000} className="block aspect-[1600/1000] w-full object-cover object-top" />
+        </div>
+        <div className="absolute -left-16 bottom-0 w-[215px]" style={{ transform: "translateZ(40px)" }}>
+          <PhoneCycle />
+        </div>
       </motion.div>
     </motion.div>
   );
