@@ -38,6 +38,7 @@ import { FlightAwareFill } from "../../src/components/FlightAwareFill";
 import * as Clipboard from "expo-clipboard";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { FlightSignature } from "../../src/components/FlightSignature";
+import { flightHash } from "../../src/signing";
 import { FlightHistory } from "../../src/components/FlightHistory";
 import { DurationField, normDuration } from "../../src/components/DurationField";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, Stat, Stepper, ToggleRow, Txt, tap } from "../../src/components/ui";
@@ -116,7 +117,7 @@ export default function FlightFormRoute() {
 
 function FlightForm() {
   const { id, rosterEventId } = useLocalSearchParams<{ id: string; rosterEventId?: string }>();
-  const { t, flights, aircraft, aircraftTypes, rosterEvents, pilot, put } = useApp();
+  const { t, flights, aircraft, aircraftTypes, rosterEvents, pilot, put, store } = useApp();
   const c = useTheme();
   const existing = id && id !== "new" ? flights.find((f) => f.id === id) : undefined;
   const rosterEvent = rosterEventId ? rosterEvents.find((e) => e.id === rosterEventId) : undefined;
@@ -336,7 +337,7 @@ function FlightForm() {
     .filter(Boolean)
     .join(" · ");
 
-  const save = async () => {
+  const save = async (voidSignature = false) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(form.date) || Number.isNaN(Date.parse(form.date))) return setError(t("flight.invalidDate"));
     if (!form.isFstd && (!form.depIcao.trim() || !form.arrIcao.trim())) return setError(t("flight.invalidAirports"));
     setError(null);
@@ -377,8 +378,26 @@ function FlightForm() {
         signatureId: existing?.signatureId ?? null,
         locked: existing?.locked ?? false,
       };
+      // a signed flight: any change of its content voids the signature (as on the website), after a warning
+      if (existing?.signatureId) {
+        const sig = await store.get("signatures", existing.signatureId);
+        const changed = !sig || sig.deletedAt || sig.contentHash !== (await flightHash({ ...existing, ...flight } as Flight));
+        if (changed && sig && !sig.deletedAt && !voidSignature) {
+          setSaving(false);
+          Alert.alert(t("flight.voidSigTitle"), t("flight.voidSigBody"), [
+            { text: t("common.cancel"), style: "cancel" },
+            { text: t("flight.voidSigOk"), style: "destructive", onPress: () => void save(true) },
+          ]);
+          return;
+        }
+        if (changed) {
+          if (sig && !sig.deletedAt) await put("signatures", { ...sig, deletedAt: new Date().toISOString() });
+          flight.signatureId = null;
+          flight.locked = false;
+        }
+      }
       const saved = await put("flights", flight);
-      if (rosterEvent && !rosterEvent.flightId) await put("roster_events", { ...rosterEvent, flightId: saved.id });
+      if (rosterEvent && (!rosterEvent.flightId || !flights.some((f) => f.id === rosterEvent.flightId))) await put("roster_events", { ...rosterEvent, flightId: saved.id });
       router.back();
       // a new flight: what it brought to the logbook
       if (!existing) announceGains([saved.id]);
@@ -423,7 +442,7 @@ function FlightForm() {
       <Stack.Screen
         options={{
           title: existing ? t("flight.edit") : t("flight.new"),
-          headerRight: () => <Button kind="ghost" small title={t("common.save")} onPress={save} disabled={locked} loading={saving} />,
+          headerRight: () => <Button kind="ghost" small title={t("common.save")} onPress={() => void save()} loading={saving} />,
         }}
       />
       <Screen backdrop>
@@ -723,7 +742,7 @@ function FlightForm() {
         {existing ? <FlightHistory flight={existing} /> : null}
 
         {error ? <Txt color={c.warning}>{error}</Txt> : null}
-        <Button title={t("common.save")} onPress={save} disabled={locked} loading={saving} />
+        <Button title={t("common.save")} onPress={() => void save()} loading={saving} />
       </Screen>
 
       <AircraftPicker

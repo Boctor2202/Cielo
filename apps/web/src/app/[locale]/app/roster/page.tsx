@@ -66,7 +66,13 @@ export default function RosterPage() {
   const [dayOpen, setDayOpen] = useState<string | null>(null);
   const today = isoDate(new Date());
 
-  const sorted = useMemo(() => [...(events ?? [])].sort((a, b) => a.startUtc.localeCompare(b.startUtc)), [events]);
+  // a duty linked to a flight since deleted shows as not logged, so it can be logged again
+  const sorted = useMemo(() => {
+    const live = flights ? new Set(flights.map((f) => f.id)) : null;
+    return (events ?? [])
+      .map((e) => (live && e.flightId && !live.has(e.flightId) ? { ...e, flightId: null } : e))
+      .sort((a, b) => a.startUtc.localeCompare(b.startUtc));
+  }, [events, flights]);
   const days = useMemo(() => {
     const [y, m] = cursor.split("-").map(Number) as [number, number];
     const first = new Date(Date.UTC(y, m - 1, 1));
