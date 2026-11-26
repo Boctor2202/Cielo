@@ -258,7 +258,7 @@ export function FeatureScroll() {
       </div>
 
       {/* large screens: the list and the screen stay, the page scrolls past one marker per step */}
-      <div className="mx-auto hidden max-w-6xl grid-cols-[0.9fr_1.25fr] gap-12 px-6 pb-24 pt-10 lg:grid">
+      <div className="mx-auto hidden max-w-[88rem] grid-cols-[minmax(0,0.62fr)_minmax(0,1.38fr)] gap-10 px-6 pb-24 pt-10 lg:grid xl:px-10">
         <div className="relative">
           {STEPS.map((s, i) => (
             <StepMarker key={s.key} i={i} onActive={setActive} />
@@ -270,8 +270,8 @@ export function FeatureScroll() {
           </div>
         </div>
         <div>
-          <div className="sticky top-[max(6rem,calc(50vh-230px))]">
-            <div className="relative min-h-[420px]">
+          <div className="sticky top-[max(5rem,calc(50vh-300px))]">
+            <div className="relative min-h-[560px]">
               <AnimatePresence initial={false}>
                 <motion.div key={active} className="absolute inset-x-0 top-0" initial={reduce ? false : { opacity: 0, y: 28, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={reduce ? undefined : { opacity: 0, y: -28, scale: 0.98 }} transition={{ duration: 0.4, ease }}>
                   <Screen className="w-full" />
