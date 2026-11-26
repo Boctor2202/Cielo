@@ -381,6 +381,7 @@ const en = {
   "dash.pic": "PIC",
 
   "log.title": "Logbook",
+  "log.toTop": "Back to the top",
   "log.empty": "Your logbook is empty.",
   "log.emptyHint": "Tap + to log a flight. Everything is stored on this device first.",
   "log.deleteTitle": "Delete this flight?",
@@ -2137,6 +2138,7 @@ const fr: Dict = {
   "dash.pic": "CdB",
 
   "log.title": "Carnet de vol",
+  "log.toTop": "Remonter en haut",
   "log.empty": "Votre carnet est vide.",
   "log.emptyHint": "Touchez + pour saisir un vol. Tout est d'abord enregistré sur cet appareil.",
   "log.deleteTitle": "Supprimer ce vol ?",
