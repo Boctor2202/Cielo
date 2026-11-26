@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Loader2, ScanLine, ShieldCheck } from "lucide-react";
@@ -111,7 +112,7 @@ export function DocumentScan({ open, onClose, licenses }: { open: boolean; onClo
                     r.draft[f] || r.changes.includes(f) || f === "validUntil" ? (
                       <label key={f} className="space-y-0.5">
                         <span className={r.changes.includes(f) ? "font-semibold text-[color:var(--accent)]" : "text-muted"}>{t(`f.${f}`)}</span>
-                        <input type="date" className="input num !py-1.5 text-xs" value={r.draft[f] ?? ""} onChange={(e) => edit(i, { [f]: e.target.value || null })} />
+                        <DateInput className="input num !py-1.5 text-xs" value={r.draft[f] ?? ""} onChange={(e) => edit(i, { [f]: e.target.value || null })} />
                       </label>
                     ) : null,
                   )}

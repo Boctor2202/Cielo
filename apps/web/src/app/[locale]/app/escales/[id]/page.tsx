@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { ArrowLeft, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -85,8 +86,8 @@ export default function LayoverPage() {
                 />
               </Field>
               <Field label={t("phone")}><input className="input num" type="tel" value={v.phone ?? ""} onChange={(e) => setV({ ...v, phone: e.target.value })} /></Field>
-              <Field label={t("arrival")}><input className="input num" type="date" value={v.arrivalUtc?.slice(0, 10) ?? ""} onChange={(e) => setV({ ...v, arrivalUtc: e.target.value ? `${e.target.value}T12:00:00.000Z` : null })} /></Field>
-              <Field label={t("departure")}><input className="input num" type="date" value={v.departureUtc?.slice(0, 10) ?? ""} onChange={(e) => setV({ ...v, departureUtc: e.target.value ? `${e.target.value}T12:00:00.000Z` : null })} /></Field>
+              <Field label={t("arrival")}><DateInput className="input num" value={v.arrivalUtc?.slice(0, 10) ?? ""} onChange={(e) => setV({ ...v, arrivalUtc: e.target.value ? `${e.target.value}T12:00:00.000Z` : null })} /></Field>
+              <Field label={t("departure")}><DateInput className="input num" value={v.departureUtc?.slice(0, 10) ?? ""} onChange={(e) => setV({ ...v, departureUtc: e.target.value ? `${e.target.value}T12:00:00.000Z` : null })} /></Field>
               <Field label={t("address")} className="sm:col-span-2"><input className="input" value={v.address ?? ""} onChange={(e) => setV({ ...v, address: e.target.value })} /></Field>
               <Field label={t("notes")} className="sm:col-span-2"><textarea className="input" rows={4} value={v.notes ?? ""} onChange={(e) => setV({ ...v, notes: e.target.value })} /></Field>
             </div>

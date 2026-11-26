@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { useMemo, useState } from "react";
 import { computeRecency, type Flight } from "@cielo/core";
 import { Link } from "@/i18n/navigation";
@@ -64,7 +65,7 @@ export function RecencyCalculator({ locale }: { locale: "fr" | "en" }) {
       <div className="card space-y-4 p-5">
         <label className="block max-w-xs">
           <span className="text-xs font-semibold text-muted">{t.today}</span>
-          <input className="input num mt-1" type="date" value={today} onChange={(e) => setToday(e.target.value)} />
+          <DateInput className="input num mt-1" value={today} onChange={(e) => setToday(e.target.value)} />
         </label>
         <div className="space-y-2">
           <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr_auto] gap-2 text-xs font-semibold text-muted">
@@ -72,7 +73,7 @@ export function RecencyCalculator({ locale }: { locale: "fr" | "en" }) {
           </div>
           {rows.map((r, i) => (
             <div key={i} className="grid grid-cols-[1.6fr_1fr_1fr_1fr_auto] items-center gap-2">
-              <input aria-label={t.date} className="input num" type="date" value={r.date} onChange={(e) => set(i, { date: e.target.value })} />
+              <DateInput aria-label={t.date} className="input num" value={r.date} onChange={(e) => set(i, { date: e.target.value })} />
               <input aria-label={t.to} className="input num" type="number" min={0} max={20} value={r.to} onChange={(e) => set(i, { to: num(e.target.value) })} />
               <input aria-label={t.ldg} className="input num" type="number" min={0} max={20} value={r.ldg} onChange={(e) => set(i, { ldg: num(e.target.value) })} />
               <input aria-label={t.night} className="input num" type="number" min={0} max={20} value={r.night} onChange={(e) => set(i, { night: num(e.target.value) })} />

@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { FileDown, PenLine } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -100,8 +101,8 @@ export default function ExportPage() {
             ))}
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <Field label={useTranslations("common")("from")}><input type="date" className="input num" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
-            <Field label={useTranslations("common")("to")}><input type="date" className="input num" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
+            <Field label={useTranslations("common")("from")}><DateInput className="input num" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
+            <Field label={useTranslations("common")("to")}><DateInput className="input num" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
           </div>
           <div className="mt-5 space-y-3">
             {["EASA", "FAA", "CASA"].includes(format) && <Toggle checked={opening} onChange={setOpening} label={t("includeOpening")} />}

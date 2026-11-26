@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { Roll } from "@/components/ui/Roll";
 import { Clock, CloudSun, Copy, CornerUpLeft, Lock, MonitorPlay, NotebookPen, PenLine, Plane, PlaneLanding, Plus, Radar, Trash2, Users, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -246,7 +247,7 @@ export function FlightForm({ flight, prefill, pilot, source, rosterEventId }: { 
           {unknownAirport && <p className="px-5 text-xs text-caution">{t("unknownAirport")}</p>}
           <div className="mt-4 grid grid-cols-2 gap-4 border-t border-dashed border-border bg-surface-2/40 px-5 py-4">
             <Field label={t("date")}>
-              <input type="date" className="input num" required value={v.date} onChange={(e) => set("date", e.target.value)} />
+              <DateInput className="input num" required value={v.date} onChange={(e) => set("date", e.target.value)} />
             </Field>
             <Field label={t("flightNumber")}>
               <input className="input num uppercase" placeholder="AF1234" value={v.flightNumber ?? ""} onChange={(e) => set("flightNumber", e.target.value.toUpperCase())} />

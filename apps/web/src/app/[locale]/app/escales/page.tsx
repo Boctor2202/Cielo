@@ -1,5 +1,6 @@
 "use client";
 
+import { DateInput } from "@/components/app/DateInput";
 import { CityPhoto } from "@/components/app/CityPhoto";
 import { PauseCircle, BedDouble, CalendarDays, ChevronRight, Globe2, Hotel, MapPin, Plus, Users } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -264,8 +265,8 @@ export default function LayoversPage() {
         >
           <AirportInput label={t("airport")} value={airport} onChange={setAirport} required />
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t("arrival")}><input id="lay-arr" className="input num" type="date" value={arrival} onChange={(e) => setArrival(e.target.value)} /></Field>
-            <Field label={t("departure")}><input id="lay-dep" className="input num" type="date" value={departure} min={arrival} onChange={(e) => setDeparture(e.target.value)} /></Field>
+            <Field label={t("arrival")}><DateInput id="lay-arr" className="input num" value={arrival} onChange={(e) => setArrival(e.target.value)} /></Field>
+            <Field label={t("departure")}><DateInput id="lay-dep" className="input num" value={departure} min={arrival} onChange={(e) => setDeparture(e.target.value)} /></Field>
           </div>
           <button className="btn btn-primary w-full" disabled={!airports?.get(airport)}>{t("create")}</button>
         </form>
