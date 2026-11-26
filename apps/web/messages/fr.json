@@ -1522,6 +1522,39 @@
         "mepRule": "Prorogation : contrôle de compétences entre le {from} et le {to}, et pendant la validité au moins 10 étapes comme pilote de la classe, ou 1 avec un examinateur (FCL.740.A(a)).",
         "sectors": "Étapes pendant la validité",
         "source": "Règles EASA : FCL.060(b)(1), FCL.740(a)(1) et FCL.740.A, Easy Access Rules for Aircrew, consultées le 25 novembre 2026. Pour information : votre autorité fait foi."
+      },
+      "scan": {
+        "button": "Lire un document",
+        "title": "Lire une licence ou un certificat médical",
+        "intro": "Prenez en photo votre licence (la carte ou les pages de vos qualifications) ou votre certificat médical, ou choisissez son PDF. Geardown le lit et remplit les fiches ; vous vérifiez chacune avant qu'elle soit enregistrée.",
+        "privacyTitle": "Ce que devient votre document",
+        "privacy": "Les pages sont envoyées à Anthropic (Claude, États-Unis), qui les lit pour Geardown et ne les utilise pas pour entraîner ses modèles ; Anthropic les supprime sous 30 jours. Geardown ne conserve ni la photo ni le PDF : seulement les fiches que vous enregistrez (intitulé, numéro, dates et, pour un certificat médical, sa classe et ses codes de limitation). Votre adresse, votre date de naissance et toute autre information de santé ne sont pas conservées.",
+        "consent": "J'accepte que mon document, y compris les données de santé d'un certificat médical, soit envoyé à Anthropic pour être lu. Je peux retirer ce consentement à tout moment en décochant cette case.",
+        "needConsent": "Cochez la case pour donner votre accord avant d'envoyer votre document.",
+        "drop": "Déposez des photos (4 au plus) ou un PDF, ou cliquez pour choisir",
+        "reading": "Lecture de votre document…",
+        "none": "Aucune fiche de licence ou de certificat médical n'a été trouvée. Essayez une photo plus nette, à plat et bien éclairée.",
+        "check": "Vérifiez chaque fiche : cochez celles à enregistrer, corrigez un intitulé ou une date si besoin. Les valeurs modifiées sont mises en évidence.",
+        "again": "Lire un autre document",
+        "save": "{count, plural, =0 {Rien à enregistrer} one {Enregistrer 1 fiche} other {Enregistrer # fiches}}",
+        "action": {
+          "new": "Nouvelle",
+          "update": "Mise à jour",
+          "same": "Inchangée"
+        },
+        "f": {
+          "issuedOn": "Délivrance / visite",
+          "validUntil": "Valide jusqu'au",
+          "lastCheckOn": "Dernier contrôle"
+        },
+        "err": {
+          "plan": "La lecture de documents fait partie de l'offre Max.",
+          "rate_limited": "Trop de documents en une heure. Réessayez plus tard.",
+          "refused": "Ce document n'a pas pu être lu.",
+          "unreadable": "Ce document n'a pas pu être lu. Essayez une photo plus nette.",
+          "bad_request": "Choisissez des photos (JPEG, PNG) ou un PDF de 8 Mo au plus.",
+          "failed": "La lecture a échoué. Réessayez dans un instant."
+        }
       }
     },
     "stats": {

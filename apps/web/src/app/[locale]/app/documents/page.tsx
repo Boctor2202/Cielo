@@ -3,6 +3,7 @@
 import { Award, BadgeCheck, Bell, CalendarClock, FileText, HeartPulse, IdCard, Languages, Moon, Plane, Plus, Radio, ShieldCheck, Trash2, Users, type LucideIcon } from "lucide-react";
 import { AircraftTypeInput } from "@/components/app/AircraftTypeInput";
 import { ClassRatingsCard } from "@/components/app/ClassRatingsCard";
+import { DocumentScan, DocumentScanButton } from "@/components/app/DocumentScan";
 import { useTypes } from "@/lib/hooks";
 import { AuthorityInput } from "@/components/app/AuthorityInput";
 import { useEffect, useMemo, useState } from "react";
@@ -46,6 +47,7 @@ export default function DocumentsPage() {
   const today = useToday();
   const fd = useFormatDate();
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [scan, setScan] = useState(false);
   const [perm, setPerm] = useState<NotificationPermission | "unsupported">("default");
 
   useEffect(() => setPerm(typeof Notification === "undefined" ? "unsupported" : Notification.permission), []);
@@ -90,7 +92,8 @@ export default function DocumentsPage() {
 
   return (
     <>
-      <PageTitle title={t("title")} subtitle={t("subtitle")} actions={<button type="button" className="btn btn-primary btn-sm" onClick={() => setDraft(blank())}><Plus size={15} /> {t("add")}</button>} />
+      <PageTitle title={t("title")} subtitle={t("subtitle")} actions={<div className="flex flex-wrap gap-2"><DocumentScanButton onClick={() => setScan(true)} /><button type="button" className="btn btn-primary btn-sm" onClick={() => setDraft(blank())}><Plus size={15} /> {t("add")}</button></div>} />
+      <DocumentScan open={scan} onClose={() => setScan(false)} licenses={licenses ?? []} />
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-5">
           {licenses && groups.length === 0 && <Card><Empty icon={<BadgeCheck size={36} />} text={t("empty")} /></Card>}

@@ -3,7 +3,7 @@ import { FlatList, Pressable, View } from "react-native";
 import { router } from "expo-router";
 import { licenseStatus } from "@cielo/core";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useWide, Appear, Card, Dot, EmptyState, Fab, Row, Txt, statusColor, tap } from "../../src/components/ui";
+import { useWide, Appear, Button, Card, Dot, EmptyState, Fab, Row, Txt, statusColor, tap } from "../../src/components/ui";
 import { Track } from "../../src/components/Bars";
 import { formatDate, type I18nKey } from "../../src/i18n";
 import { statusLabel } from "../../src/licenseLabel";
@@ -41,7 +41,9 @@ export default function Documents() {
         contentContainerStyle={[{ padding: space.lg, gap: space.md, paddingBottom: 140, flexGrow: 1 }, wide ? { width: "100%", maxWidth: 760, alignSelf: "center" } : null]}
         ListEmptyComponent={<EmptyState title={t("docs.empty")} hint={t("docs.emptyHint")} />}
         ListHeaderComponent={
-          items.length ? (
+          <View style={{ gap: space.md }}>
+          <Button kind="secondary" title={t("dscan.button")} onPress={() => (tap(), router.push("/document-scan"))} />
+          {items.length ? (
             <Appear>
               <View style={{ gap: space.md }}>
                 {next ? (
@@ -83,7 +85,8 @@ export default function Documents() {
                 </Row>
               </View>
             </Appear>
-          ) : undefined
+          ) : null}
+          </View>
         }
         renderItem={({ item: { l, s } }) => {
           const color = statusColor(c, s.state);
