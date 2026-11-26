@@ -1305,7 +1305,10 @@
           "wellness": "Spa & fitness",
           "shopping": "Shopping"
         },
-        "pickHotel": "Pick the hotel in the Hotel field at the top: places will then be found around it. Until then, they're around the airport."
+        "pickHotel": "Pick the hotel in the Hotel field at the top: places will then be found around it. Until then, they're around the airport.",
+        "recBadge": "Recommended by {count} Geardown pilots",
+        "recDo": "Recommend this place to Geardown pilots",
+        "recUndo": "Remove my recommendation"
       },
       "back": "All layovers",
       "arrival": "Arrival",
@@ -2828,6 +2831,12 @@
       "restore": "Restore",
       "restoreAll": "Restore all ({n})",
       "empty": "No deleted flight."
+    },
+    "openingPrompt": {
+      "title": "Already have flight hours?",
+      "text": "No need to type or photograph every page of your old logbooks: carry their totals over (total, PIC, co-pilot, night, IFR, landings…) in two minutes. They count in all your totals, your CV and the job offers.",
+      "cta": "Carry my totals over",
+      "later": "Hide"
     }
   },
   "why": {

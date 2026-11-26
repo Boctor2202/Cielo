@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { OpeningPrompt } from "../../src/components/OpeningPrompt";
 import { Alert, Animated, Pressable, ScrollView, SectionList, StyleSheet, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
@@ -202,7 +203,9 @@ export default function Logbook() {
         stickySectionHeadersEnabled={false}
         contentContainerStyle={[{ paddingBottom: 140, paddingTop: space.sm, flexGrow: 1 }, wide ? { width: "100%", maxWidth: 760, alignSelf: "center" } : null]}
         ListHeaderComponent={
-          flights.length ? (
+          <>
+          <OpeningPrompt style={{ marginHorizontal: space.md, marginTop: space.sm }} />
+          {flights.length ? (
             <View style={{ marginHorizontal: space.md, marginTop: space.sm, gap: space.sm }}>
               <Segmented<"list" | "calendar">
                 value={view}
@@ -332,7 +335,8 @@ export default function Logbook() {
                 </Txt>
               ) : null}
             </View>
-          ) : undefined
+          ) : null}
+          </>
         }
         ListEmptyComponent={view === "calendar" && flights.length ? undefined : q.trim() || filtersOn ? <EmptyState title={t("log.noMatch")} /> : <EmptyState title={t("log.empty")} hint={t("log.emptyHint")} action={<Button kind="secondary" title={t("uimp.title")} onPress={() => router.push("/import" as never)} />} />}
         renderSectionHeader={({ section }) => (

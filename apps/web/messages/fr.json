@@ -1305,7 +1305,10 @@
           "wellness": "Spa et sport",
           "shopping": "Shopping"
         },
-        "pickHotel": "Choisissez l'hôtel dans le champ « Hôtel » en haut de la fiche : les adresses se calculeront autour de lui. En attendant, elles sont autour de l'aéroport."
+        "pickHotel": "Choisissez l'hôtel dans le champ « Hôtel » en haut de la fiche : les adresses se calculeront autour de lui. En attendant, elles sont autour de l'aéroport.",
+        "recBadge": "Recommandé par {count} pilotes Geardown",
+        "recDo": "Recommander cette adresse aux pilotes Geardown",
+        "recUndo": "Retirer ma recommandation"
       },
       "back": "Toutes les escales",
       "arrival": "Arrivée",
@@ -2828,6 +2831,12 @@
       "restore": "Restaurer",
       "restoreAll": "Tout restaurer ({n})",
       "empty": "Aucun vol supprimé."
+    },
+    "openingPrompt": {
+      "title": "Vous avez déjà des heures de vol ?",
+      "text": "Inutile de saisir ou de photographier chaque page de vos anciens carnets : reportez leurs totaux (total, CDB, copilote, nuit, IFR, atterrissages…) en deux minutes. Ils comptent dans tous vos totaux, votre CV et les offres d'emploi.",
+      "cta": "Reporter mes totaux",
+      "later": "Masquer"
     }
   },
   "why": {

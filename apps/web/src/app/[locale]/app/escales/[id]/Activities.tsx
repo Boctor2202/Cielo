@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   Sparkles,
   Star,
+  ThumbsUp,
   Trees,
   Umbrella,
   UtensilsCrossed,
@@ -25,6 +26,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Card, Segmented } from "@/components/app/ui";
 import type { HotelHit, Place, PlaceCategory } from "@/lib/places";
+import { apiFetch } from "@/lib/report";
 
 type Cat = PlaceCategory;
 const CATS: Cat[] = [
@@ -134,14 +136,42 @@ export function Activities({
     };
   }, [center, cat, locale, cache]);
 
+  // recommendations of the Geardown members: a count from 2 on, and the pilot's own choice
+  const [recs, setRecs] = useState<{ counts: Record<string, number>; mine: Set<string> }>({ counts: {}, mine: new Set() });
+  useEffect(() => {
+    if (!places?.length) return;
+    let alive = true;
+    apiFetch(`/api/escale/recs?ids=${places.map((p) => encodeURIComponent(p.id)).join(",")}`)
+      .then((r) => r.json() as Promise<{ counts?: Record<string, number>; mine?: string[] }>)
+      .then((d) => alive && setRecs({ counts: d.counts ?? {}, mine: new Set(d.mine ?? []) }))
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [places]);
+  const recommend = async (id: string) => {
+    const on = !recs.mine.has(id);
+    const mine = new Set(recs.mine);
+    if (on) mine.add(id);
+    else mine.delete(id);
+    setRecs((r) => ({ ...r, mine }));
+    const res = await apiFetch("/api/escale/recs", { method: "POST", body: JSON.stringify({ placeId: id, on }) }).catch(() => null);
+    const d = res?.ok ? ((await res.json()) as { count?: number }) : null;
+    if (d) setRecs((r) => ({ ...r, counts: { ...r.counts, [id]: d.count ?? 0 } }));
+    else setRecs((r) => ({ ...r, mine: recs.mine }));
+  };
+
   const list = useMemo(
     () =>
       places
-        ? [...places].sort((a, b) =>
-            sort === "rating" ? b.score - a.score : a.distanceM - b.distanceM,
+        ? [...places].sort(
+            (a, b) =>
+              // places recommended by members first
+              Number((recs.counts[b.id] ?? 0) >= 2) - Number((recs.counts[a.id] ?? 0) >= 2) ||
+              (sort === "rating" ? b.score - a.score : a.distanceM - b.distanceM),
           )
         : [],
-    [places, sort],
+    [places, sort, recs.counts],
   );
   const walk = (m: number) =>
     m < 1200
@@ -206,7 +236,7 @@ export function Activities({
 
               <ol className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {list.map((p, i) => (
-                  <PlaceCard key={p.id} p={p} rank={i + 1} cat={cat} walk={walk(p.distanceM)} openLabel={p.openNow === undefined ? undefined : p.openNow ? t("open") : t("closed")} mapsLabel={t("openMaps", { name: p.name })} locale={locale} />
+                  <PlaceCard key={p.id} p={p} rank={i + 1} cat={cat} walk={walk(p.distanceM)} openLabel={p.openNow === undefined ? undefined : p.openNow ? t("open") : t("closed")} mapsLabel={t("openMaps", { name: p.name })} locale={locale} recCount={recs.counts[p.id] ?? 0} recMine={recs.mine.has(p.id)} onRecommend={() => void recommend(p.id)} recLabel={(recs.counts[p.id] ?? 0) >= 2 ? t("recBadge", { count: recs.counts[p.id]! }) : ""} recButton={t(recs.mine.has(p.id) ? "recUndo" : "recDo")} />
                 ))}
               </ol>
               {/* Google's terms: Places data shown outside a Google map carries the attribution */}
@@ -238,7 +268,7 @@ const CAT_LOOK: Record<Cat, { icon: LucideIcon; from: string; to: string }> = {
 };
 
 /** One place: its Google photo (loaded when the card scrolls into view), rank, rating, and the walk from the hotel. */
-function PlaceCard({ p, rank, cat, walk, openLabel, mapsLabel, locale }: { p: Place; rank: number; cat: Cat; walk: string; openLabel?: string; mapsLabel: string; locale: string }) {
+function PlaceCard({ p, rank, cat, walk, openLabel, mapsLabel, locale, recCount, recMine, onRecommend, recLabel, recButton }: { p: Place; rank: number; cat: Cat; walk: string; openLabel?: string; mapsLabel: string; locale: string; recCount: number; recMine: boolean; onRecommend: () => void; recLabel: string; recButton: string }) {
   const [failed, setFailed] = useState(false);
   const look = CAT_LOOK[cat];
   const Icon = look.icon;
@@ -261,7 +291,12 @@ function PlaceCard({ p, rank, cat, walk, openLabel, mapsLabel, locale }: { p: Pl
             <span className="font-normal text-white/70">({(p.reviews ?? 0).toLocaleString(locale)})</span>
           </span>
         )}
-        <div className="absolute inset-x-3 bottom-2.5">
+        <div className="absolute inset-x-3 bottom-2.5 pr-10">
+          {recCount >= 2 && (
+            <span className="mb-1 inline-flex max-w-full items-center gap-1 truncate rounded-full bg-[#22c55e] px-2 py-0.5 text-[10.5px] font-bold text-[#0a1626]">
+              <ThumbsUp size={11} className="shrink-0 fill-current" /> {recLabel}
+            </span>
+          )}
           <p className="truncate text-base font-bold text-white drop-shadow">{p.name}</p>
           {p.photo?.author && !failed && <p className="truncate text-[10px] text-white/70">© {p.photo.author}</p>}
         </div>
@@ -278,10 +313,23 @@ function PlaceCard({ p, rank, cat, walk, openLabel, mapsLabel, locale }: { p: Pl
     </>
   );
   return (
-    <li className="group min-w-0 overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-shadow hover:shadow-md">
+    <li className={`group relative min-w-0 overflow-hidden rounded-2xl border bg-surface shadow-sm transition-shadow hover:shadow-md ${recCount >= 2 ? "border-[#22c55e]/60" : "border-border"}`}>
       {p.mapsUrl ? (
         <a href={p.mapsUrl} target="_blank" rel="noopener noreferrer" aria-label={mapsLabel} className="block">{body}</a>
       ) : body}
+      {/* the pilot's own recommendation: outside the link to Google Maps */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[16/10]">
+        <button
+          type="button"
+          onClick={onRecommend}
+          aria-pressed={recMine}
+          aria-label={recButton}
+          title={recButton}
+          className={`pointer-events-auto absolute bottom-2.5 right-2.5 grid h-8 w-8 place-items-center rounded-full backdrop-blur transition-colors ${recMine ? "bg-[#22c55e] text-[#0a1626]" : "bg-black/55 text-white hover:bg-black/75"}`}
+        >
+          <ThumbsUp size={15} className={recMine ? "fill-current" : ""} />
+        </button>
+      </div>
     </li>
   );
 }

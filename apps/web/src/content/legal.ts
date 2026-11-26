@@ -24,7 +24,7 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
       title: "Politique de confidentialité (RGPD)",
       sections: [
         { h: "Responsable du traitement", p: [`${c.legalName}, ${c.address}. Contact : ${SITE.contactEmail}.`] },
-        { h: "Données traitées", p: ["Données de compte : adresse e-mail, nom, mode de connexion (e-mail, Apple, Google).", "Données de carnet de vol : vols, appareils, licences et qualifications, aptitude médicale (classe, dates, codes de limitation), roster, escales, signatures, documents joints que vous ajoutez.", "Données techniques : journaux de connexion et de synchronisation, nécessaires à la sécurité du service."] },
+        { h: "Données traitées", p: ["Données de compte : adresse e-mail, nom, mode de connexion (e-mail, Apple, Google).", "Données de carnet de vol : vols, appareils, licences et qualifications, aptitude médicale (classe, dates, codes de limitation), roster, escales, signatures, documents joints que vous ajoutez.", "Recommandations d'adresses d'escale : les autres membres n'en voient que le nombre par adresse (à partir de 2), jamais qui les a faites.", "Données techniques : journaux de connexion et de synchronisation, nécessaires à la sécurité du service."] },
         { h: "Finalités et bases légales", p: ["Fournir le carnet de vol et sa synchronisation (exécution du contrat).", "Envoyer les alertes d'échéance que vous avez activées (exécution du contrat).", "Facturer les abonnements (obligation légale et exécution du contrat).", "Sécuriser le service (intérêt légitime).", "Lire, à votre demande, une licence ou un certificat médical pour remplir vos documents (votre consentement ; pour les données de santé, votre consentement explicite, article 9.2.a du RGPD)."] },
         {
           h: "Données de santé",
@@ -91,7 +91,7 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
       title: "Privacy policy (GDPR)",
       sections: [
         { h: "Controller", p: [`${c.legalName}, ${c.address}. Contact: ${SITE.contactEmail}.`] },
-        { h: "Data processed", p: ["Account data: e-mail address, name, sign-in method (e-mail, Apple, Google).", "Logbook data: flights, aircraft, licences and ratings, medical certificate (class, dates, limitation codes), roster, layovers, signatures, attachments you add.", "Technical data: sign-in and sync logs required for service security."] },
+        { h: "Data processed", p: ["Account data: e-mail address, name, sign-in method (e-mail, Apple, Google).", "Logbook data: flights, aircraft, licences and ratings, medical certificate (class, dates, limitation codes), roster, layovers, signatures, attachments you add.", "Layover place recommendations: other members only see how many there are for a place (from 2 on), never who made them.", "Technical data: sign-in and sync logs required for service security."] },
         { h: "Purposes and legal bases", p: ["Provide the logbook and its sync (contract).", "Send the expiry alerts you enabled (contract).", "Bill subscriptions (legal obligation and contract).", "Secure the service (legitimate interest).", "Read, at your request, a licence or a medical certificate to fill in your documents (your consent; for health data, your explicit consent, GDPR article 9(2)(a))."] },
         {
           h: "Health data",
