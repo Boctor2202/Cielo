@@ -58,5 +58,8 @@ describe("live flight", () => {
     expect(nearestAirport(list, 48.731, 2.364)?.icao).toBe("LFPO");
     // in the middle of nowhere
     expect(nearestAirport(list, 45, 5)).toBeUndefined();
+    // at home, 25 km away: none within 6 km, but Orly is the nearest within 300
+    expect(nearestAirport(list, 48.95, 2.36)).toBeUndefined();
+    expect(nearestAirport(list, 48.95, 2.36, 300)?.icao).toBe("LFPO");
   });
 });
