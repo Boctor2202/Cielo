@@ -1088,6 +1088,22 @@
           "keep": "Importer quand même",
           "kept": "Importé même s'il ressemble à un vol de votre carnet.",
           "undo": "Annuler"
+        },
+        "airfield": {
+          "missing": "{count, plural, one {# vol lu sans aérodrome} other {# vols lus sans aérodrome}} (vols locaux, tours de piste…) : indiquez le terrain sur chaque ligne pour les importer. Les autres vols s'importent sans attendre.",
+          "label": "Aérodrome",
+          "ph": "LFxx",
+          "set": "OK",
+          "suggest": "{code} ? (vols du même jour)",
+          "bulk": "Appliquer {code} aux {count, plural, one {# autre vol} other {# autres vols}} sans aérodrome sur {reg} (du {from} au {to}) ?",
+          "apply": "Appliquer",
+          "no": "Non"
+        },
+        "pages": {
+          "ok": "Les vols lus font bien {expected}, le total écrit en bas des pages du carnet.",
+          "off": "Les vols lus font {read}, les totaux écrits en bas des pages du carnet {expected} : un vol oublié ou une heure mal lue. À vérifier :",
+          "page": "du {from} au {to} : {read} lus pour {expected} écrits",
+          "pageNoDate": "{read} lus pour {expected} écrits"
         }
       }
     },

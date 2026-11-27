@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { reportAiFailure } from "@/lib/server/anthropic";
-import { accessFor, noCardTrialDays, ep5Legs, parseAirFranceEp5, parseLogTenEasa, parseFlightReport, sheetCellText, tableSignature, type LogbookLeg, type StoredMapping } from "@cielo/core";
+import { accessFor, checkPageTotals, noCardTrialDays, ep5Legs, parseAirFranceEp5, parseLogTenEasa, parseFlightReport, sheetCellText, tableSignature, type LogbookLeg, type StoredMapping } from "@cielo/core";
 import { adminDb, isAdminId, userFrom } from "@/lib/server/admin";
 import { pdfText } from "@/lib/server/pdf";
 import { extractLegs, ImportAiError, mapTable } from "@/lib/server/importAi";
@@ -179,7 +179,8 @@ export async function POST(req: Request) {
     const r = kind === "pdf" ? await extractPdfLegs(Uint8Array.from(Buffer.from(pdf, "base64")), today) : await extractLegs(content, today, kind === "images" ? "high" : "medium");
     await keep(`ai:${r.source}`, r.legs.length);
     if (!r.legs.length) await logImport("none", { reader: r.source });
-    return Response.json({ reader: "ai", source: r.source, timeBasis: r.timeBasis, legs: r.legs }, { headers: { "Cache-Control": "no-store" } });
+    // a paper logbook: the flights read against the totals printed at the foot of its pages
+    return Response.json({ reader: "ai", source: r.source, timeBasis: r.timeBasis, legs: r.legs, pageCheck: checkPageTotals(r.legs, r.pages) }, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
     if (e instanceof ImportAiError) {
       await logImport(e.code);
@@ -219,7 +220,7 @@ async function extractPdfLegs(bytes: Uint8Array, today: string): Promise<Awaited
       const pages = await splitPdf(part, 1);
       if (pages.length < 2) throw e;
       const halves = await Promise.all(pages.map(read));
-      return { source: halves[0]!.source, timeBasis: halves[0]!.timeBasis, legs: halves.flatMap((h) => h.legs) };
+      return { source: halves[0]!.source, timeBasis: halves[0]!.timeBasis, legs: halves.flatMap((h) => h.legs), pages: halves.flatMap((h) => h.pages ?? []) };
     }
   };
   // four parts at a time, results kept in page order
@@ -231,5 +232,5 @@ async function extractPdfLegs(bytes: Uint8Array, today: string): Promise<Awaited
     }),
   );
   const first = results.find((r) => r.legs.length) ?? results[0]!;
-  return { source: first.source, timeBasis: first.timeBasis, legs: results.flatMap((r) => r.legs) };
+  return { source: first.source, timeBasis: first.timeBasis, legs: results.flatMap((r) => r.legs), pages: results.flatMap((r) => r.pages ?? []) };
 }

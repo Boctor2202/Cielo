@@ -3,7 +3,7 @@
 import { AlertTriangle, Check, Pencil, Undo2, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { formatDuration, rowMinutes, type CheckField, type ImportCheck, type ImportChoices, type ImportedRow, type ImportRowEdit } from "@cielo/core";
+import { formatDuration, localAirportSuggestion, missingAirport, rowMinutes, sameAircraftMissing, type CheckField, type ImportCheck, type ImportChoices, type ImportedRow, type ImportRowEdit, type PageTotalsCheck } from "@cielo/core";
 import { Card, ClockInput, DurationInput, Field, Segmented } from "./ui";
 
 type Row = ImportedRow & { excluded?: boolean; keepDuplicate?: boolean };
@@ -31,6 +31,7 @@ export function ImportReview({
   onCancel,
   busy,
   fills = 0,
+  pageCheck = null,
 }: {
   rows: Row[];
   check: ImportCheck | null;
@@ -44,9 +45,21 @@ export function ImportReview({
   busy: boolean;
   /** flights already logged that get their takeoffs and landings from this document */
   fills?: number;
+  /** a paper logbook: the flights read against the totals printed at the foot of its pages */
+  pageCheck?: PageTotalsCheck | null;
 }) {
   const t = useTranslations("app.import.review");
   const [open, setOpen] = useState<number | null>(null);
+  // an airfield just given to a local flight, offered to the other flights without one on the same aircraft
+  const [bulk, setBulk] = useState<{ code: string; reg: string; rows: Row[] } | null>(null);
+  const noAirport = rows.filter(missingAirport);
+  const giveAirfield = (r: Row, code: string) => {
+    const c = code.trim().toUpperCase();
+    if (!/^[A-Z0-9]{3,4}$/.test(c)) return;
+    onEdit(r.rowIndex, { ...(edits[r.rowIndex] ?? {}), dep: c, arr: c });
+    const others = sameAircraftMissing(rows, r.rowIndex);
+    setBulk(others.length ? { code: c, reg: r.input?.registration ?? "", rows: others } : null);
+  };
   const dupOf = check?.duplicateOf ?? {};
   const reasons = (r: Row): string[] => {
     if (r.excluded) return [];
@@ -106,6 +119,47 @@ export function ImportReview({
         </div>
       </div>
 
+      {pageCheck && (
+        <div className={`mt-4 rounded-xl px-3 py-2 text-sm ${pageCheck.off.length ? "bg-[var(--caution)]/12 text-[var(--caution)]" : "bg-surface-2/60 text-muted"}`}>
+          {pageCheck.off.length ? (
+            <>
+              <p className="flex items-start gap-1.5"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> {t("pages.off", { read: formatDuration(pageCheck.readMin), expected: formatDuration(pageCheck.expectedMin) })}</p>
+              <ul className="num mt-1 list-disc pl-6">
+                {pageCheck.off.slice(0, 12).map((o, k) => (
+                  <li key={k}>{o.from ? t("pages.page", { from: isoToDmy(o.from), to: isoToDmy(o.to), read: formatDuration(o.readMin), expected: formatDuration(o.expectedMin) }) : t("pages.pageNoDate", { read: formatDuration(o.readMin), expected: formatDuration(o.expectedMin) })}</li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="flex items-center gap-1.5"><Check size={14} /> {t("pages.ok", { expected: formatDuration(pageCheck.expectedMin) })}</p>
+          )}
+        </div>
+      )}
+
+      {noAirport.length > 0 && (
+        <p className="mt-4 flex items-start gap-1.5 rounded-xl bg-[var(--caution)]/12 px-3 py-2 text-sm text-[var(--caution)]">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0" /> {t("airfield.missing", { count: noAirport.length })}
+        </p>
+      )}
+      {bulk && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-accent/40 bg-accent/8 px-3 py-2 text-sm">
+          <span className="flex-1">
+            {t("airfield.bulk", { code: bulk.code, count: bulk.rows.length, reg: bulk.reg, from: isoToDmy(bulk.rows[0]?.input?.date), to: isoToDmy(bulk.rows[bulk.rows.length - 1]?.input?.date) })}
+          </span>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              for (const o of bulk.rows) onEdit(o.rowIndex, { ...(edits[o.rowIndex] ?? {}), dep: bulk.code, arr: bulk.code });
+              setBulk(null);
+            }}
+          >
+            {t("airfield.apply")}
+          </button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setBulk(null)}>{t("airfield.no")}</button>
+        </div>
+      )}
+
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
         <Segmented value={filter} onChange={setFilter} options={[{ value: "check", label: t("filterCheck", { count: toCheck.length }) }, { value: "all", label: t("filterAll", { count: rows.length }) }]} />
       </div>
@@ -133,6 +187,8 @@ export function ImportReview({
                   <AlertTriangle size={14} className="mt-0.5 shrink-0" /> {why.join(" · ")}
                 </p>
               )}
+              {missingAirport(r) && r.input?.remarks && <p className="mt-1 text-sm text-muted">{r.input.remarks}</p>}
+              {missingAirport(r) && open !== r.rowIndex && <AirfieldFill suggestion={localAirportSuggestion(rows, r.rowIndex)} onSet={(code) => giveAirfield(r, code)} />}
               {dupOf[r.rowIndex] && !r.excluded && (
                 <button type="button" className="btn btn-secondary btn-sm mt-2" onClick={() => onEdit(r.rowIndex, { ...(edits[r.rowIndex] ?? {}), keepDuplicate: true })}>{t("dup.keep")}</button>
               )}
@@ -153,6 +209,27 @@ export function ImportReview({
         <button type="button" className="btn btn-primary" disabled={busy || !check || (check.kept === 0 && !fills)} onClick={onConfirm}>{check && check.kept === 0 && fills ? t("confirmFills", { count: fills }) : t("confirm", { count: check?.kept ?? 0 })}</button>
       </div>
     </Card>
+  );
+}
+
+/** The airfield of a flight read without one: typed, or the one the flights around it suggest (never filled in alone). */
+function AirfieldFill({ suggestion, onSet }: { suggestion?: string; onSet: (code: string) => void }) {
+  const t = useTranslations("app.import.review");
+  const [code, setCode] = useState("");
+  return (
+    <form
+      className="mt-2 flex flex-wrap items-center gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSet(code);
+      }}
+    >
+      <input className="input num" style={{ width: "7.5rem" }} value={code} maxLength={4} placeholder={t("airfield.ph")} aria-label={t("airfield.label")} onChange={(e) => setCode(e.target.value.toUpperCase())} />
+      <button type="submit" className="btn btn-secondary btn-sm" disabled={!/^[A-Z0-9]{3,4}$/.test(code)}>{t("airfield.set")}</button>
+      {suggestion && (
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => onSet(suggestion)}>{t("airfield.suggest", { code: suggestion })}</button>
+      )}
+    </form>
   );
 }
 

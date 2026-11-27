@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { formatDuration, parseDuration, rowMinutes, type CheckField, type ImportCheck, type ImportChoices, type ImportedRow, type ImportRowEdit } from "@cielo/core";
+import { formatDuration, localAirportSuggestion, missingAirport, parseDuration, rowMinutes, sameAircraftMissing, type CheckField, type ImportCheck, type ImportChoices, type ImportedRow, type ImportRowEdit, type PageTotalsCheck } from "@cielo/core";
 import { useApp } from "../state";
 import { useTheme } from "../theme";
 import type { I18nKey } from "../i18n";
@@ -41,6 +41,7 @@ export function ImportReview({
   busy,
   source,
   fills = 0,
+  pageCheck = null,
 }: {
   rows: ImportRow[];
   check: ImportCheck | null;
@@ -55,10 +56,22 @@ export function ImportReview({
   source?: string | null;
   /** flights already logged that get their takeoffs and landings from this document */
   fills?: number;
+  /** a paper logbook: the flights read against the totals printed at the foot of its pages */
+  pageCheck?: PageTotalsCheck | null;
 }) {
   const { t } = useApp();
   const c = useTheme();
   const [open, setOpen] = useState<number | null>(null);
+  // an airfield just given to a local flight, offered to the other flights without one on the same aircraft
+  const [bulk, setBulk] = useState<{ code: string; reg: string; rows: ImportRow[] } | null>(null);
+  const noAirport = rows.filter(missingAirport);
+  const giveAirfield = (r: ImportRow, code: string) => {
+    const v = code.trim().toUpperCase();
+    if (!/^[A-Z0-9]{3,4}$/.test(v)) return;
+    onEdit(r.rowIndex, { ...(edits[r.rowIndex] ?? {}), dep: v, arr: v });
+    const others = sameAircraftMissing(rows, r.rowIndex);
+    setBulk(others.length ? { code: v, reg: r.input?.registration ?? "", rows: others } : null);
+  };
   const dupOf = check?.duplicateOf ?? {};
   const reasons = (r: ImportRow): string[] => {
     if (r.excluded) return [];
@@ -108,6 +121,46 @@ export function ImportReview({
         <Segmented label={t("irv.xc")} value={choices.xc ?? "doc"} onChange={(xc) => onChoices({ ...choices, xc })} options={(["doc", "other", "none"] as const).map((v) => ({ value: v, label: v === "doc" ? t("irv.asRead") : t(`irv.xc_${v}` as I18nKey) }))} />
       </Card>
 
+      {pageCheck ? (
+        <Card style={{ gap: 4, backgroundColor: pageCheck.off.length ? `${c.caution}22` : undefined }}>
+          {pageCheck.off.length ? (
+            <>
+              <Txt variant="small" color={c.caution}>{t("irv.pages.off", { read: formatDuration(pageCheck.readMin), expected: formatDuration(pageCheck.expectedMin) })}</Txt>
+              {pageCheck.off.slice(0, 12).map((o, k) => (
+                <Txt key={k} variant="small" mono color={c.caution}>
+                  {"• "}
+                  {o.from ? t("irv.pages.page", { from: dmy(o.from), to: dmy(o.to), read: formatDuration(o.readMin), expected: formatDuration(o.expectedMin) }) : t("irv.pages.pageNoDate", { read: formatDuration(o.readMin), expected: formatDuration(o.expectedMin) })}
+                </Txt>
+              ))}
+            </>
+          ) : (
+            <Txt variant="small">✓ {t("irv.pages.ok", { expected: formatDuration(pageCheck.expectedMin) })}</Txt>
+          )}
+        </Card>
+      ) : null}
+
+      {noAirport.length ? (
+        <Card style={{ backgroundColor: `${c.caution}22` }}>
+          <Txt variant="small" color={c.caution}>{t("irv.airfield.missing", { n: noAirport.length })}</Txt>
+        </Card>
+      ) : null}
+      {bulk ? (
+        <Card style={{ gap: 8, borderWidth: 1, borderColor: c.accent }}>
+          <Txt variant="small">{t("irv.airfield.bulk", { code: bulk.code, n: bulk.rows.length, reg: bulk.reg, from: dmy(bulk.rows[0]?.input?.date), to: dmy(bulk.rows[bulk.rows.length - 1]?.input?.date) })}</Txt>
+          <Row style={{ gap: 8 }}>
+            <Button
+              small
+              title={t("irv.airfield.apply")}
+              onPress={() => {
+                for (const o of bulk.rows) onEdit(o.rowIndex, { ...(edits[o.rowIndex] ?? {}), dep: bulk.code, arr: bulk.code });
+                setBulk(null);
+              }}
+            />
+            <Button small kind="ghost" title={t("irv.airfield.no")} onPress={() => setBulk(null)} />
+          </Row>
+        </Card>
+      ) : null}
+
       <Segmented value={filter} onChange={setFilter} options={[{ value: "check", label: t("irv.filterCheck", { n: toCheck.length }) }, { value: "all", label: t("irv.filterAll", { n: rows.length }) }]} />
 
       {shown.slice(0, 300).map((r) => {
@@ -137,6 +190,8 @@ export function ImportReview({
                 </Row>
               ) : null}
             </Pressable>
+            {missingAirport(r) && r.input?.remarks ? <Txt variant="small" color={c.muted}>{r.input.remarks}</Txt> : null}
+            {missingAirport(r) && open !== r.rowIndex ? <AirfieldFill suggestion={localAirportSuggestion(rows, r.rowIndex)} onSet={(code) => giveAirfield(r, code)} /> : null}
             {dupOf[r.rowIndex] && !r.excluded ? <Button kind="secondary" title={t("irv.dup.keep")} onPress={() => onEdit(r.rowIndex, { ...(edits[r.rowIndex] ?? {}), keepDuplicate: true })} /> : null}
             {r.keepDuplicate && !dupOf[r.rowIndex] ? (
               <Row style={{ gap: 8, flexWrap: "wrap" }}>
@@ -222,5 +277,30 @@ function RowEditor({ row, edit, onEdit, onClose }: { row: ImportRow; edit: Impor
         <Button title={t("irv.ok")} onPress={onClose} />
       </Row>
     </View>
+  );
+}
+
+/** The airfield of a flight read without one: typed, or the one the flights around it suggest (never filled in alone). */
+function AirfieldFill({ suggestion, onSet }: { suggestion?: string; onSet: (code: string) => void }) {
+  const { t } = useApp();
+  const [code, setCode] = useState("");
+  const ok = /^[A-Z0-9]{3,4}$/.test(code);
+  return (
+    <Row style={{ gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+      <Field
+        style={{ width: 110 }}
+        monoValue
+        value={code}
+        maxLength={4}
+        autoCapitalize="characters"
+        autoCorrect={false}
+        placeholder={t("irv.airfield.ph")}
+        accessibilityLabel={t("irv.airfield.label")}
+        onChangeText={(v) => setCode(v.toUpperCase())}
+        onSubmitEditing={() => ok && onSet(code)}
+      />
+      <Button small kind="secondary" title={t("irv.airfield.set")} disabled={!ok} onPress={() => onSet(code)} />
+      {suggestion ? <Button small kind="ghost" title={t("irv.airfield.suggest", { code: suggestion })} onPress={() => onSet(suggestion)} /> : null}
+    </Row>
   );
 }

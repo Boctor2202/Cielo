@@ -15,7 +15,7 @@ import { API_URL } from "../src/api";
 import { lookupAirport, toIcao } from "../src/airports";
 import { prepareImportedRows, savePrepared, type PreparedImport } from "../src/importer";
 import { ImportReview } from "../src/components/ImportReview";
-import { checkImport, formatDuration, type ImportCheck } from "@cielo/core";
+import { checkImport, formatDuration, mergePageChecks, type ImportCheck, type PageTotalsCheck } from "@cielo/core";
 import { Button, Card, Row, Screen, Segmented, Txt, tap } from "../src/components/ui";
 import { useApp } from "../src/state";
 import { useTheme } from "../src/theme";
@@ -25,7 +25,7 @@ import type { I18nKey } from "../src/i18n";
 const BATCH_BYTES = 3_300_000;
 const PHOTO_BATCH_BYTES = 4_200_000;
 
-type Result = { table?: string[][]; legs?: LogbookLeg[]; role?: string | null; reader?: string; source?: string; mapping?: StoredMapping; mappingIndex?: Record<string, number>; error?: string };
+type Result = { table?: string[][]; legs?: LogbookLeg[]; role?: string | null; reader?: string; source?: string; mapping?: StoredMapping; mappingIndex?: Record<string, number>; pageCheck?: PageTotalsCheck | null; error?: string };
 
 /**
  * The universal import, as on the website: photos of paper logbook pages, a PDF statement, a CSV or a pasted
@@ -41,6 +41,8 @@ export default function ImportScreen() {
   const [choices, setChoices] = useState<ImportChoices>({ rules: "doc", function: "doc", xc: "doc" });
   // the pilot's corrections, row by row
   const [edits, setEdits] = useState<Record<number, ImportRowEdit>>({});
+  /** a paper logbook: the flights read against the totals printed at the foot of its pages */
+  const [pageCheck, setPageCheck] = useState<PageTotalsCheck | null>(null);
   const rows = useMemo(() => (readRows ? applyImportChoices(readRows, choices).map((r) => editImportedRow(r, edits[r.rowIndex])) : null), [readRows, choices, edits]);
   /** A new reading: corrections and choices made for the previous one are dropped. */
   const setRows = (next: ImportedRow[] | null) => {
@@ -81,7 +83,8 @@ export default function ImportScreen() {
     return r.ok ? d : { ...d, error: d.error ?? (r.status === 413 ? "too_big" : "error") };
   };
   const fail = (code?: string) => Alert.alert(t("uimp.title"), t(`uimp.err.${["plan", "unauthorized", "rate_limited", "unsupported", "too_big", "busy", "xls", "unreadable"].includes(code ?? "") ? code : "error"}` as never));
-  const show = (legs: LogbookLeg[], role?: string | null, src?: string | null) => {
+  const show = (legs: LogbookLeg[], role?: string | null, src?: string | null, check: PageTotalsCheck | null = null) => {
+    setPageCheck(check);
     const fn = role === "CDB" || role === "CDT" ? "PIC" : role ? "SIC" : pilot.defaultFunction;
     setRows(legsToRows(legs, (code) => toIcao(code), { function: fn, pilotFlying: false, airline: src === "Air France · EP4 / EP5" }));
     setSource(src ?? null);
@@ -95,6 +98,7 @@ export default function ImportScreen() {
     setBusy("photos");
     try {
       const legs: LogbookLeg[] = [];
+      const checks: (PageTotalsCheck | null | undefined)[] = [];
       let batch: typeof list = [];
       let size = 0;
       let src: string | undefined;
@@ -103,6 +107,7 @@ export default function ImportScreen() {
         const d = await call({ kind: "images", images: batch });
         if (d.error) throw new Error(d.error);
         legs.push(...(d.legs ?? []));
+        checks.push(d.pageCheck);
         src = d.source ?? src;
         batch = [];
         size = 0;
@@ -115,7 +120,7 @@ export default function ImportScreen() {
       }
       await flush();
       setPhotos([]);
-      show(legs, null, src ?? "ai");
+      show(legs, null, src ?? "ai", mergePageChecks(checks));
     } catch (e) {
       fail((e as Error).message);
     } finally {
@@ -166,7 +171,7 @@ export default function ImportScreen() {
         }
         if (!all.length) return fail("error");
         const reader = all.every((d) => d.reader === all[0]!.reader) ? all[0]!.reader : undefined;
-        return show(all.flatMap((d) => d.legs ?? []), all.find((d) => d.role)?.role ?? null, reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : reader === "logten-pdf" ? "LogTen" : all[0]!.source ?? "ai");
+        return show(all.flatMap((d) => d.legs ?? []), all.find((d) => d.role)?.role ?? null, reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : reader === "logten-pdf" ? "LogTen" : all[0]!.source ?? "ai", mergePageChecks(all.map((d) => d.pageCheck)));
       }
       // Excel 97-2003 (.xls) cannot be read: ask for .xlsx or CSV
       if (/\.xls$/i.test(a.name) || a.mimeType === "application/vnd.ms-excel") return fail("xls");
@@ -290,6 +295,7 @@ export default function ImportScreen() {
           onCancel={() => setRows(null)}
           busy={busy === "save"}
           fills={review?.prepared.fills.length ?? 0}
+          pageCheck={table ? null : pageCheck}
           source={source ? (source === "learned" ? t("uimp.learned") : source === "report" ? t("uimp.report") : source === "LogTen" || source === "Air France · EP4 / EP5" ? t("uimp.reader", { source }) : t("uimp.ai", { source })) : null}
         />
       </Screen>
