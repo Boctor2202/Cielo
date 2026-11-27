@@ -45,7 +45,7 @@
   },
   "features": {
     "title": "Everything a logbook should do",
-    "subtitle": "Twelve tools, one source of truth for your flying experience.",
+    "subtitle": "Thirteen tools, one source of truth for your flying experience.",
     "items": {
       "logbook": {
         "title": "Logbook and exports in authority formats",
@@ -152,6 +152,15 @@
         "points": [
           "Restaurants, bars, beaches, culture… ranked by rating or distance",
           "Places recommended by Geardown pilots, from 2 recommendations on"
+        ]
+      },
+      "faa": {
+        "title": "FAA endorsements and the 8710-1 report",
+        "text": "The 96 official sample endorsements of AC 61-65K, filled in with your name and aircraft, signed by your instructor on your screen or in their own browser, without an account. And the \"Record of Pilot Time\" section of Form 8710-1, worked out from your logbook, ready to copy into IACRA.",
+        "points": [
+          "Signed with the CFI number and the RE or expiration date, sealed with a fingerprint",
+          "Deadlines tracked: 90-day solo, flight review every 24 calendar months",
+          "Record of the endorsements given, for instructors (14 CFR 61.189)"
         ]
       }
     },
@@ -3362,6 +3371,14 @@
       "ratings": {
         "t": "Recency, SEP / MEP and HUD",
         "d": "3 takeoffs and landings in 90 days, class rating revalidation by experience, HUD recency for the pilots who fly with one."
+      },
+      "faa": {
+        "t": "FAA endorsements and 8710-1",
+        "d": "The 96 AC 61-65K sample endorsements signed by the instructor on screen or by link, and the Form 8710-1 table worked out from the logbook."
+      },
+      "live": {
+        "t": "I'm flying now",
+        "d": "Off-block, take-off, landing and on-block stamped in one tap, airports found by GPS, the flight filled in on arrival."
       }
     },
     "mobile": {

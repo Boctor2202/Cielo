@@ -45,7 +45,7 @@
   },
   "features": {
     "title": "Tout ce qu'un carnet de vol devrait faire",
-    "subtitle": "Douze outils, une seule source de vérité pour votre expérience aéronautique.",
+    "subtitle": "Treize outils, une seule source de vérité pour votre expérience aéronautique.",
     "items": {
       "logbook": {
         "title": "Carnet de vol et exports au format des autorités",
@@ -152,6 +152,15 @@
         "points": [
           "Restaurants, bars, plages, culture… classés par note ou par distance",
           "Adresses recommandées par les pilotes Geardown, à partir de 2 recommandations"
+        ]
+      },
+      "faa": {
+        "title": "Endossements FAA et rapport 8710-1",
+        "text": "Les 96 modèles officiels d'endossement de la circulaire AC 61-65K, remplis avec votre nom et votre avion, signés par votre instructeur sur votre écran ou depuis son navigateur, sans compte. Et la section « Record of Pilot Time » du formulaire 8710-1, calculée depuis votre carnet, prête à recopier dans IACRA.",
+        "points": [
+          "Signature avec n° CFI et date RE ou d'expiration, verrouillée par une empreinte",
+          "Échéances suivies : solo 90 jours, flight review 24 mois civils",
+          "Registre des endossements donnés pour les instructeurs (14 CFR 61.189)"
         ]
       }
     },
@@ -3362,6 +3371,14 @@
       "ratings": {
         "t": "Récence, SEP / MEP et HUD",
         "d": "3 décollages et atterrissages en 90 jours, prorogation des qualifications de classe par l'expérience, récence HUD pour ceux qui volent avec."
+      },
+      "faa": {
+        "t": "Endossements FAA et 8710-1",
+        "d": "Les 96 modèles de l'AC 61-65K signés par l'instructeur sur l'écran ou par lien, et le tableau du formulaire 8710-1 calculé depuis le carnet."
+      },
+      "live": {
+        "t": "Je vole maintenant",
+        "d": "Cales, décollage, atterrissage et arrivée notés en un geste, aéroports détectés par le GPS, vol pré-rempli à l'arrivée."
       }
     },
     "mobile": {

@@ -24,6 +24,8 @@ export function GET() {
     "- Flight time limitations: flight and duty time over 7 days, 14 days, 28 days, the calendar year and 12 months, from the logbook and roster.",
     "- Licences, medical and ratings with expiry reminders; recent experience checked with each flight.",
     "- Signatures: a saved signature to sign flights, or a request to a captain or instructor to sign.",
+    "- FAA endorsements: the 96 sample endorsements of AC 61-65K, signed by the instructor on screen or by link (CFI number, RE or expiration date), with solo and flight review deadlines; and the Record of Pilot Time of FAA Form 8710-1 worked out from the logbook, to copy into IACRA.",
+    "- I'm flying now: off-block, take-off, landing and on-block stamped in one tap on the iPhone, airports from the phone's position.",
     "- Flightmap: routes, airports, nautical miles and countries visited, shareable as an image.",
     "- Fill a flight from its registration: airports and actual times found from ADS-B data or FlightAware.",
     "- Pilot CV and job offers sorted by the pilot's experience, type and licences.",
