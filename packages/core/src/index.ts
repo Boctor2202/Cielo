@@ -9,6 +9,8 @@ export * from "./recency";
 export * from "./licenses";
 export * from "./documentScan";
 export * from "./liveFlight";
+export * from "./ac6165k";
+export * from "./faa";
 export * from "./audit";
 export * from "./ftl";
 export * from "./csv";

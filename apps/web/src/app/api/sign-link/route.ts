@@ -3,6 +3,7 @@ import { adminDb, userFrom } from "@/lib/server/admin";
 import { rateLimited } from "@/lib/places";
 import { canSign, contentHash, flightFromRow, snapshot } from "@/lib/server/crew";
 import { SITE_URL } from "@/lib/seo";
+import { blanksLeft, canonicalEndorsement, endorsementValidUntil } from "@cielo/core";
 import { meteredFetch } from "@/lib/server/usage";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,8 @@ export const maxDuration = 60;
  *      unchanged since the link was made, and locks it.
  *  POST /api/sign-link { action: "refuse", token, reason? } (public)
  *  POST /api/sign-link { action: "revoke", id } (the pilot)
+ * The same for one logbook endorsement (FAA): { action: "create", endorsementId, signerName, … }; the instructor
+ * then signs with their certificate number and its recent-experience or expiration date (AC 61-65K).
  */
 
 const DAYS = 14;
@@ -28,6 +31,18 @@ const ipOf = (req: Request) => req.headers.get("x-forwarded-for")?.split(",")[0]
 const ROLES = ["instructor", "captain", "examiner", "other"] as const;
 
 type LinkFlight = { flightId: string; flight: ReturnType<typeof snapshot>; hash: string };
+/** what the instructor is shown of an endorsement, and checked again when they sign */
+type LinkEndorsement = { templateId: string; title: string; regulation: string | null; text: string; studentName: string; aircraft: string | null; issuedOn: string };
+const endorsementSnap = (r: Record<string, unknown>): LinkEndorsement => ({
+  templateId: String(r.template_id),
+  title: String(r.title),
+  regulation: (r.regulation as string | null) ?? null,
+  text: String(r.text),
+  studentName: String(r.student_name),
+  aircraft: (r.aircraft as string | null) ?? null,
+  issuedOn: String(r.issued_on).slice(0, 10),
+});
+const sameSnap = (a: LinkEndorsement, b: LinkEndorsement) => JSON.stringify(a) === JSON.stringify(b);
 
 async function linkBy(token: string) {
   const db = adminDb();
@@ -51,6 +66,7 @@ export async function GET(req: Request) {
     signerRole: l.signer_role,
     expiresAt: l.expires_at,
     flights: (l.flights as LinkFlight[]).map((f) => f.flight),
+    endorsement: (l.endorsement as LinkEndorsement | null) ?? null,
     signedCount: l.signed_count ?? 0,
   });
 }
@@ -71,22 +87,33 @@ export async function POST(req: Request) {
     if (!(await canSign(db, user.id))) return Response.json({ error: "plan" }, { status: 403 });
     if (rateLimited(`sign-link-create:${user.id}`, 30, 3_600_000)) return Response.json({ error: "rate_limited" }, { status: 429 });
     const ids = (Array.isArray(body.flightIds) ? body.flightIds : []).map(String).slice(0, 300);
+    const endorsementId = clip(body.endorsementId, 40);
     const signerName = clip(body.signerName, 120);
     const role = ROLES.includes(body.signerRole as (typeof ROLES)[number]) ? (body.signerRole as string) : "captain";
     const email = clip(body.email, 200).toLowerCase();
     const locale = body.locale === "en" ? "en" : "fr";
-    if (!ids.length || !signerName) return Response.json({ error: "input" }, { status: 400 });
+    if ((!ids.length && !endorsementId) || !signerName) return Response.json({ error: "input" }, { status: 400 });
     if (email && !EMAIL.test(email)) return Response.json({ error: "email" }, { status: 400 });
 
+    // one endorsement to sign (FAA): it must be in the account already (synced) and not signed yet
+    let endorsement: LinkEndorsement | null = null;
+    if (endorsementId) {
+      const { data: e } = await db.from("endorsements").select("*").eq("id", endorsementId).eq("pilot_id", user.id).is("deleted_at", null).maybeSingle();
+      if (!e) return Response.json({ error: "not_synced" }, { status: 409 });
+      if (e.signed_at) return Response.json({ error: "signed" }, { status: 409 });
+      endorsement = endorsementSnap(e);
+      if (blanksLeft(endorsement.text).length) return Response.json({ error: "blanks" }, { status: 400 });
+    }
+
     const { data: rows } = await db.from("flights").select("*").eq("pilot_id", user.id).in("id", ids).is("deleted_at", null).is("signature_id", null);
-    if (!rows?.length) return Response.json({ error: "no_flights" }, { status: 400 });
-    const flights: LinkFlight[] = rows
+    if (!endorsement && !rows?.length) return Response.json({ error: "no_flights" }, { status: 400 });
+    const flights: LinkFlight[] = (endorsement ? [] : rows ?? [])
       .map((r) => flightFromRow(r))
       .sort((a, b) => (a.date + (a.outUtc ?? "")).localeCompare(b.date + (b.outUtc ?? "")))
       .map((f) => ({ flightId: f.id, flight: snapshot(f), hash: contentHash(f) }));
     const token = randomBytes(24).toString("base64url");
     const expiresAt = new Date(Date.now() + DAYS * 86_400_000).toISOString();
-    const { error } = await db.from("signature_links").insert({ requester_id: user.id, token_hash: sha(token), signer_name: signerName, signer_role: role, signer_email: email || null, flights, expires_at: expiresAt });
+    const { error } = await db.from("signature_links").insert({ requester_id: user.id, token_hash: sha(token), signer_name: signerName, signer_role: endorsement ? "instructor" : role, signer_email: email || null, flights, endorsement_id: endorsement ? endorsementId : null, endorsement, expires_at: expiresAt });
     if (error) return Response.json({ error: "db" }, { status: 500 });
     const url = `${SITE_URL}/${locale}/${locale === "fr" ? "signer" : "sign"}/${token}`;
 
@@ -97,8 +124,14 @@ export async function POST(req: Request) {
       const pilot = p?.display_name || p?.full_name || "Geardown";
       const n = flights.length;
       const fr = locale === "fr";
-      const subject = fr ? `${pilot} vous demande de signer ${n} vol${n > 1 ? "s" : ""}` : `${pilot} asks you to sign ${n} flight${n > 1 ? "s" : ""}`;
-      const text = fr
+      const subject = endorsement
+        ? fr ? `${pilot} vous demande de signer un endossement (${endorsement.templateId})` : `${pilot} asks you to sign a logbook endorsement (${endorsement.templateId})`
+        : fr ? `${pilot} vous demande de signer ${n} vol${n > 1 ? "s" : ""}` : `${pilot} asks you to sign ${n} flight${n > 1 ? "s" : ""}`;
+      const text = endorsement
+        ? fr
+          ? `Bonjour ${signerName},\n\n${pilot} vous demande de signer l'endossement « ${endorsement.title} » de son carnet de vol Geardown. Vous pouvez le lire puis le signer, ou refuser, sans créer de compte :\n\n${url}\n\nCe lien est valable ${DAYS} jours et ne sert qu'une fois.`
+          : `Hello ${signerName},\n\n${pilot} asks you to sign the logbook endorsement "${endorsement.title}" in their Geardown logbook. You can read it then sign, or decline, without creating an account:\n\n${url}\n\nThis link is valid for ${DAYS} days and works once.`
+        : fr
         ? `Bonjour ${signerName},\n\n${pilot} vous demande de signer ${n} vol${n > 1 ? "s" : ""} de son carnet de vol Geardown. Vous pouvez vérifier chaque vol puis signer, ou refuser, sans créer de compte :\n\n${url}\n\nCe lien est valable ${DAYS} jours et ne sert qu'une fois.`
         : `Hello ${signerName},\n\n${pilot} asks you to sign ${n} flight${n > 1 ? "s" : ""} of their Geardown logbook. You can check each flight then sign, or decline, without creating an account:\n\n${url}\n\nThis link is valid for ${DAYS} days and works once.`;
       const r = await meteredFetch("resend", "signLink", "https://api.resend.com/emails", {
@@ -114,7 +147,7 @@ export async function POST(req: Request) {
       }).catch(() => null);
       mailed = !!r?.ok;
     }
-    return Response.json({ url, expiresAt, mailed, flights: flights.length });
+    return Response.json({ url, expiresAt, mailed, flights: flights.length, endorsement: !!endorsement });
   }
 
   // the signer's answers (public, by token)
@@ -132,6 +165,42 @@ export async function POST(req: Request) {
   if (body.action === "refuse") {
     await db.from("signature_links").update({ status: "refused", refusal: clip(body.reason, 300) || null, ...audit }).eq("id", l.id).eq("status", "open");
     return Response.json({ ok: true });
+  }
+
+  if (body.action === "sign" && l.endorsement_id) {
+    const name = clip(body.name, 120);
+    const cert = clip(body.certificate, 60);
+    const kind: "RE" | "Exp" | null = body.certKind === "RE" || body.certKind === "Exp" ? body.certKind : null;
+    const certDate = typeof body.certDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.certDate) ? body.certDate : null;
+    const image = typeof body.image === "string" && /^data:image\/(png|svg\+xml)[;,]/.test(body.image) && body.image.length < 400_000 ? body.image : "";
+    if (!name || !cert || !image || (kind && !certDate)) return Response.json({ error: "input" }, { status: 400 });
+    const { data: claimed } = await db.from("signature_links").update({ status: "signed", signed_name: name, signed_licence: cert, ...audit }).eq("id", l.id).eq("status", "open").select("id");
+    if (!claimed?.length) return Response.json({ error: "signed" }, { status: 409 });
+    const { data: row } = await db.from("endorsements").select("*").eq("id", l.endorsement_id).eq("pilot_id", l.requester_id).maybeSingle();
+    // the pilot changed or deleted the endorsement after sending the link: not what the instructor was shown
+    if (!row || row.deleted_at || row.signed_at || !sameSnap(endorsementSnap(row), l.endorsement as LinkEndorsement)) {
+      await db.from("signature_links").update({ signed_count: 0 }).eq("id", l.id);
+      return Response.json({ signed: 0, changed: 1 });
+    }
+    const snap = endorsementSnap(row);
+    const sealed = { templateId: snap.templateId, text: snap.text, studentName: snap.studentName, issuedOn: snap.issuedOn, instructorName: name, instructorCertificate: cert, instructorCertKind: kind, instructorCertDate: certDate };
+    await db
+      .from("endorsements")
+      .update({
+        instructor_name: name,
+        instructor_certificate: cert,
+        instructor_cert_kind: kind,
+        instructor_cert_date: certDate,
+        signature_image: image,
+        signed_at: now,
+        source: "link",
+        content_hash: sha(canonicalEndorsement(sealed)),
+        expires_on: endorsementValidUntil(snap.templateId, snap.issuedOn),
+        updated_at: now,
+      })
+      .eq("id", row.id);
+    await db.from("signature_links").update({ signed_count: 1 }).eq("id", l.id);
+    return Response.json({ signed: 1, changed: 0 });
   }
 
   if (body.action === "sign") {

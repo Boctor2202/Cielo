@@ -2,7 +2,7 @@
 
 import { useAutoSign } from "./Signature";
 import {
-  BadgeCheck, BarChart3, FileDown, ScanSearch, Upload, UserRound, Hotel, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Globe2, Wifi, WifiOff, Radar, Lock, ShieldCheck, Bug,
+  BadgeCheck, FileSignature, BarChart3, FileDown, ScanSearch, Upload, UserRound, Hotel, Briefcase, FileUser, CalendarDays, Gauge, Map as MapIcon, NotebookPen, Plane, Plus, Settings, Timer, Globe2, Wifi, WifiOff, Radar, Lock, ShieldCheck, Bug,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -50,6 +50,7 @@ export const NAV: { href: AppPathname; key: string; icon: typeof Gauge; group: N
   { href: "/app/emplois", key: "jobs", icon: Briefcase, group: "career", max: "jobs", flag: "jobs" },
   { href: "/app/cv", key: "cvFile", icon: FileUser, group: "career", max: "cv" },
   { href: "/app/documents", key: "documents", icon: BadgeCheck, group: "account" },
+  { href: "/app/endossements", key: "endorsements", icon: FileSignature, group: "account" },
   { href: "/app/profil", key: "profile", icon: UserRound, group: "account" },
   { href: "/app/parametres", key: "settings", icon: Settings, group: "account" },
   { href: "/app/admin", key: "admin", icon: ShieldCheck, group: "admin", admin: true },

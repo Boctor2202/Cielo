@@ -266,6 +266,45 @@ export interface OpeningBalance extends SyncedRecord {
   fstdMin: number;
 }
 
+/**
+ * A logbook endorsement (FAA, AC 61-65K): received from an instructor (signed on the pilot's screen, by link,
+ * or copied from paper), or given by the pilot as an instructor (their record under 14 CFR 61.189).
+ */
+export interface Endorsement extends SyncedRecord {
+  pilotId: UUID;
+  direction: "received" | "given";
+  /** "A.6" for an AC 61-65K sample endorsement, "custom" otherwise */
+  templateId: string;
+  title: string;
+  regulation?: string;
+  /** the endorsement as signed, its [brackets] filled in */
+  text: string;
+  /** the endorsed pilot (the student, for an endorsement given) */
+  studentName: string;
+  aircraft?: string;
+  issuedOn: ISODate;
+  /** limited endorsements (solo 90 days…); the flight review is due 24 calendar months later */
+  expiresOn?: ISODate | null;
+  instructorName?: string;
+  /** CFI or ground instructor certificate number */
+  instructorCertificate?: string;
+  /** "RE": flight instructor recent experience end date; "Exp": certificate expiration; none for a ground instructor */
+  instructorCertKind?: "RE" | "Exp" | null;
+  instructorCertDate?: ISODate | null;
+  /** signature drawn by the instructor (SVG or PNG data URL) and when */
+  signatureImage?: string;
+  signedAt?: ISODateTime | null;
+  /** SHA-256 of the signed content: a change after signing shows */
+  contentHash?: string;
+  source: "here" | "link" | "paper";
+  /** photo or scan of a paper endorsement */
+  attachmentDataUrl?: string;
+  /** endorsements given: the kind of test and its result (14 CFR 61.189(b)) */
+  testKind?: string;
+  testResult?: string;
+  notes?: string;
+}
+
 export type LicenseKind =
   | "licence"
   | "medical"

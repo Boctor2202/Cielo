@@ -573,3 +573,10 @@ select.input {
 .logbook-line::after { right: 0; }
 .logbook-row:hover .logbook-line svg { transform: translate(-50%, -50%) rotate(45deg) scale(1.25); }
 .logbook-line svg { transition: transform 200ms ease; }
+
+/* printing a report (FAA 8710 record of pilot time): only the report's card */
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; inset: 0 auto auto 0; width: 100%; border: 0; box-shadow: none; background: #fff; color: #000; }
+}
