@@ -9,6 +9,67 @@ export interface Post {
 /** Blog posts. Paragraphs starting with "## " are rendered as headings. */
 export const POSTS: Post[] = [
   {
+    slug: "endossements-faa-ac-61-65",
+    date: "2026-11-27",
+    readingMin: 6,
+    fr: {
+          "title": "Endossements FAA : ce que dit l'AC 61-65K, et comment les tenir à jour",
+          "excerpt": "Les 96 modèles d'endossement de la circulaire AC 61-65K, ce que chaque endossement doit contenir, les durées du solo et du flight review, et le registre de l'instructeur.",
+          "body": [
+                "Aux États-Unis, une grande partie de la formation et des privilèges d'un pilote passe par des endossements : des mentions signées par un instructeur dans le carnet de vol, qui autorisent un vol solo, une présentation à un examen ou le pilotage d'un avion à train classique. Voici ce que disent les textes en vigueur, et comment ne pas en laisser expirer un.",
+                "## La référence : l'AC 61-65K",
+                "La circulaire FAA AC 61-65K, « Certification: Pilots and Flight and Ground Instructors », datée du 14 novembre 2025, remplace la version J. Son annexe A regroupe 96 modèles d'endossement, numérotés de A.1 à A.96, chacun avec sa référence réglementaire (14 CFR part 61, SFAR 73 pour les R-22 et R-44, 49 CFR pour l'attestation de citoyenneté demandée par la TSA). La circulaire les présente comme des modèles recommandés (« recommended sample endorsements »).",
+                "## Ce que chaque endossement doit contenir",
+                "L'annexe A le dit en une phrase : chaque endossement doit être lisible et comporter la signature de l'instructeur, la date de la signature, son numéro de certificat d'instructeur de vol (CFI) ou d'instructeur sol, et la date de fin d'expérience récente (RE) ou la date d'expiration de son certificat, selon le cas. Le nom en clair est facultatif. La circulaire donne la forme de la ligne de signature, par exemple : « /s/ [date] J. J. Jones 987654321CFI RE 12-31-2026 » pour un certificat sans date d'expiration.",
+                "## Les endossements les plus courants",
+                "Élève pilote : connaissances avant le premier solo (A.3, 61.87(b)), formation avant le solo (A.4, 61.87(c)), vol solo pour la première période de 90 jours (A.6, 61.87(n)) puis pour chaque période suivante (A.7, 61.87(p)), et navigation solo (A.9, 61.93(c)(1) et (2)).",
+                "Examens : prérequis pour l'examen pratique (A.1, 61.39(a)(6)(i) et (ii)), examen théorique de pilote privé (A.36), ou révision des points faibles de l'examen théorique (A.2).",
+                "Pilote breveté : flight review (A.69, 61.56(a) et (c)), contrôle de compétence aux instruments, l'IPC (A.71, 61.57(d)), et les qualifications de type d'avion pour agir comme commandant de bord : avion complexe (A.72, 61.31(e)), haute performance (A.73, 61.31(f)), pressurisé de haute altitude (A.74, 61.31(g)) et train classique (A.75, 61.31(i)).",
+                "## Les durées à surveiller",
+                "Le solo de l'élève : 14 CFR 61.87(n) interdit le vol solo sans un endossement, pour la marque et le modèle d'avion utilisés, donné par un instructeur « within the 90 days preceding the date of the flight ». L'endossement doit donc être renouvelé tous les 90 jours (A.7). Le solo de nuit suit la même logique de 90 jours (A.5, 61.87(o)).",
+                "Le flight review : 14 CFR 61.56(c) interdit d'agir comme commandant de bord sans un flight review accompli, et l'endossement correspondant, « since the beginning of the 24th calendar month before the month in which that pilot acts as pilot in command ». En pratique, un flight review passé en novembre 2026 couvre jusqu'au 30 novembre 2028 : on compte en mois civils, pas en jours.",
+                "## Le registre de l'instructeur",
+                "L'instructeur a lui aussi des obligations, fixées par 14 CFR 61.189 : signer le carnet de chaque personne à qui il a donné de la formation en vol ou au sol, et tenir un registre avec le nom de chaque élève endossé pour le vol solo et la date, ainsi que le nom de chaque élève endossé pour un examen théorique ou pratique, avec le type d'examen, la date et le résultat. Ce registre se garde au moins 3 ans.",
+                "## Ce que fait Geardown",
+                "Geardown reprend les 96 modèles de l'AC 61-65K et les remplit avec votre nom et votre avion. L'instructeur signe sur votre écran, ou depuis son navigateur grâce à un lien, sans créer de compte : son numéro CFI et sa date RE ou d'expiration sont demandés, et l'endossement est verrouillé par une empreinte, toute modification ultérieure se voit. Les échéances du solo et du flight review sont suivies, et les instructeurs tiennent leur registre 61.189 dans la même application. Geardown calcule aussi la section « Record of Pilot Time » du formulaire 8710-1 depuis votre carnet. Le pilote et l'instructeur restent responsables du contenu de chaque endossement.",
+                "## Sources",
+                "- FAA, [AC 61-65K, Certification: Pilots and Flight and Ground Instructors](https://www.faa.gov/regulations_policies/advisory_circulars/index.cfm/go/document.information/documentID/1043393) (14/11/2025), annexe A.",
+                "- FAA, [14 CFR 61.56, flight review](https://www.ecfr.gov/current/title-14/chapter-I/subchapter-D/part-61/subpart-A/section-61.56).",
+                "- FAA, [14 CFR 61.87, solo requirements for student pilots](https://www.ecfr.gov/current/title-14/chapter-I/subchapter-D/part-61/subpart-C/section-61.87).",
+                "- FAA, [14 CFR 61.189, flight instructor records](https://www.ecfr.gov/current/title-14/chapter-I/subchapter-D/part-61/subpart-H/section-61.189).",
+                "- Textes consultés le 27 novembre 2026."
+          ]
+    },
+    en: {
+          "title": "FAA endorsements: what AC 61-65K says, and how to keep them current",
+          "excerpt": "The 96 sample endorsements of AC 61-65K, what every endorsement must contain, how long a solo endorsement and a flight review last, and the instructor's record.",
+          "body": [
+                "In the United States, much of a pilot's training and privileges goes through endorsements: entries signed by an instructor in the logbook that allow a solo flight, a test, or flying a tailwheel airplane. Here is what the current texts say, and how not to let one lapse.",
+                "## The reference: AC 61-65K",
+                "FAA Advisory Circular AC 61-65K, \"Certification: Pilots and Flight and Ground Instructors\", dated November 14, 2025, replaces revision J. Its Appendix A holds 96 sample endorsements, numbered A.1 to A.96, each with its regulation (14 CFR part 61, SFAR 73 for the R-22 and R-44, 49 CFR for the citizenship endorsement recommended by the TSA). The AC presents them as \"recommended sample endorsements\".",
+                "## What every endorsement must contain",
+                "Appendix A puts it in one sentence: each endorsement must be legible and include the instructor's signature, the date of signature, the certificated flight instructor (CFI) or ground instructor certificate number, and the flight instructor recent experience (RE) end date or the certificate expiration date, as applicable. The printed name is optional. The AC gives the form of the signature line, for example \"/s/ [date] J. J. Jones 987654321CFI RE 12-31-2026\" for a certificate without an expiration date.",
+                "## The most common endorsements",
+                "Student pilot: pre-solo aeronautical knowledge (A.3, 61.87(b)), pre-solo flight training (A.4, 61.87(c)), solo flight for the first 90-calendar-day period (A.6, 61.87(n)) then for each additional period (A.7, 61.87(p)), and solo cross-country (A.9, 61.93(c)(1) and (2)).",
+                "Tests: prerequisites for the practical test (A.1, 61.39(a)(6)(i) and (ii)), the private pilot knowledge test (A.36), or review of the deficiencies identified on the knowledge test (A.2).",
+                "Certificated pilot: flight review (A.69, 61.56(a) and (c)), instrument proficiency check (A.71, 61.57(d)), and the aircraft endorsements to act as pilot in command: complex (A.72, 61.31(e)), high-performance (A.73, 61.31(f)), pressurized high-altitude (A.74, 61.31(g)) and tailwheel (A.75, 61.31(i)).",
+                "## The deadlines to watch",
+                "Student solo: 14 CFR 61.87(n) forbids solo flight without an endorsement, for the specific make and model, given by an instructor \"within the 90 days preceding the date of the flight\". The endorsement must therefore be renewed every 90 days (A.7). Night solo follows the same 90-day logic (A.5, 61.87(o)).",
+                "Flight review: 14 CFR 61.56(c) forbids acting as pilot in command without a flight review, and its endorsement, accomplished \"since the beginning of the 24th calendar month before the month in which that pilot acts as pilot in command\". In practice, a flight review in November 2026 covers you until November 30, 2028: it counts in calendar months, not days.",
+                "## The instructor's record",
+                "Instructors have duties too, set by 14 CFR 61.189: sign the logbook of each person they gave flight or ground training to, and keep a record of the name of each person endorsed for solo flight privileges with the date, and of each person endorsed for a knowledge or practical test with the kind of test, the date and the result. The record is kept at least 3 years.",
+                "## What Geardown does",
+                "Geardown carries the 96 samples of AC 61-65K and fills them in with your name and aircraft. Your instructor signs on your screen, or in their own browser from a link, without creating an account: their CFI number and RE or expiration date are asked for, and the endorsement is sealed with a fingerprint, so any later change shows. Solo and flight review deadlines are tracked, and instructors keep their 61.189 record in the same app. Geardown also works out the Record of Pilot Time of Form 8710-1 from your logbook. The pilot and the instructor remain responsible for the content of every endorsement.",
+                "## Sources",
+                "- FAA, [AC 61-65K, Certification: Pilots and Flight and Ground Instructors](https://www.faa.gov/regulations_policies/advisory_circulars/index.cfm/go/document.information/documentID/1043393) (11/14/2025), Appendix A.",
+                "- FAA, [14 CFR 61.56, flight review](https://www.ecfr.gov/current/title-14/chapter-I/subchapter-D/part-61/subpart-A/section-61.56).",
+                "- FAA, [14 CFR 61.87, solo requirements for student pilots](https://www.ecfr.gov/current/title-14/chapter-I/subchapter-D/part-61/subpart-C/section-61.87).",
+                "- FAA, [14 CFR 61.189, flight instructor records](https://www.ecfr.gov/current/title-14/chapter-I/subchapter-D/part-61/subpart-H/section-61.189).",
+                "- Texts consulted on November 27, 2026."
+          ]
+    },
+  },
+  {
     slug: "temps-de-vol-temps-bloc",
     date: "2026-11-24",
     readingMin: 5,
