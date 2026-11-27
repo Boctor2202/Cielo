@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, FlatList, Modal, Pressable, ScrollView, Share, TextInput, View } from "react-native";
+import { Alert, FlatList, Modal, Platform, Pressable, ScrollView, Share, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import * as Crypto from "expo-crypto";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -14,6 +14,7 @@ import {
   type Endorsement,
 } from "@cielo/core";
 import { API_URL } from "../src/api";
+import { usePrompt } from "../src/components/TextPrompt";
 import { Button, Card, Chip, Field, Row, Screen, Segmented, Txt, tap } from "../src/components/ui";
 import { DateField, isValidDate } from "../src/components/DateField";
 import { SignatureImage, SignaturePad, signatureSvg } from "../src/components/SignaturePad";
@@ -30,6 +31,7 @@ const hash = (e: Parameters<typeof canonicalEndorsement>[0]) => Crypto.digestStr
  */
 export default function EndorsementsScreen() {
   const { t, store, put, pilot, locale, session } = useApp();
+  const prompt = usePrompt();
   const c = useTheme();
   const [all, setAll] = useState<Endorsement[]>([]);
   const [tab, setTab] = useState<"received" | "given">("received");
@@ -46,6 +48,7 @@ export default function EndorsementsScreen() {
 
   return (
     <View style={{ flex: 1 }}>
+      {prompt.node}
       <Screen>
         <Txt variant="small">{t("end.subtitle")}</Txt>
         <Segmented value={tab} onChange={setTab} options={[{ value: "received", label: t("end.received") }, { value: "given", label: t("end.given") }]} />
@@ -76,44 +79,31 @@ export default function EndorsementsScreen() {
   );
 
   /** A link for an instructor without Geardown: they read and sign in their browser; shared from the phone. */
-  async function sendLink(e: Endorsement) {
+  async function sendLink(e: Endorsement): Promise<void> {
     if (blanksLeft(e.text).length) return Alert.alert(t("end.linkTitle"), t("end.blanksFirst", { list: blanksLeft(e.text).join(" ") }));
     if (!session?.access_token) return Alert.alert(t("end.linkTitle"), t("end.linkErr.unauthorized"));
-    Alert.prompt(
-      t("end.linkTitle"),
-      t("end.linkHint"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("end.createLink"),
-          onPress: (name?: string) => {
-            if (!name?.trim()) return;
-            void (async () => {
-              const call = () =>
-                fetch(`${API_URL}/api/sign-link`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, "x-client": "ios" },
-                  body: JSON.stringify({ action: "create", endorsementId: e.id, signerName: name.trim(), locale }),
-                });
-              // the endorsement must reach the account first: the sync runs after each save, wait for it a little
-              let r = await call();
-              for (let i = 0; i < 3 && r.status === 409; i++) {
-                await new Promise((res) => setTimeout(res, 2500));
-                r = await call();
-              }
-              const d = (await r.json().catch(() => ({}))) as { url?: string; error?: string };
-              if (!r.ok || !d.url) {
-                const code = d.error ?? "error";
-                return Alert.alert(t("end.linkTitle"), t(`end.linkErr.${["plan", "blanks", "not_synced"].includes(code) ? code : "error"}` as never));
-              }
-              await Share.share({ message: t("end.linkMessage", { url: d.url }) });
-            })();
-          },
-        },
-      ],
-      "plain-text",
-      e.instructorName ?? "",
-    );
+    const name = await prompt.ask({ title: t("end.linkTitle"), message: t("end.linkHint"), defaultValue: e.instructorName ?? "", okLabel: t("end.createLink"), cancelLabel: t("common.cancel"), autoCapitalize: "words" });
+    if (!name?.trim()) return;
+      void (async () => {
+        const call = () =>
+          fetch(`${API_URL}/api/sign-link`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, "x-client": Platform.OS },
+            body: JSON.stringify({ action: "create", endorsementId: e.id, signerName: name.trim(), locale }),
+          });
+        // the endorsement must reach the account first: the sync runs after each save, wait for it a little
+        let r = await call();
+        for (let i = 0; i < 3 && r.status === 409; i++) {
+          await new Promise((res) => setTimeout(res, 2500));
+          r = await call();
+        }
+        const d = (await r.json().catch(() => ({}))) as { url?: string; error?: string };
+        if (!r.ok || !d.url) {
+          const code = d.error ?? "error";
+          return Alert.alert(t("end.linkTitle"), t(`end.linkErr.${["plan", "blanks", "not_synced"].includes(code) ? code : "error"}` as never));
+        }
+        await Share.share({ message: t("end.linkMessage", { url: d.url }) });
+      })();
   }
 }
 

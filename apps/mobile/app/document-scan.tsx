@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Switch, View } from "react-native";
+import { ActivityIndicator, Alert, Platform, ScrollView, Switch, View } from "react-native";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
@@ -49,7 +49,7 @@ export default function DocumentScanScreen() {
     try {
       const r = await fetch(`${API_URL}/api/document-scan`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${session.access_token}`, "x-client": "ios" },
+        headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${session.access_token}`, "x-client": Platform.OS },
         body: JSON.stringify({ ...body, consent: true }),
       });
       const d = (await r.json().catch(() => ({}))) as { entries?: ScannedDocument[]; error?: string };

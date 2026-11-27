@@ -39,15 +39,15 @@
     "locales": {
       "fr": {
         "CFBundleDisplayName": "Geardown",
-        "NSPhotoLibraryUsageDescription": "Geardown utilise vos photos pour votre photo de profil et la photo de votre CV.",
-        "NSCameraUsageDescription": "Geardown utilise l'appareil photo pour prendre votre photo de profil.",
-        "NSLocationWhenInUseUsageDescription": "Geardown utilise votre position pour centrer le radar sur le trafic autour de vous."
+        "NSPhotoLibraryUsageDescription": "Geardown utilise vos photos pour votre photo de profil, la photo de votre CV et l'import d'un relevé, d'une licence ou d'un certificat médical.",
+        "NSCameraUsageDescription": "Geardown utilise l'appareil photo pour votre photo de profil et pour photographier un relevé de vols, une licence ou un certificat médical à importer.",
+        "NSLocationWhenInUseUsageDescription": "Geardown utilise votre position pour centrer le radar sur le trafic autour de vous et, en mode « Je vole maintenant », trouver l'aéroport où vous êtes."
       },
       "en": {
         "CFBundleDisplayName": "Geardown",
-        "NSPhotoLibraryUsageDescription": "Geardown uses your photos for your profile picture and the photo on your CV.",
-        "NSCameraUsageDescription": "Geardown uses the camera to take your profile picture.",
-        "NSLocationWhenInUseUsageDescription": "Geardown uses your position to centre the radar on the traffic around you."
+        "NSPhotoLibraryUsageDescription": "Geardown uses your photos for your profile picture, the photo on your CV and to import a flight statement, licence or medical certificate.",
+        "NSCameraUsageDescription": "Geardown uses the camera for your profile picture and to photograph a flight statement, licence or medical certificate to import.",
+        "NSLocationWhenInUseUsageDescription": "Geardown uses your position to centre the radar on the traffic around you and, in \"I'm flying now\" mode, to find the airport you are at."
       }
     },
     "plugins": [
@@ -80,8 +80,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Geardown uses your photos for your profile picture and the photo on your CV.",
-          "cameraPermission": "Geardown uses the camera to take your profile picture.",
+          "photosPermission": "Geardown uses your photos for your profile picture, the photo on your CV and to import a flight statement, licence or medical certificate.",
+          "cameraPermission": "Geardown uses the camera for your profile picture and to photograph a flight statement, licence or medical certificate to import.",
           "microphonePermission": false
         }
       ],
@@ -91,7 +91,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Geardown uses your position to centre the radar on the traffic around you."
+          "locationWhenInUsePermission": "Geardown uses your position to centre the radar on the traffic around you and, in \"I'm flying now\" mode, to find the airport you are at."
         }
       ],
       "@react-native-community/datetimepicker",
