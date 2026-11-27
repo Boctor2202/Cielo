@@ -1,5 +1,6 @@
 "use client";
 
+import { NO_COUNT_KEY } from "@/components/marketing/VisitBeacon";
 import { Check, Copy, Eye, Loader2, RefreshCw, Search, ShieldCheck, X } from "lucide-react";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -24,6 +25,7 @@ interface Overview {
   flights: number;
   openReports: number;
   thresholds: Thresholds;
+  visitors: { perDay: { date: string; n: number }[]; today: number; d7: number; d30: number; sources: { key: string; n: number }[]; pages: { key: string; n: number }[] };
 }
 interface Thresholds {
   year: number;
@@ -72,6 +74,14 @@ export default function AdminPage() {
   const cloud = useCloud();
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
+
+  // this browser is the admin's: its visits of the website are not counted
+  useEffect(() => {
+    if (!allowed) return;
+    try {
+      localStorage.setItem(NO_COUNT_KEY, "1");
+    } catch {}
+  }, [allowed]);
 
   useEffect(() => {
     if (!cloud.session) return setAllowed(false);
@@ -155,6 +165,7 @@ function OverviewTab() {
         <Readout label={t("flights")} value={data.flights.toLocaleString(locale)} level="neutral" />
         <Readout label={t("openReports")} value={data.openReports} sub={t("canceled", { n: data.canceled30 })} level={data.openReports ? "warning" : "neutral"} />
       </div>
+      <VisitorsCard v={data.visitors} />
       <ThresholdsCard data={data.thresholds} eur={eur} />
       <Card title={t("signupsChart")}>
         <div className="flex h-36 items-end gap-1">
@@ -170,6 +181,49 @@ function OverviewTab() {
         </div>
       </Card>
     </div>
+  );
+}
+
+/** Visitors of the website per day (one per browser and day, without cookie; this browser is not counted). */
+function VisitorsCard({ v }: { v: Overview["visitors"] }) {
+  const t = useTranslations("app.admin.overview.visitors");
+  const max = Math.max(1, ...v.perDay.map((d) => d.n));
+  const list = (title: string, rows: { key: string; n: number }[], label: (k: string) => string) => (
+    <div className="min-w-0">
+      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{title}</p>
+      {rows.length ? (
+        <ul className="space-y-1 text-sm">
+          {rows.map((r) => (
+            <li key={r.key} className="flex justify-between gap-3"><span className="truncate">{label(r.key)}</span><span className="num shrink-0 text-muted">{r.n}</span></li>
+          ))}
+        </ul>
+      ) : <p className="text-sm text-muted">—</p>}
+    </div>
+  );
+  return (
+    <Card title={t("title")}>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Readout label={t("today")} value={v.today} level="neutral" />
+        <Readout label={t("d7")} value={v.d7} level="neutral" />
+        <Readout label={t("d30")} value={v.d30} level="neutral" />
+      </div>
+      <div className="mt-5 flex h-36 items-end gap-1">
+        {v.perDay.map((d) => (
+          <div key={d.date} className="group relative flex-1" title={`${d.date} · ${d.n}`}>
+            <div className="rounded-t bg-[#38bdf8]/80" style={{ height: `${Math.max(2, (d.n / max) * 130)}px` }} />
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex justify-between text-[11px] text-muted">
+        <span>{v.perDay[0]?.date}</span>
+        <span>{v.perDay.at(-1)?.date}</span>
+      </div>
+      <div className="mt-5 grid gap-5 sm:grid-cols-2">
+        {list(t("sources"), v.sources, (k) => (k === "direct" ? t("direct") : k))}
+        {list(t("pages"), v.pages, (k) => k)}
+      </div>
+      <p className="mt-4 text-xs text-muted">{t("note")}</p>
+    </Card>
   );
 }
 

@@ -36,10 +36,11 @@ export const SITE = {
   /** where the account's data is hosted, said on the site only once confirmed (e.g. "eu"); null = not stated */
   dataRegion: null as "eu" | null,
   company: {
-    legalName: "[Raison sociale]",
-    address: "[Adresse du siège]",
-    registration: "[RCS / SIREN]",
-    publisher: "[Directeur de la publication]",
+    legalName: "Geardown, nom commercial de Cyrille Boctor, entrepreneur individuel (EI)",
+    legalNameEn: "Geardown, trade name of Cyrille Boctor, sole trader (entrepreneur individuel, EI)",
+    address: "14 rue Maurice Bokanowski, 92600 Asnières-sur-Seine, France",
+    registration: "RCS Nanterre 938 850 211",
+    publisher: "Cyrille Boctor",
     /** site and server functions; the logbook database is a separate processor (see dataHost) */
     host: "Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, USA (vercel.com)",
     dataHost: "Supabase Inc., 970 Toa Payoh North #07-04, Singapour 318992 (supabase.com), sur des serveurs situés à Londres (Royaume-Uni)",

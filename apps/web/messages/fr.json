@@ -2239,6 +2239,16 @@
           "detail": "Encaissé cette année : web {web}, stores (net de commission) {stores}.",
           "unknownCountry": "{amount} de ventes web sans pays connu.",
           "disclaimer": "Seuils en vigueur pour 2026, à vérifier chaque année avec un expert-comptable. Paiements réels uniquement (les tests sont exclus)."
+        },
+        "visitors": {
+          "title": "Visiteurs du site",
+          "today": "Aujourd'hui",
+          "d7": "7 derniers jours",
+          "d30": "30 derniers jours",
+          "sources": "D'où ils viennent (30 j)",
+          "pages": "Page d'arrivée (30 j)",
+          "direct": "Accès direct ou application",
+          "note": "Un visiteur = un navigateur par jour, sans cookie. Les robots et tes navigateurs (ceux où tu as ouvert l'admin) ne sont pas comptés, ni les visiteurs qui demandent à ne pas être suivis."
         }
       },
       "users": {

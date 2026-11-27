@@ -2239,6 +2239,16 @@
           "detail": "Received this year: web {web}, stores (net of commission) {stores}.",
           "unknownCountry": "{amount} of web sales with no known country.",
           "disclaimer": "Thresholds in force for 2026, to check every year with an accountant. Real payments only (tests excluded)."
+        },
+        "visitors": {
+          "title": "Website visitors",
+          "today": "Today",
+          "d7": "Last 7 days",
+          "d30": "Last 30 days",
+          "sources": "Where they come from (30 d)",
+          "pages": "Landing page (30 d)",
+          "direct": "Direct or app",
+          "note": "One visitor = one browser per day, without cookies. Robots and your own browsers (where you opened the admin) are not counted, nor visitors asking not to be tracked."
         }
       },
       "users": {
