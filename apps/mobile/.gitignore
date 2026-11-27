@@ -18,3 +18,4 @@ secrets/
 
 expo-env.d.ts
 # @end expo-cli
+store.config.json

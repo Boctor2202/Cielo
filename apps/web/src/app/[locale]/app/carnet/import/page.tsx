@@ -16,7 +16,7 @@ import { logImported, buildFlight, softDelete } from "@/lib/repo";
 import { db, localStore } from "@/lib/db";
 import { announceGains } from "@/lib/gains";
 import { useAirlineDirectory } from "@/lib/airlines";
-import { checkImport, formatDuration, operatorIndex, type Flight, type ImportCheck } from "@cielo/core";
+import { checkImport, formatDuration, mergePageChecks, type PageTotalsCheck, operatorIndex, type Flight, type ImportCheck } from "@cielo/core";
 import { DropZone } from "@/components/app/DropZone";
 import { ImportReview } from "@/components/app/ImportReview";
 import { Paywall, useAccess } from "@/lib/access";
@@ -84,6 +84,7 @@ async function importAny(body: Record<string, unknown>) {
     source?: string;
     mapping?: StoredMapping;
     mappingIndex?: Record<string, number>;
+    pageCheck?: PageTotalsCheck | null;
     error?: string;
   };
   return r.ok ? d : { ...d, error: d.error ?? "error" };
@@ -133,6 +134,8 @@ function FileImport({ photos = false }: { photos?: boolean }) {
   const [choices, setChoices] = useState<ImportChoices>({ rules: "doc", function: "doc", xc: "doc" });
   // the pilot's corrections, row by row (typed in the check before importing)
   const [edits, setEdits] = useState<Record<number, ImportRowEdit>>({});
+  /** a paper logbook: the flights read against the totals printed at the foot of its pages */
+  const [pageCheck, setPageCheck] = useState<PageTotalsCheck | null>(null);
   const parsed = useMemo(() => applyImportChoices(pdfRows ?? tableRows, choices).map((r) => editImportedRow(r, edits[r.rowIndex])), [pdfRows, tableRows, choices, edits]);
   const recognised = mapping ? Object.values(mapping).filter((i) => i >= 0).length : 0;
   // cross-checks on the data itself, recomputed whenever a column is changed by hand
@@ -165,6 +168,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
       let d: Awaited<ReturnType<typeof importAny>>;
       if (images) {
         const legs: LogbookLeg[] = [];
+        const checks: (PageTotalsCheck | null | undefined)[] = [];
         let batch: typeof images = [];
         let size = 0;
         let last: typeof d = {};
@@ -173,6 +177,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
           last = await importAny({ ...body, images: batch, share });
           if (last.error) throw new Error(last.error);
           legs.push(...(last.legs ?? []));
+          checks.push(last.pageCheck);
           batch = [];
           size = 0;
         };
@@ -182,7 +187,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
           size += im.data.length;
         }
         await flush();
-        d = { ...last, legs };
+        d = { ...last, legs, pageCheck: mergePageChecks(checks) };
       } else d = await importAny({ ...body, share });
       showLegs(d);
     } catch (e) {
@@ -199,6 +204,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
     setApp(d.reader === "airfrance-ep5" ? "Air France · EP4 / EP5" : d.reader === "logten-pdf" ? "LogTen" : undefined);
     setSource(d.reader === "ai" ? d.source ?? "?" : d.reader === "report" ? "report" : null);
     setPdfState(d.legs.length ? null : "none");
+    setPageCheck(d.pageCheck ?? null);
   }
   // one PDF: read here first (an airline statement or a LogTen logbook needs no upload, whatever its size), else on
   // the server; a request is limited to 4.5 MB, so a larger PDF is uploaded to the pilot's private folder first
@@ -243,7 +249,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
       if (!all.length) return setPdfState("none");
       const first = all[0]!;
       const sameReader = all.every((d) => d.reader === first.reader);
-      showLegs({ ...first, reader: sameReader ? first.reader : undefined, role: all.find((d) => d.role)?.role ?? null, legs: all.flatMap((d) => d.legs ?? []) });
+      showLegs({ ...first, reader: sameReader ? first.reader : undefined, role: all.find((d) => d.role)?.role ?? null, legs: all.flatMap((d) => d.legs ?? []), pageCheck: mergePageChecks(all.map((d) => d.pageCheck)) });
     } catch (e) {
       setPdfState((e as Error).message || "error");
     }
@@ -383,6 +389,7 @@ function FileImport({ photos = false }: { photos?: boolean }) {
       onCancel={cancel}
       busy={busy || !airports}
       fills={review?.fills.length ?? 0}
+      pageCheck={pdfRows ? pageCheck : null}
     />
   );
 

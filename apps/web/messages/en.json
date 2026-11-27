@@ -1088,6 +1088,22 @@
           "keep": "Import anyway",
           "kept": "Imported although it looks like a flight in your logbook.",
           "undo": "Undo"
+        },
+        "airfield": {
+          "missing": "{count, plural, one {# flight read without an airfield} other {# flights read without an airfield}} (local flights, circuits…): give the airfield on each line to import them. The other flights import right away.",
+          "label": "Airfield",
+          "ph": "ICAO",
+          "set": "OK",
+          "suggest": "{code}? (flights that day)",
+          "bulk": "Give {code} to the {count, plural, one {# other flight} other {# other flights}} without an airfield on {reg} ({from} to {to})?",
+          "apply": "Apply",
+          "no": "No"
+        },
+        "pages": {
+          "ok": "The flights read add up to {expected}, the total written at the foot of the logbook's pages.",
+          "off": "The flights read add up to {read}, the totals written at the foot of the logbook's pages to {expected}: a flight missed or a time misread. To check:",
+          "page": "{from} to {to}: {read} read for {expected} written",
+          "pageNoDate": "{read} read for {expected} written"
         }
       }
     },

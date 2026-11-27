@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { AI_MODEL, anthropic } from "@/lib/server/anthropic";
-import { IMPORT_FIELDS, type LogbookLeg } from "@cielo/core";
+import { IMPORT_FIELDS, type LogbookLeg, type LogbookPageTotals } from "@cielo/core";
 import { meterAi } from "./usage";
 
 /**
@@ -16,8 +16,22 @@ const hhmm = { type: "string", pattern: "^(([01]\\d|2[0-3]):[0-5]\\d)?$" };
 const LEGS_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["source", "timeBasis", "legs"],
+  required: ["source", "timeBasis", "legs", "pages"],
   properties: {
+    pages: {
+      type: "array",
+      description: "Paper logbook only (else []): one entry per page spread, in order, with the totals printed at its foot, to check the flights read against them",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["flights", "broughtForwardMin", "carriedForwardMin"],
+        properties: {
+          flights: { type: "integer", description: "Number of legs given for this spread (flights and simulator sessions)" },
+          broughtForwardMin: { type: "integer", description: "Sum, in minutes, of the flight-time cells of the line brought forward from the previous page (\"Reports\", \"Total from previous pages\") — only the columns that hold flight time of the pilot (not landings, not simulator, not a column already included in another such as instrument time); 0 when that line is empty on the first page; -1 when there is no such line" },
+          carriedForwardMin: { type: "integer", description: "Same sum on the line carried forward at the foot of the spread (\"Totaux à reporter\", \"Total time\"); -1 when absent" },
+        },
+      },
+    },
     source: { type: "string", description: "What the document is, in a few words (e.g. 'Air France EP5 statement', 'EASA paper logbook', 'Ryanair post-flight e-mail')" },
     timeBasis: { type: "string", enum: ["UTC", "local", "unknown"] },
     legs: {
@@ -70,12 +84,19 @@ Rules:
 - The name in the "Name PIC" column is the pilot in command; when it is someone else (an instructor), the pilot was likely flying dual: use the function-time columns when visible, else leave function "".
 - Every flight row needs its departure and arrival airports, its aircraft registration and its aircraft type: read them on every row (they are often in the "Departure place", "Arrival place", "Registration" and "Make, model, variant" columns), and when a cell holds a ditto mark or is left empty under the same aircraft, repeat the value above. European paper logbooks use 4-letter ICAO codes (LFPN, LFOX, EGLL): read each letter carefully, as handwriting confuses N/H, O/D/0, I/1, S/5, P/F.
 - Airports as written (ICAO or IATA). Registrations as written, with the national prefix when obvious ("FGKXA" → "F-GKXA", Air France "HZUN" → "F-HZUN").
+- French paper logbooks ("carnet de vol", the older DGAC / FFA layout: "Date, Aéronef (Type, Immatriculation), Fonction à bord, Nature du vol", then "Membre d'équipage", "Pilote monomoteur Jour/Nuit — Double / Cdt de bord", "Pilote multimoteurs Jour/Nuit — Double / Cdt de bord / Co-pilote", "Vols aux instruments", "Simulation", "Observations"):
+  - The year is often written only in the page title ("ANNÉE 20__", the last digits handwritten) and the rows give "JJ/MM". A title with two years ("2006/2007", "2018-2019") spans a new year: rows before the month goes back (e.g. 20/12 then 03/01) are in the first year, the rows after in the second. A row with its own year ("13/06/18") keeps it.
+  - Times are written "0h54", "1h", "1.20", "1:00" (= 54, 60, 80, 60 minutes). Each flight time sits in one column: "Double" is instruction received (dualMin and function "DUAL"), "Cdt de bord" is pilot in command (picMin and function "PIC"), "Co-pilote" is copilotMin (function "SIC"); the "Nuit" columns are night time as well (nightMin); "Vols aux instruments" is ifrMin (already included in the flight time). totalMin is the sum of the flight time of the row. When a row has time in both "Double" and "Cdt de bord", give both.
+  - "Fonction à bord" codes: EP (élève pilote) = student pilot, P = pilot, CdB = commandant de bord, P+I or EP/I = with an instructor on board, I = instructor. The time column decides the function, as above; the code alone only when the time column is unclear (EP → DUAL, P or CdB → PIC).
+  - "Nature du vol" holds the route and the kind of flight: "LFPN-LFPN", "LFXA → LFLM", "LFXA LFHI LFXA" (departure = first airport, arrival = last), "A/R LFPN/LFOP" (a return trip from the first airport: departure and arrival LFPN), "LFXA 3TDP" or "LFMH autour de St Étienne" (a local flight: the one airport is both the departure and the arrival). Put the rest of the text in remarks ("tours de piste", "mania", "navigation", "survol de la Dombes"). When no airport is written at all ("vol de mania", "tours de piste", "Test PPL"), give dep and arr "" — the pilot fills them in; never guess the airfield.
 - Never invent: when a value is absent or unreadable, write "" for text and times, -1 for numbers.`;
 
 export interface LegsResult {
   source: string;
   timeBasis: string;
   legs: LogbookLeg[];
+  /** paper logbook: the totals printed at the foot of each spread, with the number of legs read on it */
+  pages?: LogbookPageTotals[];
 }
 
 type Block = Anthropic.Beta.Messages.BetaContentBlockParam;
