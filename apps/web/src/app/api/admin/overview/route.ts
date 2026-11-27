@@ -39,6 +39,20 @@ export function GET(req: Request) {
       const d = p.created_at.slice(0, 10);
       if (d in perDay) perDay[d]!++;
     }
+    // visitors of the website (one per browser and day, the admin's browsers left out), last 30 days
+    const { data: visits } = await db.from("site_visits").select("day, ref_host, first_path").gte("day", daysAgo(29).slice(0, 10)).limit(50_000);
+    const visitsPerDay: Record<string, number> = {};
+    for (let i = 29; i >= 0; i--) visitsPerDay[daysAgo(i).slice(0, 10)] = 0;
+    const sources: Record<string, number> = {};
+    const pages: Record<string, number> = {};
+    for (const v of visits ?? []) {
+      if (v.day in visitsPerDay) visitsPerDay[v.day]!++;
+      const src = v.ref_host ?? "direct";
+      sources[src] = (sources[src] ?? 0) + 1;
+      if (v.first_path) pages[v.first_path] = (pages[v.first_path] ?? 0) + 1;
+    }
+    const top = (o: Record<string, number>) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([key, n]) => ({ key, n }));
+    const days = Object.values(visitsPerDay);
     const active7 = (stats ?? []).filter((s) => s.last_flight_change && Date.parse(s.last_flight_change) > now - 7 * 86400_000).length;
     return Response.json({
       pilots: P.length,
@@ -55,6 +69,14 @@ export function GET(req: Request) {
       flights: flights ?? 0,
       openReports: openReports ?? 0,
       thresholds: thresholdStatus((revenue ?? []) as Revenue[]),
+      visitors: {
+        perDay: Object.entries(visitsPerDay).map(([date, n]) => ({ date, n })),
+        today: days.at(-1) ?? 0,
+        d7: days.slice(-7).reduce((a, b) => a + b, 0),
+        d30: days.reduce((a, b) => a + b, 0),
+        sources: top(sources),
+        pages: top(pages),
+      },
     });
   });
 }

@@ -7,7 +7,7 @@ type Key = "notice" | "privacy" | "terms" | "cookies";
 const c = SITE.company;
 const P = SITE.pricing;
 const eur = (n: number | undefined, locale: "fr" | "en") => (n === undefined ? "" : locale === "fr" ? `${n.toFixed(2).replace(".", ",")} €` : `€${n.toFixed(2)}`);
-export const LEGAL_UPDATED = "2026-11-26";
+export const LEGAL_UPDATED = "2026-11-27";
 
 export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
   fr: {
@@ -25,7 +25,7 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
       sections: [
         { h: "Responsable du traitement", p: [`${c.legalName}, ${c.address}. Contact : ${SITE.contactEmail}.`] },
         { h: "Données traitées", p: ["Données de compte : adresse e-mail, nom, mode de connexion (e-mail, Apple, Google).", "Données de carnet de vol : vols, appareils, licences et qualifications, aptitude médicale (classe, dates, codes de limitation), roster, escales, signatures, documents joints que vous ajoutez.", "Recommandations d'adresses d'escale : les autres membres n'en voient que le nombre par adresse (à partir de 2), jamais qui les a faites.", "Données techniques : journaux de connexion et de synchronisation, nécessaires à la sécurité du service."] },
-        { h: "Finalités et bases légales", p: ["Fournir le carnet de vol et sa synchronisation (exécution du contrat).", "Envoyer les alertes d'échéance que vous avez activées (exécution du contrat).", "Facturer les abonnements (obligation légale et exécution du contrat).", "Sécuriser le service (intérêt légitime).", "Lire, à votre demande, une licence ou un certificat médical pour remplir vos documents (votre consentement ; pour les données de santé, votre consentement explicite, article 9.2.a du RGPD)."] },
+        { h: "Finalités et bases légales", p: ["Fournir le carnet de vol et sa synchronisation (exécution du contrat).", "Envoyer les alertes d'échéance que vous avez activées (exécution du contrat).", "Facturer les abonnements (obligation légale et exécution du contrat).", "Sécuriser le service (intérêt légitime).", "Compter les visiteurs du site par jour, sans cookie (intérêt légitime ; voir la page Cookies).", "Lire, à votre demande, une licence ou un certificat médical pour remplir vos documents (votre consentement ; pour les données de santé, votre consentement explicite, article 9.2.a du RGPD)."] },
         {
           h: "Données de santé",
           p: [
@@ -74,6 +74,7 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
       title: "Cookies",
       sections: [
         { h: "Cookies utilisés", p: ["Geardown n'utilise aucun cookie publicitaire ni de mesure d'audience tiers.", "Stockage strictement nécessaire : session de connexion, préférence de langue et de thème, base locale du carnet (IndexedDB) pour le fonctionnement hors ligne.", "Ces traceurs étant indispensables au service, ils ne nécessitent pas de consentement (article 82 de la loi Informatique et Libertés)."] },
+        { h: "Mesure d'audience", p: ["Pour connaître le nombre de visiteurs du site par jour, Geardown ne dépose aucun cookie : un identifiant est calculé côté serveur à partir de la date, de l'adresse réseau et du navigateur, haché de façon irréversible avec une clé secrète. Il change chaque jour, ne permet pas de vous suivre d'un jour à l'autre et n'est jamais partagé. Seuls sont conservés, 13 mois au plus, cet identifiant, la page d'arrivée, le site d'où vous venez et le pays. Les navigateurs qui demandent à ne pas être suivis (Global Privacy Control, Do Not Track) ne sont pas comptés."] },
       ],
     },
   },
@@ -81,7 +82,7 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
     notice: {
       title: "Legal notice",
       sections: [
-        { h: "Publisher", p: [`${c.legalName}, ${c.address}. ${c.registration}.`, `Publication director: ${c.publisher}.`, `Contact: ${SITE.contactEmail}.`] },
+        { h: "Publisher", p: [`${c.legalNameEn}, ${c.address}. ${c.registration}.`, `Publication director: ${c.publisher}.`, `Contact: ${SITE.contactEmail}.`] },
         { h: "Hosting", p: [`Website and server functions: ${c.host}.`, `Logbook database and attachments: ${c.dataHostEn}.`] },
         { h: "Intellectual property", p: ["The Geardown name, logo, texts, interfaces and code belong to the publisher. Any reproduction without permission is prohibited."] },
         { h: "Aeronautical data", p: ["The aerodrome database comes from OurAirports (public domain). Aircraft type designators follow ICAO Doc 8643. The airline list comes from OpenFlights (openflights.org), under the Open Database License (ODbL)."] },
@@ -90,9 +91,9 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
     privacy: {
       title: "Privacy policy (GDPR)",
       sections: [
-        { h: "Controller", p: [`${c.legalName}, ${c.address}. Contact: ${SITE.contactEmail}.`] },
+        { h: "Controller", p: [`${c.legalNameEn}, ${c.address}. Contact: ${SITE.contactEmail}.`] },
         { h: "Data processed", p: ["Account data: e-mail address, name, sign-in method (e-mail, Apple, Google).", "Logbook data: flights, aircraft, licences and ratings, medical certificate (class, dates, limitation codes), roster, layovers, signatures, attachments you add.", "Layover place recommendations: other members only see how many there are for a place (from 2 on), never who made them.", "Technical data: sign-in and sync logs required for service security."] },
-        { h: "Purposes and legal bases", p: ["Provide the logbook and its sync (contract).", "Send the expiry alerts you enabled (contract).", "Bill subscriptions (legal obligation and contract).", "Secure the service (legitimate interest).", "Read, at your request, a licence or a medical certificate to fill in your documents (your consent; for health data, your explicit consent, GDPR article 9(2)(a))."] },
+        { h: "Purposes and legal bases", p: ["Provide the logbook and its sync (contract).", "Send the expiry alerts you enabled (contract).", "Bill subscriptions (legal obligation and contract).", "Secure the service (legitimate interest).", "Count the website's visitors per day, without cookies (legitimate interest; see the Cookies page).", "Read, at your request, a licence or a medical certificate to fill in your documents (your consent; for health data, your explicit consent, GDPR article 9(2)(a))."] },
         {
           h: "Health data",
           p: [
@@ -141,6 +142,7 @@ export const LEGAL: Record<"fr" | "en", Record<Key, Doc>> = {
       title: "Cookies",
       sections: [
         { h: "Cookies in use", p: ["Geardown uses no advertising or third-party analytics cookies.", "Strictly necessary storage only: sign-in session, language and theme preference, the local logbook database (IndexedDB) for offline use.", "As they are essential to the service, they do not require consent."] },
+        { h: "Audience measurement", p: ["To know how many people visit the website each day, Geardown sets no cookie: an identifier is computed on the server from the date, the network address and the browser, hashed irreversibly with a secret key. It changes every day, cannot follow you from one day to the next and is never shared. Only this identifier, the landing page, the site you came from and the country are kept, for 13 months at most. Browsers asking not to be tracked (Global Privacy Control, Do Not Track) are not counted."] },
       ],
     },
   },
