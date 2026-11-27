@@ -1,6 +1,6 @@
 "use client";
 
-import { misreadOperators, retypeLogbook, typeFromText,
+import { canonicalEndorsement, endorsementValidUntil, type Endorsement, misreadOperators, retypeLogbook, typeFromText,
   markPilotFields,
   operatorIndex,
   canonicalFlightContent, ownSignature, type SignedInfo, deriveFlightTimes, extraFlightFields, flightRevision, newId, stamp, SYNC_TABLES, type Aircraft, type AircraftType, type Flight,
@@ -527,6 +527,20 @@ export async function put<T extends TableName>(table: T, rec: Omit<TableMap[T], 
 export const saveLicense = (l: Omit<License, "id" | "createdAt" | "updatedAt" | "pilotId"> & { id?: string }) => put("licenses", l);
 export const saveOpening = (o: Omit<OpeningBalance, "id" | "createdAt" | "updatedAt" | "pilotId"> & { id?: string }) => put("opening_balances", o);
 export const saveRosterEvent = (e: Omit<RosterEvent, "id" | "createdAt" | "updatedAt" | "pilotId"> & { id?: string }) => put("roster_events", e);
+export const saveEndorsement = (e: Omit<Endorsement, "id" | "createdAt" | "updatedAt" | "pilotId"> & { id?: string }) => put("endorsements", e);
+
+/** An endorsement signed on this screen by the instructor: their certificate, the drawn signature, the seal. */
+export async function signEndorsementHere(e: Endorsement, s: Pick<Endorsement, "instructorName" | "instructorCertificate" | "instructorCertKind" | "instructorCertDate" | "signatureImage">) {
+  const sealed = { ...e, ...s };
+  return put("endorsements", {
+    ...sealed,
+    signedAt: now(),
+    source: e.source === "paper" ? "paper" : "here",
+    contentHash: await sha256(canonicalEndorsement(sealed)),
+    expiresOn: endorsementValidUntil(e.templateId, e.issuedOn),
+  });
+}
+
 export const saveLayover = (l: Omit<Layover, "id" | "createdAt" | "updatedAt" | "pilotId"> & { id?: string }) => put("layovers", l);
 
 /* ---------- GDPR ---------- */

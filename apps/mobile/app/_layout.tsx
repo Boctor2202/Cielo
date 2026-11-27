@@ -105,6 +105,8 @@ function Navigator() {
         <Stack.Screen name="auth" options={{ contentStyle: { backgroundColor: c.bg }, title: t("auth.title"), presentation: "modal" }} />
         <Stack.Screen name="auth-callback" options={{ title: t("auth.title") }} />
         <Stack.Screen name="import" options={{ contentStyle: { backgroundColor: c.bg }, title: t("uimp.title"), presentation: "modal" }} />
+        <Stack.Screen name="endorsements" options={{ contentStyle: { backgroundColor: c.bg }, title: t("end.title") }} />
+        <Stack.Screen name="report8710" options={{ contentStyle: { backgroundColor: c.bg }, title: t("r8710.title") }} />
         <Stack.Screen name="live" options={{ contentStyle: { backgroundColor: c.bg }, title: t("live.title"), presentation: "modal" }} />
         <Stack.Screen name="document-scan" options={{ contentStyle: { backgroundColor: c.bg }, title: t("dscan.title"), presentation: "modal" }} />
         <Stack.Screen name="letter" options={{ contentStyle: { backgroundColor: c.bg }, title: t("letter.title"), presentation: "modal" }} />

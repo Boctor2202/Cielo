@@ -98,6 +98,7 @@ export default function More() {
       <MenuGroup title={t("more.g.pilot")}>
         <MenuRow icon={<Ionicons name="person" size={17} color="#fff" />} color="#0A84FF" label={t("more.openProfile")} onPress={() => router.navigate("/profile")} />
         <MenuRow icon={<Ionicons name="ribbon" size={17} color="#fff" />} color="#FF9F0A" label={t("more.documents")} onPress={() => router.navigate("/documents")} />
+        <MenuRow icon={<Ionicons name="create-outline" size={17} color="#fff" />} color="#64D2FF" label={t("more.endorsements")} onPress={() => router.push("/endorsements")} />
         <MenuRow icon={<Ionicons name="create" size={17} color="#fff" />} color="#30B0C7" label={t("crew.menu")} value={crewInbox ? String(crewInbox) : undefined} onPress={() => router.navigate("/crew")} />
         <MenuRow icon={<Ionicons name="notifications" size={17} color="#fff" />} color="#FF3B30" label={t("more.reminders")} onPress={() => router.navigate("/reminders")} />
       </MenuGroup>
@@ -109,6 +110,7 @@ export default function More() {
         <MenuRow icon={<Ionicons name="funnel" size={17} color="#fff" />} color="#0A84FF" label={t("more.reports")} onPress={() => router.navigate("/reports")} />
         <MenuRow icon={<Ionicons name="checkmark-done" size={17} color="#fff" />} color="#34C759" label={t("more.audit")} onPress={() => router.navigate("/audit")} />
         <MenuRow icon={<Ionicons name="albums" size={17} color="#fff" />} color="#BF5AF2" label={t("more.opening")} onPress={() => router.navigate("/opening")} />
+        <MenuRow icon={<Ionicons name="document-text" size={17} color="#fff" />} color="#5856D6" label={t("more.r8710")} onPress={() => router.push("/report8710")} />
       </MenuGroup>
 
 

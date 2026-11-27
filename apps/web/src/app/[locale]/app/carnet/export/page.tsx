@@ -89,7 +89,7 @@ export default function ExportPage() {
 
   return (
     <>
-      <PageTitle title={t("title")} subtitle={t("notice")} />
+      <PageTitle title={t("title")} subtitle={t("notice")} actions={<Link href="/app/carnet/8710" className="btn btn-secondary btn-sm">{t("faa8710")}</Link>} />
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <Card title={t("format")}>
           <div className="grid gap-2 sm:grid-cols-2">

@@ -5,7 +5,7 @@
  * Deletions are soft (deletedAt) so they propagate.
  */
 import type {
-  Aircraft, AircraftType, Flight, FlightRevision, FlightTrack, Layover, License, OpeningBalance, Pilot, Roster, RosterEvent, Signature, SyncedRecord,
+  Aircraft, AircraftType, Endorsement, Flight, FlightRevision, FlightTrack, Layover, License, OpeningBalance, Pilot, Roster, RosterEvent, Signature, SyncedRecord,
 } from "./types";
 
 export interface TableMap {
@@ -21,12 +21,13 @@ export interface TableMap {
   layovers: Layover;
   flight_tracks: FlightTrack;
   flight_revisions: FlightRevision;
+  endorsements: Endorsement;
 }
 
 export type TableName = keyof TableMap;
 
 export const SYNC_TABLES: TableName[] = [
-  "pilots", "aircraft_types", "aircraft", "flights", "opening_balances", "signatures", "licenses", "rosters", "roster_events", "layovers", "flight_tracks", "flight_revisions",
+  "pilots", "aircraft_types", "aircraft", "flights", "opening_balances", "signatures", "licenses", "rosters", "roster_events", "layovers", "flight_tracks", "flight_revisions", "endorsements",
 ];
 
 export interface LocalStore {
