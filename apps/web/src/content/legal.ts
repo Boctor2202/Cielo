@@ -1,6 +1,6 @@
 import { SITE } from "@/config/site";
 
-/** Legal templates — to be completed and reviewed by legal counsel before publication. */
+/** Legal pages: notice, privacy policy, terms and cookies, in French and English. */
 type Doc = { title: string; sections: { h: string; p: string[] }[] };
 type Key = "notice" | "privacy" | "terms" | "cookies";
 
