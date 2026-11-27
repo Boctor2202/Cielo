@@ -27,22 +27,40 @@ export function LiveFlightCard() {
   const step = f ? nextStep(f) : undefined;
   const running = f && f.out;
   const minutes = f ? (f.off ? liveMinutes(f.off, f.on, new Date()) : liveMinutes(f.out, f.in, new Date())) : 0;
+  // round, at the top right of the dashboard: the plane to start, the running time once a flight is on
   return (
     <Pressable
       onPress={() => (tap("medium"), router.push("/live"))}
       accessibilityRole="button"
-      style={({ pressed }) => ({ borderRadius: 20, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: c.accent, opacity: pressed ? 0.9 : 1 })}
+      accessibilityLabel={running ? t("live.inProgress", { route: [f!.depIcao, f!.arrIcao].filter(Boolean).join(" → ") }) : t("live.start")}
+      hitSlop={6}
+      style={({ pressed }) => ({ alignItems: "center", gap: 3, transform: [{ scale: pressed ? 0.94 : 1 }] })}
     >
-      <View style={{ width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.12)" }}>
-        <Ionicons name="airplane" size={20} color={c.onAccent} />
+      <View
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: c.accent,
+          borderWidth: running ? 3 : 0,
+          borderColor: c.accent + "55",
+          shadowColor: c.accent,
+          shadowOpacity: 0.45,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 4 },
+        }}
+      >
+        {running ? (
+          <Txt mono style={{ fontSize: 14, fontWeight: "800" }} color={c.onAccent}>{formatDuration(minutes)}</Txt>
+        ) : (
+          <Ionicons name="airplane" size={24} color={c.onAccent} />
+        )}
       </View>
-      <View style={{ flex: 1, gap: 1 }}>
-        <Txt style={{ fontSize: 17, fontWeight: "800" }} color={c.onAccent}>{running ? t("live.inProgress", { route: [f!.depIcao, f!.arrIcao].filter(Boolean).join(" → ") }) : t("live.start")}</Txt>
-        <Txt style={{ fontSize: 13 }} color={c.onAccent}>
-          {running ? `${formatDuration(minutes)} · ${step ? t("live.nextIs", { step: t(`live.step.${step}` as I18nKey) }) : t("live.toSave")}` : t("live.startHint")}
-        </Txt>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={c.onAccent} />
+      <Txt numberOfLines={1} style={{ fontSize: 10.5, fontWeight: "700", maxWidth: 84, textAlign: "center" }} color={c.accent}>
+        {running ? (step ? t(`live.step.${step}` as I18nKey) : t("live.toSave")) : t("live.short")}
+      </Txt>
     </Pressable>
   );
 }
