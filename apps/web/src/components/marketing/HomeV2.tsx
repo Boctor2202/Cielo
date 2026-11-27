@@ -498,7 +498,7 @@ export function Showcase() {
 
 /* ---------- And everything else ---------- */
 
-const MORE = ["audit", "roster", "imports", "ratings", "offline", "layovers", "exports", "radar", "cv", "badges"] as const;
+const MORE = ["audit", "roster", "imports", "ratings", "faa", "offline", "layovers", "exports", "radar", "cv", "badges", "live"] as const;
 
 /** Everything else, as a list between hairlines: the name, then what it does. */
 export function MoreFeatures() {
