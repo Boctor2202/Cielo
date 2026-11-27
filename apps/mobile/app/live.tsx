@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Linking, Pressable, ScrollView, View } from "react-native";
+import { usePrompt } from "../src/components/TextPrompt";
 import { Stack, router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LIVE_STEPS, formatDuration, goAround, liveMinutes, nextStep, setStepClock, shiftLast, stampStep, type LiveFlight, type LiveStep } from "@cielo/core";
@@ -19,6 +20,7 @@ const clock = (iso?: string) => (iso ? iso.slice(11, 16) : "--:--");
  * saved from the usual flight form, filled in.
  */
 export default function LiveFlightScreen() {
+  const prompt = usePrompt();
   const { t, store, flights, aircraft, aircraftTypes, rosterEvents, pilot } = useApp();
   const c = useTheme();
   const [f, setF] = useState<LiveFlight | null>(null);
@@ -103,25 +105,20 @@ export default function LiveFlightScreen() {
 
   const editClock = (s: LiveStep) => {
     if (!f?.[s] && s !== step) return;
-    Alert.prompt(t(`live.step.${s}` as I18nKey), t("live.editHint"), [
-      { text: t("common.cancel"), style: "cancel" },
-      { text: t("common.ok"), onPress: (v?: string) => v && update(setStepClock(f!, s, v.trim())) },
-    ], "plain-text", clock(f?.[s] ?? new Date().toISOString()), "numbers-and-punctuation");
+    void prompt
+      .ask({ title: t(`live.step.${s}` as I18nKey), message: t("live.editHint"), defaultValue: clock(f?.[s] ?? new Date().toISOString()), okLabel: t("common.ok"), cancelLabel: t("common.cancel"), keyboardType: "numbers-and-punctuation" })
+      .then((v) => v && update(setStepClock(f!, s, v.trim())));
   };
   const editAirport = (which: "dep" | "arr") => {
     if (!f) return;
-    Alert.prompt(t(which === "dep" ? "live.dep" : "live.arr"), t("live.icaoHint"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("common.ok"),
-        onPress: (v?: string) => {
-          const code = (v ?? "").trim().toUpperCase();
-          if (!/^[A-Z0-9]{3,4}$/.test(code)) return;
-          const icao = lookupAirport(code)?.icao ?? code;
-          update(which === "dep" ? { ...f, depIcao: icao, depFrom: undefined } : { ...f, arrIcao: icao, arrFrom: undefined });
-        },
-      },
-    ], "plain-text", (which === "dep" ? f.depIcao : f.arrIcao) ?? "");
+    void prompt
+      .ask({ title: t(which === "dep" ? "live.dep" : "live.arr"), message: t("live.icaoHint"), defaultValue: (which === "dep" ? f.depIcao : f.arrIcao) ?? "", okLabel: t("common.ok"), cancelLabel: t("common.cancel"), autoCapitalize: "characters" })
+      .then((v) => {
+        const code = (v ?? "").trim().toUpperCase();
+        if (!/^[A-Z0-9]{3,4}$/.test(code)) return;
+        const icao = lookupAirport(code)?.icao ?? code;
+        update(which === "dep" ? { ...f, depIcao: icao, depFrom: undefined } : { ...f, arrIcao: icao, arrFrom: undefined });
+      });
   };
   const abandon = () =>
     Alert.alert(t("live.abandon"), t("live.abandonBody"), [
@@ -162,6 +159,7 @@ export default function LiveFlightScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: c.bg }} contentContainerStyle={{ padding: space.lg, gap: space.md, paddingBottom: 60 }}>
       <Stack.Screen options={{ title: step ? t("live.title") : t("live.done") }} />
+      {prompt.node}
       <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
         <Pressable onPress={() => setPicker(true)} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
           <Ionicons name="airplane" size={14} color={c.muted} />
