@@ -382,8 +382,7 @@
     "newPasswordIntro": "Choose your new password."
   },
   "legal": {
-    "updated": "Last updated",
-    "templateNote": "Template to complete and have reviewed by your legal counsel before publication."
+    "updated": "Last updated"
   },
   "common": {
     "save": "Save",

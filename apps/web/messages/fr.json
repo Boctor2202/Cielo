@@ -382,8 +382,7 @@
     "newPasswordIntro": "Choisissez votre nouveau mot de passe."
   },
   "legal": {
-    "updated": "Dernière mise à jour",
-    "templateNote": "Modèle à compléter et à faire valider par votre conseil juridique avant publication."
+    "updated": "Dernière mise à jour"
   },
   "common": {
     "save": "Enregistrer",
