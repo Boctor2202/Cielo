@@ -9,3 +9,6 @@ packages/reference-data/raw
 packages/export/test/out
 packages/*/test/out
 .claude/worktrees/
+
+# App Store config pulled by EAS Metadata: review contact and demo password
+apps/mobile/store.config.json
